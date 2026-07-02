@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>My Book Library</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
-<style>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 /* ── CONFIG: paste your credentials below ── */
 /* See SETUP.md for instructions */
 
@@ -889,6 +889,7 @@ function boot() {
     document.getElementById('setupScreen').style.display = 'block';
   } else {
     document.getElementById('mainApp').style.display = 'block';
+    initTokenClient();
     loadBooks();
   }
 }
@@ -903,9 +904,10 @@ function saveSetup() {
     err.style.display = 'block';
     return;
   }
-  saveConfig({ apiKey, clientId, sheetId });
+ saveConfig({ apiKey, clientId, sheetId });
   document.getElementById('setupScreen').style.display = 'none';
   document.getElementById('mainApp').style.display = 'block';
+  initTokenClient();
   loadBooks();
 }
 
@@ -933,17 +935,56 @@ const SHEET_NAME = 'Books';
 const HEADERS = ['id','status','title','author','format','genre','theme1','theme2','theme3',
   'awards','series','seriesNum','year','pages','currentPage','owned','ambition','isbn',
   'synopsis','startDate','finishDate','rating','fatalFlaw','loanee','notes'];
+const SCOPES = 'https://www.googleapis.com/auth/spreadsheets';
 
-async function sheetsRequest(method, path, body) {
+let oauthToken = null;
+let tokenClient = null;
+
+function initTokenClient() {
+  const cfg = getConfig();
+  if (!cfg || !cfg.clientId) return;
+  if (typeof google === 'undefined' || !google.accounts) {
+    setTimeout(initTokenClient, 500);
+    return;
+  }
+  tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: cfg.clientId,
+    scope: SCOPES,
+    callback: (resp) => {
+      if (resp.error) {
+        setSyncState('error', 'Auth failed');
+        showToast('Google auth failed: ' + resp.error, 'error');
+        return;
+      }
+      oauthToken = resp.access_token;
+      if (pendingAction) { pendingAction(); pendingAction = null; }
+    },
+  });
+}
+
+let pendingAction = null;
+
+function requireAuth(action) {
+  if (oauthToken) { action(); return; }
+  pendingAction = action;
+  if (!tokenClient) { showToast('Auth not ready yet, try again in a moment.', 'error'); return; }
+  tokenClient.requestAccessToken({ prompt: 'consent' });
+}
+
+async function sheetsRequest(method, path, body, useAuth = false) {
   const cfg = getConfig();
   if (!cfg) return null;
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${cfg.sheetId}${path}?key=${cfg.apiKey}`;
-  const opts = {
-    method,
-    headers: { 'Content-Type': 'application/json' },
-  };
+  const authParam = useAuth ? '' : `key=${cfg.apiKey}`;
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${cfg.sheetId}${path}${authParam ? '?' + authParam : ''}`;
+  const headers = { 'Content-Type': 'application/json' };
+  if (useAuth && oauthToken) headers['Authorization'] = `Bearer ${oauthToken}`;
+  const opts = { method, headers };
   if (body) opts.body = JSON.stringify(body);
   const res = await fetch(url, opts);
+  if (res.status === 401) {
+    oauthToken = null;
+    throw new Error('AUTH_EXPIRED');
+  }
   if (!res.ok) {
     const e = await res.json().catch(()=>({}));
     throw new Error(e.error?.message || `HTTP ${res.status}`);
@@ -952,23 +993,17 @@ async function sheetsRequest(method, path, body) {
 }
 
 async function ensureHeaders() {
-  try {
-    const data = await sheetsRequest('GET', `/values/${SHEET_NAME}!A1:Z1`);
-    const row = data?.values?.[0] || [];
-    if (row[0] === 'id') return; // already set up
-    await sheetsRequest('PUT', `/values/${SHEET_NAME}!A1`, {
-      valueInputOption: 'RAW',
-      values: [HEADERS]
-    });
-  } catch(e) {
-    console.warn('ensureHeaders:', e);
-  }
+  const data = await sheetsRequest('GET', `/values/${SHEET_NAME}!A1:Z1`);
+  const row = data?.values?.[0] || [];
+  if (row[0] === 'id') return;
+  await sheetsRequest('PUT', `/values/${SHEET_NAME}!A1?valueInputOption=RAW`, {
+    values: [HEADERS]
+  }, true);
 }
 
 async function loadFromSheets() {
   setSyncState('syncing', 'Loading...');
   try {
-    await ensureHeaders();
     const data = await sheetsRequest('GET', `/values/${SHEET_NAME}!A1:Z10000`);
     const rows = data?.values || [];
     if (rows.length < 2) { setSyncState('synced', 'Synced'); return; }
@@ -989,13 +1024,12 @@ async function loadFromSheets() {
     }
     setSyncState('synced', 'Synced');
   } catch(e) {
-    console.error('loadFromSheets:', e);
-    setSyncState('error', 'Load failed');
-    showToast('Could not load from Sheets: ' + e.message, 'error');
+    console.warn('loadFromSheets:', e.message);
+    setSyncState('idle', 'Sync');
   }
 }
 
-async function syncToSheets() {
+async function doSyncToSheets() {
   setSyncState('syncing', 'Saving...');
   try {
     await ensureHeaders();
@@ -1007,18 +1041,26 @@ async function syncToSheets() {
         return v === null || v === undefined ? '' : String(v);
       }));
     });
-    await sheetsRequest('PUT', `/values/${SHEET_NAME}!A1`, {
-      valueInputOption: 'RAW',
+    await sheetsRequest('PUT', `/values/${SHEET_NAME}!A1?valueInputOption=RAW`, {
       values: rows
-    });
-    setSyncState('synced', 'Saved');
+    }, true);
+    setSyncState('synced', 'Saved ✓');
     showToast('Saved to Google Sheets', 'success');
-    setTimeout(()=>setSyncState('idle','Sync'), 3000);
+    setTimeout(() => setSyncState('idle', 'Sync'), 3000);
   } catch(e) {
+    if (e.message === 'AUTH_EXPIRED') {
+      oauthToken = null;
+      requireAuth(doSyncToSheets);
+      return;
+    }
     console.error('syncToSheets:', e);
     setSyncState('error', 'Save failed');
-    showToast('Could not save to Sheets: ' + e.message, 'error');
+    showToast('Could not save: ' + e.message, 'error');
   }
+}
+
+function syncToSheets() {
+  requireAuth(doSyncToSheets);
 }
 
 function setSyncState(state, label) {
