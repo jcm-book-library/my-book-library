@@ -473,7 +473,6 @@ tbody td{padding:9px 12px;vertical-align:middle}
       <div class="rec-filter">
         <button class="rec-tab active" onclick="setRecFilter(3,this)">3 theme matches</button>
         <button class="rec-tab" onclick="setRecFilter(2,this)">2+ matches</button>
-        <button class="rec-tab" onclick="setRecFilter(1,this)">1+ matches</button>
       </div>
       <div id="recResults"></div>
     </div>
@@ -1125,7 +1124,8 @@ function updateCurrentPage(id,val){
   persistBooks();
   renderLibrary();
   renderReadingCards();
-  showToast('Page updated.','success');
+  showToast('Page updated — syncing...','success');
+  requireAuth(doSyncToSheets);
 }
 
 function sortBy(col){if(sortCol===col)sortDir*=-1;else{sortCol=col;sortDir=1;}renderLibrary();}
@@ -1361,35 +1361,48 @@ function renderRecommendations(){
   const el=document.getElementById('recResults');
   if(!el) return;
 
-  // Build theme fingerprint from highly rated read books (4+)
+  // Build theme set from highly rated read books (4+)
   const highlyRated=books.filter(b=>b.status==='Read'&&b.rating>=4);
-  if(!highlyRated.length){el.innerHTML='<p style="color:var(--text-muted);font-size:12px">Rate some books 4 stars or higher to get recommendations.</p>';return;}
+  if(!highlyRated.length){
+    el.innerHTML='<p style="color:var(--text-muted);font-size:12px">Rate some books 4 stars or higher to get recommendations.</p>';
+    return;
+  }
 
+  // Use a Set for O(1) lookups and a count map for scoring -- much faster on large libraries
+  const themeSet=new Set();
   const themeCounts={};
   highlyRated.forEach(b=>{
     [b.theme1,b.theme2,b.theme3].filter(Boolean).forEach(t=>{
+      themeSet.add(t);
       themeCounts[t]=(themeCounts[t]||0)+1;
     });
   });
 
-  // Score TBR books by theme matches
+  // Only scan TBR, pre-filter by checking if any theme intersects before full scoring
   const tbr=books.filter(b=>b.status==='TBR');
-  const scored=tbr.map(b=>{
+  const scored=[];
+  for(const b of tbr){
     const themes=[b.theme1,b.theme2,b.theme3].filter(Boolean);
-    const matches=themes.filter(t=>themeCounts[t]);
-    const score=matches.reduce((s,t)=>s+themeCounts[t],0);
-    return{...b,matchedThemes:matches,matchScore:score};
-  }).filter(b=>b.matchedThemes.length>=recMinMatch)
-    .sort((a,b)=>b.matchScore-a.matchScore)
-    .slice(0,15);
+    // Quick pre-check -- skip if no themes at all
+    if(!themes.length) continue;
+    const matches=themes.filter(t=>themeSet.has(t));
+    if(matches.length<recMinMatch) continue;
+    const score=matches.reduce((s,t)=>s+(themeCounts[t]||0),0);
+    scored.push({...b,matchedThemes:matches,matchScore:score});
+    // Cap at 20 results for performance
+    if(scored.length>=20) break;
+  }
 
-  if(!scored.length){
-    el.innerHTML=`<p style="color:var(--text-muted);font-size:12px">No TBR books match ${recMinMatch} or more themes from your highly rated books. Try lowering the match threshold.</p>`;
+  scored.sort((a,b)=>b.matchScore-a.matchScore);
+  const results=scored.slice(0,15);
+
+  if(!results.length){
+    el.innerHTML=`<p style="color:var(--text-muted);font-size:12px">No TBR books found with ${recMinMatch}+ theme matches. Try switching to 2+ matches.</p>`;
     return;
   }
 
-  el.innerHTML=scored.map(b=>{
-    const matchClass=b.matchedThemes.length>=3?'rec-match-3':b.matchedThemes.length>=2?'rec-match-2':'rec-match';
+  el.innerHTML=results.map(b=>{
+    const matchClass=b.matchedThemes.length>=3?'rec-match-3':'rec-match-2';
     return `<div class="rec-item">
       <div class="rec-title">${esc(b.title)}</div>
       <div class="rec-author">${esc(b.author)}${b.genre?' · '+esc(b.genre):''}${b.pages?' · '+b.pages+' pages':''}</div>
