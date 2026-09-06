@@ -663,9 +663,9 @@ function persistBooks(){
 
 /* ═══ GOOGLE SHEETS API + OAUTH ═══ */
 const SHEET_NAME='Books';
-const HEADERS=['id','status','title','author','currentPage','pages','rating','startDate','finishDate',
-  'year','spotlight','type','format','genre','theme1','theme2','theme3','awards','synopsis',
-  'series','seriesNum','owned','ambition','isbn','loaned','loanee','notes','fatalFlaw'];
+const HEADERS=['title','author','status','currentPage','pages','remain','%','rating','startDate','finishDate',
+  'year','spotlight','id','type','format','genre','theme1','theme2','theme3','awards','synopsis',
+  'series','seriesNum','owned','ambition','isbn','loaned','loanee','fatalFlaw','notes'];
 const SCOPES='https://www.googleapis.com/auth/spreadsheets';
 
 let oauthToken=null, tokenClient=null, pendingAction=null;
@@ -710,7 +710,7 @@ async function sheetsRequest(method,path,body,useAuth=false){
 async function ensureHeaders(){
   const data=await sheetsRequest('GET',`/values/${SHEET_NAME}!A1:Z1`);
   const row=data?.values?.[0]||[];
-  if(row[0]==='id') return;
+  if(row[0]==='title') return;
   await sheetsRequest('PUT',`/values/${SHEET_NAME}!A1?valueInputOption=RAW`,{values:[HEADERS]},true);
 }
 
@@ -747,6 +747,8 @@ async function doSyncToSheets(){
     const rows=[HEADERS];
     books.forEach(b=>{
       rows.push(HEADERS.map(h=>{
+        // Leave formula columns blank so sheet formulas stay intact
+        if(h==='remain'||h==='%') return '';
         if(h==='awards') return (b.awards||[]).join('|');
         if(h==='spotlight'||h==='loaned') return b[h]?'TRUE':'FALSE';
         const v=b[h];
