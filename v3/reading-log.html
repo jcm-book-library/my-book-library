@@ -144,6 +144,18 @@ table.lib{width:100%;border-collapse:collapse;font-size:14px;min-width:860px}
 .hbar .track{height:10px;background:var(--raise);border-radius:4px;overflow:hidden}
 .hbar .fill{display:block;height:100%;background:var(--accent);border-radius:4px}
 .hbar .val{font-variant-numeric:tabular-nums;color:var(--muted);min-width:3.5em;text-align:right}
+.hbar[data-click]{cursor:pointer;border-radius:6px;margin:-3px -6px;padding:3px 6px}
+.hbar[data-click]:hover,.hbar[data-click]:focus-visible{background:color-mix(in srgb,var(--accent) 12%,transparent)}
+.hbar[data-click]:hover .fill{filter:brightness(1.15)}
+.mini-list li[data-click]{cursor:pointer;border-radius:6px;margin:-3px -6px;padding:3px 6px}
+.mini-list li[data-click]:hover,.mini-list li[data-click]:focus-visible{background:color-mix(in srgb,var(--accent) 12%,transparent)}
+.drill-list{list-style:none;margin:0;padding:8px 12px 16px;display:flex;flex-direction:column}
+.drill-list li button{all:unset;box-sizing:border-box;width:100%;cursor:pointer;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;padding:10px 8px;border-radius:8px;border-top:1px solid var(--line)}
+.drill-list li:first-child button{border-top:0}
+.drill-list li button:hover,.drill-list li button:focus-visible{background:color-mix(in srgb,var(--accent) 12%,var(--surface))}
+.drill-list .t{font-weight:600}
+.drill-list .m{font-size:13px;color:var(--muted);grid-column:1}
+.drill-list .r{grid-row:1/3;grid-column:2;align-self:center;text-align:right;font-size:13px;color:var(--muted)}
 .split{display:flex;height:12px;border-radius:6px;overflow:hidden;gap:2px;margin:8px 0}
 .split i{display:block;height:100%}
 .split-legend{display:flex;justify-content:space-between;gap:10px;font-size:13px;color:var(--muted);flex-wrap:wrap}
@@ -325,6 +337,11 @@ dialog::backdrop{background:rgba(8,6,14,.65)}
     </div>
   </section>
 </div></div>
+
+<dialog id="drillDlg" aria-labelledby="drillTitle">
+  <div class="dlg-head"><div><h2 id="drillTitle">Books</h2><div class="muted" id="drillSub" style="font-size:13px"></div></div><button class="btn" type="button" id="drillClose">Close</button></div>
+  <ul class="drill-list" id="drillList"></ul>
+</dialog>
 
 <dialog id="bookDlg" aria-labelledby="dlgTitle">
   <form id="bookForm" method="dialog">
@@ -1033,6 +1050,7 @@ function hbars(el, items, max, fmtVal) {
     li.innerHTML = `<span class="lab"></span><span class="track"><i class="fill" style="width:${max ? Math.max(2, it.value / max * 100) : 0}%"></i></span><span class="val"></span>`;
     li.querySelector('.lab').textContent = it.label;
     li.querySelector('.val').textContent = fmtVal ? fmtVal(it) : fmt(it.value);
+    if (it.books && it.books.length) makeDrill(li, it.drillTitle || it.label, it.books);
     el.appendChild(li);
   }
 }
@@ -1089,13 +1107,19 @@ function renderDashboard() {
     type: 'bar',
     data: { labels, datasets: [{ label: 'Books finished', data, backgroundColor: colours, borderRadius: 4, maxBarThickness: 40 }] },
     options: { responsive: true, maintainAspectRatio: false, animation: false,
-      plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => `${c.raw} book${c.raw === 1 ? '' : 's'}` } } },
+      onClick: (_e, els) => {
+        if (!els.length) return; const i = els[0].index;
+        const books = dashPeriod === 'all' ? all.filter(b => b.status === 'Read' && finYear(b) === labels[i]) : read.filter(b => +b.finishDate.slice(5, 7) === i + 1);
+        if (books.length) openDrill(dashPeriod === 'all' ? `Finished in ${labels[i]}` : `Finished in ${FULL_MONTHS[i]} ${dashPeriod}`, books);
+      },
+      onHover: (e, els) => { e.native.target.style.cursor = els.length ? 'pointer' : 'default'; },
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => `${c.raw} book${c.raw === 1 ? '' : 's'} · click to see them` } } },
       scales: { x: { grid: { display: false } }, y: { beginAtZero: true, grid: { color: css('--line') }, ticks: { precision: 0, maxTicksLimit: 5 } } } }
   });
 
   // Ratings distribution, high to low
   const steps = ['5', '4.5', '4', '3.5', '3', '2.5', '2', '1.5', '1', '0.5'];
-  const rc = steps.map(s => ({ label: '★'.repeat(Math.floor(+s)) + (+s % 1 ? '½' : ''), value: rated.filter(b => toNum(b.rating) === +s).length, tip: `${s} stars` }));
+  const rc = steps.map(s => ({ label: '★'.repeat(Math.floor(+s)) + (+s % 1 ? '½' : ''), value: rated.filter(b => toNum(b.rating) === +s).length, tip: `${s} stars`, books: rated.filter(b => toNum(b.rating) === +s), drillTitle: `Rated ${s} stars` }));
   const firstNonZero = rc.findIndex(x => x.value), lastNonZero = rc.length - 1 - [...rc].reverse().findIndex(x => x.value);
   hbars($('ratBars'), firstNonZero < 0 ? [] : rc.slice(firstNonZero, lastNonZero + 1), Math.max(...rc.map(x => x.value)));
   $('ratNote').textContent = rated.length ? `${rated.length} rated · average ${avgRating.toFixed(2)}` : '';
@@ -1103,13 +1127,13 @@ function renderDashboard() {
   // Genres: count, with average rating
   const gm = new Map();
   for (const b of read) { if (!b.genre) continue; const g = gm.get(b.genre) || { n: 0, r: 0, rn: 0 }; g.n++; if (toNum(b.rating)) { g.r += toNum(b.rating); g.rn++; } gm.set(b.genre, g); }
-  const gItems = [...gm].map(([k, g]) => ({ label: k, value: g.n, avg: g.rn ? g.r / g.rn : 0, tip: `${k}: ${g.n} read${g.rn ? `, average ${(g.r / g.rn).toFixed(1)}★` : ''}` })).sort((a, b) => b.value - a.value).slice(0, 10);
+  const gItems = [...gm].map(([k, g]) => ({ label: k, value: g.n, avg: g.rn ? g.r / g.rn : 0, books: read.filter(b => b.genre === k), tip: `${k}: ${g.n} read${g.rn ? `, average ${(g.r / g.rn).toFixed(1)}★` : ''}` })).sort((a, b) => b.value - a.value).slice(0, 10);
   hbars($('genBars'), gItems, gItems[0] ? gItems[0].value : 0, it => `${it.value}${it.avg ? ' · ' + it.avg.toFixed(1) + '★' : ''}`);
 
   // Type split + formats
   const tm = countBy(read, 'type');
   split($('typeSplit'), [{ label: 'Fiction', value: tm.get('Fiction') || 0 }, { label: 'Non-Fiction', value: tm.get('Non-Fiction') || 0 }], [accent, MC[(+today().slice(5, 7) + 5) % 12]]);
-  const fItems = [...countBy(read, 'format')].map(([k, v]) => ({ label: k, value: v })).sort((a, b) => b.value - a.value).slice(0, 8);
+  const fItems = [...countBy(read, 'format')].map(([k, v]) => ({ label: k, value: v, books: read.filter(b => b.format === k) })).sort((a, b) => b.value - a.value).slice(0, 8);
   hbars($('fmtBars'), fItems, fItems[0] ? fItems[0].value : 0);
 
   // Top authors
@@ -1117,7 +1141,7 @@ function renderDashboard() {
   for (const b of read) { if (!b.author) continue; const a = am.get(b.author) || { n: 0, r: 0, rn: 0 }; a.n++; if (toNum(b.rating)) { a.r += toNum(b.rating); a.rn++; } am.set(b.author, a); }
   const aItems = [...am].sort((x, y) => y[1].n - x[1].n || (y[1].r / (y[1].rn || 1)) - (x[1].r / (x[1].rn || 1))).slice(0, 8);
   $('authList').innerHTML = aItems.length ? '' : '<li class="empty">Nothing here yet for this period.</li>';
-  for (const [name, a] of aItems) { const li = document.createElement('li'); li.innerHTML = '<span></span><span class="r"></span>'; li.firstChild.textContent = name; li.lastChild.textContent = `${a.n} book${a.n > 1 ? 's' : ''}${a.rn ? ' · ' + (a.r / a.rn).toFixed(1) + '★' : ''}`; $('authList').appendChild(li); }
+  for (const [name, a] of aItems) { const li = document.createElement('li'); li.innerHTML = '<span></span><span class="r"></span>'; li.firstChild.textContent = name; li.lastChild.textContent = `${a.n} book${a.n > 1 ? 's' : ''}${a.rn ? ' · ' + (a.r / a.rn).toFixed(1) + '★' : ''}`; makeDrill(li, `${name} · everything in your library`, all.filter(b => b.author === name)); $('authList').appendChild(li); }
 
   // Awards: read vs in library (all time, awards normalised e.g. "Booker Prize" → "Booker")
   // Group award spellings: "Booker Prize" → Booker, "Pulitzer Prize for Fiction" → Pulitzer, etc.
@@ -1126,12 +1150,13 @@ function renderDashboard() {
   const awAll = new Map(), awRead = new Map();
   for (const b of all) for (const a of [...new Set((b.awards || '').split(/[|,;]/).map(x => x.trim()).filter(Boolean).map(normAward))]) { awAll.set(a, (awAll.get(a) || 0) + 1); if (b.status === 'Read') awRead.set(a, (awRead.get(a) || 0) + 1); }
   const awItems = [...awAll].map(([k, n]) => ({ label: k, value: awRead.get(k) || 0, total: n })).sort((a, b) => b.total - a.total).slice(0, 7);
-  hbars($('awBars'), awItems.map(x => ({ ...x, value: x.value / x.total * 100, tip: `${x.label}: ${x.value} of ${x.total} read` })), 100, it => `${awRead.get(it.label) || 0}/${it.total}`);
+  const hasAward = (b, k) => (b.awards || '').split(/[|,;]/).map(x => x.trim()).filter(Boolean).map(normAward).includes(k);
+  hbars($('awBars'), awItems.map(x => ({ ...x, value: x.value / x.total * 100, tip: `${x.label}: ${x.value} of ${x.total} read`, books: all.filter(b => hasAward(b, x.label)), drillTitle: `${x.label} books in your library` })), 100, it => `${awRead.get(it.label) || 0}/${it.total}`);
 
   // Series: read vs total in the library (all time), unfinished series first
   const sm = new Map();
   for (const b of all) { if (!b.series) continue; const x = sm.get(b.series) || { n: 0, r: 0 }; x.n++; if (b.status === 'Read') x.r++; sm.set(b.series, x); }
-  const sItems = [...sm].filter(([, x]) => x.n > 1 && x.r > 0).map(([k, x]) => ({ label: k, value: x.r / x.n * 100, r: x.r, n: x.n, tip: `${k}: ${x.r} of ${x.n} read` }))
+  const sItems = [...sm].filter(([, x]) => x.n > 1 && x.r > 0).map(([k, x]) => ({ label: k, value: x.r / x.n * 100, r: x.r, n: x.n, tip: `${k}: ${x.r} of ${x.n} read`, books: all.filter(b => b.series === k).sort((a, b) => toNum(a.seriesNum) - toNum(b.seriesNum)), drillTitle: k }))
     .sort((a, b) => (a.value === 100) - (b.value === 100) || b.value - a.value).slice(0, 8);
   hbars($('serBars'), sItems, 100, it => `${it.r}/${it.n}`);
 
@@ -1144,10 +1169,48 @@ function renderDashboard() {
   split($('ownSplit'), [{ label: 'Digital', value: om.get('Digital') || 0 }, { label: 'Physical', value: om.get('Physical') || 0 }], [accent, MC[(+today().slice(5, 7) + 5) % 12]]);
   const quick = tbr.filter(b => toNum(b.pages) >= 40).sort((a, b) => toNum(a.pages) - toNum(b.pages)).slice(0, 5);
   $('quickList').textContent = '';
-  for (const b of quick) { const li = document.createElement('li'); li.innerHTML = '<span></span><span class="r"></span>'; li.firstChild.textContent = b.title; li.lastChild.textContent = fmt(toNum(b.pages)) + ' pp'; $('quickList').appendChild(li); }
+  for (const b of quick) { const li = document.createElement('li'); li.innerHTML = '<span></span><span class="r"></span>'; li.firstChild.textContent = b.title; li.lastChild.textContent = fmt(toNum(b.pages)) + ' pp'; makeDrill(li, b.title, [b]); li.onclick = null; li.addEventListener('click', e => { e.stopImmediatePropagation(); openInLibrary(b.id); }, true); $('quickList').appendChild(li); }
   const spots = tbr.filter(b => b.spotlight === 'Yes').slice(0, 8);
   $('spotList').innerHTML = spots.length ? '' : '<li class="empty">Mark TBR books as Spotlight in the Library to see them here.</li>';
-  for (const b of spots) { const li = document.createElement('li'); li.innerHTML = '<span></span><span class="r"></span>'; li.firstChild.textContent = b.title; li.lastChild.textContent = [b.author, toNum(b.pages) ? fmt(toNum(b.pages)) + ' pp' : ''].filter(Boolean).join(' · '); $('spotList').appendChild(li); }
+  for (const b of spots) { const li = document.createElement('li'); li.innerHTML = '<span></span><span class="r"></span>'; li.firstChild.textContent = b.title; li.lastChild.textContent = [b.author, toNum(b.pages) ? fmt(toNum(b.pages)) + ' pp' : ''].filter(Boolean).join(' · '); makeDrill(li, b.title, [b]); li.addEventListener('click', e => { e.stopImmediatePropagation(); openInLibrary(b.id); }, true); $('spotList').appendChild(li); }
+}
+
+
+/* ---------- drill-down: click a bar to see its books ---------- */
+function makeDrill(el, title, books) {
+  el.dataset.click = '';
+  el.tabIndex = 0;
+  el.setAttribute('role', 'button');
+  el.setAttribute('aria-label', `${title}: show ${books.length} book${books.length === 1 ? '' : 's'}`);
+  const open = () => openDrill(title, books);
+  el.addEventListener('click', open);
+  el.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
+}
+function openDrill(title, books) {
+  $('drillTitle').textContent = title;
+  $('drillSub').textContent = `${books.length} book${books.length === 1 ? '' : 's'} · tap one to open it in the Library`;
+  const list = $('drillList');
+  list.textContent = '';
+  const sorted = [...books].sort((a, b) => (b.finishDate || '').localeCompare(a.finishDate || '') || a.title.localeCompare(b.title));
+  for (const b of sorted) {
+    const li = document.createElement('li');
+    li.innerHTML = '<button type="button"><span class="t"></span><span class="m"></span><span class="r"></span></button>';
+    li.querySelector('.t').textContent = b.title;
+    li.querySelector('.m').textContent = [b.author, b.status !== 'Read' ? b.status : '', b.finishDate ? 'finished ' + b.finishDate : ''].filter(Boolean).join(' · ');
+    li.querySelector('.r').innerHTML = `<span class="stars">${starStr(b.rating)}</span>`;
+    li.querySelector('button').addEventListener('click', () => { $('drillDlg').close(); openInLibrary(b.id); });
+    list.appendChild(li);
+  }
+  $('drillDlg').showModal();
+}
+function openInLibrary(id) {
+  Object.assign(state.lib, { q: '', status: 'All', type: '', format: '', genre: '', owned: '', sort: 'sheet', dir: 1, open: id });
+  $('libSearch').value = ''; for (const s of ['libType', 'libFormat', 'libGenre', 'libOwned']) $(s).value = '';
+  const idx = state.allBooks.findIndex(b => b.id === id);
+  state.lib.limit = Math.max(100, Math.ceil((idx + 1) / 100) * 100);
+  showTab('library');
+  const row = document.querySelector(`#libBody tr[data-id="${CSS.escape(id)}"]`);
+  if (row) row.scrollIntoView({ block: 'center', behavior: 'smooth' });
 }
 
 function recentDailyAverage(days) {
@@ -1227,6 +1290,7 @@ $('libMore').addEventListener('click', () => { state.lib.limit += 100; renderLib
 $('addBookBtn').addEventListener('click', () => { if (!state.libLoaded) return; openBookDialog(null); });
 $('bookForm').addEventListener('submit', saveBookDialog);
 $('dlgClose').addEventListener('click', () => $('bookDlg').close());
+$('drillClose').addEventListener('click', () => $('drillDlg').close());
 
 $('refreshBtn').addEventListener('click', () => refresh());
 $('quickBtn').addEventListener('click', () => {
