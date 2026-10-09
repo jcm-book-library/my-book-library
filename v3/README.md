@@ -4,7 +4,7 @@ Source for the v3 pages hosted on claude.ai. These are backups; the live site (`
 
 | File | What it is |
 |---|---|
-| `reading-log.html` | The v3 app ("My Book Library"): Log tab (page logging, streak, charts, calendar, finish-a-book) and Library tab (search, filter, sort, edit, add). Proton Seasons theme. |
+| `reading-log.html` | The v3 app ("My Book Library"): Log tab (page logging, streak, charts, calendar, finish-a-book), Library tab (search, filter, sort, edit, add) and Dashboard tab (yearly stats, pace per book, ratings, genres, authors, awards, series, TBR). Proton Seasons theme. |
 | `proton-seasons-preview.html` | Chosen design: Proton Night base with a soft colour per month (tint + drift on). |
 | `colourways-preview.html` | The four original colour options, kept for reference. |
 
