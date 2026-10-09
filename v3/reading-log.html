@@ -1,0 +1,652 @@
+<title>My Reading Log</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@400;500;600&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+/* Layout: one column on phone, two on laptop — log panel left (the daily job), stats + charts right. */
+:root{
+  /* Proton Seasons: Proton Night base (tinted ~5% by the month), one soft colour per month in --accent,
+     lime (--accent-2) only for the 7-day average and today's progress. Dark-only by design. */
+  --bg:#16141f; --surface:#1e1b2b; --raise:#2a2640; --line:#353050;
+  --fg:#f1effa; --muted:#a49fbf; --accent:#43ad8f; --accent-next:#7bae6a; --accent-ink:#ffffff; --accent-2:#c4f04a;
+  --danger:#ff7a7a;
+  --display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --body:"Figtree",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font:15px/1.5 var(--body);margin:0}
+.wrap{max-width:1180px;margin:0 auto;padding-inline:16px;padding-block:20px 48px}
+h1,h2,.num{font-family:var(--display)}
+#todayLabel{color:var(--accent)}
+h1{font-size:clamp(26px,4vw,34px);font-weight:800;letter-spacing:-.02em;margin:0;text-wrap:balance}
+h2{font-size:17px;font-weight:700;margin:0;letter-spacing:-.01em}
+.eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);font-weight:600}
+.muted{color:var(--muted)}
+.tnum{font-variant-numeric:tabular-nums}
+
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:20px}
+.status{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--muted);flex:none}
+.status[data-state="live"] .dot{background:var(--accent)}
+.status[data-state="error"] .dot{background:var(--danger)}
+.status[data-state="loading"] .dot{background:var(--accent);animation:pulse 1s infinite alternate}
+@keyframes pulse{to{opacity:.3}}
+button{font:inherit;cursor:pointer}
+.btn{border:1px solid var(--line);background:var(--raise);color:var(--fg);border-radius:8px;padding:7px 12px;font-weight:600;font-size:13px}
+.btn:hover{border-color:var(--muted)}
+.btn-primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn-primary:hover{filter:brightness(1.08);border-color:var(--accent)}
+.btn:disabled{opacity:.5;cursor:default}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.notice{background:var(--raise);border:1px solid var(--line);border-left:3px solid var(--accent);padding:10px 14px;border-radius:8px;margin-bottom:18px;font-size:14px}
+.notice[data-kind="error"]{border-left-color:var(--danger)}
+
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:20px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.stat .num{font-size:clamp(28px,4vw,40px);font-weight:800;line-height:1.05;letter-spacing:-.02em}
+.stat .sub{font-size:13px;color:var(--muted)}
+.stat.streak{background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 20%,var(--surface)),color-mix(in srgb,var(--accent-next) 8%,var(--surface)) 75%);border-color:color-mix(in srgb,var(--accent) 45%,var(--line))}
+.stat.streak .num{color:color-mix(in srgb,var(--accent) 70%,#fff)}
+.goalbar{height:6px;border-radius:3px;background:var(--raise);overflow:hidden;margin-top:6px}
+.goalbar > i{display:block;height:100%;background:var(--accent-2);border-radius:3px;transition:width .4s}
+
+.grid{display:grid;grid-template-columns:minmax(0,380px) minmax(0,1fr);gap:20px;align-items:start}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;min-width:0}
+.panel + .panel{margin-top:20px}
+.panel-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+
+.book{padding:12px 0;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:8px}
+.book:first-of-type{border-top:0;padding-top:0}
+.book-title{font-weight:600;line-height:1.3}
+.book-meta{font-size:13px;color:var(--muted)}
+.prog{height:5px;background:var(--raise);border-radius:3px;overflow:hidden}
+.prog > i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--accent-next));border-radius:3px}
+.logrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.logrow label{font-size:13px;color:var(--muted)}
+input[type="number"]{width:92px;font:inherit;font-variant-numeric:tabular-nums;background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:7px 10px}
+input[type="number"]:focus{border-color:var(--accent);outline:none}
+.delta{font-size:13px;font-weight:600;color:color-mix(in srgb,var(--accent) 65%,#fff);min-width:70px}
+.delta[data-bad]{color:var(--danger)}
+.quick{margin-top:14px;padding-top:14px;border-top:1px dashed var(--line)}
+.today-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;font-size:14px}
+.today-list li{display:flex;justify-content:space-between;gap:10px}
+.today-list .pg{font-weight:600}
+
+.chart-box{position:relative;height:220px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{width:10px;height:10px;border-radius:2px;display:inline-block}
+.range-tabs{display:flex;gap:4px}
+.range-tabs button{border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:6px;padding:3px 9px;font-size:12px;font-weight:600}
+.range-tabs button[aria-pressed="true"]{background:color-mix(in srgb,var(--accent) 28%,var(--surface));color:var(--fg);border-color:var(--accent)}
+
+.heat-scroll{overflow-x:auto;padding-bottom:4px}
+.heat{display:grid;grid-template-rows:14px repeat(7,12px);grid-auto-flow:column;grid-auto-columns:12px;gap:3px}
+.heat .c{border-radius:2px;background:var(--raise)}
+.heat .c[data-future]{background:transparent;outline:1px dashed var(--line);outline-offset:-1px}
+.heat .m{font-size:10px;color:var(--muted);white-space:nowrap;grid-row:1}
+
+@media (max-width:860px){
+  .grid{grid-template-columns:minmax(0,1fr)}
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header>
+    <div>
+      <div class="eyebrow" id="todayLabel">Today</div>
+      <h1>My Reading Log</h1>
+    </div>
+    <div class="status" id="status" data-state="loading" role="status">
+      <span class="dot"></span><span id="statusText">Connecting to your sheet…</span>
+      <button class="btn" id="refreshBtn" type="button">Refresh</button>
+    </div>
+  </header>
+
+  <div class="notice" id="notice" hidden></div>
+
+  <section class="stats" aria-label="Summary">
+    <div class="stat streak">
+      <span class="eyebrow">Reading streak</span>
+      <span class="num tnum" id="sStreak">–</span>
+      <span class="sub" id="sStreakSub">days</span>
+    </div>
+    <div class="stat">
+      <span class="eyebrow">Today</span>
+      <span class="num tnum" id="sToday">0</span>
+      <span class="sub" id="sTodaySub">of 100 pages</span>
+      <div class="goalbar" aria-hidden="true"><i id="sTodayBar" style="width:0"></i></div>
+    </div>
+    <div class="stat">
+      <span class="eyebrow" id="sMonthLabel">This month</span>
+      <span class="num tnum" id="sMonth">–</span>
+      <span class="sub" id="sMonthSub"></span>
+    </div>
+    <div class="stat">
+      <span class="eyebrow" id="sYearLabel">This year</span>
+      <span class="num tnum" id="sYear">–</span>
+      <span class="sub" id="sYearSub"></span>
+    </div>
+  </section>
+
+  <div class="grid">
+    <div>
+      <section class="panel" aria-labelledby="logH">
+        <div class="panel-head"><h2 id="logH">Log your reading</h2><span class="muted" style="font-size:13px">Type the page you're on</span></div>
+        <div id="books"></div>
+        <div class="quick">
+          <div class="logrow">
+            <label for="quickPages">Pages without a book</label>
+            <input type="number" id="quickPages" min="1" max="2000" inputmode="numeric" placeholder="0">
+            <button class="btn" id="quickBtn" type="button">Add</button>
+          </div>
+        </div>
+      </section>
+      <section class="panel" aria-labelledby="todayH">
+        <div class="panel-head"><h2 id="todayH">Today's entries</h2><span class="muted tnum" id="todayCount" style="font-size:13px"></span></div>
+        <ul class="today-list" id="todayList"></ul>
+      </section>
+    </div>
+
+    <div>
+      <section class="panel" aria-labelledby="dailyH">
+        <div class="panel-head">
+          <h2 id="dailyH">Pages per day</h2>
+          <div class="range-tabs" role="group" aria-label="Range">
+            <button type="button" data-range="30" aria-pressed="false">30 days</button>
+            <button type="button" data-range="90" aria-pressed="true">90 days</button>
+            <button type="button" data-range="365" aria-pressed="false">Year</button>
+          </div>
+        </div>
+        <div class="chart-box"><canvas id="dailyChart" aria-label="Pages read per day"></canvas></div>
+        <div class="legend" style="margin-top:8px">
+          <span><i class="sw" id="lgGoal"></i>Goal days, in each month's colour</span>
+          <span><i class="sw" id="lgUnder"></i>Under goal</span>
+          <span><i class="sw" style="background:var(--accent-2)"></i>7-day average</span>
+        </div>
+      </section>
+      <section class="panel" aria-labelledby="monthH">
+        <div class="panel-head"><h2 id="monthH">Monthly totals</h2><span class="muted" id="monthNote" style="font-size:13px"></span></div>
+        <div class="chart-box"><canvas id="monthChart" aria-label="Pages read per month"></canvas></div>
+      </section>
+      <section class="panel" aria-labelledby="heatH">
+        <div class="panel-head"><h2 id="heatH">Reading calendar</h2>
+          <div class="legend"><span>Each day in its month's colour, brighter for more pages</span></div>
+        </div>
+        <div class="heat-scroll"><div class="heat" id="heat" role="img" aria-label="Pages read each day this year"></div></div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<script>
+const SHEET_ID = '1558jWeUc8gCzQuph6wOVyOocvTBhQf22UuCSXza8klc';
+const SERVER = 'Google Sheets';
+
+// Snapshot taken 9 Oct 2026 so the page is useful before (or without) the live connection.
+const SNAPSHOT = {
+  start: '2026-01-01',
+  pages: [79,128,188,153,77,88,172,130,104,130,198,141,75,126,111,74,54,109,81,115,73,107,118,207,210,81,80,60,153,65,40,87,158,75,105,87,66,274,215,28,67,90,74,105,232,114,89,63,104,101,71,203,282,112,70,67,83,144,101,91,93,108,105,52,67,190,105,124,60,108,131,140,142,141,120,103,69,73,88,125,195,76,100,76,48,112,215,174,100,121,219,125,125,194,251,132,77,119,68,141,67,52,79,78,118,100,90,205,169,119,58,55,15,36,238,175,66,89,89,64,102,118,61,86,105,71,147,67,278,302,121,284,78,68,107,145,86,121,108,120,112,52,105,167,101,74,105,116,165,168,200,115,102,217,237,118,115,127,164,255,20,104,117,105,86,216,257,289,251,293,63,246,120,202,186,104,156,318,186,191,234,147,152,143,262,168,106,117,87,51,22,100,159,89,119,95,98,67,192,171,123,104,109,116,71,3,279,122,105,73,85,96,203,224,107,123,104,109,83,108,168,145,130,136,106,239,97,219,122,85,168,128,215,158,157,227,346,93,244,49,52,100,91,83,146,102,116,107,169,91,69,81,114,65,131,97,109,100,138,157,152,172,154,109,111,122,106,210,107,10,56,106,189,117,151,322,117,108,103,106,98],
+  settings: { streakStartDate: '2025-04-04', streakMinPages: 1, dailyGoalPages: 100 },
+  books: [
+    { id: '1716', title: 'Boy Swallows Universe', author: 'Trent Dalton', currentPage: 62, pages: 343 },
+    { id: '8264', title: 'Dune: The Graphic Novel, Book 3', author: 'Brian Herbert and Kevin J Anderson', currentPage: 68, pages: 194 },
+    { id: '8344', title: 'Footnotes in Gaza', author: 'Joe Sacco', currentPage: 29, pages: 436 }
+  ]
+};
+
+/* ---------- dates (local time, so "today" is Melbourne time on your devices) ---------- */
+const pad = n => String(n).padStart(2, '0');
+const iso = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const fromIso = s => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
+const addDays = (s, n) => { const d = fromIso(s); d.setDate(d.getDate() + n); return iso(d); };
+const daysBetween = (a, b) => Math.round((fromIso(b) - fromIso(a)) / 864e5);
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const fmt = n => Number(n).toLocaleString('en-AU');
+const today = () => iso(new Date());
+const toNum = v => { const n = parseFloat(String(v ?? '').replace(/,/g, '')); return Number.isFinite(n) ? n : 0; };
+const toDate = v => { const m = String(v ?? '').match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? m[0] : null; };
+
+/* ---------- Proton Seasons theme ---------- */
+// One soft colour per month through Melbourne's seasons (summer Dec–Feb … spring Sep–Nov).
+const MC = ['#e8935a','#e07a7a','#d9738f','#c573b4','#a674e0','#7f6cf5','#6a7ff0','#5591e0','#3fa4b8','#43ad8f','#7bae6a','#d6a345'];
+const SEASON = ['Summer','Summer','Autumn','Autumn','Autumn','Winter','Winter','Winter','Spring','Spring','Spring','Summer'];
+const BASE = { bg:'#16141f', surface:'#1e1b2b', raise:'#2a2640', line:'#353050' };
+const LIME = '#c4f04a';
+const hexRgb = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+const mix = (a, b, t) => '#' + hexRgb(a).map((v, i) => Math.round(v + (hexRgb(b)[i] - v) * t).toString(16).padStart(2, '0')).join('');
+// Drift: a day's colour slides up to 60% of the way toward next month's by month end.
+function dayColour(isoDate) {
+  const y = +isoDate.slice(0, 4), m = +isoDate.slice(5, 7) - 1, d = +isoDate.slice(8, 10);
+  const len = new Date(y, m + 1, 0).getDate();
+  return mix(MC[m], MC[(m + 1) % 12], ((d - 1) / (len - 1)) * 0.6);
+}
+const underColour = c => mix(BASE.raise, c, 0.42);
+function applyTheme() {
+  const t = today(), m = +t.slice(5, 7) - 1, c = dayColour(t), r = document.documentElement.style;
+  r.setProperty('--accent', c);
+  r.setProperty('--accent-next', MC[(m + 1) % 12]);
+  r.setProperty('--bg', mix(BASE.bg, c, 0.05));
+  r.setProperty('--surface', mix(BASE.surface, c, 0.05));
+  r.setProperty('--raise', mix(BASE.raise, c, 0.06));
+  r.setProperty('--line', mix(BASE.line, c, 0.08));
+  const g = document.getElementById('lgGoal'), u = document.getElementById('lgUnder');
+  if (g) g.style.background = `linear-gradient(90deg,${MC[(m + 10) % 12]},${MC[(m + 11) % 12]},${MC[m]})`;
+  if (u) u.style.background = underColour(c);
+}
+
+/* ---------- state ---------- */
+const state = {
+  entries: SNAPSHOT.pages.map((p, i) => ({ date: addDays(SNAPSHOT.start, i), pages: p, bookId: '', title: '', pageReached: null, source: 'import' })),
+  books: SNAPSHOT.books.map(b => ({ ...b })),
+  settings: { ...SNAPSHOT.settings },
+  mcp: null, live: false, busy: false, range: 90
+};
+
+function dailyTotals() {
+  const t = new Map();
+  for (const e of state.entries) t.set(e.date, (t.get(e.date) || 0) + e.pages);
+  return t;
+}
+
+// Streak = consecutive days with at least streakMinPages, counting back from today
+// (or from yesterday while today is still unlogged). Days before the first log row
+// are covered by streakStartDate from App Settings.
+function streakInfo(totals) {
+  const min = state.settings.streakMinPages || 1;
+  const t = today();
+  const firstLog = [...totals.keys()].sort()[0] || t;
+  const todayDone = (totals.get(t) || 0) >= min;
+  let d = todayDone ? t : addDays(t, -1);
+  let count = 0;
+  while (d >= firstLog && (totals.get(d) || 0) >= min) { count++; d = addDays(d, -1); }
+  if (d < firstLog && state.settings.streakStartDate && state.settings.streakStartDate < firstLog) {
+    count += daysBetween(state.settings.streakStartDate, firstLog);
+  }
+  return { count, todayDone };
+}
+
+/* ---------- rendering ---------- */
+const $ = id => document.getElementById(id);
+
+function renderStats(totals) {
+  const t = today(), goal = state.settings.dailyGoalPages || 100;
+  const { count, todayDone } = streakInfo(totals);
+  $('sStreak').textContent = fmt(count);
+  $('sStreakSub').textContent = count === 0 ? 'Log a page to start a new streak'
+    : todayDone ? 'days, including today' : `days. Log today to make it ${fmt(count + 1)}`;
+  const tp = totals.get(t) || 0;
+  $('sToday').textContent = fmt(tp);
+  $('sTodaySub').textContent = tp >= goal ? `Goal of ${goal} reached` : `of ${goal} pages · ${goal - tp} to go`;
+  $('sTodayBar').style.width = Math.min(100, tp / goal * 100) + '%';
+
+  const ym = t.slice(0, 7), y = t.slice(0, 4);
+  let mTot = 0, mDays = 0, mHit = 0, yTot = 0, yDays = 0;
+  for (const [d, p] of totals) {
+    if (d.startsWith(ym)) { mTot += p; mDays++; if (p >= goal) mHit++; }
+    if (d.startsWith(y)) { yTot += p; yDays++; }
+  }
+  const dayOfMonth = Number(t.slice(8));
+  $('sMonthLabel').textContent = MONTHS[Number(t.slice(5, 7)) - 1] + ' so far';
+  $('sMonth').textContent = fmt(mTot);
+  $('sMonthSub').textContent = `${mHit} of ${dayOfMonth} days at goal`;
+  $('sYearLabel').textContent = y + ' so far';
+  $('sYear').textContent = fmt(yTot);
+  $('sYearSub').textContent = yDays ? `${fmt(Math.round(yTot / yDays))} a day on average` : '';
+  $('todayLabel').textContent = new Date().toLocaleDateString('en-AU', { weekday: 'long', day: 'numeric', month: 'long' }) + ' · ' + SEASON[Number(t.slice(5, 7)) - 1];
+}
+
+function lastPageFor(book) {
+  let p = book.currentPage || 0;
+  for (const e of state.entries) if (e.bookId === book.id && e.pageReached > p) p = e.pageReached;
+  return p;
+}
+
+function renderBooks() {
+  const box = $('books');
+  box.textContent = '';
+  if (!state.books.length) {
+    box.innerHTML = '<p class="muted">No books marked Reading in your sheet. Set a book\'s status to Reading and press Refresh.</p>';
+    return;
+  }
+  for (const b of state.books) {
+    const last = lastPageFor(b);
+    const pct = b.pages ? Math.min(100, last / b.pages * 100) : 0;
+    const el = document.createElement('div');
+    el.className = 'book';
+    const inputId = 'pg-' + b.id;
+    el.innerHTML = `
+      <div><div class="book-title"></div><div class="book-meta tnum"></div></div>
+      <div class="prog" aria-hidden="true"><i style="width:${pct}%"></i></div>
+      <div class="logrow">
+        <label for="${inputId}">On page</label>
+        <input type="number" id="${inputId}" min="1" ${b.pages ? `max="${b.pages}"` : ''} inputmode="numeric" placeholder="${last + 1}">
+        <button class="btn btn-primary" type="button">Log</button>
+        <span class="delta tnum" aria-live="polite"></span>
+      </div>`;
+    el.querySelector('.book-title').textContent = b.title;
+    el.querySelector('.book-meta').textContent = `${b.author ? b.author + ' · ' : ''}page ${fmt(last)}${b.pages ? ' of ' + fmt(b.pages) + ' · ' + Math.round(pct) + '%' : ''}`;
+    const input = el.querySelector('input'), btn = el.querySelector('button'), delta = el.querySelector('.delta');
+    const update = () => {
+      const v = parseInt(input.value, 10);
+      delta.removeAttribute('data-bad');
+      if (!v) { delta.textContent = ''; return; }
+      if (v <= last) { delta.textContent = `Already at ${last}`; delta.setAttribute('data-bad', ''); return; }
+      if (b.pages && v > b.pages) { delta.textContent = `Book has ${b.pages}`; delta.setAttribute('data-bad', ''); return; }
+      delta.textContent = `+${v - last} pages`;
+    };
+    input.addEventListener('input', update);
+    input.addEventListener('keydown', e => { if (e.key === 'Enter') btn.click(); });
+    btn.addEventListener('click', () => {
+      const v = parseInt(input.value, 10);
+      if (!v || v <= last || (b.pages && v > b.pages)) { update(); input.focus(); return; }
+      logEntry({ pages: v - last, bookId: b.id, title: b.title, pageReached: v }, btn);
+    });
+    box.appendChild(el);
+  }
+}
+
+function renderToday() {
+  const t = today();
+  const list = $('todayList');
+  list.textContent = '';
+  const items = state.entries.filter(e => e.date === t);
+  $('todayCount').textContent = items.length ? `${items.length} ${items.length === 1 ? 'entry' : 'entries'}` : '';
+  if (!items.length) {
+    const li = document.createElement('li');
+    li.className = 'muted';
+    li.textContent = 'Nothing logged yet today. Type the page you\'re on above and press Log.';
+    list.appendChild(li);
+    return;
+  }
+  for (const e of items) {
+    const li = document.createElement('li');
+    const name = document.createElement('span');
+    name.textContent = e.title ? `${e.title}${e.pageReached ? ' → p. ' + e.pageReached : ''}` : (e.source === 'import' ? 'Daily total' : 'Pages');
+    const pg = document.createElement('span');
+    pg.className = 'pg tnum';
+    pg.textContent = '+' + fmt(e.pages);
+    li.append(name, pg);
+    list.appendChild(li);
+  }
+}
+
+/* ---------- charts ---------- */
+const css = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+let dailyChart, monthChart;
+
+function chartBase() {
+  Chart.defaults.font.family = css('--body');
+  Chart.defaults.color = css('--muted');
+  Chart.defaults.borderColor = css('--line');
+}
+
+function renderDaily(totals) {
+  const goal = state.settings.dailyGoalPages || 100;
+  const t = today();
+  const n = state.range === 365 ? daysBetween(t.slice(0, 4) + '-01-01', t) + 1 : state.range;
+  const labels = [], data = [], avg = [];
+  for (let i = n - 1; i >= 0; i--) {
+    const d = addDays(t, -i);
+    labels.push(d);
+    data.push(totals.get(d) || 0);
+  }
+  data.forEach((_, i) => {
+    const w = data.slice(Math.max(0, i - 6), i + 1);
+    avg.push(Math.round(w.reduce((a, b) => a + b, 0) / w.length));
+  });
+  const avgC = LIME, muted = css('--muted');
+  const cfg = {
+    data: {
+      labels,
+      datasets: [
+        { type: 'line', label: '7-day average', data: avg, borderColor: avgC, borderWidth: 2, pointRadius: 0, tension: .35, order: 0 },
+        { type: 'bar', label: 'Pages', data, backgroundColor: data.map((v, i) => { const c = dayColour(labels[i]); return v >= goal ? c : underColour(c); }), borderRadius: 2, barPercentage: .9, categoryPercentage: .95, order: 1 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, animation: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: {
+          title: items => fromIso(items[0].label).toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' }),
+          label: c => `${c.dataset.label}: ${fmt(c.raw)}`
+        } },
+        goalLine: { value: goal, color: muted }
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 7,
+          callback: function (v) { const d = fromIso(this.getLabelForValue(v)); return `${d.getDate()} ${MONTHS[d.getMonth()]}`; } } },
+        y: { beginAtZero: true, grid: { color: css('--line') }, ticks: { maxTicksLimit: 5 } }
+      }
+    },
+    plugins: [goalLinePlugin]
+  };
+  if (dailyChart) dailyChart.destroy();
+  dailyChart = new Chart($('dailyChart'), cfg);
+}
+
+const goalLinePlugin = {
+  id: 'goalLine',
+  afterDatasetsDraw(chart, _a, opts) {
+    const y = chart.scales.y.getPixelForValue(opts.value);
+    const { left, right } = chart.chartArea;
+    const ctx = chart.ctx;
+    ctx.save();
+    ctx.strokeStyle = opts.color; ctx.setLineDash([4, 4]); ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(left, y); ctx.lineTo(right, y); ctx.stroke();
+    ctx.setLineDash([]); ctx.fillStyle = opts.color; ctx.font = '11px ' + css('--body');
+    ctx.textAlign = 'right'; ctx.fillText(`Goal ${opts.value}`, right, y - 4);
+    ctx.restore();
+  }
+};
+
+function renderMonthly(totals) {
+  const t = today(), y = t.slice(0, 4), curM = Number(t.slice(5, 7));
+  const tot = new Array(curM).fill(0), days = new Array(curM).fill(0);
+  for (const [d, p] of totals) if (d.startsWith(y)) { const m = Number(d.slice(5, 7)) - 1; if (m < curM) { tot[m] += p; days[m]++; } }
+  const best = tot.indexOf(Math.max(...tot));
+  $('monthNote').textContent = tot[best] ? `Best: ${MONTHS[best]} with ${fmt(tot[best])}` : '';
+  const cfg = {
+    type: 'bar',
+    data: { labels: MONTHS.slice(0, curM), datasets: [{ label: 'Pages', data: tot,
+      backgroundColor: tot.map((_, i) => i === curM - 1 ? MC[i] + '8c' : MC[i]), borderRadius: 4, maxBarThickness: 44 }] },
+    options: {
+      responsive: true, maintainAspectRatio: false, animation: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: {
+        label: c => `${fmt(c.raw)} pages · ${fmt(Math.round(c.raw / Math.max(1, days[c.dataIndex])))} a day${c.dataIndex === curM - 1 ? ' (month in progress)' : ''}`
+      } } },
+      scales: { x: { grid: { display: false } }, y: { beginAtZero: true, grid: { color: css('--line') }, ticks: { maxTicksLimit: 5, callback: v => fmt(v) } } }
+    }
+  };
+  if (monthChart) monthChart.destroy();
+  monthChart = new Chart($('monthChart'), cfg);
+}
+
+function renderHeat(totals) {
+  const box = $('heat');
+  box.textContent = '';
+  const t = today(), y = t.slice(0, 4);
+  const jan1 = `${y}-01-01`, dec31 = `${y}-12-31`;
+  const lead = (fromIso(jan1).getDay() + 6) % 7; // Monday-first rows
+  const strength = p => p <= 0 ? 0 : p < 50 ? .3 : p < 100 ? .5 : p < 200 ? .78 : 1;
+  let col = 0, lastMonth = -1;
+  const frag = document.createDocumentFragment();
+  const addMonthLabel = (m, c) => { const s = document.createElement('span'); s.className = 'm'; s.style.gridColumn = String(c + 1); s.textContent = MONTHS[m]; frag.appendChild(s); };
+  for (let i = 0; i < lead; i++) { const c = document.createElement('i'); c.style.visibility = 'hidden'; c.style.gridRow = String(i + 2); c.style.gridColumn = '1'; frag.appendChild(c); }
+  for (let d = jan1, i = lead; d <= dec31; d = addDays(d, 1), i++) {
+    col = Math.floor(i / 7);
+    const m = Number(d.slice(5, 7)) - 1;
+    if (m !== lastMonth) { addMonthLabel(m, col); lastMonth = m; }
+    const c = document.createElement('i');
+    c.className = 'c';
+    c.style.gridRow = String((i % 7) + 2);
+    c.style.gridColumn = String(col + 1);
+    if (d > t) c.setAttribute('data-future', '');
+    else { const p = totals.get(d) || 0; c.style.background = mix(BASE.raise, dayColour(d), strength(p)); c.title = `${fromIso(d).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })}: ${fmt(p)} pages`; }
+    frag.appendChild(c);
+  }
+  box.appendChild(frag);
+}
+
+function renderAll() {
+  applyTheme();
+  const totals = dailyTotals();
+  renderStats(totals);
+  renderBooks();
+  renderToday();
+  chartBase();
+  renderDaily(totals);
+  renderMonthly(totals);
+  renderHeat(totals);
+}
+
+/* ---------- connection ---------- */
+function setStatus(kind, text) { $('status').dataset.state = kind; $('statusText').textContent = text; }
+function notice(text, kind) { const n = $('notice'); if (!text) { n.hidden = true; return; } n.textContent = text; n.dataset.kind = kind || ''; n.hidden = false; }
+
+function explain(err) {
+  switch (err && err.code) {
+    case 'server_not_connected': return 'Google Sheets isn\'t connected for your account. Add it in claude.ai Settings → Connectors, then press Refresh.';
+    case 'needs_reauth': return 'Your Google Sheets connection has expired. Reconnect it in claude.ai Settings → Connectors, then press Refresh.';
+    case 'selection_required': return 'You have more than one Google Sheets connector. Choose one when Claude asks, then press Refresh.';
+    case 'not_in_manifest': case 'consent_required': return 'This page isn\'t allowed to use Google Sheets yet. Allow it from the page\'s permissions, then press Refresh.';
+    case 'blocked_by_policy': return 'Your organisation blocks Google Sheets for this page.';
+    case 'server_unavailable': return 'Google Sheets didn\'t answer in time. Press Refresh to try again.';
+    case 'tool_error': return 'Google Sheets reported a problem: ' + (err.message || 'unknown error') + '.';
+    case 'not_granted': case 'capability_disabled': case 'capability_removed': return 'This view can\'t reach your connectors. Open the page in Claude to connect your sheet.';
+    default: return 'Couldn\'t reach your sheet' + (err && err.message ? ': ' + err.message : '') + '. Press Refresh to try again.';
+  }
+}
+
+async function readRange(range) {
+  const res = await state.mcp.callTool(SERVER, 'get_values', { spreadsheetId: SHEET_ID, range }, { cache: false });
+  const p = res.payload;
+  return (p && Array.isArray(p.values)) ? p.values : [];
+}
+
+async function refresh() {
+  if (!state.mcp) return;
+  setStatus('loading', 'Loading from your sheet…');
+  $('refreshBtn').disabled = true;
+  try {
+    const [log, books, settings] = await Promise.all([
+      readRange("'Reading Log'!A1:G20000"),
+      readRange('Books!A1:M5000'),
+      readRange("'App Settings'!A1:B50")
+    ]);
+    // Reading Log: header row, then one row per entry
+    const lh = (log[0] || []).map(h => String(h).trim());
+    const li = k => lh.indexOf(k);
+    state.entries = log.slice(1).map(r => ({
+      date: toDate(r[li('date')]), pages: toNum(r[li('pages')]),
+      bookId: String(r[li('bookId')] ?? '').trim(), title: String(r[li('title')] ?? ''),
+      pageReached: toNum(r[li('pageReached')]) || null, source: String(r[li('source')] ?? '')
+    })).filter(e => e.date && e.pages > 0);
+    // Books: columns found by header name, so column moves in the sheet don't break this
+    const bh = (books[0] || []).map(h => String(h).trim());
+    const bi = k => bh.indexOf(k);
+    state.books = books.slice(1).filter(r => String(r[bi('status')] ?? '').trim() === 'Reading').map(r => ({
+      id: String(r[bi('id')] ?? '').trim(), title: String(r[bi('title')] ?? ''), author: String(r[bi('author')] ?? ''),
+      currentPage: toNum(r[bi('currentPage')]), pages: toNum(r[bi('pages')])
+    })).filter(b => b.id);
+    for (const r of settings.slice(1)) {
+      const k = String(r[0] ?? '').trim(), v = r[1];
+      if (k === 'streakStartDate') state.settings.streakStartDate = toDate(v) || state.settings.streakStartDate;
+      else if (k === 'streakMinPages') state.settings.streakMinPages = toNum(v) || 1;
+      else if (k === 'dailyGoalPages') state.settings.dailyGoalPages = toNum(v) || 100;
+    }
+    state.live = true;
+    notice('');
+    setStatus('live', 'Live from your sheet · ' + new Date().toLocaleTimeString('en-AU', { hour: 'numeric', minute: '2-digit' }));
+    renderAll();
+  } catch (err) {
+    setStatus('error', state.live ? 'Showing the last data loaded' : 'Showing the 9 Oct snapshot');
+    notice(explain(err), 'error');
+  } finally {
+    $('refreshBtn').disabled = false;
+  }
+}
+
+// Update the book's currentPage in the Books tab: find its row by id right before writing,
+// and only ever move the page forward. Touches exactly one cell.
+async function updateBookPage(bookId, pageReached) {
+  const header = (await readRange('Books!A1:AZ1'))[0] || [];
+  const col = name => header.findIndex(h => String(h).trim() === name);
+  const idCol = col('id'), pageCol = col('currentPage');
+  if (idCol < 0 || pageCol < 0) throw { code: 'tool_error', message: 'Books tab is missing an id or currentPage column' };
+  const letter = i => { let s = ''; i++; while (i) { const r = (i - 1) % 26; s = String.fromCharCode(65 + r) + s; i = Math.floor((i - 1) / 26); } return s; };
+  const ids = await readRange(`Books!${letter(idCol)}1:${letter(idCol)}5000`);
+  const hits = ids.map((r, i) => String(r[0] ?? '').trim() === bookId ? i + 1 : 0).filter(Boolean);
+  if (hits.length !== 1) throw { code: 'tool_error', message: hits.length ? `ID ${bookId} appears ${hits.length} times in Books` : `ID ${bookId} not found in Books` };
+  const cell = `Books!${letter(pageCol)}${hits[0]}`;
+  const cur = toNum(((await readRange(cell))[0] || [])[0]);
+  if (pageReached <= cur) return;
+  await state.mcp.callTool(SERVER, 'update_values', { spreadsheetId: SHEET_ID, range: cell, values: [[pageReached]] }, { cache: false });
+  const b = state.books.find(x => x.id === bookId); if (b) b.currentPage = pageReached;
+}
+
+async function logEntry({ pages, bookId = '', title = '', pageReached = '' }, btn) {
+  if (state.busy) return;
+  if (!state.mcp) { notice('Logging needs the live connection. Open this page in Claude to connect your sheet.', 'error'); return; }
+  state.busy = true;
+  const oldLabel = btn.textContent;
+  let ok = false;
+  btn.disabled = true; btn.textContent = 'Saving…';
+  const now = new Date();
+  const row = [iso(now), pages, bookId, title, pageReached, `${iso(now)} ${pad(now.getHours())}:${pad(now.getMinutes())}`, 'app'];
+  try {
+    await state.mcp.callTool(SERVER, 'append_values', { spreadsheetId: SHEET_ID, range: "'Reading Log'!A1", values: [row] }, { cache: false });
+    state.entries.push({ date: row[0], pages, bookId, title, pageReached: pageReached || null, source: 'app' });
+    renderAll();
+    notice('');
+    if (bookId && pageReached) {
+      try { await updateBookPage(bookId, pageReached); renderAll(); }
+      catch (e) { notice(`Your pages were logged, but the book's page in the Books tab wasn't updated: ${e.message || e.code}. You can change it in the sheet.`, 'error'); }
+    }
+    ok = true;
+    setStatus('live', `Saved ${pages} pages · ` + now.toLocaleTimeString('en-AU', { hour: 'numeric', minute: '2-digit' }));
+  } catch (err) {
+    const unsure = err && (err.code === 'server_unavailable' || err.code === 'upstream_error' || err.code === 'cancelled');
+    notice(unsure ? 'The save may or may not have gone through. Checking your sheet now so nothing is logged twice.' : explain(err), 'error');
+    if (unsure) await refresh();
+  } finally {
+    state.busy = false;
+    btn.disabled = false; btn.textContent = oldLabel;
+  }
+  return ok;
+}
+
+/* ---------- wiring ---------- */
+$('refreshBtn').addEventListener('click', () => refresh());
+$('quickBtn').addEventListener('click', () => {
+  const v = parseInt($('quickPages').value, 10);
+  if (!v || v < 1) { $('quickPages').focus(); return; }
+  logEntry({ pages: v }, $('quickBtn')).then(ok => { if (ok) $('quickPages').value = ''; });
+});
+document.querySelectorAll('.range-tabs button').forEach(b => b.addEventListener('click', () => {
+  state.range = Number(b.dataset.range);
+  document.querySelectorAll('.range-tabs button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+  renderDaily(dailyTotals());
+}));
+// Redraw charts when the theme flips so their colours follow
+const redraw = () => { chartBase(); const t = dailyTotals(); renderDaily(t); renderMonthly(t); };
+void redraw;
+
+renderAll();
+setStatus('loading', 'Connecting to your sheet…');
+(async () => {
+  const mcp = window.claude && window.claude.use ? await window.claude.use('mcp') : null;
+  if (!mcp) {
+    setStatus('error', 'Showing the 9 Oct snapshot');
+    notice('This view can\'t reach Google Sheets, so you\'re seeing a snapshot. Open the page in Claude to see live data and log pages.');
+    return;
+  }
+  state.mcp = mcp;
+  refresh();
+})();
+</script>

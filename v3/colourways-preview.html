@@ -1,0 +1,289 @@
+<title>Library Colourways</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@400;500;600&display=swap">
+<style>
+/* Layout: scheme picker across the top, one large live preview of the reading log below it, month strip for the seasonal option.
+   Deliberately dark-only: every option is a dark theme, so the page commits to one look. */
+:root{
+  --page:#0e0d14; --page-fg:#ecebf3; --page-muted:#9a97ad; --page-line:#2a2836;
+  --display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --body:"Figtree",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  color-scheme:dark;
+  /* preview tokens, overwritten by the chosen scheme */
+  --bg:#16141f; --surface:#1e1b2b; --raise:#2a2640; --line:#353050; --fg:#f1effa; --muted:#a49fbf;
+  --primary:#6d4aff; --primary-ink:#fff; --hl:#c4f04a; --grad:linear-gradient(90deg,#6d4aff,#6d4aff);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--page);color:var(--page-fg);font:15px/1.5 var(--body)}
+.wrap{max-width:1180px;margin:0 auto;padding-inline:16px;padding-block:24px 56px}
+h1,h2,h3,.num{font-family:var(--display)}
+h1{font-size:clamp(28px,4.5vw,40px);font-weight:800;letter-spacing:-.02em;margin:0 0 6px;text-wrap:balance}
+.lede{color:var(--page-muted);max-width:64ch;margin:0 0 22px}
+.eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:.09em;font-weight:600}
+.tnum{font-variant-numeric:tabular-nums}
+
+/* picker */
+.picker{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:22px}
+.pick{all:unset;cursor:pointer;display:flex;flex-direction:column;gap:10px;padding:14px;border-radius:12px;border:1px solid var(--page-line);background:#15141d;min-width:0}
+.pick:hover{border-color:#4a4760}
+.pick[aria-pressed="true"]{border-color:var(--page-fg);box-shadow:0 0 0 1px var(--page-fg) inset}
+.pick:focus-visible{outline:2px solid var(--page-fg);outline-offset:2px}
+.pick h3{margin:0;font-size:16px;font-weight:700}
+.pick p{margin:0;font-size:13px;color:var(--page-muted);line-height:1.4}
+.swatches{display:flex;height:28px;border-radius:6px;overflow:hidden}
+.swatches i{flex:1}
+
+/* the preview — everything inside uses the scheme tokens */
+.preview{background:var(--bg);color:var(--fg);border-radius:16px;padding:20px;border:1px solid var(--line);transition:background .3s}
+.pv-head{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.pv-head h2{margin:0;font-size:26px;font-weight:800;letter-spacing:-.02em}
+.pv-head .eyebrow{color:var(--muted)}
+.chip{font-size:12px;font-weight:600;padding:4px 10px;border-radius:999px;border:1px solid var(--hl);color:var(--hl)}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:16px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.stat .eyebrow{color:var(--muted)}
+.stat .num{font-size:clamp(26px,3.6vw,36px);font-weight:800;line-height:1.05;letter-spacing:-.02em}
+.stat .sub{font-size:13px;color:var(--muted)}
+.stat.streak{position:relative;overflow:hidden;border-color:transparent;background:var(--surface)}
+.stat.streak::before{content:"";position:absolute;inset:0;background:var(--grad);opacity:.28}
+.stat.streak::after{content:"";position:absolute;inset:0;border-radius:12px;padding:1px;background:var(--grad);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude}
+.stat.streak > *{position:relative}
+.stat.streak .num{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.goalbar{height:6px;border-radius:3px;background:var(--raise);overflow:hidden;margin-top:6px}
+.goalbar i{display:block;height:100%;width:3%;background:var(--hl);border-radius:3px}
+.pv-grid{display:grid;grid-template-columns:minmax(0,340px) minmax(0,1fr);gap:16px;align-items:start}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;min-width:0}
+.panel + .panel{margin-top:16px}
+.panel h3{margin:0 0 12px;font-size:16px;font-weight:700}
+.book{padding:12px 0;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:8px}
+.book:first-of-type{border-top:0;padding-top:0}
+.book b{font-weight:600}
+.book small{color:var(--muted);font-size:13px}
+.prog{height:5px;background:var(--raise);border-radius:3px;overflow:hidden}
+.prog i{display:block;height:100%;background:var(--grad);border-radius:3px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+.fake-input{width:84px;padding:7px 10px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--fg);font-variant-numeric:tabular-nums}
+.fake-input.focus{border-color:var(--hl);box-shadow:0 0 0 1px var(--hl)}
+.btn{padding:7px 14px;border-radius:8px;font-weight:600;font-size:13px;background:var(--primary);color:var(--primary-ink);border:0}
+.delta{color:var(--hl);font-weight:600}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:8px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{width:10px;height:10px;border-radius:2px;display:inline-block}
+svg{display:block;width:100%;height:auto}
+.heat{display:grid;grid-template-rows:repeat(7,11px);grid-auto-flow:column;grid-auto-columns:11px;gap:3px;overflow-x:auto}
+.heat i{border-radius:2px}
+
+/* months */
+.months{margin-top:22px}
+.months h2{font-size:20px;margin:0 0 4px}
+.months p{color:var(--page-muted);margin:0 0 12px;max-width:68ch}
+.mstrip{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:6px}
+.m{all:unset;cursor:pointer;border-radius:10px;padding:10px 6px;text-align:center;font-size:12px;font-weight:600;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.4);min-width:0}
+.m small{display:block;font-weight:500;opacity:.85;font-size:10px}
+.m[aria-pressed="true"]{box-shadow:0 0 0 2px var(--page-fg)}
+.m:focus-visible{outline:2px solid var(--page-fg);outline-offset:2px}
+.note{margin-top:22px;padding:14px 16px;border:1px solid var(--page-line);border-radius:12px;color:var(--page-muted);font-size:14px}
+.note b{color:var(--page-fg)}
+
+@media (max-width:900px){
+  .picker{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .pv-grid{grid-template-columns:minmax(0,1fr)}
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .mstrip{grid-template-columns:repeat(6,minmax(0,1fr))}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <h1>Library Colourways</h1>
+  <p class="lede">Four directions built from your references: Proton's calm night tones, the Vantage's lime, cobalt, and the way the Dune covers blend one colour into the next. Pick one to see it on your real reading log. The numbers are your actual pages from this year.</p>
+
+  <div class="picker" role="group" aria-label="Colour scheme" id="picker"></div>
+
+  <section class="preview" id="preview" aria-label="Preview">
+    <div class="pv-head">
+      <div><div class="eyebrow" id="pvDate">Friday 9 October</div><h2>My Reading Log</h2></div>
+      <span class="chip" id="pvChip">Live from your sheet</span>
+    </div>
+    <div class="stats">
+      <div class="stat streak"><span class="eyebrow">Reading streak</span><span class="num tnum">554</span><span class="sub">days, including today</span></div>
+      <div class="stat"><span class="eyebrow">Today</span><span class="num tnum">3</span><span class="sub">of 100 pages · 97 to go</span><div class="goalbar"><i></i></div></div>
+      <div class="stat"><span class="eyebrow">Oct so far</span><span class="num tnum">1,125</span><span class="sub">8 of 9 days at goal</span></div>
+      <div class="stat"><span class="eyebrow">2026 so far</span><span class="num tnum">35,564</span><span class="sub">126 a day on average</span></div>
+    </div>
+    <div class="pv-grid">
+      <div>
+        <div class="panel">
+          <h3>Log your reading</h3>
+          <div class="book"><div><b>Boy Swallows Universe</b><br><small>Trent Dalton · page 65 of 343 · 19%</small></div><div class="prog"><i style="width:19%"></i></div>
+            <div class="row">On page <span class="fake-input focus">92</span><span class="btn">Log</span><span class="delta">+27 pages</span></div></div>
+          <div class="book"><div><b>Dune: The Graphic Novel, Book 3</b><br><small>Herbert &amp; Anderson · page 68 of 194 · 35%</small></div><div class="prog"><i style="width:35%"></i></div>
+            <div class="row">On page <span class="fake-input">69</span><span class="btn">Log</span></div></div>
+          <div class="book"><div><b>Footnotes in Gaza</b><br><small>Joe Sacco · page 29 of 436 · 7%</small></div><div class="prog"><i style="width:7%"></i></div>
+            <div class="row">On page <span class="fake-input">30</span><span class="btn">Log</span></div></div>
+        </div>
+      </div>
+      <div>
+        <div class="panel">
+          <h3>Pages per day · last 60 days</h3>
+          <div id="daily"></div>
+          <div class="legend" id="dailyLegend"></div>
+        </div>
+        <div class="panel">
+          <h3>Monthly totals</h3>
+          <div id="monthly"></div>
+        </div>
+        <div class="panel">
+          <h3>Reading calendar · last 20 weeks</h3>
+          <div class="heat" id="heat"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="months" id="monthsSec">
+    <h2>Colour by month</h2>
+    <p id="monthsIntro"></p>
+    <div class="mstrip" id="mstrip" role="group" aria-label="Month"></div>
+  </section>
+
+  <div class="note"><b>What to tell me:</b> which option (or which parts of each) you like, and whether the colour should change each month in every option or only in Seasons. Nothing in your app or sheet changes until you choose.</div>
+</div>
+
+<script>
+const PAGES = [79,128,188,153,77,88,172,130,104,130,198,141,75,126,111,74,54,109,81,115,73,107,118,207,210,81,80,60,153,65,40,87,158,75,105,87,66,274,215,28,67,90,74,105,232,114,89,63,104,101,71,203,282,112,70,67,83,144,101,91,93,108,105,52,67,190,105,124,60,108,131,140,142,141,120,103,69,73,88,125,195,76,100,76,48,112,215,174,100,121,219,125,125,194,251,132,77,119,68,141,67,52,79,78,118,100,90,205,169,119,58,55,15,36,238,175,66,89,89,64,102,118,61,86,105,71,147,67,278,302,121,284,78,68,107,145,86,121,108,120,112,52,105,167,101,74,105,116,165,168,200,115,102,217,237,118,115,127,164,255,20,104,117,105,86,216,257,289,251,293,63,246,120,202,186,104,156,318,186,191,234,147,152,143,262,168,106,117,87,51,22,100,159,89,119,95,98,67,192,171,123,104,109,116,71,3,279,122,105,73,85,96,203,224,107,123,104,109,83,108,168,145,130,136,106,239,97,219,122,85,168,128,215,158,157,227,346,93,244,49,52,100,91,83,146,102,116,107,169,91,69,81,114,65,131,97,109,100,138,157,152,172,154,109,111,122,106,210,107,10,56,106,189,117,151,322,117,108,103,106,98,3];
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const GOAL = 100;
+
+// Interpolate along a list of colour stops: t in [0,1]
+function hex(h){h=h.replace('#','');return [0,2,4].map(i=>parseInt(h.slice(i,i+2),16));}
+function mix(stops,t){t=Math.max(0,Math.min(1,t));const s=t*(stops.length-1),i=Math.min(stops.length-2,Math.floor(s)),f=s-i;const a=hex(stops[i]),b=hex(stops[i+1]);return 'rgb('+a.map((v,k)=>Math.round(v+(b[k]-v)*f)).join(',')+')';}
+
+// Southern-hemisphere seasons: Dec–Feb summer, Mar–May autumn, Jun–Aug winter, Sep–Nov spring.
+const SEASON_MONTHS = [
+  { c:'#ff8a3d', s:'Summer' }, { c:'#ff6a4d', s:'Summer' }, { c:'#e8574a', s:'Autumn' },
+  { c:'#d9487f', s:'Autumn' }, { c:'#a64bff', s:'Autumn' }, { c:'#6a5cff', s:'Winter' },
+  { c:'#2f6bff', s:'Winter' }, { c:'#1f8fe0', s:'Winter' }, { c:'#14b8a6', s:'Spring' },
+  { c:'#8fd43a', s:'Spring' }, { c:'#c6e23a', s:'Spring' }, { c:'#ffb02e', s:'Summer' }
+];
+
+const SCHEMES = [
+  { id:'night', name:'Proton Night', blurb:'Soft navy-violet base, one violet colour for actions, lime only for wins.',
+    t:{bg:'#16141f',surface:'#1e1b2b',raise:'#2a2640',line:'#353050',fg:'#f1effa',muted:'#a49fbf',primary:'#6d4aff','primary-ink':'#ffffff',hl:'#c4f04a'},
+    grad:['#6d4aff','#9b7bff'], bars:{mode:'goal', hit:'#8b6dff', under:'#3d3566'}, heat:['#2a2640','#3f3470','#5b45b8','#7e5cff','#c4f04a'] },
+  { id:'cobalt', name:'Cobalt & Lime', blurb:'Deep navy with cobalt as the main colour and lime used as a fine line and for goal days.',
+    t:{bg:'#0b1120',surface:'#111a30',raise:'#192543',line:'#243358',fg:'#eef3ff',muted:'#93a3c8',primary:'#2a63e8','primary-ink':'#ffffff',hl:'#c6f432'},
+    grad:['#0047ab','#2f7bff'], bars:{mode:'goal', hit:'#3b7bff', under:'#1d3266'}, heat:['#192543','#16367a','#1f55c2','#3b7bff','#c6f432'] },
+  { id:'arrakis', name:'Arrakis Blend', blurb:'Taken from the Dune covers. Bars and calendar blend violet to magenta to amber as the page count climbs.',
+    t:{bg:'#130f1b',surface:'#1c1626',raise:'#281f36',line:'#372b4a',fg:'#fbf3ef',muted:'#b3a5b9',primary:'#ff6a3d','primary-ink':'#1b0c05',hl:'#ffd166'},
+    grad:['#3a5bff','#a24bff','#ff4fa3','#ff9a3d','#ffd166'], bars:{mode:'blend', stops:['#3a5bff','#a24bff','#ff4fa3','#ff9a3d','#ffd166'], max:300}, heat:['#281f36','#4b3bd6','#c04bd8','#ff6a6a','#ffc14d'] },
+  { id:'seasons', name:'Seasons', blurb:'Proton Night as the base, with the main colour changing each month through Melbourne\'s seasons.',
+    t:{bg:'#15141d',surface:'#1d1b28',raise:'#29263a',line:'#34304a',fg:'#f2f0f8',muted:'#a39fba',primary:'#8fd43a','primary-ink':'#11160a',hl:'#c6f432'},
+    seasonal:true, bars:{mode:'goal'} }
+];
+
+let current = SCHEMES[0], month = 9; // October
+
+function shade(c, amt){ // mix a colour toward the scheme's raise tone for "under goal" bars
+  const r = getComputedStyle(document.documentElement).getPropertyValue('--raise').trim() || '#29263a';
+  return mix([c, r], amt);
+}
+
+function applyScheme(){
+  const root = document.documentElement.style;
+  const t = { ...current.t };
+  let grad = current.grad, heat = current.heat, bars = { ...current.bars };
+  if (current.seasonal) {
+    const c = SEASON_MONTHS[month].c, next = SEASON_MONTHS[(month + 1) % 12].c;
+    t.primary = c; t['primary-ink'] = '#ffffff';
+    grad = [c, next];
+    for (const [k, v] of Object.entries(t)) root.setProperty('--' + k, v);
+    bars = { mode:'goal', hit:c, under:shade(c, .7) };
+    heat = [t.raise, shade(c,.75), shade(c,.5), shade(c,.2), c];
+  }
+  for (const [k, v] of Object.entries(t)) root.setProperty('--' + k, v);
+  root.setProperty('--grad', `linear-gradient(100deg, ${grad.join(', ')})`);
+  drawDaily(bars, t);
+  drawMonthly(bars, t, grad);
+  drawHeat(heat);
+  document.querySelectorAll('.pick').forEach(p => p.setAttribute('aria-pressed', String(p.dataset.id === current.id)));
+  $('monthsIntro').textContent = current.seasonal
+    ? `Click a month to preview it. October is spring green, winter runs through blues, summer through the Dune oranges.`
+    : `Seasons uses this strip. Any of the other options could change its main colour by month the same way. Pick Seasons above to try it.`;
+}
+
+const $ = id => document.getElementById(id);
+const svgNS = 'http://www.w3.org/2000/svg';
+
+function drawDaily(bars, t){
+  const data = PAGES.slice(-60), W = 640, H = 200, padL = 28, padB = 18, padT = 8;
+  const max = 350, bw = (W - padL) / data.length;
+  const y = v => padT + (H - padT - padB) * (1 - v / max);
+  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Pages per day for the last 60 days">`;
+  for (const g of [100, 200, 300]) s += `<line x1="${padL}" x2="${W}" y1="${y(g)}" y2="${y(g)}" stroke="${t.line}" stroke-width="1"/><text x="${padL - 6}" y="${y(g) + 4}" text-anchor="end" font-size="10" fill="${t.muted}">${g}</text>`;
+  data.forEach((v, i) => {
+    const fill = bars.mode === 'blend' ? mix(bars.stops, v / bars.max) : (v >= GOAL ? bars.hit : bars.under);
+    const h = Math.max(1, (H - padT - padB) * Math.min(v, max) / max);
+    s += `<rect x="${padL + i * bw + 1}" y="${y(Math.min(v, max))}" width="${Math.max(1, bw - 2)}" height="${h}" rx="1.5" fill="${fill}"/>`;
+  });
+  // 7-day average line
+  const avg = data.map((_, i) => { const w = data.slice(Math.max(0, i - 6), i + 1); return w.reduce((a, b) => a + b, 0) / w.length; });
+  s += `<polyline fill="none" stroke="${t.hl}" stroke-width="2" points="${avg.map((v, i) => `${padL + i * bw + bw / 2},${y(v)}`).join(' ')}"/>`;
+  s += `<line x1="${padL}" x2="${W}" y1="${y(GOAL)}" y2="${y(GOAL)}" stroke="${t.fg}" stroke-opacity=".55" stroke-dasharray="4 4"/>`;
+  s += `<text x="${W}" y="${y(GOAL) - 4}" text-anchor="end" font-size="10" fill="${t.muted}">Goal 100</text>`;
+  s += `<text x="${padL}" y="${H - 4}" font-size="10" fill="${t.muted}">11 Aug</text><text x="${W}" y="${H - 4}" text-anchor="end" font-size="10" fill="${t.muted}">Today</text></svg>`;
+  $('daily').innerHTML = s;
+  $('dailyLegend').innerHTML = bars.mode === 'blend'
+    ? `<span><i class="sw" style="background:linear-gradient(90deg,${bars.stops.join(',')})"></i>Colour blends with pages read (0 → 300+)</span><span><i class="sw" style="background:${t.hl}"></i>7-day average</span>`
+    : `<span><i class="sw" style="background:${bars.hit}"></i>Hit 100-page goal</span><span><i class="sw" style="background:${bars.under}"></i>Under goal</span><span><i class="sw" style="background:${t.hl}"></i>7-day average</span>`;
+}
+
+function drawMonthly(bars, t, grad){
+  const tot = new Array(10).fill(0); let d = new Date(2026, 0, 1);
+  PAGES.forEach(p => { tot[d.getMonth()] += p; d.setDate(d.getDate() + 1); });
+  const W = 640, H = 170, padL = 34, padB = 18, padT = 16, max = 6000, bw = (W - padL) / tot.length;
+  const y = v => padT + (H - padT - padB) * (1 - v / max);
+  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Pages per month this year"><defs><linearGradient id="mg" x1="0" y1="1" x2="0" y2="0">${grad.map((c, i) => `<stop offset="${i / (grad.length - 1)}" stop-color="${c}"/>`).join('')}</linearGradient></defs>`;
+  for (const g of [2000, 4000, 6000]) s += `<line x1="${padL}" x2="${W}" y1="${y(g)}" y2="${y(g)}" stroke="${t.line}"/><text x="${padL - 6}" y="${y(g) + 4}" text-anchor="end" font-size="10" fill="${t.muted}">${g / 1000}k</text>`;
+  tot.forEach((v, i) => {
+    const x = padL + i * bw + bw * .2, w = bw * .6;
+    const fill = current.seasonal ? SEASON_MONTHS[i].c : 'url(#mg)';
+    s += `<rect x="${x}" y="${y(v)}" width="${w}" height="${H - padB - y(v)}" rx="3" fill="${fill}" ${i === 9 ? 'fill-opacity=".55"' : ''}/>`;
+    s += `<text x="${x + w / 2}" y="${H - 4}" text-anchor="middle" font-size="10" fill="${t.muted}">${MONTHS[i]}</text>`;
+    if (i === 5) s += `<text x="${x + w / 2}" y="${y(v) - 4}" text-anchor="middle" font-size="10" font-weight="600" fill="${t.fg}">${v.toLocaleString('en-AU')}</text>`;
+  });
+  $('monthly').innerHTML = s + '</svg>';
+}
+
+function drawHeat(levels){
+  const last = PAGES.slice(-140);
+  const lv = p => p <= 0 ? 0 : p < 50 ? 1 : p < 100 ? 2 : p < 200 ? 3 : 4;
+  $('heat').innerHTML = last.map(p => `<i style="background:${levels[lv(p)]}" title="${p} pages"></i>`).join('');
+}
+
+// picker
+for (const s of SCHEMES) {
+  const b = document.createElement('button');
+  b.className = 'pick'; b.type = 'button'; b.dataset.id = s.id;
+  const sw = s.seasonal ? SEASON_MONTHS.map(m => m.c) : [s.t.bg, s.t.surface, ...(s.grad || []), s.t.hl];
+  b.innerHTML = `<div class="swatches">${sw.map(c => `<i style="background:${c}"></i>`).join('')}</div><h3></h3><p></p>`;
+  b.querySelector('h3').textContent = s.name;
+  b.querySelector('p').textContent = s.blurb;
+  b.addEventListener('click', () => { current = s; applyScheme(); });
+  $('picker').appendChild(b);
+}
+// months
+SEASON_MONTHS.forEach((m, i) => {
+  const b = document.createElement('button');
+  b.className = 'm'; b.type = 'button'; b.style.background = m.c;
+  b.innerHTML = `${MONTHS[i]}<small>${m.s}</small>`;
+  b.setAttribute('aria-pressed', String(i === month));
+  b.addEventListener('click', () => {
+    month = i;
+    document.querySelectorAll('.m').forEach((x, k) => x.setAttribute('aria-pressed', String(k === i)));
+    current = SCHEMES.find(s => s.seasonal); applyScheme();
+  });
+  $('mstrip').appendChild(b);
+});
+applyScheme();
+</script>
