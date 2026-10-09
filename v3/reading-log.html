@@ -262,7 +262,7 @@ dialog::backdrop{background:rgba(8,6,14,.65)}
         <tbody id="libBody"></tbody>
       </table>
     </div>
-    <div class="lib-foot"><span id="libCount"></span><button class="btn" id="libMore" type="button" hidden>Show 100 more</button></div>
+    <div class="lib-foot"><span><span id="libCount"></span> <button class="btn" id="libSheetOrder" type="button" hidden>Back to sheet order</button></span><button class="btn" id="libMore" type="button" hidden>Show 100 more</button></div>
   </div>
 </div>
 
@@ -337,7 +337,7 @@ const state = {
   settings: { ...SNAPSHOT.settings },
   mcp: null, live: false, busy: false, range: 90,
   allBooks: [], header: [], libLoaded: false,
-  lib: { q: '', status: 'All', type: '', format: '', genre: '', owned: '', sort: 'title', dir: 1, limit: 100, open: null }
+  lib: { q: '', status: 'All', type: '', format: '', genre: '', owned: '', sort: 'sheet', dir: 1, limit: 100, open: null }
 };
 
 function dailyTotals() {
@@ -660,8 +660,8 @@ async function refresh() {
     const bh = (books[0] || []).map(h => String(h).trim());
     const bi = k => bh.indexOf(k);
     state.header = bh;
-    state.allBooks = books.slice(1).map(r => {
-      const o = {};
+    state.allBooks = books.slice(1).map((r, idx) => {
+      const o = { _row: idx };
       bh.forEach((h, i) => { o[h] = String(r[i] ?? '').trim(); });
       return o;
     }).filter(o => o.id && o.title);
@@ -785,6 +785,7 @@ async function addBook(fields) {
     await state.mcp.callTool(SERVER, 'update_values', { spreadsheetId: SHEET_ID, range: `Books!${colLetter(ci('%'))}${r}`, values: [[`=${C}${r}/${P}${r}*100`]] }, { cache: false });
   }
   const book = { ...Object.fromEntries(header.map(h => [h, ''])), ...Object.fromEntries(Object.entries(fields).map(([k, v]) => [k, String(v ?? '').trim()])), id };
+  book._row = state.allBooks.length;
   state.allBooks.push(book);
   syncReadingBooks();
   return book;
@@ -800,9 +801,8 @@ const LIB_COLS = [
 ];
 const starStr = r => { const n = toNum(r); if (!n) return ''; return '★'.repeat(Math.floor(n)) + (n % 1 >= .5 ? '½' : ''); };
 const sortKey = (b, k) => {
-  if (['currentPage', 'pages', 'rating', 'year'].includes(k)) return toNum(b[k]);
-  if (k === 'remain') return Math.max(0, toNum(b.pages) - toNum(b.currentPage));
-  if (k === '%') return toNum(b.pages) ? toNum(b.currentPage) / toNum(b.pages) : 0;
+  if (k === 'sheet') return b._row;
+  if (['currentPage', 'pages', 'rating', 'year', 'remain', '%'].includes(k)) return b[k] === '' || b[k] == null ? -1 : toNum(b[k]);
   return String(b[k] || '').toLowerCase();
 };
 function libFiltered() {
@@ -838,8 +838,8 @@ function renderLibrary() {
     const pages = toNum(b.pages), cur = toNum(b.currentPage);
     const cells = {
       title: `<span class="t"></span>`, author: '', status: `<span class="pill" data-s="${b.status}">${b.status || '–'}</span>`,
-      currentPage: cur ? fmt(cur) : '', pages: pages ? fmt(pages) : '', remain: pages ? fmt(Math.max(0, pages - cur)) : '',
-      '%': pages ? Math.round(cur / pages * 100) + '%' : '', rating: `<span class="stars">${starStr(b.rating)}</span>`,
+      currentPage: b.currentPage === '' ? '' : fmt(cur), pages: b.pages === '' ? '' : fmt(pages), remain: b.remain || '',
+      '%': b['%'] || '', rating: `<span class="stars">${starStr(b.rating)}</span>`,
       startDate: b.startDate || '', finishDate: b.finishDate || '', year: b.year || ''
     };
     tr.innerHTML = LIB_COLS.map(c => `<td class="${c.num ? 'num tnum' : ''}">${cells[c.k]}</td>`).join('');
@@ -850,6 +850,8 @@ function renderLibrary() {
   }
   $('libCount').textContent = `Showing ${fmt(Math.min(L.limit, rows.length))} of ${fmt(rows.length)} books`;
   $('libMore').hidden = rows.length <= L.limit;
+  $('libSheetOrder').hidden = L.sort === 'sheet';
+  $('libCount').textContent += L.sort === 'sheet' ? ' · in sheet order' : '';
 }
 function detailRow(b) {
   const tr = document.createElement('tr');
@@ -973,7 +975,15 @@ $('libSearch').addEventListener('input', e => { clearTimeout(searchT); searchT =
 for (const [id, key] of [['libType', 'type'], ['libFormat', 'format'], ['libGenre', 'genre'], ['libOwned', 'owned']])
   $(id).addEventListener('change', e => { state.lib[key] = e.target.value; state.lib.limit = 100; renderLibrary(); });
 $('libChips').addEventListener('click', e => { const c = e.target.closest('.chip'); if (!c) return; state.lib.status = c.dataset.st; state.lib.limit = 100; renderLibrary(); });
-$('libHead').addEventListener('click', e => { const th = e.target.closest('th'); if (!th) return; const k = th.dataset.k; if (state.lib.sort === k) state.lib.dir *= -1; else { state.lib.sort = k; state.lib.dir = ['rating', 'finishDate', 'startDate', 'year', 'pages', '%', 'currentPage'].includes(k) ? -1 : 1; } renderLibrary(); });
+$('libHead').addEventListener('click', e => {
+  const th = e.target.closest('th'); if (!th) return; const k = th.dataset.k, L = state.lib;
+  const first = ['rating', 'finishDate', 'startDate', 'year', 'pages', '%', 'currentPage', 'remain'].includes(k) ? -1 : 1;
+  if (L.sort !== k) { L.sort = k; L.dir = first; }
+  else if (L.dir === first) L.dir = -first;
+  else { L.sort = 'sheet'; L.dir = 1; }
+  renderLibrary();
+});
+$('libSheetOrder').addEventListener('click', () => { state.lib.sort = 'sheet'; state.lib.dir = 1; renderLibrary(); });
 $('libBody').addEventListener('click', e => {
   const ed = e.target.closest('[data-edit]');
   if (ed) { openBookDialog(state.allBooks.find(b => b.id === ed.dataset.edit)); return; }
