@@ -1,4 +1,4 @@
-<title>My Reading Log</title>
+<title>My Book Library</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@400;500;600&display=swap">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
@@ -87,7 +87,63 @@ input[type="number"]:focus{border-color:var(--accent);outline:none}
 .heat .c[data-future]{background:transparent;outline:1px dashed var(--line);outline-offset:-1px}
 .heat .m{font-size:10px;color:var(--muted);white-space:nowrap;grid-row:1}
 
+/* tabs */
+.tabs{display:flex;gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:4px;margin-bottom:20px;width:max-content;max-width:100%;overflow-x:auto}
+.tab{border:0;background:transparent;color:var(--muted);border-radius:8px;padding:7px 16px;font-weight:600;font-size:14px;white-space:nowrap}
+.tab[aria-selected="true"]{background:color-mix(in srgb,var(--accent) 24%,var(--surface));color:var(--fg);box-shadow:inset 0 -2px 0 var(--accent)}
+.tab:disabled{opacity:.45;cursor:default}
+.tab small{font-weight:500;font-size:11px;margin-left:4px}
+
+/* library */
+.lib-bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:12px}
+.lib-bar input[type="search"],.lib-bar select,.field input,.field select,.field textarea{font:inherit;font-size:14px;background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:7px 10px}
+.lib-bar input[type="search"]{flex:1 1 220px;min-width:0}
+.lib-bar input:focus,.lib-bar select:focus,.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent);outline:none}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.chip{border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:999px;padding:4px 12px;font-size:13px;font-weight:600}
+.chip[aria-pressed="true"]{background:color-mix(in srgb,var(--accent) 24%,var(--surface));border-color:var(--accent);color:var(--fg)}
+.chip .n{font-variant-numeric:tabular-nums;opacity:.7;margin-left:4px;font-weight:500}
+.table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+table.lib{width:100%;border-collapse:collapse;font-size:14px;min-width:860px}
+.lib th{position:sticky;top:0;background:var(--raise);text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600;padding:9px 10px;white-space:nowrap;cursor:pointer;user-select:none}
+.lib th[aria-sort="ascending"]::after{content:" ↑";color:var(--accent)} .lib th[aria-sort="descending"]::after{content:" ↓";color:var(--accent)}
+.lib th.num,.lib td.num{text-align:right}
+.lib td{padding:9px 10px;border-top:1px solid var(--line);vertical-align:top}
+.lib tbody tr.row{cursor:pointer}
+.lib tbody tr.row:hover td{background:color-mix(in srgb,var(--accent) 6%,var(--surface))}
+.lib tr.open td{background:color-mix(in srgb,var(--accent) 9%,var(--surface))}
+.lib .t{font-weight:600;line-height:1.3}
+.pill{display:inline-block;font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px;white-space:nowrap;border:1px solid var(--line);color:var(--muted)}
+.pill[data-s="Reading"]{color:var(--fg);background:color-mix(in srgb,var(--accent) 30%,transparent);border-color:var(--accent)}
+.pill[data-s="Read"]{color:var(--fg);background:var(--raise)}
+.pill[data-s="Paused"]{color:#f2c46d;border-color:#6b5631}
+.pill[data-s="DNF"]{color:#f29a9a;border-color:#6b3a3a}
+.stars{color:color-mix(in srgb,var(--accent) 60%,#fff);letter-spacing:1px;white-space:nowrap}
+.detail td{padding:4px 16px 16px;cursor:default}
+.detail-grid{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:18px}
+.detail p{margin:6px 0 0;max-width:70ch;color:var(--fg)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:13px;margin:0}
+.kv dt{color:var(--muted)} .kv dd{margin:0}
+.lib-foot{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:12px;font-size:13px;color:var(--muted);flex-wrap:wrap}
+
+/* edit dialog */
+dialog{background:var(--surface);color:var(--fg);border:1px solid var(--line);border-radius:16px;padding:0;width:min(760px,calc(100vw - 32px));max-height:calc(100vh - 40px)}
+dialog::backdrop{background:rgba(8,6,14,.65)}
+.dlg-head{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--surface);z-index:1}
+.dlg-head h2{font-size:20px}
+.dlg-body{padding:16px 20px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.dlg-foot{display:flex;justify-content:space-between;gap:10px;padding:14px 20px;border-top:1px solid var(--line);position:sticky;bottom:0;background:var(--surface)}
+.field{display:flex;flex-direction:column;gap:4px;min-width:0}
+.field label{font-size:12px;color:var(--muted);font-weight:600}
+.field.w2{grid-column:span 2} .field.w4{grid-column:1/-1}
+.field textarea{min-height:84px;resize:vertical}
+.sec-label{grid-column:1/-1;font-size:11px;text-transform:uppercase;letter-spacing:.09em;color:var(--accent);font-weight:700;margin-top:6px}
+.finish{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:10px 12px;border-radius:10px;background:color-mix(in srgb,var(--accent) 14%,var(--surface));border:1px solid color-mix(in srgb,var(--accent) 40%,var(--line));font-size:13px}
+.finish select{font:inherit;background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:5px 8px}
+
 @media (max-width:860px){
+  .detail-grid{grid-template-columns:minmax(0,1fr)}
+  .dlg-body{grid-template-columns:repeat(2,minmax(0,1fr))}
   .grid{grid-template-columns:minmax(0,1fr)}
   .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
@@ -98,7 +154,7 @@ input[type="number"]:focus{border-color:var(--accent);outline:none}
   <header>
     <div>
       <div class="eyebrow" id="todayLabel">Today</div>
-      <h1>My Reading Log</h1>
+      <h1>My Book Library</h1>
     </div>
     <div class="status" id="status" data-state="loading" role="status">
       <span class="dot"></span><span id="statusText">Connecting to your sheet…</span>
@@ -108,6 +164,14 @@ input[type="number"]:focus{border-color:var(--accent);outline:none}
 
   <div class="notice" id="notice" hidden></div>
 
+  <nav class="tabs" role="tablist" aria-label="Sections">
+    <button class="tab" role="tab" id="tab-log" aria-selected="true" aria-controls="view-log" type="button">Log</button>
+    <button class="tab" role="tab" id="tab-library" aria-selected="false" aria-controls="view-library" type="button">Library</button>
+    <button class="tab" role="tab" type="button" disabled>Dashboard <small>soon</small></button>
+    <button class="tab" role="tab" type="button" disabled>Tools <small>soon</small></button>
+  </nav>
+
+  <div id="view-log" role="tabpanel" aria-labelledby="tab-log">
   <section class="stats" aria-label="Summary">
     <div class="stat streak">
       <span class="eyebrow">Reading streak</span>
@@ -180,7 +244,35 @@ input[type="number"]:focus{border-color:var(--accent);outline:none}
       </section>
     </div>
   </div>
+  </div>
+
+  <div id="view-library" role="tabpanel" aria-labelledby="tab-library" hidden>
+    <div class="lib-bar">
+      <input type="search" id="libSearch" placeholder="Search title, author, series or theme" aria-label="Search books">
+      <select id="libType" aria-label="Type"><option value="">All types</option></select>
+      <select id="libFormat" aria-label="Format"><option value="">All formats</option></select>
+      <select id="libGenre" aria-label="Genre"><option value="">All genres</option></select>
+      <select id="libOwned" aria-label="Owned"><option value="">Physical &amp; digital</option><option>Physical</option><option>Digital</option></select>
+      <button class="btn btn-primary" id="addBookBtn" type="button">Add book</button>
+    </div>
+    <div class="chips" id="libChips" role="group" aria-label="Status"></div>
+    <div class="table-wrap">
+      <table class="lib">
+        <thead><tr id="libHead"></tr></thead>
+        <tbody id="libBody"></tbody>
+      </table>
+    </div>
+    <div class="lib-foot"><span id="libCount"></span><button class="btn" id="libMore" type="button" hidden>Show 100 more</button></div>
+  </div>
 </div>
+
+<dialog id="bookDlg" aria-labelledby="dlgTitle">
+  <form id="bookForm" method="dialog">
+    <div class="dlg-head"><h2 id="dlgTitle">Edit book</h2><button class="btn" type="button" id="dlgClose">Close</button></div>
+    <div class="dlg-body" id="dlgBody"></div>
+    <div class="dlg-foot"><span class="muted" id="dlgMsg" style="font-size:13px;align-self:center"></span><button class="btn btn-primary" type="submit" id="dlgSave">Save</button></div>
+  </form>
+</dialog>
 
 <script>
 const SHEET_ID = '1558jWeUc8gCzQuph6wOVyOocvTBhQf22UuCSXza8klc';
@@ -243,7 +335,9 @@ const state = {
   entries: SNAPSHOT.pages.map((p, i) => ({ date: addDays(SNAPSHOT.start, i), pages: p, bookId: '', title: '', pageReached: null, source: 'import' })),
   books: SNAPSHOT.books.map(b => ({ ...b })),
   settings: { ...SNAPSHOT.settings },
-  mcp: null, live: false, busy: false, range: 90
+  mcp: null, live: false, busy: false, range: 90,
+  allBooks: [], header: [], libLoaded: false,
+  lib: { q: '', status: 'All', type: '', format: '', genre: '', owned: '', sort: 'title', dir: 1, limit: 100, open: null }
 };
 
 function dailyTotals() {
@@ -327,6 +421,14 @@ function renderBooks() {
         <button class="btn btn-primary" type="button">Log</button>
         <span class="delta tnum" aria-live="polite"></span>
       </div>`;
+    if (b.pages && last >= b.pages) {
+      const fin = document.createElement('div');
+      fin.className = 'finish';
+      fin.innerHTML = `<span>You've reached the last page.</span><label>Rating <select aria-label="Rating"><option value="">–</option>${['5','4.5','4','3.5','3','2.5','2','1.5','1','0.5'].map(r => `<option>${r}</option>`).join('')}</select></label><button class="btn btn-primary" type="button">Mark as read</button>`;
+      const fb = fin.querySelector('button');
+      fb.addEventListener('click', () => finishBook(b, fin.querySelector('select').value, fb));
+      el.appendChild(fin);
+    }
     el.querySelector('.book-title').textContent = b.title;
     el.querySelector('.book-meta').textContent = `${b.author ? b.author + ' · ' : ''}page ${fmt(last)}${b.pages ? ' of ' + fmt(b.pages) + ' · ' + Math.round(pct) + '%' : ''}`;
     const input = el.querySelector('input'), btn = el.querySelector('button'), delta = el.querySelector('.delta');
@@ -503,6 +605,13 @@ function renderAll() {
   renderDaily(totals);
   renderMonthly(totals);
   renderHeat(totals);
+  if (state.libLoaded) renderLibrary();
+}
+
+function syncReadingBooks() {
+  state.books = state.allBooks.filter(o => o.status === 'Reading').map(o => ({
+    id: o.id, title: o.title, author: o.author, currentPage: toNum(o.currentPage), pages: toNum(o.pages)
+  }));
 }
 
 /* ---------- connection ---------- */
@@ -536,7 +645,7 @@ async function refresh() {
   try {
     const [log, books, settings] = await Promise.all([
       readRange("'Reading Log'!A1:G20000"),
-      readRange('Books!A1:M5000'),
+      readRange('Books!A1:AD5000'),
       readRange("'App Settings'!A1:B50")
     ]);
     // Reading Log: header row, then one row per entry
@@ -550,10 +659,14 @@ async function refresh() {
     // Books: columns found by header name, so column moves in the sheet don't break this
     const bh = (books[0] || []).map(h => String(h).trim());
     const bi = k => bh.indexOf(k);
-    state.books = books.slice(1).filter(r => String(r[bi('status')] ?? '').trim() === 'Reading').map(r => ({
-      id: String(r[bi('id')] ?? '').trim(), title: String(r[bi('title')] ?? ''), author: String(r[bi('author')] ?? ''),
-      currentPage: toNum(r[bi('currentPage')]), pages: toNum(r[bi('pages')])
-    })).filter(b => b.id);
+    state.header = bh;
+    state.allBooks = books.slice(1).map(r => {
+      const o = {};
+      bh.forEach((h, i) => { o[h] = String(r[i] ?? '').trim(); });
+      return o;
+    }).filter(o => o.id && o.title);
+    syncReadingBooks();
+    state.libLoaded = true;
     for (const r of settings.slice(1)) {
       const k = String(r[0] ?? '').trim(), v = r[1];
       if (k === 'streakStartDate') state.settings.streakStartDate = toDate(v) || state.settings.streakStartDate;
@@ -588,6 +701,7 @@ async function updateBookPage(bookId, pageReached) {
   if (pageReached <= cur) return;
   await state.mcp.callTool(SERVER, 'update_values', { spreadsheetId: SHEET_ID, range: cell, values: [[pageReached]] }, { cache: false });
   const b = state.books.find(x => x.id === bookId); if (b) b.currentPage = pageReached;
+  const ab = state.allBooks.find(x => x.id === bookId); if (ab) ab.currentPage = String(pageReached);
 }
 
 async function logEntry({ pages, bookId = '', title = '', pageReached = '' }, btn) {
@@ -621,7 +735,256 @@ async function logEntry({ pages, bookId = '', title = '', pageReached = '' }, bt
   return ok;
 }
 
+
+/* ---------- Books sheet writes (changed cells only, row found by id just before writing) ---------- */
+const NUM_FIELDS = ['currentPage', 'pages', 'rating', 'year', 'seriesNum', 'ambition'];
+const DATE_FIELDS = ['startDate', 'finishDate'];
+const FORMULA_FIELDS = ['remain', '%'];
+const colLetter = i => { let s = ''; i++; while (i) { const r = (i - 1) % 26; s = String.fromCharCode(65 + r) + s; i = Math.floor((i - 1) / 26); } return s; };
+function cellValue(field, v) {
+  v = String(v ?? '').trim();
+  if (!v) return '';
+  if (NUM_FIELDS.includes(field)) { const n = toNum(v); return Number.isFinite(n) ? n : ''; }
+  if (DATE_FIELDS.includes(field)) return toDate(v) || '';
+  return "'" + v; // keep text as text (e.g. a title like 1984)
+}
+async function findBookRow(id) {
+  const header = (await readRange('Books!A1:AD1'))[0] || [];
+  const idCol = header.findIndex(h => String(h).trim() === 'id');
+  if (idCol < 0) throw { code: 'tool_error', message: 'Books tab has no id column' };
+  const ids = await readRange(`Books!${colLetter(idCol)}1:${colLetter(idCol)}5000`);
+  const hits = ids.map((r, i) => String(r[0] ?? '').trim() === id ? i + 1 : 0).filter(Boolean);
+  if (hits.length !== 1) throw { code: 'tool_error', message: hits.length ? `ID ${id} appears ${hits.length} times in Books` : `ID ${id} isn't in Books any more` };
+  return { header: header.map(h => String(h).trim()), row: hits[0] };
+}
+async function writeBookFields(id, fields) {
+  const { header, row } = await findBookRow(id);
+  for (const [k, v] of Object.entries(fields)) {
+    const c = header.indexOf(k);
+    if (c < 0 || FORMULA_FIELDS.includes(k) || k === 'id') continue;
+    await state.mcp.callTool(SERVER, 'update_values', { spreadsheetId: SHEET_ID, range: `Books!${colLetter(c)}${row}`, values: [[cellValue(k, v)]] }, { cache: false });
+  }
+  const b = state.allBooks.find(x => x.id === id);
+  if (b) Object.assign(b, Object.fromEntries(Object.entries(fields).map(([k, v]) => [k, String(v ?? '').trim()])));
+  syncReadingBooks();
+}
+async function addBook(fields) {
+  const header = ((await readRange('Books!A1:AD1'))[0] || []).map(h => String(h).trim());
+  const ids = (await readRange(`Books!${colLetter(header.indexOf('id'))}2:${colLetter(header.indexOf('id'))}5000`)).map(r => toNum(r[0]));
+  const id = String(Math.max(0, ...ids) + 4);
+  const row = header.map(h => h === 'id' ? "'" + id : FORMULA_FIELDS.includes(h) ? '' : cellValue(h, fields[h]));
+  const res = await state.mcp.callTool(SERVER, 'append_values', { spreadsheetId: SHEET_ID, range: 'Books!A1', values: [row] }, { cache: false });
+  // Put the remain / % formulas on the new row, matching the rest of the sheet
+  const p = res.payload || {};
+  const rng = (p.updates && p.updates.updatedRange) || p.updatedRange || '';
+  const m = String(rng).match(/![A-Z]+(\d+)/);
+  const ci = k => header.indexOf(k);
+  if (m && ci('remain') >= 0 && ci('%') >= 0 && ci('pages') >= 0 && ci('currentPage') >= 0) {
+    const r = m[1], P = colLetter(ci('pages')), C = colLetter(ci('currentPage'));
+    await state.mcp.callTool(SERVER, 'update_values', { spreadsheetId: SHEET_ID, range: `Books!${colLetter(ci('remain'))}${r}`, values: [[`=${P}${r}-${C}${r}`]] }, { cache: false });
+    await state.mcp.callTool(SERVER, 'update_values', { spreadsheetId: SHEET_ID, range: `Books!${colLetter(ci('%'))}${r}`, values: [[`=${C}${r}/${P}${r}*100`]] }, { cache: false });
+  }
+  const book = { ...Object.fromEntries(header.map(h => [h, ''])), ...Object.fromEntries(Object.entries(fields).map(([k, v]) => [k, String(v ?? '').trim()])), id };
+  state.allBooks.push(book);
+  syncReadingBooks();
+  return book;
+}
+
+/* ---------- library view ---------- */
+const STATUSES = ['Reading', 'TBR', 'Read', 'Paused', 'DNF'];
+const LIB_COLS = [
+  { k: 'title', label: 'Title' }, { k: 'author', label: 'Author' }, { k: 'status', label: 'Status' },
+  { k: 'currentPage', label: 'Page', num: true }, { k: 'pages', label: 'Pages', num: true }, { k: 'remain', label: 'Left', num: true },
+  { k: '%', label: '%', num: true }, { k: 'rating', label: 'Rating', num: true },
+  { k: 'startDate', label: 'Started' }, { k: 'finishDate', label: 'Finished' }, { k: 'year', label: 'Year', num: true }
+];
+const starStr = r => { const n = toNum(r); if (!n) return ''; return '★'.repeat(Math.floor(n)) + (n % 1 >= .5 ? '½' : ''); };
+const sortKey = (b, k) => {
+  if (['currentPage', 'pages', 'rating', 'year'].includes(k)) return toNum(b[k]);
+  if (k === 'remain') return Math.max(0, toNum(b.pages) - toNum(b.currentPage));
+  if (k === '%') return toNum(b.pages) ? toNum(b.currentPage) / toNum(b.pages) : 0;
+  return String(b[k] || '').toLowerCase();
+};
+function libFiltered() {
+  const L = state.lib, q = L.q.toLowerCase();
+  return state.allBooks.filter(b =>
+    (L.status === 'All' || b.status === L.status) &&
+    (!L.type || b.type === L.type) && (!L.format || b.format === L.format) && (!L.genre || b.genre === L.genre) &&
+    (!L.owned || b.owned === L.owned) &&
+    (!q || [b.title, b.author, b.series, b.theme1, b.theme2, b.theme3, b.genre].some(v => String(v || '').toLowerCase().includes(q))));
+}
+function fillSelect(id, field, label) {
+  const sel = $(id), cur = sel.value;
+  const vals = [...new Set(state.allBooks.map(b => b[field]).filter(Boolean))].sort();
+  sel.innerHTML = `<option value="">${label}</option>` + vals.map(v => `<option>${v.replace(/</g, '&lt;')}</option>`).join('');
+  sel.value = cur;
+}
+function renderLibrary() {
+  const L = state.lib;
+  if ($('libGenre').options.length <= 1) { fillSelect('libType', 'type', 'All types'); fillSelect('libFormat', 'format', 'All formats'); fillSelect('libGenre', 'genre', 'All genres'); }
+  // status chips with counts
+  const counts = { All: state.allBooks.length };
+  for (const b of state.allBooks) counts[b.status] = (counts[b.status] || 0) + 1;
+  $('libChips').innerHTML = ['All', ...STATUSES].map(st => `<button class="chip" type="button" data-st="${st}" aria-pressed="${L.status === st}">${st}<span class="n">${fmt(counts[st] || 0)}</span></button>`).join('');
+  // header
+  $('libHead').innerHTML = LIB_COLS.map(c => `<th scope="col" data-k="${c.k}" class="${c.num ? 'num' : ''}" ${L.sort === c.k ? `aria-sort="${L.dir > 0 ? 'ascending' : 'descending'}"` : ''}>${c.label}</th>`).join('');
+  const rows = libFiltered().sort((a, b) => { const x = sortKey(a, L.sort), y = sortKey(b, L.sort); return (x < y ? -1 : x > y ? 1 : 0) * L.dir; });
+  const body = $('libBody');
+  body.textContent = '';
+  for (const b of rows.slice(0, L.limit)) {
+    const tr = document.createElement('tr');
+    tr.className = 'row' + (L.open === b.id ? ' open' : '');
+    tr.dataset.id = b.id;
+    const pages = toNum(b.pages), cur = toNum(b.currentPage);
+    const cells = {
+      title: `<span class="t"></span>`, author: '', status: `<span class="pill" data-s="${b.status}">${b.status || '–'}</span>`,
+      currentPage: cur ? fmt(cur) : '', pages: pages ? fmt(pages) : '', remain: pages ? fmt(Math.max(0, pages - cur)) : '',
+      '%': pages ? Math.round(cur / pages * 100) + '%' : '', rating: `<span class="stars">${starStr(b.rating)}</span>`,
+      startDate: b.startDate || '', finishDate: b.finishDate || '', year: b.year || ''
+    };
+    tr.innerHTML = LIB_COLS.map(c => `<td class="${c.num ? 'num tnum' : ''}">${cells[c.k]}</td>`).join('');
+    tr.querySelector('.t').textContent = b.title;
+    tr.children[1].textContent = b.author;
+    body.appendChild(tr);
+    if (L.open === b.id) body.appendChild(detailRow(b));
+  }
+  $('libCount').textContent = `Showing ${fmt(Math.min(L.limit, rows.length))} of ${fmt(rows.length)} books`;
+  $('libMore').hidden = rows.length <= L.limit;
+}
+function detailRow(b) {
+  const tr = document.createElement('tr');
+  tr.className = 'detail';
+  const td = document.createElement('td');
+  td.colSpan = LIB_COLS.length;
+  const kv = [['Type', b.type], ['Format', b.format], ['Genre', b.genre], ['Themes', [b.theme1, b.theme2, b.theme3].filter(Boolean).join(', ')],
+    ['Series', b.series ? `${b.series}${b.seriesNum ? ' #' + b.seriesNum : ''}` : ''], ['Owned', b.owned], ['Awards', (b.awards || '').split('|').filter(Boolean).join(', ')],
+    ['ISBN', b.isbn], ['Spotlight', b.spotlight], ['Loaned', b.loaned ? `${b.loaned}${b.loanee ? ' to ' + b.loanee : ''}` : ''], ['Notes', b.notes]].filter(([, v]) => v);
+  td.innerHTML = `<div class="detail-grid"><div><div class="eyebrow">Synopsis</div><p class="syn"></p></div><div><dl class="kv"></dl><div style="margin-top:12px"><button class="btn btn-primary" type="button" data-edit="${b.id}">Edit book</button></div></div></div>`;
+  td.querySelector('.syn').textContent = b.synopsis || 'No synopsis yet.';
+  const dl = td.querySelector('.kv');
+  for (const [k, v] of kv) { const dt = document.createElement('dt'), dd = document.createElement('dd'); dt.textContent = k; dd.textContent = v; dl.append(dt, dd); }
+  tr.appendChild(td);
+  return tr;
+}
+
+/* ---------- edit / add dialog ---------- */
+const FORM = [
+  { sec: 'Book' }, { k: 'title', w: 'w2', req: true }, { k: 'author', w: 'w2' },
+  { k: 'status', type: 'select', opts: STATUSES }, { k: 'type', type: 'select', from: 'type' }, { k: 'format', type: 'select', from: 'format' }, { k: 'genre', type: 'select', from: 'genre' },
+  { sec: 'Progress' }, { k: 'currentPage', type: 'number', label: 'Current page' }, { k: 'pages', type: 'number' },
+  { k: 'startDate', type: 'date', label: 'Started' }, { k: 'finishDate', type: 'date', label: 'Finished' },
+  { k: 'rating', type: 'select', opts: ['', '0.5', '1', '1.5', '2', '2.5', '3', '3.5', '4', '4.5', '5'] }, { k: 'year', type: 'number', label: 'Published' },
+  { k: 'owned', type: 'select', opts: ['', 'Physical', 'Digital'] }, { k: 'isbn', label: 'ISBN' },
+  { sec: 'Details' }, { k: 'series', w: 'w2' }, { k: 'seriesNum', type: 'number', label: 'Series #' }, { k: 'ambition', type: 'select', opts: ['', '1', '2', '3'] },
+  { k: 'theme1', label: 'Theme 1' }, { k: 'theme2', label: 'Theme 2' }, { k: 'theme3', label: 'Theme 3' }, { k: 'spotlight', type: 'select', opts: ['', 'Yes'] },
+  { k: 'awards', w: 'w2', label: 'Awards (separate with |)' }, { k: 'loaned', type: 'select', opts: ['', 'Yes'] }, { k: 'loanee', label: 'Loaned to' },
+  { k: 'synopsis', type: 'textarea', w: 'w4' }, { k: 'notes', type: 'textarea', w: 'w4' }
+];
+let editing = null;
+function openBookDialog(book) {
+  editing = book;
+  $('dlgTitle').textContent = book ? 'Edit book' : 'Add a book';
+  $('dlgMsg').textContent = book ? `ID ${book.id}` : 'A new ID is given when you save';
+  const body = $('dlgBody');
+  body.textContent = '';
+  for (const f of FORM) {
+    if (f.sec) { const d = document.createElement('div'); d.className = 'sec-label'; d.textContent = f.sec; body.appendChild(d); continue; }
+    const wrap = document.createElement('div');
+    wrap.className = 'field ' + (f.w || '');
+    const id = 'f-' + f.k.replace(/\W/g, '');
+    const lab = document.createElement('label');
+    lab.htmlFor = id; lab.textContent = f.label || (f.k[0].toUpperCase() + f.k.slice(1));
+    let el;
+    const val = book ? (book[f.k] || '') : (f.k === 'status' ? 'TBR' : '');
+    if (f.type === 'select') {
+      el = document.createElement('select');
+      const opts = f.opts || ['', ...new Set(state.allBooks.map(b => b[f.from]).filter(Boolean))].sort();
+      if (val && !opts.includes(val)) opts.push(val);
+      for (const o of [...new Set(opts)]) { const op = document.createElement('option'); op.value = o; op.textContent = o || '–'; el.appendChild(op); }
+    } else if (f.type === 'textarea') el = document.createElement('textarea');
+    else { el = document.createElement('input'); el.type = f.type || 'text'; if (f.type === 'number') el.inputMode = 'numeric'; }
+    el.id = id; el.name = f.k; el.value = f.type === 'number' ? (toNum(val) || (val === '0' ? 0 : '')) : val;
+    if (f.req) el.required = true;
+    wrap.append(lab, el);
+    body.appendChild(wrap);
+  }
+  $('bookDlg').showModal();
+}
+async function saveBookDialog(e) {
+  e.preventDefault();
+  if (!state.mcp) { $('dlgMsg').textContent = 'Saving needs the live connection to your sheet.'; return; }
+  const data = {};
+  for (const f of FORM) if (f.k) data[f.k] = $('bookForm').elements[f.k].value.trim();
+  if (!data.title) { $('dlgMsg').textContent = 'A title is needed.'; return; }
+  const btn = $('dlgSave'); btn.disabled = true; btn.textContent = 'Saving…';
+  try {
+    if (editing) {
+      const changed = {};
+      for (const [k, v] of Object.entries(data)) {
+        const old = String(editing[k] || '').trim();
+        const same = NUM_FIELDS.includes(k) ? toNum(old) === toNum(v) && (!!old === !!v || toNum(v) === 0) : old === v;
+        if (!same) changed[k] = v;
+      }
+      if (Object.keys(changed).length) await writeBookFields(editing.id, changed);
+      notice('');
+      setStatus('live', Object.keys(changed).length ? `Saved ${Object.keys(changed).length} change${Object.keys(changed).length > 1 ? 's' : ''} to “${data.title}”` : 'No changes to save');
+    } else {
+      const b = await addBook(data);
+      state.lib.open = b.id;
+      setStatus('live', `Added “${b.title}” with ID ${b.id}`);
+    }
+    $('bookDlg').close();
+    renderAll();
+  } catch (err) {
+    $('dlgMsg').textContent = (err && err.code && err.code !== 'tool_error') ? explain(err) : 'Not saved: ' + (err.message || 'unknown problem') + '.';
+  } finally { btn.disabled = false; btn.textContent = 'Save'; }
+}
+
+/* ---------- finishing a book from the Log ---------- */
+async function finishBook(book, rating, btn) {
+  btn.disabled = true; btn.textContent = 'Saving…';
+  try {
+    const f = { status: 'Read', finishDate: today(), currentPage: String(book.pages) };
+    if (rating) f.rating = rating;
+    await writeBookFields(book.id, f);
+    setStatus('live', `Marked “${book.title}” as read`);
+    renderAll();
+  } catch (err) {
+    notice('Couldn\'t mark it as read: ' + (err.message || explain(err)), 'error');
+    btn.disabled = false; btn.textContent = 'Mark as read';
+  }
+}
+
 /* ---------- wiring ---------- */
+function showTab(name) {
+  for (const t of ['log', 'library']) {
+    $('tab-' + t).setAttribute('aria-selected', String(t === name));
+    $('view-' + t).hidden = t !== name;
+  }
+  if (name === 'library' && !state.libLoaded) $('libBody').innerHTML = `<tr><td colspan="${LIB_COLS.length}" class="muted" style="padding:18px">${state.mcp ? 'Loading your library…' : 'Your library loads from the sheet. Open this page in Claude to connect it.'}</td></tr>`;
+  if (name === 'library' && state.libLoaded) { fillSelect('libType', 'type', 'All types'); fillSelect('libFormat', 'format', 'All formats'); fillSelect('libGenre', 'genre', 'All genres'); renderLibrary(); }
+  if (name === 'log') redraw();
+  try { localStorage.setItem('mbl-tab', name); } catch (e) {}
+}
+$('tab-log').addEventListener('click', () => showTab('log'));
+$('tab-library').addEventListener('click', () => showTab('library'));
+let searchT;
+$('libSearch').addEventListener('input', e => { clearTimeout(searchT); searchT = setTimeout(() => { state.lib.q = e.target.value; state.lib.limit = 100; renderLibrary(); }, 150); });
+for (const [id, key] of [['libType', 'type'], ['libFormat', 'format'], ['libGenre', 'genre'], ['libOwned', 'owned']])
+  $(id).addEventListener('change', e => { state.lib[key] = e.target.value; state.lib.limit = 100; renderLibrary(); });
+$('libChips').addEventListener('click', e => { const c = e.target.closest('.chip'); if (!c) return; state.lib.status = c.dataset.st; state.lib.limit = 100; renderLibrary(); });
+$('libHead').addEventListener('click', e => { const th = e.target.closest('th'); if (!th) return; const k = th.dataset.k; if (state.lib.sort === k) state.lib.dir *= -1; else { state.lib.sort = k; state.lib.dir = ['rating', 'finishDate', 'startDate', 'year', 'pages', '%', 'currentPage'].includes(k) ? -1 : 1; } renderLibrary(); });
+$('libBody').addEventListener('click', e => {
+  const ed = e.target.closest('[data-edit]');
+  if (ed) { openBookDialog(state.allBooks.find(b => b.id === ed.dataset.edit)); return; }
+  const tr = e.target.closest('tr.row'); if (!tr) return;
+  state.lib.open = state.lib.open === tr.dataset.id ? null : tr.dataset.id; renderLibrary();
+});
+$('libMore').addEventListener('click', () => { state.lib.limit += 100; renderLibrary(); });
+$('addBookBtn').addEventListener('click', () => { if (!state.libLoaded) return; openBookDialog(null); });
+$('bookForm').addEventListener('submit', saveBookDialog);
+$('dlgClose').addEventListener('click', () => $('bookDlg').close());
+
 $('refreshBtn').addEventListener('click', () => refresh());
 $('quickBtn').addEventListener('click', () => {
   const v = parseInt($('quickPages').value, 10);
@@ -638,6 +1001,7 @@ const redraw = () => { chartBase(); const t = dailyTotals(); renderDaily(t); ren
 void redraw;
 
 renderAll();
+try { if (localStorage.getItem('mbl-tab') === 'library') showTab('library'); } catch (e) {}
 setStatus('loading', 'Connecting to your sheet…');
 (async () => {
   const mcp = window.claude && window.claude.use ? await window.claude.use('mcp') : null;

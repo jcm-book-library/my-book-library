@@ -4,7 +4,7 @@ Source for the v3 pages hosted on claude.ai. These are backups; the live site (`
 
 | File | What it is |
 |---|---|
-| `reading-log.html` | Live reading log: page logging, streak, daily/monthly charts, calendar. Proton Seasons theme. |
+| `reading-log.html` | The v3 app ("My Book Library"): Log tab (page logging, streak, charts, calendar, finish-a-book) and Library tab (search, filter, sort, edit, add). Proton Seasons theme. |
 | `proton-seasons-preview.html` | Chosen design: Proton Night base with a soft colour per month (tint + drift on). |
 | `colourways-preview.html` | The four original colour options, kept for reference. |
 
@@ -21,3 +21,13 @@ Through the claude.ai Google Sheets connector, as the viewer. Writes are narrow:
 - It then updates that book's `currentPage` cell only, found by `id` just before writing, and only moves forward.
 
 The pages that read live data only work when opened inside claude.ai; opened elsewhere they show a built-in snapshot.
+- Editing a book in the Library writes only the cells that changed (text kept as text, numbers as numbers, dates as dates).
+- Adding a book appends one row with the next ID (highest + 4) and adds the `remain` / `%` formulas to that row.
+- Finishing a book from the Log sets `status = Read`, `finishDate = today`, `currentPage = pages`, and the rating if chosen.
+
+## Sheet changes made on 2026-10-09
+
+- Fixed 13 duplicate IDs (new IDs 8340–8388) and added a red highlight rule for duplicate IDs.
+- Start/finish dates for Read books set from the StoryGraph export; 10 books not in StoryGraph given best-guess finish dates.
+- `currentPage`, `pages`, `rating`, `year` converted from text to numbers; `startDate` / `finishDate` converted to real dates (shown as yyyy-mm-dd).
+- Full copy of Books before the conversion kept in the `Books backup 2026-10-09` tab.
