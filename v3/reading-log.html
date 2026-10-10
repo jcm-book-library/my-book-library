@@ -1,6 +1,6 @@
-<title>My Book Library</title>
+<title>Jackets &amp; Manuscripts</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@400;500;600&display=swap">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
 /* Layout: one column on phone, two on laptop — log panel left (the daily job), stats + charts right. */
@@ -20,6 +20,10 @@ body{background:var(--bg);color:var(--fg);font:15px/1.5 var(--body);margin:0}
 h1,h2,.num{font-family:var(--display)}
 #todayLabel{color:var(--accent)}
 h1{font-size:clamp(26px,4vw,34px);font-weight:800;letter-spacing:-.02em;margin:0;text-wrap:balance}
+.lockup{--mk:52px;display:flex;align-items:center;gap:calc(var(--mk)*.14);margin-top:6px}
+.jm-mark{width:var(--mk);height:var(--mk);flex:none;color:var(--accent);display:block}
+.jm-wordmark{font-family:"Atkinson Hyperlegible",var(--body);font-weight:700;font-size:calc(var(--mk)*.38);line-height:1.06;letter-spacing:-.01em;color:#eef0fa}
+@media (max-width:520px){.lockup{--mk:44px}}
 h2{font-size:17px;font-weight:700;margin:0;letter-spacing:-.01em}
 .eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);font-weight:600}
 .muted{color:var(--muted)}
@@ -253,7 +257,20 @@ dialog::backdrop{background:rgba(8,6,14,.65)}
   <header>
     <div>
       <div class="eyebrow" id="todayLabel">Today</div>
-      <h1>My Book Library</h1>
+      <h1 class="lockup" aria-label="Jackets &amp; Manuscripts"><svg class="jm-mark" viewBox="71 61 280 280" aria-hidden="true"><defs>
+<linearGradient id="jm-fold-a" gradientUnits="userSpaceOnUse" x1="200" y1="0" x2="270" y2="0">
+<stop offset="0" stop-color="#000" stop-opacity="0.08"/><stop offset="0.2" stop-color="#000" stop-opacity="0.3"/><stop offset="1" stop-color="#000" stop-opacity="0"/>
+</linearGradient>
+<linearGradient id="jm-fold-b" gradientUnits="userSpaceOnUse" x1="314" y1="143.2" x2="371.2" y2="171.8">
+<stop offset="0" stop-color="#000" stop-opacity="0.08"/><stop offset="0.2" stop-color="#000" stop-opacity="0.3"/><stop offset="1" stop-color="#000" stop-opacity="0"/>
+</linearGradient>
+</defs>
+<polygon points="292,94 336,94 336,304 314,282 292,304" fill="currentColor"/>
+<path d="M178 94 L246 230 L314 94 V200" fill="none" stroke="currentColor" stroke-width="44" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M156 270 V94 A22 22 0 0 1 200 94 V270 A60.4 60.4 0 0 1 89.9 304.4 A42 42 0 0 0 156 270 Z" fill="currentColor"/>
+<circle cx="112" cy="272" r="26" fill="currentColor"/>
+<polygon points="200,88.8 265.68,220.16 226.32,239.84 200,187.2" fill="url(#jm-fold-a)"/>
+<polygon points="292,187.2 336,99.2 336,304 314,282 292,304" fill="url(#jm-fold-b)"/></svg><span class="jm-wordmark" aria-hidden="true">Jackets &amp;<br>Manuscripts</span></h1>
     </div>
     <div class="status" id="status" data-state="loading" role="status">
       <span class="dot"></span><span id="statusText">Connecting to your sheet…</span>
@@ -507,6 +524,16 @@ function applyTheme() {
   const g = document.getElementById('lgGoal'), u = document.getElementById('lgUnder');
   if (g) g.style.background = `linear-gradient(90deg,${MC[(m + 10) % 12]},${MC[(m + 11) % 12]},${MC[m]})`;
   if (u) u.style.background = underColour(c);
+  setFavicon(c);
+}
+
+/* Favicon follows the month colour (used when hosted outside claude.ai) */
+function setFavicon(c) {
+  const m = document.querySelector('.jm-mark'); if (!m) return;
+  const svg = m.outerHTML.replace('class="jm-mark"', 'xmlns="http://www.w3.org/2000/svg"').replace(/currentColor/g, c);
+  let l = document.querySelector('link[rel="icon"]');
+  if (!l) { l = document.createElement('link'); l.rel = 'icon'; document.head.appendChild(l); }
+  l.type = 'image/svg+xml'; l.href = 'data:image/svg+xml,' + encodeURIComponent(svg);
 }
 
 /* ---------- state ---------- */

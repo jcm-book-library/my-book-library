@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="71 61 280 280" role="img" aria-label="JM monogram">
+<defs>
+<linearGradient id="jm-fold-a" gradientUnits="userSpaceOnUse" x1="200" y1="0" x2="270" y2="0">
+<stop offset="0" stop-color="#000" stop-opacity="0.08"/><stop offset="0.2" stop-color="#000" stop-opacity="0.3"/><stop offset="1" stop-color="#000" stop-opacity="0"/>
+</linearGradient>
+<linearGradient id="jm-fold-b" gradientUnits="userSpaceOnUse" x1="314" y1="143.2" x2="371.2" y2="171.8">
+<stop offset="0" stop-color="#000" stop-opacity="0.08"/><stop offset="0.2" stop-color="#000" stop-opacity="0.3"/><stop offset="1" stop-color="#000" stop-opacity="0"/>
+</linearGradient>
+</defs>
+<polygon points="292,94 336,94 336,304 314,282 292,304" fill="#eef0fa"/>
+<path d="M178 94 L246 230 L314 94 V200" fill="none" stroke="#eef0fa" stroke-width="44" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M156 270 V94 A22 22 0 0 1 200 94 V270 A60.4 60.4 0 0 1 89.9 304.4 A42 42 0 0 0 156 270 Z" fill="#eef0fa"/>
+<circle cx="112" cy="272" r="26" fill="#eef0fa"/>
+<polygon points="200,88.8 265.68,220.16 226.32,239.84 200,187.2" fill="url(#jm-fold-a)"/>
+<polygon points="292,187.2 336,99.2 336,304 314,282 292,304" fill="url(#jm-fold-b)"/>
+</svg>
