@@ -116,6 +116,7 @@ table.lib{width:100%;border-collapse:collapse;font-size:14px;min-width:860px}
 .pill{display:inline-block;font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px;white-space:nowrap;border:1px solid var(--line);color:var(--muted)}
 .pill[data-s="Reading"]{color:var(--fg);background:color-mix(in srgb,var(--accent) 30%,transparent);border-color:var(--accent)}
 .pill[data-s="Read"]{color:var(--fg);background:var(--raise)}
+.pill[data-s="Re-read"]{color:color-mix(in srgb,var(--accent) 70%,#fff);border-color:color-mix(in srgb,var(--accent) 45%,var(--line))}
 .pill[data-s="Paused"]{color:#f2c46d;border-color:#6b5631}
 .pill[data-s="DNF"]{color:#f29a9a;border-color:#6b3a3a}
 .stars{color:color-mix(in srgb,var(--accent) 60%,#fff);letter-spacing:1px;white-space:nowrap}
@@ -408,6 +409,7 @@ dialog::backdrop{background:rgba(8,6,14,.65)}
         <button class="chip" type="button" data-m="change" aria-pressed="false">Change of pace</button>
         <button class="chip" type="button" data-m="quick" aria-pressed="false">Quick win</button>
         <button class="chip" type="button" data-m="like" aria-pressed="false">More like…</button>
+        <button class="chip" type="button" data-m="revisit" aria-pressed="false">Revisit a favourite</button>
       </div>
       <select id="recKind" aria-label="Kind"><option value="">Everything</option><option>Fiction</option><option>Non-fiction</option><option>Comics &amp; GN</option></select>
       <select id="recOwned" aria-label="Owned"><option value="">Physical &amp; digital</option><option>Physical</option><option>Digital</option></select>
@@ -982,7 +984,7 @@ async function addBook(fields) {
 }
 
 /* ---------- library view ---------- */
-const STATUSES = ['Reading', 'TBR', 'Read', 'Paused', 'DNF'];
+const STATUSES = ['Reading', 'TBR', 'Re-read', 'Read', 'Paused', 'DNF'];
 const LIB_COLS = [
   { k: 'title', label: 'Title' }, { k: 'author', label: 'Author' }, { k: 'status', label: 'Status' },
   { k: 'currentPage', label: 'Page', num: true }, { k: 'pages', label: 'Pages', num: true }, { k: 'remain', label: 'Left', num: true },
@@ -1602,6 +1604,7 @@ function renderRecs() {
   // Skip TBR rows that duplicate a book you've already read
   const normT = t => String(t || '').toLowerCase().replace(/^(the|a|an) /, '').replace(/[^a-z0-9]/g, '');
   const done = new Set(state.allBooks.filter(b => b.status === 'Read' || b.status === 'DNF').map(b => normT(b.title)));
+  if (recState.mode === 'revisit') { renderRevisit(box, normT); return; }
   let tbr = state.allBooks.filter(b => b.status === 'TBR' && !done.has(normT(b.title)));
   if (recState.kind === 'Fiction') tbr = tbr.filter(b => categoryOf(b) === 'Fiction');
   if (recState.kind === 'Non-fiction') tbr = tbr.filter(b => categoryOf(b) === 'Non-fiction');
@@ -1629,6 +1632,40 @@ function renderRecs() {
       sb.disabled = true; sb.textContent = 'Starting…';
       try { await writeBookFields(b.id, { status: 'Reading', startDate: today() }); setStatus('live', `Started “${b.title}”. It's on your Log now.`); renderAll(); renderRecs(); }
       catch (err) { sb.disabled = false; sb.textContent = 'Start reading'; notice('Couldn\'t start it: ' + (err.message || explain(err)), 'error'); }
+    });
+    box.appendChild(el);
+  }
+}
+// Re-read pile: your saved copies of books you loved, best-rated and longest-ago first
+function renderRevisit(box, normT) {
+  const reads = new Map();
+  for (const b of state.allBooks) if (b.status === 'Read') { const k = normT(b.title); const prev = reads.get(k); if (!prev || (b.finishDate || '') > (prev.finishDate || '')) reads.set(k, b); }
+  let pile = state.allBooks.filter(b => b.status === 'Re-read').map(b => ({ b, orig: reads.get(normT(b.title)) }));
+  if (recState.kind) pile = pile.filter(x => categoryOf(x.b) === recState.kind);
+  if (recState.owned) pile = pile.filter(x => x.b.owned === recState.owned);
+  const yrs = d => d ? (daysBetween(d, today()) / 365) : 0;
+  pile.sort((a, c) => (toNum(c.orig && c.orig.rating) - toNum(a.orig && a.orig.rating)) || (yrs(c.orig && c.orig.finishDate) - yrs(a.orig && a.orig.finishDate)));
+  box.textContent = '';
+  if (!pile.length) { box.innerHTML = '<p class="empty">No books with the Re-read status yet.</p>'; return; }
+  for (const { b, orig } of pile.slice(0, 12)) {
+    const el = document.createElement('div');
+    el.className = 'rec';
+    el.innerHTML = `<div class="rec-head"><div><div class="t"></div><div class="muted small meta"></div></div><div class="rec-actions"><button class="btn" type="button" data-open>Open</button><button class="btn btn-primary" type="button" data-start>Start re-read</button></div></div><div class="why"></div><p class="syn small"></p>`;
+    el.querySelector('.t').textContent = b.title;
+    el.querySelector('.meta').textContent = [b.author, b.genre, b.owned].filter(Boolean).join(' · ');
+    const why = [];
+    if (orig && toNum(orig.rating)) why.push(`You rated it ${orig.rating}★`);
+    if (orig && orig.finishDate) { const y = yrs(orig.finishDate); why.push(y < 1 ? `Read ${Math.round(y * 12)} months ago` : `Read ${y.toFixed(1).replace('.0', '')} years ago`); }
+    el.querySelector('.why').innerHTML = why.map(() => '<span class="why-chip"></span>').join('');
+    el.querySelectorAll('.why-chip').forEach((c, i) => { c.textContent = why[i]; });
+    el.querySelector('.syn').textContent = (orig && orig.synopsis) || b.synopsis || '';
+    el.querySelector('[data-open]').addEventListener('click', () => openInLibrary(b.id));
+    const sb = el.querySelector('[data-start]');
+    sb.addEventListener('click', async () => {
+      if (!state.mcp) return;
+      sb.disabled = true; sb.textContent = 'Starting…';
+      try { await writeBookFields(b.id, { status: 'Reading', startDate: today() }); setStatus('live', `Started re-reading “${b.title}”`); renderAll(); renderRecs(); }
+      catch (err) { sb.disabled = false; sb.textContent = 'Start re-read'; notice('Couldn\'t start it: ' + (err.message || explain(err)), 'error'); }
     });
     box.appendChild(el);
   }

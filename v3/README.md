@@ -38,3 +38,4 @@ The pages that read live data only work when opened inside claude.ai; opened els
 - **Contents:** anthologies and collections can store a table of contents (`Contents` tab: bookId, savedAt, story, startPage); the Log shows which story you're in and pages left in it.
 - **Discover tab:** quote of the day (Quotes sheet), On this day, Coming soon (Wishlist), Award watch, links.
 - **Sheet tidy-up:** themes normalised (capitalisation and duplicates merged, 2,290 → 2,124 distinct), award names consolidated, details filled for ~69 recently added books.
+- **Duplicates (2026-10-10):** 61 digital copies of books already read moved from TBR to a new `Re-read` status; 23 true duplicates deleted (backup tab: `Books backup 2026-10-10 (before duplicates)`). Recommendations gained a "Revisit a favourite" mode for the Re-read pile.
