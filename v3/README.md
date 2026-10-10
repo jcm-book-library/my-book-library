@@ -31,3 +31,10 @@ The pages that read live data only work when opened inside claude.ai; opened els
 - Start/finish dates for Read books set from the StoryGraph export; 10 books not in StoryGraph given best-guess finish dates.
 - `currentPage`, `pages`, `rating`, `year` converted from text to numbers; `startDate` / `finishDate` converted to real dates (shown as yyyy-mm-dd).
 - Full copy of Books before the conversion kept in the `Books backup 2026-10-09` tab.
+
+## Added 2026-10-10
+
+- **Tools tab:** RATED scorer with separate criteria for Fiction, Non-fiction and Comics & GN, gut rating, standout +0.5 / fatal flaw −0.5, and 2–3 similar rated books to compare against. Saving writes the rating (and fatal flaw) to Books and a breakdown row to the `Ratings` tab. Recommendations score TBR books on theme, genre and author affinity from your ratings, series continuation, Spotlight and awards, with modes Best match / Next in series / Change of pace / Quick win / More like…; "Start reading" sets status and start date.
+- **Contents:** anthologies and collections can store a table of contents (`Contents` tab: bookId, savedAt, story, startPage); the Log shows which story you're in and pages left in it.
+- **Discover tab:** quote of the day (Quotes sheet), On this day, Coming soon (Wishlist), Award watch, links.
+- **Sheet tidy-up:** themes normalised (capitalisation and duplicates merged, 2,290 → 2,124 distinct), award names consolidated, details filled for ~69 recently added books.
