@@ -461,6 +461,17 @@ dialog::backdrop{background:rgba(8,6,14,.65)}
   <ul class="drill-list" id="drillList"></ul>
 </dialog>
 
+<dialog id="gDlg" aria-labelledby="gTitle" style="width:min(520px,calc(100vw - 32px))">
+  <form id="gForm" method="dialog">
+    <div class="dlg-head"><h2 id="gTitle">Connect your Google Sheet</h2><button class="btn" type="button" id="gClose">Close</button></div>
+    <div style="padding:16px 20px;display:grid;gap:12px">
+      <p class="muted" style="margin:0;font-size:14px">Paste the OAuth Client ID from your Google Cloud project (the same one the old app used). It's saved in this browser only.</p>
+      <div class="field"><label for="gClient">OAuth Client ID</label><input id="gClient" autocomplete="off" spellcheck="false" placeholder="1234…apps.googleusercontent.com"></div>
+    </div>
+    <div class="dlg-foot"><span class="muted" id="gMsg" style="font-size:13px;align-self:center"></span><button class="btn btn-primary" type="submit">Connect</button></div>
+  </form>
+</dialog>
+
 <dialog id="bookDlg" aria-labelledby="dlgTitle">
   <form id="bookForm" method="dialog">
     <div class="dlg-head"><h2 id="dlgTitle">Edit book</h2><button class="btn" type="button" id="dlgClose">Close</button></div>
@@ -833,12 +844,15 @@ function syncReadingBooks() {
 }
 
 /* ---------- connection ---------- */
+const isLive = () => !!state.mcp && !(state.google && !google_.valid());
+const connectHint = () => state.google ? 'Press Connect at the top to sign in to Google.' : 'Open this page in Claude to connect it.';
 function setStatus(kind, text) { $('status').dataset.state = kind; $('statusText').textContent = text; }
 function notice(text, kind) { const n = $('notice'); if (!text) { n.hidden = true; return; } n.textContent = text; n.dataset.kind = kind || ''; n.hidden = false; }
 
 function explain(err) {
   switch (err && err.code) {
     case 'server_not_connected': return 'Google Sheets isn\'t connected for your account. Add it in claude.ai Settings → Connectors, then press Refresh.';
+    case 'google_signin': return 'Your Google sign-in has expired. Press Connect to sign in again.';
     case 'needs_reauth': return 'Your Google Sheets connection has expired. Reconnect it in claude.ai Settings → Connectors, then press Refresh.';
     case 'selection_required': return 'You have more than one Google Sheets connector. Choose one when Claude asks, then press Refresh.';
     case 'not_in_manifest': case 'consent_required': return 'This page isn\'t allowed to use Google Sheets yet. Allow it from the page\'s permissions, then press Refresh.';
@@ -925,7 +939,7 @@ async function updateBookPage(bookId, pageReached) {
 
 async function logEntry({ pages, bookId = '', title = '', pageReached = '' }, btn) {
   if (state.busy) return;
-  if (!state.mcp) { notice('Logging needs the live connection. Open this page in Claude to connect your sheet.', 'error'); return; }
+  if (!state.mcp) { notice('Logging needs the live connection. ' + connectHint(), 'error'); return; }
   state.busy = true;
   const oldLabel = btn.textContent;
   let ok = false;
@@ -1202,7 +1216,7 @@ function split(el, parts, colours) {
 function countBy(list, key) { const m = new Map(); for (const b of list) { const k = typeof key === 'function' ? key(b) : b[key]; if (k) m.set(k, (m.get(k) || 0) + 1); } return m; }
 
 function renderDashboard() {
-  if (!state.libLoaded) { $('dashTiles').innerHTML = `<p class="empty">${state.mcp ? 'Loading your library…' : 'The dashboard loads from your sheet. Open this page in Claude to connect it.'}</p>`; return; }
+  if (!state.libLoaded) { $('dashTiles').innerHTML = `<p class="empty">${isLive() ? 'Loading your library…' : 'The dashboard loads from your sheet. ' + connectHint()}</p>`; return; }
   const all = state.allBooks;
   const years = [...new Set(all.filter(b => b.status === 'Read').map(finYear).filter(Boolean))].sort().reverse();
   if (dashPeriod !== 'all' && !years.includes(dashPeriod)) dashPeriod = years[0] || 'all';
@@ -1439,7 +1453,7 @@ function rateCandidates() {
 }
 function renderRate() {
   const box = $('rateBox');
-  if (!state.libLoaded) { box.innerHTML = `<p class="empty">${state.mcp ? 'Loading your library…' : 'The scorer needs your library. Open this page in Claude to connect it.'}</p>`; return; }
+  if (!state.libLoaded) { box.innerHTML = `<p class="empty">${isLive() ? 'Loading your library…' : 'The scorer needs your library. ' + connectHint()}</p>`; return; }
   const cands = rateCandidates();
   if (!rate.bookId && cands.length) { const unrated = cands.find(b => !toNum(b.rating) && b.status === 'Read') || cands[0]; selectRateBook(unrated.id, false); }
   const book = state.allBooks.find(b => b.id === rate.bookId);
@@ -1793,7 +1807,7 @@ async function loadDiscover() {
   disc.loaded = true;
 }
 async function renderDiscover() {
-  if (!state.mcp) { $('discQuote').innerHTML = '<p class="empty">Discover reads your sheets live. Open this page in Claude to connect it.</p>'; return; }
+  if (!state.mcp) { $('discQuote').innerHTML = '<p class="empty">Discover reads your sheets live. ' + connectHint() + '</p>'; return; }
   if (!disc.loaded) { $('discQuote').innerHTML = '<p class="empty">Loading…</p>'; await loadDiscover(); }
   // Quote of the day (same quote all day; "Another" cycles)
   const qb = $('discQuote');
@@ -1842,7 +1856,7 @@ function showTab(name) {
     $('tab-' + t).setAttribute('aria-selected', String(t === name));
     $('view-' + t).hidden = t !== name;
   }
-  if (name === 'library' && !state.libLoaded) $('libBody').innerHTML = `<tr><td colspan="${LIB_COLS.length}" class="muted" style="padding:18px">${state.mcp ? 'Loading your library…' : 'Your library loads from the sheet. Open this page in Claude to connect it.'}</td></tr>`;
+  if (name === 'library' && !state.libLoaded) $('libBody').innerHTML = `<tr><td colspan="${LIB_COLS.length}" class="muted" style="padding:18px">${isLive() ? 'Loading your library…' : 'Your library loads from the sheet. ' + connectHint()}</td></tr>`;
   if (name === 'library' && state.libLoaded) { fillSelect('libType', 'type', 'All types'); fillSelect('libFormat', 'format', 'All formats'); fillSelect('libGenre', 'genre', 'All genres'); renderLibrary(); }
   if (name === 'log') redraw();
   if (name === 'dashboard') renderDashboard();
@@ -1889,7 +1903,7 @@ $('bookForm').addEventListener('submit', saveBookDialog);
 $('dlgClose').addEventListener('click', () => $('bookDlg').close());
 $('drillClose').addEventListener('click', () => $('drillDlg').close());
 
-$('refreshBtn').addEventListener('click', () => refresh());
+$('refreshBtn').addEventListener('click', () => state.google && !google_.valid() ? googleConnect() : refresh());
 $('quickBtn').addEventListener('click', () => {
   const v = parseInt($('quickPages').value, 10);
   if (!v || v < 1) { $('quickPages').focus(); return; }
@@ -1904,11 +1918,88 @@ document.querySelectorAll('.range-tabs button').forEach(b => b.addEventListener(
 const redraw = () => { chartBase(); const t = dailyTotals(); renderDaily(t); renderMonthly(t); };
 void redraw;
 
+/* ---------- Google Sheets direct (GitHub Pages and other hosts outside claude.ai) ----------
+   Same calls as the claude.ai connector, sent straight to the Sheets API with a Google sign-in.
+   Writes use USER_ENTERED, like the connector, so ' prefixes, numbers, dates and formulas behave the same. */
+const google_ = {
+  cfgKey: 'mbl_config', tokKey: 'jm-google-token', client: null,
+  cfg() { try { return JSON.parse(localStorage.getItem(this.cfgKey) || 'null') || {}; } catch (e) { return {}; } },
+  saveCfg(c) { try { localStorage.setItem(this.cfgKey, JSON.stringify({ ...this.cfg(), ...c })); } catch (e) {} },
+  tok() { try { return JSON.parse(localStorage.getItem(this.tokKey) || 'null'); } catch (e) { return null; } },
+  valid() { const t = this.tok(); return !!(t && t.exp > Date.now()); },
+  async callTool(server, tool, input) {
+    if (!this.valid()) { googleSignedOut(); throw { code: 'google_signin' }; }
+    const base = `https://sheets.googleapis.com/v4/spreadsheets/${input.spreadsheetId}/values/${encodeURIComponent(input.range)}`;
+    const url = tool === 'get_values' ? base
+      : tool === 'append_values' ? base + ':append?valueInputOption=USER_ENTERED'
+      : base + '?valueInputOption=USER_ENTERED';
+    const opts = { method: tool === 'get_values' ? 'GET' : tool === 'append_values' ? 'POST' : 'PUT', headers: { Authorization: 'Bearer ' + this.tok().t } };
+    if (tool !== 'get_values') { opts.headers['Content-Type'] = 'application/json'; opts.body = JSON.stringify({ values: input.values }); }
+    const res = await fetch(url, opts);
+    if (res.status === 401) { try { localStorage.removeItem(this.tokKey); } catch (e) {} googleSignedOut(); throw { code: 'google_signin' }; }
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) throw { code: 'tool_error', message: (body.error && body.error.message) || 'HTTP ' + res.status };
+    return { payload: body };
+  }
+};
+
+function googleSignedOut() {
+  setStatus('error', state.live ? 'Signed out · showing the last data loaded' : 'Not connected · showing the 9 Oct snapshot');
+  $('refreshBtn').textContent = 'Connect';
+}
+
+function loadGis() {
+  return new Promise((ok, fail) => {
+    if (window.google && google.accounts && google.accounts.oauth2) return ok();
+    const s = document.createElement('script');
+    s.src = 'https://accounts.google.com/gsi/client'; s.async = true;
+    s.onload = () => ok(); s.onerror = () => fail(new Error('Google sign-in didn\'t load'));
+    document.head.appendChild(s);
+  });
+}
+
+// Runs from a click, and stays synchronous once Google's script has loaded, so the sign-in popup isn't blocked
+function googleConnect() {
+  const id = google_.cfg().clientId;
+  if (!id) { $('gClient').value = ''; $('gMsg').textContent = ''; $('gDlg').showModal(); return; }
+  if (!(window.google && google.accounts && google.accounts.oauth2)) { loadGis().then(googleConnect, err => notice(err.message, 'error')); return; }
+  try {
+    if (!google_.client) google_.client = google.accounts.oauth2.initTokenClient({
+      client_id: id, scope: 'https://www.googleapis.com/auth/spreadsheets',
+      callback: r => {
+        if (r.error) { notice('Google sign-in failed: ' + r.error, 'error'); return; }
+        try { localStorage.setItem(google_.tokKey, JSON.stringify({ t: r.access_token, exp: Date.now() + (r.expires_in - 120) * 1000 })); } catch (e) {}
+        $('refreshBtn').textContent = 'Refresh';
+        refresh();
+      },
+      error_callback: e => notice('Google sign-in was closed or blocked' + (e && e.type ? ' (' + e.type + ')' : '') + '. Press Connect to try again.', 'error')
+    });
+    google_.client.requestAccessToken({ prompt: '' });
+  } catch (err) { notice(err.message, 'error'); }
+}
+
+function googleBoot() {
+  state.google = true; state.mcp = google_;
+  loadGis().catch(() => {});
+  if (google_.valid()) { refresh(); return; }
+  googleSignedOut();
+  notice(google_.cfg().clientId ? 'Press Connect to sign in to Google and load your sheet.' : 'Press Connect to link your Google Sheet. You\'ll need the OAuth Client ID from your Google Cloud project.');
+}
+
+$('gClose').addEventListener('click', () => $('gDlg').close());
+$('gForm').addEventListener('submit', e => {
+  const v = $('gClient').value.trim();
+  if (!/\.apps\.googleusercontent\.com$/.test(v)) { e.preventDefault(); $('gMsg').textContent = 'That doesn\'t look like a Client ID.'; return; }
+  google_.saveCfg({ clientId: v }); google_.client = null;
+  googleConnect();
+});
+
 renderAll();
 try { const t = localStorage.getItem('mbl-tab'); if (['library', 'dashboard', 'tools', 'discover'].includes(t)) showTab(t); } catch (e) {}
 setStatus('loading', 'Connecting to your sheet…');
 (async () => {
-  const mcp = window.claude && window.claude.use ? await window.claude.use('mcp') : null;
+  if (!(window.claude && window.claude.use)) { googleBoot(); return; }
+  const mcp = await window.claude.use('mcp');
   if (!mcp) {
     setStatus('error', 'Showing the 9 Oct snapshot');
     notice('This view can\'t reach Google Sheets, so you\'re seeing a snapshot. Open the page in Claude to see live data and log pages.');
