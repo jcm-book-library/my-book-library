@@ -77,6 +77,9 @@ button{font:inherit;cursor:pointer}
 .book:first-of-type{border-top:0;padding-top:0}
 .book-title{font-weight:600;line-height:1.3}
 .book-meta{font-size:13px;color:var(--muted)}
+.book-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.book-pct{font-family:var(--display);font-size:28px;font-weight:700;line-height:1;color:var(--accent);flex:none}
+.book-pct[data-preview]{color:color-mix(in srgb,var(--accent) 65%,#fff)}
 .prog{height:5px;background:var(--raise);border-radius:3px;overflow:hidden}
 .prog > i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--accent-next));border-radius:3px}
 .logrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
@@ -132,8 +135,9 @@ table.lib{width:100%;border-collapse:collapse;font-size:14px;min-width:860px}
 .lib .t{font-weight:600;line-height:1.3}
 .pill{display:inline-block;font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px;white-space:nowrap;border:1px solid var(--line);color:var(--muted)}
 .pill[data-s="Reading"]{color:var(--fg);background:color-mix(in srgb,var(--accent) 30%,transparent);border-color:var(--accent)}
-.pill[data-s="Read"]{color:var(--fg);background:var(--raise)}
-.pill[data-s="Re-read"]{color:color-mix(in srgb,var(--accent) 70%,#fff);border-color:color-mix(in srgb,var(--accent) 45%,var(--line))}
+.pill[data-s="Read"]{color:#8fb8f2;border-color:#34507a}
+.pill[data-s="TBR"]{color:#c2a8f0;border-color:#4d3f70}
+.pill[data-s="Re-read"]{color:#dba8ec;border-color:#5e3f6c}
 .pill[data-s="Paused"]{color:#f2c46d;border-color:#6b5631}
 .pill[data-s="DNF"]{color:#f29a9a;border-color:#6b3a3a}
 .stars{color:color-mix(in srgb,var(--accent) 60%,#fff);letter-spacing:1px;white-space:nowrap}
@@ -343,6 +347,7 @@ dialog::backdrop{background:rgba(8,6,14,.65)}
         <div class="panel-head"><h2 id="todayH">Today's entries</h2><span class="muted tnum" id="todayCount" style="font-size:13px"></span></div>
         <ul class="today-list" id="todayList"></ul>
       </section>
+      <section class="panel" aria-labelledby="qH"><div class="panel-head"><h2 id="qH">Quote of the day</h2><span class="muted small">From your Quotes sheet</span></div><div id="discQuote"></div></section>
     </div>
 
     <div>
@@ -362,18 +367,19 @@ dialog::backdrop{background:rgba(8,6,14,.65)}
           <span><i class="sw" style="background:var(--accent-2)"></i>7-day average</span>
         </div>
       </section>
-      <section class="panel" aria-labelledby="monthH">
-        <div class="panel-head"><h2 id="monthH">Monthly totals</h2><span class="muted" id="monthNote" style="font-size:13px"></span></div>
-        <div class="chart-box"><canvas id="monthChart" aria-label="Pages read per month"></canvas></div>
-      </section>
-      <section class="panel" aria-labelledby="heatH">
-        <div class="panel-head"><h2 id="heatH">Reading calendar</h2>
-          <div class="legend"><span>Each day in its month's colour, brighter for more pages</span></div>
-        </div>
-        <div class="heat-scroll"><div class="heat" id="heat" role="img" aria-label="Pages read each day this year"></div></div>
+      <section class="panel" aria-labelledby="paceH">
+        <div class="panel-head"><h2 id="paceH">Reading now</h2><span class="muted" id="paceNote" style="font-size:13px"></span></div>
+        <div class="pace" id="pace"></div>
       </section>
     </div>
   </div>
+  <section class="panel" style="margin-top:20px" aria-labelledby="tbrH">
+    <div class="panel-head"><h2 id="tbrH">Your TBR</h2><span class="muted" id="tbrNote" style="font-size:13px"></span></div>
+    <div class="dash-2" style="margin-bottom:0">
+      <div><div class="eyebrow" style="margin-bottom:4px">Digital or physical</div><div id="ownSplit"></div><div class="eyebrow" style="margin:18px 0 8px">Quick wins · shortest on your TBR</div><ul class="mini-list" id="quickList"></ul></div>
+      <div><div class="eyebrow" style="margin-bottom:8px">Spotlight picks</div><ul class="mini-list" id="spotList"></ul></div>
+    </div>
+  </section>
   </div>
 
   <div id="view-library" role="tabpanel" aria-labelledby="tab-library" hidden>
@@ -399,30 +405,31 @@ dialog::backdrop{background:rgba(8,6,14,.65)}
 <div class="wrap" style="padding-block:0 48px"><div id="view-dashboard" role="tabpanel" aria-labelledby="tab-dashboard" hidden>
   <div class="periods" id="dashPeriods" role="group" aria-label="Period"></div>
   <section class="dash-tiles" id="dashTiles" aria-label="Totals"></section>
-  <section class="panel" style="margin-bottom:20px" aria-labelledby="paceH">
-    <div class="panel-head"><h2 id="paceH">Reading now</h2><span class="muted" id="paceNote" style="font-size:13px"></span></div>
-    <div class="pace" id="pace"></div>
+  <div class="dash-2">
+    <section class="panel" aria-labelledby="monthH">
+      <div class="panel-head"><h2 id="monthH">Monthly totals</h2><span class="muted" id="monthNote" style="font-size:13px"></span></div>
+      <div class="chart-box"><canvas id="monthChart" aria-label="Pages read per month"></canvas></div>
+    </section>
+    <section class="panel" aria-labelledby="finH"><div class="panel-head"><h2 id="finH">Books finished</h2><span class="muted" id="finNote" style="font-size:13px"></span></div><div class="chart-box"><canvas id="finChart" aria-label="Books finished over time"></canvas></div></section>
+  </div>
+  <section class="panel" style="margin-bottom:20px" aria-labelledby="heatH">
+    <div class="panel-head"><h2 id="heatH">Reading calendar</h2>
+      <div class="legend"><span>Each day in its month's colour, brighter for more pages</span></div>
+    </div>
+    <div class="heat-scroll"><div class="heat" id="heat" role="img" aria-label="Pages read each day this year"></div></div>
   </section>
   <div class="dash-2">
-    <section class="panel" aria-labelledby="finH"><div class="panel-head"><h2 id="finH">Books finished</h2><span class="muted" id="finNote" style="font-size:13px"></span></div><div class="chart-box"><canvas id="finChart" aria-label="Books finished over time"></canvas></div></section>
     <section class="panel" aria-labelledby="ratH"><div class="panel-head"><h2 id="ratH">Ratings</h2><span class="muted" id="ratNote" style="font-size:13px"></span></div><ul class="hbars" id="ratBars"></ul></section>
+    <section class="panel" aria-labelledby="genH"><div class="panel-head"><h2 id="genH">Genres</h2><span class="muted" style="font-size:13px">Books read · average rating</span></div><ul class="hbars" id="genBars"></ul></section>
   </div>
   <div class="dash-2">
-    <section class="panel" aria-labelledby="genH"><div class="panel-head"><h2 id="genH">Genres</h2><span class="muted" style="font-size:13px">Books read · average rating</span></div><ul class="hbars" id="genBars"></ul></section>
     <section class="panel" aria-labelledby="fmtH"><div class="panel-head"><h2 id="fmtH">Type &amp; format</h2></div><div id="typeSplit"></div><ul class="hbars" id="fmtBars" style="margin-top:16px"></ul></section>
-  </div>
-  <div class="dash-3">
     <section class="panel" aria-labelledby="authH"><div class="panel-head"><h2 id="authH">Top authors</h2></div><ul class="mini-list" id="authList"></ul></section>
+  </div>
+  <div class="dash-2">
     <section class="panel" aria-labelledby="awH"><div class="panel-head"><h2 id="awH">Award winners</h2><span class="muted" style="font-size:13px">Read of those you own</span></div><ul class="hbars" id="awBars"></ul></section>
     <section class="panel" aria-labelledby="serH"><div class="panel-head"><h2 id="serH">Series progress</h2></div><ul class="hbars" id="serBars"></ul></section>
   </div>
-  <section class="panel" aria-labelledby="tbrH">
-    <div class="panel-head"><h2 id="tbrH">Your TBR</h2><span class="muted" id="tbrNote" style="font-size:13px"></span></div>
-    <div class="dash-2" style="margin-bottom:0">
-      <div><div class="eyebrow" style="margin-bottom:4px">Digital or physical</div><div id="ownSplit"></div><div class="eyebrow" style="margin:18px 0 8px">Quick wins · shortest on your TBR</div><ul class="mini-list" id="quickList"></ul></div>
-      <div><div class="eyebrow" style="margin-bottom:8px">Spotlight picks</div><ul class="mini-list" id="spotList"></ul></div>
-    </div>
-  </section>
 </div></div>
 
 <div class="wrap" style="padding-block:0 48px"><div id="view-tools" role="tabpanel" aria-labelledby="tab-tools" hidden>
@@ -450,14 +457,13 @@ dialog::backdrop{background:rgba(8,6,14,.65)}
 </div>
 <div id="view-discover" role="tabpanel" aria-labelledby="tab-discover" hidden>
   <div class="dash-2">
-    <section class="panel" aria-labelledby="qH"><div class="panel-head"><h2 id="qH">Quote of the day</h2><span class="muted small">From your Quotes sheet</span></div><div id="discQuote"></div></section>
     <section class="panel" aria-labelledby="odH"><div class="panel-head"><h2 id="odH">On this day</h2><span class="muted small">Finished around this date in past years</span></div><ul class="mini-list" id="discOnDay"></ul></section>
+    <section class="panel" aria-labelledby="csH"><div class="panel-head"><h2 id="csH">Coming soon</h2><span class="muted small">From your Wishlist</span></div><ul class="mini-list" id="discSoon"></ul><div class="why" id="discPipe" style="margin-top:14px"></div></section>
   </div>
   <div class="dash-2">
-    <section class="panel" aria-labelledby="csH"><div class="panel-head"><h2 id="csH">Coming soon</h2><span class="muted small">From your Wishlist</span></div><ul class="mini-list" id="discSoon"></ul><div class="why" id="discPipe" style="margin-top:14px"></div></section>
     <section class="panel" aria-labelledby="awwH"><div class="panel-head"><h2 id="awwH">Award watch</h2><span class="muted small">Your progress · roughly when each is announced</span></div><ul class="aw-list" id="discAwards"></ul></section>
+    <section class="panel" aria-labelledby="lkH"><div class="panel-head"><h2 id="lkH">Links</h2></div><div class="links" id="discLinks"></div></section>
   </div>
-  <section class="panel" aria-labelledby="lkH"><div class="panel-head"><h2 id="lkH">Links</h2></div><div class="links" id="discLinks"></div></section>
 </div></div>
 
 <dialog id="contentsDlg" aria-labelledby="ctTitle">
@@ -643,11 +649,11 @@ function renderBooks() {
     el.className = 'book';
     const inputId = 'pg-' + b.id;
     el.innerHTML = `
-      <div><div class="book-title"></div><div class="book-meta tnum"></div></div>
+      <div class="book-head"><div><div class="book-title"></div><div class="book-meta tnum"></div></div>${b.pages ? `<span class="book-pct tnum">${Math.round(pct)}%</span>` : ''}</div>
       <div class="prog" aria-hidden="true"><i style="width:${pct}%"></i></div>
       <div class="logrow">
         <label for="${inputId}">On page</label>
-        <input type="number" id="${inputId}" min="1" ${b.pages ? `max="${b.pages}"` : ''} inputmode="numeric" placeholder="${last + 1}">
+        <input type="number" id="${inputId}" min="1" ${b.pages ? `max="${b.pages}"` : ''} inputmode="numeric" aria-describedby="meta-${b.id}">
         <button class="btn btn-primary" type="button">Log</button>
         <span class="delta tnum" aria-live="polite"></span>
       </div>`;
@@ -670,10 +676,16 @@ function renderBooks() {
       cb.addEventListener('click', () => openContents(b)); ctRow.appendChild(cb); el.appendChild(ctRow);
     }
     el.querySelector('.book-title').textContent = b.title;
-    el.querySelector('.book-meta').textContent = `${b.author ? b.author + ' · ' : ''}page ${fmt(last)}${b.pages ? ' of ' + fmt(b.pages) + ' · ' + Math.round(pct) + '%' : ''}`;
+    el.querySelector('.book-meta').textContent = `${b.author ? b.author + ' · ' : ''}page ${fmt(last)}${b.pages ? ' of ' + fmt(b.pages) : ''}`;
+    el.querySelector('.book-meta').id = 'meta-' + b.id;
     const input = el.querySelector('input'), btn = el.querySelector('button'), delta = el.querySelector('.delta');
+    const pctEl = el.querySelector('.book-pct'), bar = el.querySelector('.prog > i');
     const update = () => {
       const v = parseInt(input.value, 10);
+      // Preview the new % while typing a valid page; fall back to the logged page otherwise
+      const shown = b.pages && v > last && v <= b.pages ? v : last;
+      if (pctEl) { pctEl.textContent = Math.round(Math.min(100, shown / b.pages * 100)) + '%'; pctEl.toggleAttribute('data-preview', shown !== last); }
+      if (b.pages) bar.style.width = Math.min(100, shown / b.pages * 100) + '%';
       delta.removeAttribute('data-bad');
       if (!v) { delta.textContent = ''; return; }
       if (v <= last) { delta.textContent = `Already at ${last}`; delta.setAttribute('data-bad', ''); return; }
@@ -787,8 +799,8 @@ const goalLinePlugin = {
   }
 };
 
-function renderMonthly(totals) {
-  const t = today(), y = t.slice(0, 4), curM = Number(t.slice(5, 7));
+function renderMonthly(totals, y = today().slice(0, 4)) {
+  const t = today(), curM = y < t.slice(0, 4) ? 12 : Number(t.slice(5, 7));
   const tot = new Array(curM).fill(0), days = new Array(curM).fill(0);
   for (const [d, p] of totals) if (d.startsWith(y)) { const m = Number(d.slice(5, 7)) - 1; if (m < curM) { tot[m] += p; days[m]++; } }
   const best = tot.indexOf(Math.max(...tot));
@@ -796,11 +808,11 @@ function renderMonthly(totals) {
   const cfg = {
     type: 'bar',
     data: { labels: MONTHS.slice(0, curM), datasets: [{ label: 'Pages', data: tot,
-      backgroundColor: tot.map((_, i) => i === curM - 1 ? MC[i] + '8c' : MC[i]), borderRadius: 4, maxBarThickness: 44 }] },
+      backgroundColor: tot.map((_, i) => i === curM - 1 && y === t.slice(0, 4) ? MC[i] + '8c' : MC[i]), borderRadius: 4, maxBarThickness: 44 }] },
     options: {
       responsive: true, maintainAspectRatio: false, animation: false,
       plugins: { legend: { display: false }, tooltip: { callbacks: {
-        label: c => `${fmt(c.raw)} pages · ${fmt(Math.round(c.raw / Math.max(1, days[c.dataIndex])))} a day${c.dataIndex === curM - 1 ? ' (month in progress)' : ''}`
+        label: c => `${fmt(c.raw)} pages · ${fmt(Math.round(c.raw / Math.max(1, days[c.dataIndex])))} a day${c.dataIndex === curM - 1 && y === t.slice(0, 4) ? ' (month in progress)' : ''}`
       } } },
       scales: { x: { grid: { display: false } }, y: { beginAtZero: true, grid: { color: css('--line') }, ticks: { maxTicksLimit: 5, callback: v => fmt(v) } } }
     }
@@ -809,10 +821,10 @@ function renderMonthly(totals) {
   monthChart = new Chart($('monthChart'), cfg);
 }
 
-function renderHeat(totals) {
+function renderHeat(totals, y = today().slice(0, 4)) {
   const box = $('heat');
   box.textContent = '';
-  const t = today(), y = t.slice(0, 4);
+  const t = today();
   const jan1 = `${y}-01-01`, dec31 = `${y}-12-31`;
   const lead = (fromIso(jan1).getDay() + 6) % 7; // Monday-first rows
   const strength = p => p <= 0 ? 0 : p < 50 ? .3 : p < 100 ? .5 : p < 200 ? .78 : 1;
@@ -843,9 +855,9 @@ function renderAll() {
   renderToday();
   chartBase();
   renderDaily(totals);
-  renderMonthly(totals);
-  renderHeat(totals);
-  if (state.libLoaded) renderLibrary();
+  renderPace();
+  if (state.libLoaded) { renderLibrary(); renderTBR(); }
+  renderQuote();
   if (state.libLoaded && !$('view-dashboard').hidden) renderDashboard();
   if (state.libLoaded && !$('view-tools').hidden) renderTools();
 }
@@ -1206,6 +1218,8 @@ async function finishBook(book, rating, btn) {
 
 /* ---------- dashboard ---------- */
 let dashPeriod = String(new Date().getFullYear()), finChart;
+// Monthly totals and the calendar follow the chosen year; "All time" shows this year
+const dashYear = () => dashPeriod === 'all' ? today().slice(0, 4) : dashPeriod;
 const finYear = b => (b.finishDate || '').slice(0, 4);
 function hbars(el, items, max, fmtVal) {
   el.textContent = '';
@@ -1249,13 +1263,14 @@ function renderDashboard() {
   if (dashPeriod === thisYear) { const doy = daysBetween(thisYear + '-01-01', today()) + 1; paceSub = `on pace for ${Math.round(read.length / doy * 365)} this year`; }
   $('dashTiles').innerHTML =
     tile('Books read', fmt(read.length), paceSub) +
-    tile('Pages read', fmt(pages), 'from finished books') +
+    tile('Pages read', fmt(pages), 'total length of books finished') +
     tile('Average rating', avgRating ? avgRating.toFixed(2) : '–', `${rated.length} rated`) +
     tile('Average length', read.length ? fmt(Math.round(pages / read.length)) : '–', 'pages per book') +
     tile('Longest', longest ? fmt(toNum(longest.pages)) : '–', longest ? escapeText(longest.title) : '') +
     tile('Did not finish', fmt(dnf.length), label);
 
-  renderPace();
+  renderMonthly(dailyTotals(), dashYear());
+  renderHeat(dailyTotals(), dashYear());
 
   // Books finished: by month for a year, by year for all time
   const accent = css('--accent');
@@ -1327,7 +1342,10 @@ function renderDashboard() {
     .sort((a, b) => (a.value === 100) - (b.value === 100) || b.value - a.value).slice(0, 8);
   hbars($('serBars'), sItems, 100, it => `${it.r}/${it.n}`);
 
-  // TBR
+}
+
+function renderTBR() {
+  const all = state.allBooks, accent = css('--accent');
   const tbr = all.filter(b => b.status === 'TBR');
   const tbrPages = tbr.reduce((a, b) => a + toNum(b.pages), 0);
   const avgDaily = recentDailyAverage(30);
@@ -1803,8 +1821,11 @@ const LINKS = [
   ["Anna's Archive", 'https://annas-archive.pk/'], ['Open Library', 'https://openlibrary.org'], ['Goodreads', 'https://www.goodreads.com'],
   ['LibraryThing', 'https://www.librarything.com'], ['The StoryGraph', 'https://app.thestorygraph.com']
 ];
-async function loadDiscover() {
-  if (disc.loaded || !state.mcp) return;
+function loadDiscover() {
+  if (disc.loaded || !state.mcp) return Promise.resolve();
+  return disc.loading || (disc.loading = fetchDiscover().finally(() => { disc.loading = null; }));
+}
+async function fetchDiscover() {
   const [q, w] = await Promise.allSettled([
     state.mcp.callTool(SERVER, 'get_values', { spreadsheetId: QUOTES_ID, range: 'QUOTES!A1:D2000' }, { cache: false }),
     readRange('Wishlist!A1:L2000')
@@ -1819,19 +1840,24 @@ async function loadDiscover() {
   } else disc.wErr = w.reason;
   disc.loaded = true;
 }
-async function renderDiscover() {
-  if (!state.mcp) { $('discQuote').innerHTML = '<p class="empty">Discover reads your sheets live. ' + connectHint() + '</p>'; return; }
-  if (!disc.loaded) { $('discQuote').innerHTML = '<p class="empty">Loading…</p>'; await loadDiscover(); }
-  // Quote of the day (same quote all day; "Another" cycles)
+// Quote of the day on the Log (same quote all day; "Another" cycles)
+async function renderQuote() {
   const qb = $('discQuote');
+  if (!isLive()) { qb.innerHTML = '<p class="empty">Quotes load from your Quotes sheet. ' + connectHint() + '</p>'; return; }
+  if (!disc.loaded) { if (!qb.firstChild) qb.innerHTML = '<p class="empty">Loading…</p>'; await loadDiscover(); }
   if (disc.quotes.length) {
     if (disc.qIdx == null) { const d = daysBetween('2026-01-01', today()); disc.qIdx = ((d * 7919) % disc.quotes.length + disc.quotes.length) % disc.quotes.length; }
     const q = disc.quotes[disc.qIdx];
     qb.innerHTML = `<blockquote class="quote"><p></p><footer></footer></blockquote><button class="btn" type="button" id="qNext">Another quote</button>`;
     qb.querySelector('p').textContent = q.text;
     qb.querySelector('footer').textContent = '— ' + [q.who, q.from, q.by && q.by !== q.who ? q.by : ''].filter(Boolean).join(', ');
-    $('qNext').onclick = () => { disc.qIdx = (disc.qIdx + 1) % disc.quotes.length; renderDiscover(); };
+    $('qNext').onclick = () => { disc.qIdx = (disc.qIdx + 1) % disc.quotes.length; renderQuote(); };
   } else qb.innerHTML = `<p class="empty">${disc.qErr ? 'Couldn\'t read your Quotes sheet: ' + escapeText(explain(disc.qErr)) : 'No quotes found.'}</p>`;
+}
+
+async function renderDiscover() {
+  if (!isLive()) { $('discOnDay').innerHTML = '<li class="empty">Discover reads your sheets live. ' + connectHint() + '</li>'; return; }
+  if (!disc.loaded) { $('discOnDay').innerHTML = '<li class="empty">Loading…</li>'; await loadDiscover(); }
   // On this day
   const t = today(), md = t.slice(5), list = $('discOnDay'); list.textContent = '';
   const near = state.allBooks.filter(b => b.status === 'Read' && b.finishDate && b.finishDate.slice(0, 4) < t.slice(0, 4))
@@ -1928,7 +1954,7 @@ document.querySelectorAll('.range-tabs button').forEach(b => b.addEventListener(
   renderDaily(dailyTotals());
 }));
 // Redraw charts when the theme flips so their colours follow
-const redraw = () => { chartBase(); const t = dailyTotals(); renderDaily(t); renderMonthly(t); };
+const redraw = () => { chartBase(); renderDaily(dailyTotals()); };
 void redraw;
 
 /* ---------- Google Sheets direct (GitHub Pages and other hosts outside claude.ai) ----------
