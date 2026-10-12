@@ -1243,6 +1243,15 @@ function renderDashboard() {
   const longest = read.reduce((m, b) => toNum(b.pages) > toNum(m && m.pages) ? b : m, null);
   const avgRating = rated.length ? rated.reduce((a, b) => a + toNum(b.rating), 0) / rated.length : 0;
   const label = dashPeriod === 'all' ? 'all time' : dashPeriod;
+  // Pages read: for a year the daily log fully covers, use the logged total (matches the Log tab);
+  // otherwise fall back to the length of the books finished
+  const pagesTile = () => {
+    const first = state.entries.reduce((m, e) => !m || e.date < m ? e.date : m, '');
+    if (dashPeriod === 'all' || !first || first > dashPeriod + '-01-01') return tile('Pages read', fmt(pages), 'total length of books finished');
+    let tot = 0; const days = new Set();
+    for (const [d, p] of dailyTotals()) if (d.startsWith(dashPeriod)) { tot += p; days.add(d); }
+    return tile('Pages read', fmt(tot), `${days.size ? fmt(Math.round(tot / days.size)) + ' a day on average · ' : ''}${fmt(pages)} in finished books`);
+  };
   const tile = (eb, num, sub) => `<div class="stat"><span class="eyebrow">${eb}</span><span class="num tnum">${num}</span><span class="sub">${sub}</span></div>`;
   // Pace this year vs a full year, only for the current year
   const thisYear = String(new Date().getFullYear());
@@ -1250,7 +1259,7 @@ function renderDashboard() {
   if (dashPeriod === thisYear) { const doy = daysBetween(thisYear + '-01-01', today()) + 1; paceSub = `on pace for ${Math.round(read.length / doy * 365)} this year`; }
   $('dashTiles').innerHTML =
     tile('Books read', fmt(read.length), paceSub) +
-    tile('Pages read', fmt(pages), 'total length of books finished') +
+    pagesTile() +
     tile('Average rating', avgRating ? avgRating.toFixed(2) : '–', `${rated.length} rated`) +
     tile('Average length', read.length ? fmt(Math.round(pages / read.length)) : '–', 'pages per book') +
     tile('Longest', longest ? fmt(toNum(longest.pages)) : '–', longest ? escapeText(longest.title) : '') +
