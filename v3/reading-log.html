@@ -235,6 +235,9 @@ dialog::backdrop{background:rgba(8,6,14,.65)}
 .dlg-head{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--surface);z-index:1}
 .dlg-head h2{font-size:20px}
 .dlg-body{padding:16px 20px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.dlg-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:flex-end}
+.dlg-log{font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer}
+.dlg-log input{accent-color:var(--accent);width:16px;height:16px}
 .dlg-foot{display:flex;justify-content:space-between;gap:10px;padding:14px 20px;border-top:1px solid var(--line);position:sticky;bottom:0;background:var(--surface)}
 .field{display:flex;flex-direction:column;gap:4px;min-width:0}
 .field label{font-size:12px;color:var(--muted);font-weight:600}
@@ -482,7 +485,7 @@ dialog::backdrop{background:rgba(8,6,14,.65)}
   <form id="bookForm" method="dialog">
     <div class="dlg-head"><h2 id="dlgTitle">Edit book</h2><button class="btn" type="button" id="dlgClose">Close</button></div>
     <div class="dlg-body" id="dlgBody"></div>
-    <div class="dlg-foot"><span class="muted" id="dlgMsg" style="font-size:13px;align-self:center"></span><button class="btn btn-primary" type="submit" id="dlgSave">Save</button></div>
+    <div class="dlg-foot"><span class="muted" id="dlgMsg" style="font-size:13px;align-self:center"></span><span class="dlg-actions"><label class="dlg-log" id="dlgLogWrap" hidden><input type="checkbox" id="dlgLog" checked> <span id="dlgLogText"></span></label><button class="btn btn-primary" type="submit" id="dlgSave">Save</button></span></div>
   </form>
 </dialog>
 
@@ -957,10 +960,8 @@ async function logEntry({ pages, bookId = '', title = '', pageReached = '' }, bt
   let ok = false;
   btn.disabled = true; btn.textContent = 'Saving…';
   const now = new Date();
-  const row = [iso(now), pages, bookId, title, pageReached, `${iso(now)} ${pad(now.getHours())}:${pad(now.getMinutes())}`, 'app'];
   try {
-    await state.mcp.callTool(SERVER, 'append_values', { spreadsheetId: SHEET_ID, range: "'Reading Log'!A1", values: [row] }, { cache: false });
-    state.entries.push({ date: row[0], pages, bookId, title, pageReached: pageReached || null, source: 'app' });
+    await appendLogRow({ pages, bookId, title, pageReached });
     renderAll();
     notice('');
     if (bookId && pageReached) {
@@ -980,6 +981,14 @@ async function logEntry({ pages, bookId = '', title = '', pageReached = '' }, bt
   return ok;
 }
 
+
+// One Reading Log row; also added to the in-memory log so totals update straight away
+async function appendLogRow({ pages, bookId = '', title = '', pageReached = '' }) {
+  const now = new Date();
+  const row = [iso(now), pages, bookId ? "'" + bookId : '', title ? "'" + title : '', pageReached || '', `${iso(now)} ${pad(now.getHours())}:${pad(now.getMinutes())}`, 'app'];
+  await state.mcp.callTool(SERVER, 'append_values', { spreadsheetId: SHEET_ID, range: "'Reading Log'!A1", values: [row] }, { cache: false });
+  state.entries.push({ date: row[0], pages, bookId, title, pageReached: pageReached || null, source: 'app' });
+}
 
 /* ---------- Books sheet writes (changed cells only, row found by id just before writing) ---------- */
 const NUM_FIELDS = ['currentPage', 'pages', 'rating', 'year', 'seriesNum', 'ambition'];
@@ -1155,7 +1164,25 @@ function openBookDialog(book) {
     wrap.append(lab, el);
     body.appendChild(wrap);
   }
+  $('dlgLog').checked = true;
+  updateDlgLog();
   $('bookDlg').showModal();
+}
+
+// Pages gained in the dialog: a new current page above the old one, on a book being read
+// (or finished today). Offered as a tick box so correcting a page number doesn't log pages.
+function dlgPageGain() {
+  const f = $('bookForm').elements;
+  const status = f.status ? f.status.value : '', now = toNum(f.currentPage && f.currentPage.value);
+  const finishedToday = status === 'Read' && f.finishDate && toDate(f.finishDate.value) === today();
+  if (!(status === 'Reading' || finishedToday)) return 0;
+  const was = editing ? toNum(editing.currentPage) : 0;
+  return now > was ? now - was : 0;
+}
+function updateDlgLog() {
+  const gain = dlgPageGain();
+  $('dlgLogWrap').hidden = !gain;
+  $('dlgLogText').textContent = `Count ${gain} page${gain === 1 ? '' : 's'} towards today`;
 }
 async function saveBookDialog(e) {
   e.preventDefault();
@@ -1164,7 +1191,9 @@ async function saveBookDialog(e) {
   for (const f of FORM) if (f.k) data[f.k] = $('bookForm').elements[f.k].value.trim();
   if (!data.title) { $('dlgMsg').textContent = 'A title is needed.'; return; }
   const btn = $('dlgSave'); btn.disabled = true; btn.textContent = 'Saving…';
+  const gain = $('dlgLog').checked ? dlgPageGain() : 0;
   try {
+    let savedId = editing && editing.id;
     if (editing) {
       const changed = {};
       for (const [k, v] of Object.entries(data)) {
@@ -1177,8 +1206,13 @@ async function saveBookDialog(e) {
       setStatus('live', Object.keys(changed).length ? `Saved ${Object.keys(changed).length} change${Object.keys(changed).length > 1 ? 's' : ''} to “${data.title}”` : 'No changes to save');
     } else {
       const b = await addBook(data);
+      savedId = b.id;
       state.lib.open = b.id;
       setStatus('live', `Added “${b.title}” with ID ${b.id}`);
+    }
+    if (gain) {
+      try { await appendLogRow({ pages: gain, bookId: savedId, title: data.title, pageReached: toNum(data.currentPage) }); }
+      catch (err) { notice(`The book was saved, but its ${gain} pages weren't added to today's count: ${err.message || explain(err)}`, 'error'); }
     }
     $('bookDlg').close();
     renderAll();
@@ -1935,6 +1969,8 @@ $('libBody').addEventListener('click', e => {
 $('libMore').addEventListener('click', () => { state.lib.limit += 100; renderLibrary(); });
 $('addBookBtn').addEventListener('click', () => { if (!state.libLoaded) return; openBookDialog(null); });
 $('bookForm').addEventListener('submit', saveBookDialog);
+$('bookForm').addEventListener('input', updateDlgLog);
+$('bookForm').addEventListener('change', updateDlgLog);
 $('dlgClose').addEventListener('click', () => $('bookDlg').close());
 $('drillClose').addEventListener('click', () => $('drillDlg').close());
 
