@@ -77,6 +77,34 @@ button{font:inherit;cursor:pointer}
 .book:first-of-type{border-top:0;padding-top:0}
 .book-title{font-weight:600;line-height:1.3}
 .book-meta{font-size:13px;color:var(--muted)}
+.reading-now{margin-bottom:20px}
+.logday{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.logday button{font:inherit;font-size:12px;font-weight:600;border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:999px;padding:4px 11px;cursor:pointer}
+.logday button[aria-pressed="true"]{background:color-mix(in srgb,var(--accent) 22%,transparent);border-color:var(--accent);color:var(--fg)}
+.logday input[type=date]{font:inherit;font-size:12px;background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:999px;padding:3px 10px;color-scheme:dark}
+.logday-banner{margin:-4px 0 12px;padding:8px 12px;border-radius:10px;font-size:13px;font-weight:600;background:color-mix(in srgb,var(--accent) 16%,transparent);border:1px solid color-mix(in srgb,var(--accent) 45%,transparent)}
+.nb{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr) auto;gap:8px 22px;align-items:center;padding:14px 0;border-top:1px solid var(--line)}
+.nb:first-child{border-top:0;padding-top:4px}
+.nb .nb-prog{display:flex;flex-direction:column;gap:6px}
+.nb .nb-prog .row{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.nb .nb-sub{font-size:12px;color:var(--muted)}
+.nb .recent{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.nb .recent span{font-size:11px;padding:2px 8px;border-radius:999px;background:var(--raise);color:var(--muted)}
+.nb .recent b{color:var(--fg);font-weight:600}
+.nb .nb-log{display:flex;align-items:center;gap:8px}
+.nb .nb-log input{width:84px}
+.nb .nb-extra{grid-column:1/-1;display:flex;flex-direction:column;gap:6px}
+.nb .nb-extra:empty{display:none}
+@media (max-width:860px){.nb{grid-template-columns:minmax(0,1fr) auto}.nb .nb-prog{grid-column:1/-1;order:3}.nb .nb-extra{order:4}}
+@media (max-width:560px){.nb{grid-template-columns:minmax(0,1fr)}.nb .nb-prog{order:2}.nb .nb-log{order:3}.nb .nb-log label{margin-right:auto}}
+.today-list .ent{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:8px;align-items:center}
+.today-list .ent .when{font-size:11px;color:var(--muted)}
+.today-list .ent .acts{display:flex;gap:4px}
+.today-list .ent .acts button{font:inherit;font-size:11px;background:none;border:0;color:var(--muted);cursor:pointer;padding:2px 4px;text-decoration:underline}
+.today-list .edit{display:flex;gap:6px;flex-wrap:wrap;align-items:center;grid-column:1/-1}
+.today-list .edit input{font:inherit;font-size:13px;background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:4px 8px;color-scheme:dark}
+.today-list .edit input[type=number]{width:80px}
+.quick{margin-bottom:10px}
 .book-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
 .book-pct{font-family:var(--display);font-size:28px;font-weight:700;line-height:1;color:var(--accent);flex:none}
 .book-pct[data-preview]{color:color-mix(in srgb,var(--accent) 65%,#fff)}
@@ -333,21 +361,29 @@ dialog::backdrop{background:rgba(8,6,14,.65)}
     </div>
   </section>
 
+  <section class="panel reading-now" aria-labelledby="logH">
+    <div class="panel-head">
+      <h2 id="logH">Reading now</h2>
+      <div class="logday" role="group" aria-label="Day you're logging for">
+        <span class="muted small" id="paceNote"></span>
+        <button type="button" data-day="0" aria-pressed="true">Today</button>
+        <button type="button" data-day="-1" aria-pressed="false">Yesterday</button>
+        <input type="date" id="logDate" aria-label="Pick a day to log for">
+      </div>
+    </div>
+    <div class="logday-banner" id="logDayBanner" hidden></div>
+    <div id="books"></div>
+  </section>
+
   <div class="grid">
     <div>
-      <section class="panel" aria-labelledby="logH">
-        <div class="panel-head"><h2 id="logH">Log your reading</h2><span class="muted" style="font-size:13px">Type the page you're on</span></div>
-        <div id="books"></div>
-        <div class="quick">
-          <div class="logrow">
-            <label for="quickPages">Pages without a book</label>
-            <input type="number" id="quickPages" min="1" max="2000" inputmode="numeric" placeholder="0">
-            <button class="btn" id="quickBtn" type="button">Add</button>
-          </div>
+      <section class="panel" aria-labelledby="recentH">
+        <div class="panel-head"><h2 id="recentH">Recent entries</h2><span class="muted tnum small" id="todayCount"></span></div>
+        <div class="logrow quick">
+          <label for="quickPages">Pages without a book</label>
+          <input type="number" id="quickPages" min="1" max="2000" inputmode="numeric" placeholder="0">
+          <button class="btn" id="quickBtn" type="button">Add</button>
         </div>
-      </section>
-      <section class="panel" aria-labelledby="todayH">
-        <div class="panel-head"><h2 id="todayH">Today's entries</h2><span class="muted tnum" id="todayCount" style="font-size:13px"></span></div>
         <ul class="today-list" id="todayList"></ul>
       </section>
       <section class="panel" aria-labelledby="qH"><div class="panel-head"><h2 id="qH">Quote of the day</h2><span class="muted small">From your Quotes sheet</span></div><div id="discQuote"></div></section>
@@ -369,10 +405,6 @@ dialog::backdrop{background:rgba(8,6,14,.65)}
           <span><i class="sw" id="lgUnder"></i>Under goal</span>
           <span><i class="sw" style="background:var(--accent-2)"></i>7-day average</span>
         </div>
-      </section>
-      <section class="panel" aria-labelledby="paceH">
-        <div class="panel-head"><h2 id="paceH">Reading now</h2><span class="muted" id="paceNote" style="font-size:13px"></span></div>
-        <div class="pace" id="pace"></div>
       </section>
     </div>
   </div>
@@ -574,7 +606,7 @@ const state = {
   entries: SNAPSHOT.pages.map((p, i) => ({ date: addDays(SNAPSHOT.start, i), pages: p, bookId: '', title: '', pageReached: null, source: 'import' })),
   books: SNAPSHOT.books.map(b => ({ ...b })),
   settings: { ...SNAPSHOT.settings },
-  mcp: null, live: false, busy: false, range: 90,
+  mcp: null, live: false, busy: false, range: 90, logDate: null, editing: null,
   allBooks: [], header: [], libLoaded: false,
   lib: { q: '', status: 'All', type: '', format: '', genre: '', owned: '', sort: 'sheet', dir: 1, limit: 100, open: null }
 };
@@ -638,9 +670,48 @@ function lastPageFor(book) {
   return p;
 }
 
+// The day new log entries go on: today unless you've picked an earlier day (e.g. after a flight)
+const logDay = () => state.logDate || today();
+const dayLabel = d => d === today() ? 'Today' : d === addDays(today(), -1) ? 'Yesterday'
+  : fromIso(d).toLocaleDateString('en-AU', daysBetween(d, today()) < 7 ? { weekday: 'short' } : { day: 'numeric', month: 'short' });
+
+function setLogDay(d) {
+  state.logDate = d && d < today() ? d : null;
+  const cur = logDay();
+  document.querySelectorAll('.logday button').forEach(b => b.setAttribute('aria-pressed', String(addDays(today(), Number(b.dataset.day)) === cur && (cur !== today() || b.dataset.day === '0'))));
+  $('logDate').max = today();
+  $('logDate').value = state.logDate || '';
+  const ban = $('logDayBanner');
+  ban.hidden = !state.logDate;
+  if (state.logDate) ban.textContent = `Logging for ${fromIso(cur).toLocaleDateString('en-AU', { weekday: 'long', day: 'numeric', month: 'long' })}. New entries and finished books go on that day.`;
+}
+
+// Pace for one book: your recent daily pages, split by how much this book got in the last 14 days
+function bookPace(b) {
+  const avg = recentDailyAverage(14), since = addDays(today(), -14);
+  const per = new Map();
+  for (const e of state.entries) if (e.bookId && e.date > since) per.set(e.bookId, (per.get(e.bookId) || 0) + e.pages);
+  const logged = state.books.reduce((a, x) => a + (per.get(x.id) || 0), 0);
+  const share = logged ? (per.get(b.id) || 0) / logged : 1 / Math.max(1, state.books.length);
+  const rate = avg * share, left = Math.max(0, (b.pages || 0) - lastPageFor(b));
+  const days = rate > 0 && b.pages ? Math.ceil(left / rate) : null;
+  if (!b.pages) return 'Add a page count to estimate a finish date';
+  if (days == null) return `${fmt(left)} pages left · log some pages to estimate`;
+  const done = fromIso(addDays(today(), days));
+  return `${fmt(left)} left · about ${fmt(Math.round(rate))} a day · done ${days === 0 ? 'today' : 'around ' + done.toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' })}`;
+}
+
+// The last few days you read this book, newest first: [{date, pages}]
+function recentDays(bookId, n = 3) {
+  const m = new Map();
+  for (const e of state.entries) if (e.bookId === bookId) m.set(e.date, (m.get(e.date) || 0) + e.pages);
+  return [...m.entries()].sort((a, b) => a[0] < b[0] ? 1 : -1).slice(0, n).map(([date, pages]) => ({ date, pages }));
+}
+
 function renderBooks() {
   const box = $('books');
   box.textContent = '';
+  $('paceNote').textContent = state.books.length ? `You average ${fmt(Math.round(recentDailyAverage(14)))} pages a day (last 14 days)` : '';
   if (!state.books.length) {
     box.innerHTML = '<p class="muted">No books marked Reading in your sheet. Set a book\'s status to Reading and press Refresh.</p>';
     return;
@@ -649,24 +720,34 @@ function renderBooks() {
     const last = lastPageFor(b);
     const pct = b.pages ? Math.min(100, last / b.pages * 100) : 0;
     const el = document.createElement('div');
-    el.className = 'book';
+    el.className = 'nb';
     const inputId = 'pg-' + b.id;
     el.innerHTML = `
-      <div class="book-head"><div><div class="book-title"></div><div class="book-meta tnum"></div></div>${b.pages ? `<span class="book-pct tnum">${Math.round(pct)}%</span>` : ''}</div>
-      <div class="prog" aria-hidden="true"><i style="width:${pct}%"></i></div>
-      <div class="logrow">
+      <div class="nb-info"><div class="book-title"></div><div class="book-meta tnum"></div><div class="recent tnum"></div></div>
+      <div class="nb-prog">
+        <div class="row"><span class="nb-sub tnum"></span>${b.pages ? `<span class="book-pct tnum">${Math.round(pct)}%</span>` : ''}</div>
+        <div class="prog" aria-hidden="true"><i style="width:${pct}%"></i></div>
+      </div>
+      <div class="nb-log logrow">
         <label for="${inputId}">On page</label>
         <input type="number" id="${inputId}" min="1" ${b.pages ? `max="${b.pages}"` : ''} inputmode="numeric" aria-describedby="meta-${b.id}">
         <button class="btn btn-primary" type="button">Log</button>
         <span class="delta tnum" aria-live="polite"></span>
-      </div>`;
+      </div>
+      <div class="nb-extra"></div>`;
+    const extra = el.querySelector('.nb-extra');
+    const rec = el.querySelector('.recent');
+    const days = recentDays(b.id);
+    if (!days.length) rec.innerHTML = '<span>Not logged yet</span>';
+    for (const d of days) { const sp = document.createElement('span'); sp.innerHTML = `${dayLabel(d.date)} <b>+${fmt(d.pages)}</b>`; rec.appendChild(sp); }
+    el.querySelector('.nb-sub').textContent = bookPace(b);
     if (b.pages && last >= b.pages) {
       const fin = document.createElement('div');
       fin.className = 'finish';
       fin.innerHTML = `<span>You've reached the last page.</span><label>Rating <select aria-label="Rating"><option value="">–</option>${['5','4.5','4','3.5','3','2.5','2','1.5','1','0.5'].map(r => `<option>${r}</option>`).join('')}</select></label><button class="btn btn-primary" type="button">Mark as read</button>`;
       const fb = fin.querySelector('button');
       fb.addEventListener('click', () => finishBook(b, fin.querySelector('select').value, fb));
-      el.appendChild(fin);
+      extra.appendChild(fin);
     }
     const story = storyAt(b.id, last, b.pages);
     const ctRow = document.createElement('div');
@@ -676,12 +757,12 @@ function renderBooks() {
     if (story) ctRow.querySelector('b').textContent = story.story;
     if (story || isCollection) {
       const cb = document.createElement('button'); cb.type = 'button'; cb.className = 'linkbtn'; cb.textContent = story ? 'Edit contents' : 'Add contents';
-      cb.addEventListener('click', () => openContents(b)); ctRow.appendChild(cb); el.appendChild(ctRow);
+      cb.addEventListener('click', () => openContents(b)); ctRow.appendChild(cb); extra.appendChild(ctRow);
     }
     el.querySelector('.book-title').textContent = b.title;
     el.querySelector('.book-meta').textContent = `${b.author ? b.author + ' · ' : ''}page ${fmt(last)}${b.pages ? ' of ' + fmt(b.pages) : ''}`;
     el.querySelector('.book-meta').id = 'meta-' + b.id;
-    const input = el.querySelector('input'), btn = el.querySelector('button'), delta = el.querySelector('.delta');
+    const input = el.querySelector('input'), btn = el.querySelector('.nb-log button'), delta = el.querySelector('.delta');
     const pctEl = el.querySelector('.book-pct'), bar = el.querySelector('.prog > i');
     const update = () => {
       const v = parseInt(input.value, 10);
@@ -706,28 +787,102 @@ function renderBooks() {
   }
 }
 
+// Recent entries: the last 7 days of log rows, newest first, each with Edit and Delete
 function renderToday() {
-  const t = today();
+  const t = today(), since = addDays(t, -6);
   const list = $('todayList');
   list.textContent = '';
-  const items = state.entries.filter(e => e.date === t);
-  $('todayCount').textContent = items.length ? `${items.length} ${items.length === 1 ? 'entry' : 'entries'}` : '';
+  const items = state.entries.filter(e => e.date >= since && e.date <= t)
+    .sort((a, b) => a.date !== b.date ? (a.date < b.date ? 1 : -1) : (b._row || 0) - (a._row || 0));
+  const todays = items.filter(e => e.date === t).length;
+  $('todayCount').textContent = `${todays} today · last 7 days`;
   if (!items.length) {
     const li = document.createElement('li');
     li.className = 'muted';
-    li.textContent = 'Nothing logged yet today. Type the page you\'re on above and press Log.';
+    li.textContent = 'Nothing logged this week. Type the page you\'re on above and press Log.';
     list.appendChild(li);
     return;
   }
   for (const e of items) {
     const li = document.createElement('li');
-    const name = document.createElement('span');
-    name.textContent = e.title ? `${e.title}${e.pageReached ? ' → p. ' + e.pageReached : ''}` : (e.source === 'import' ? 'Daily total' : 'Pages');
-    const pg = document.createElement('span');
-    pg.className = 'pg tnum';
-    pg.textContent = '+' + fmt(e.pages);
-    li.append(name, pg);
+    li.className = 'ent';
+    li.innerHTML = '<span><span class="nm"></span> <span class="when"></span></span><span class="pg tnum"></span><span class="acts"></span>';
+    li.querySelector('.nm').textContent = e.title ? `${e.title}${e.pageReached ? ' → p. ' + e.pageReached : ''}` : (e.source === 'import' ? 'Daily total' : 'Pages');
+    li.querySelector('.when').textContent = dayLabel(e.date) + (e.loggedAt && e.loggedAt.slice(0, 10) !== e.date ? ' · logged later' : '');
+    li.querySelector('.pg').textContent = '+' + fmt(e.pages);
+    if (e._row && e.source !== 'import') {
+      const acts = li.querySelector('.acts');
+      const eb = document.createElement('button'); eb.type = 'button'; eb.textContent = 'Edit';
+      eb.setAttribute('aria-label', `Edit ${e.pages} pages on ${e.date}`);
+      eb.addEventListener('click', () => { state.editing = state.editing === e ? null : e; renderToday(); });
+      acts.appendChild(eb);
+    }
+    if (state.editing === e) li.appendChild(entryEditor(e));
     list.appendChild(li);
+  }
+}
+
+function entryEditor(e) {
+  const f = document.createElement('div');
+  f.className = 'edit';
+  f.innerHTML = `<input type="date" aria-label="Day" max="${today()}"><input type="number" min="1" max="2000" inputmode="numeric" aria-label="Pages">
+    <button class="btn btn-primary" type="button" data-a="save">Save</button><button class="btn" type="button" data-a="del">Delete</button><button class="btn" type="button" data-a="cancel">Cancel</button>`;
+  const [dIn, pIn] = f.querySelectorAll('input');
+  dIn.value = e.date; pIn.value = e.pages;
+  f.addEventListener('click', ev => {
+    const a = ev.target.closest('button')?.dataset.a;
+    if (a === 'cancel') { state.editing = null; renderToday(); }
+    if (a === 'save') {
+      const d = toDate(dIn.value), p = parseInt(pIn.value, 10);
+      if (!d || d > today() || !(p > 0)) { notice('Pick a day up to today and a page count above 0.', 'error'); return; }
+      editEntry(e, { date: d, pages: p }, ev.target.closest('button'));
+    }
+    if (a === 'del') {
+      if (!confirm(`Delete ${e.pages} pages${e.title ? ' of ' + e.title : ''} from ${e.date}?`)) return;
+      editEntry(e, { del: true }, ev.target.closest('button'));
+    }
+  });
+  return f;
+}
+
+// Change one Reading Log row. The row number is checked against the sheet right before writing,
+// so if the log was edited elsewhere nothing is overwritten. The connector can't remove rows,
+// so a delete sets pages to 0 and source to "deleted"; the app ignores rows with 0 pages.
+async function editEntry(e, change, btn) {
+  if (state.busy) return;
+  if (!isLive()) { notice('Editing needs the live connection. ' + connectHint(), 'error'); return; }
+  state.busy = true; btn.disabled = true; const old = btn.textContent; btn.textContent = 'Saving…';
+  try {
+    const r = e._row;
+    const cur = (await readRange(`'Reading Log'!A${r}:G${r}`))[0] || [];
+    if (toDate(cur[0]) !== e.date || toNum(cur[1]) !== e.pages || String(cur[2] ?? '').trim() !== e.bookId) {
+      notice('That entry changed in the sheet since the app loaded it. Reloading so you can try again.', 'error');
+      state.editing = null; await refresh(); return;
+    }
+    const put = (col, v) => state.mcp.callTool(SERVER, 'update_values', { spreadsheetId: SHEET_ID, range: `'Reading Log'!${col}${r}`, values: [[v]] }, { cache: false });
+    if (change.del) {
+      await put('B', 0); await put('G', 'deleted');
+      state.entries = state.entries.filter(x => x !== e);
+      // Roll the book back if this entry is what moved it to its current page
+      const b = state.books.find(x => x.id === e.bookId);
+      if (b && e.pageReached && toNum(b.currentPage) === e.pageReached) {
+        const back = Math.max(0, e.pageReached - e.pages);
+        await writeBookFields(b.id, { currentPage: String(back) });
+      }
+      setStatus('live', 'Entry deleted');
+    } else {
+      if (change.date !== e.date) await put('A', change.date);
+      if (change.pages !== e.pages) await put('B', change.pages);
+      e.date = change.date; e.pages = change.pages;
+      setStatus('live', 'Entry updated');
+    }
+    state.editing = null;
+    notice('');
+    renderAll();
+  } catch (err) {
+    notice('Couldn\'t change that entry: ' + (err.message || explain(err)), 'error');
+  } finally {
+    state.busy = false; btn.disabled = false; btn.textContent = old;
   }
 }
 
@@ -858,7 +1013,6 @@ function renderAll() {
   renderToday();
   chartBase();
   renderDaily(totals);
-  renderPace();
   if (state.libLoaded) { renderLibrary(); renderTBR(); }
   renderQuote();
   if (state.libLoaded && !$('view-dashboard').hidden) renderDashboard();
@@ -911,11 +1065,13 @@ async function refresh() {
     // Reading Log: header row, then one row per entry
     const lh = (log[0] || []).map(h => String(h).trim());
     const li = k => lh.indexOf(k);
-    state.entries = log.slice(1).map(r => ({
+    state.entries = log.slice(1).map((r, i) => ({
       date: toDate(r[li('date')]), pages: toNum(r[li('pages')]),
       bookId: String(r[li('bookId')] ?? '').trim(), title: String(r[li('title')] ?? ''),
-      pageReached: toNum(r[li('pageReached')]) || null, source: String(r[li('source')] ?? '')
+      pageReached: toNum(r[li('pageReached')]) || null, source: String(r[li('source')] ?? ''),
+      loggedAt: String(r[li('loggedAt')] ?? ''), _row: i + 2
     })).filter(e => e.date && e.pages > 0);
+    state.editing = null;
     // Books: columns found by header name, so column moves in the sheet don't break this
     const bh = (books[0] || []).map(h => String(h).trim());
     const bi = k => bh.indexOf(k);
@@ -998,9 +1154,12 @@ async function logEntry({ pages, bookId = '', title = '', pageReached = '' }, bt
 // One Reading Log row; also added to the in-memory log so totals update straight away
 async function appendLogRow({ pages, bookId = '', title = '', pageReached = '' }) {
   const now = new Date();
-  const row = [iso(now), pages, bookId ? "'" + bookId : '', title ? "'" + title : '', pageReached || '', `${iso(now)} ${pad(now.getHours())}:${pad(now.getMinutes())}`, 'app'];
-  await state.mcp.callTool(SERVER, 'append_values', { spreadsheetId: SHEET_ID, range: "'Reading Log'!A1", values: [row] }, { cache: false });
-  state.entries.push({ date: row[0], pages, bookId, title, pageReached: pageReached || null, source: 'app' });
+  const loggedAt = `${iso(now)} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+  const row = [logDay(), pages, bookId ? "'" + bookId : '', title ? "'" + title : '', pageReached || '', loggedAt, 'app'];
+  const res = await state.mcp.callTool(SERVER, 'append_values', { spreadsheetId: SHEET_ID, range: "'Reading Log'!A1", values: [row] }, { cache: false });
+  const p = (res && res.payload) || {};
+  const m = String((p.updates && p.updates.updatedRange) || p.updatedRange || '').match(/![A-Z]+(\d+)/);
+  state.entries.push({ date: row[0], pages, bookId, title, pageReached: pageReached || null, source: 'app', loggedAt, _row: m ? Number(m[1]) : null });
 }
 
 /* ---------- Books sheet writes (changed cells only, row found by id just before writing) ---------- */
@@ -1238,7 +1397,7 @@ async function saveBookDialog(e) {
 async function finishBook(book, rating, btn) {
   btn.disabled = true; btn.textContent = 'Saving…';
   try {
-    const f = { status: 'Read', finishDate: today(), currentPage: String(book.pages) };
+    const f = { status: 'Read', finishDate: logDay(), currentPage: String(book.pages) };
     if (rating) f.rating = rating;
     await writeBookFields(book.id, f);
     setStatus('live', `Marked “${book.title}” as read`);
@@ -1447,35 +1606,6 @@ function recentDailyAverage(days) {
   return sum / days;
 }
 
-// Pace: split your recent daily pages across current books by how much each got in the last 14 days
-function renderPace() {
-  const box = $('pace'); box.textContent = '';
-  const books = state.books;
-  if (!books.length) { box.innerHTML = '<p class="empty">No books marked Reading.</p>'; $('paceNote').textContent = ''; return; }
-  const avg = recentDailyAverage(14), since = addDays(today(), -14);
-  const per = new Map();
-  for (const e of state.entries) if (e.bookId && e.date > since) per.set(e.bookId, (per.get(e.bookId) || 0) + e.pages);
-  const logged = books.reduce((a, b) => a + (per.get(b.id) || 0), 0);
-  $('paceNote').textContent = `You average ${fmt(Math.round(avg))} pages a day (last 14 days)`;
-  for (const b of books) {
-    const last = lastPageFor(b), left = Math.max(0, b.pages - last);
-    const share = logged ? (per.get(b.id) || 0) / logged : 1 / books.length;
-    const rate = avg * share;
-    const days = rate > 0 && b.pages ? Math.ceil(left / rate) : null;
-    const done = days != null ? fromIso(addDays(today(), days)) : null;
-    const pct = b.pages ? Math.min(100, last / b.pages * 100) : 0;
-    const el = document.createElement('div');
-    el.className = 'pace-card';
-    el.innerHTML = `<div class="t"></div><div class="prog"><i style="width:${pct}%"></i></div>
-      <div class="big tnum">${days == null ? '–' : days === 0 ? 'Today' : days === 1 ? '1 day' : days + ' days'}</div>
-      <div class="sub tnum"></div>`;
-    el.querySelector('.t').textContent = b.title;
-    el.querySelector('.sub').textContent = !b.pages ? 'Add a page count to estimate a finish date'
-      : days == null ? `${fmt(left)} pages left · log some pages to estimate`
-      : `${fmt(left)} pages left · about ${fmt(Math.round(rate))} a day here (${Math.round(share * 100)}% of your reading) · done around ${done.toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' })}`;
-    box.appendChild(el);
-  }
-}
 const escapeText = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
 /* ================= TOOLS: RATED scorer ================= */
@@ -1988,6 +2118,9 @@ $('dlgClose').addEventListener('click', () => $('bookDlg').close());
 $('drillClose').addEventListener('click', () => $('drillDlg').close());
 
 $('refreshBtn').addEventListener('click', () => state.google && !google_.valid() ? googleConnect() : refresh());
+document.querySelectorAll('.logday button').forEach(b => b.addEventListener('click', () => setLogDay(addDays(today(), Number(b.dataset.day)))));
+$('logDate').addEventListener('change', e => setLogDay(toDate(e.target.value)));
+setLogDay(null);
 $('quickBtn').addEventListener('click', () => {
   const v = parseInt($('quickPages').value, 10);
   if (!v || v < 1) { $('quickPages').focus(); return; }
