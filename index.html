@@ -89,7 +89,9 @@ button{font:inherit;cursor:pointer}
 .nb .nb-prog .row{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
 .nb .nb-sub{font-size:12px;color:var(--muted)}
 .nb .recent{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
-.nb .recent span{font-size:11px;padding:2px 8px;border-radius:999px;background:var(--raise);color:var(--muted)}
+.nb .recent button{font:inherit;border:0;cursor:pointer}
+.nb .recent button[aria-expanded="true"]{outline:1px solid var(--accent)}
+.nb .recent span,.nb .recent button{font-size:11px;padding:2px 8px;border-radius:999px;background:var(--raise);color:var(--muted)}
 .nb .recent b{color:var(--fg);font-weight:600}
 .nb .nb-log{display:flex;align-items:center;gap:8px}
 .nb .nb-log input{width:84px}
@@ -256,6 +258,16 @@ table.lib{width:100%;border-collapse:collapse;font-size:14px;min-width:860px}
 .linkbtn{border:0;background:none;color:color-mix(in srgb,var(--accent) 70%,#fff);font-weight:600;font-size:13px;padding:0;cursor:pointer}
 .linkbtn:hover{text-decoration:underline}
 /* discover */
+.dog-btn{padding:6px 8px;line-height:0}
+.dog-btn svg{width:16px;height:16px}
+.dog-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.dog{position:relative;padding:12px 26px 12px 14px;background:var(--raise);border-radius:10px 0 10px 10px}
+.dog::after{content:"";position:absolute;top:0;right:0;width:16px;height:16px;border-bottom-left-radius:4px;background:linear-gradient(225deg,var(--surface) 50%,color-mix(in srgb,var(--accent) 60%,var(--raise)) 50%)}
+.dog.new::after{animation:fold .6s ease-out}
+@keyframes fold{from{width:0;height:0}60%{width:22px;height:22px}to{width:16px;height:16px}}
+@media (prefers-reduced-motion:reduce){.dog.new::after{animation:none}}
+.dog p{margin:0;font-size:15px;line-height:1.5;white-space:pre-line}
+.dog footer{margin-top:6px;font-size:12px;color:var(--muted)}
 .quote{margin:0 0 12px;padding:4px 0 4px 16px;border-left:3px solid var(--accent)}
 .quote p{margin:0;font-size:17px;line-height:1.55;white-space:pre-line}
 .quote footer{margin-top:10px;font-size:13px;color:var(--muted)}
@@ -373,20 +385,20 @@ dialog::backdrop{background:rgba(8,6,14,.65)}
     </div>
     <div class="logday-banner" id="logDayBanner" hidden></div>
     <div id="books"></div>
+    <div class="logrow quick">
+      <label for="quickPages">Pages without a book</label>
+      <input type="number" id="quickPages" min="1" max="2000" inputmode="numeric" placeholder="0">
+      <button class="btn" id="quickBtn" type="button">Add</button>
+    </div>
   </section>
 
   <div class="grid">
     <div>
-      <section class="panel" aria-labelledby="recentH">
-        <div class="panel-head"><h2 id="recentH">Recent entries</h2><span class="muted tnum small" id="todayCount"></span></div>
-        <div class="logrow quick">
-          <label for="quickPages">Pages without a book</label>
-          <input type="number" id="quickPages" min="1" max="2000" inputmode="numeric" placeholder="0">
-          <button class="btn" id="quickBtn" type="button">Add</button>
-        </div>
-        <ul class="today-list" id="todayList"></ul>
-      </section>
       <section class="panel" aria-labelledby="qH"><div class="panel-head"><h2 id="qH">Quote of the day</h2><span class="muted small">From your Quotes sheet</span></div><div id="discQuote"></div></section>
+      <section class="panel" aria-labelledby="dogH">
+        <div class="panel-head"><h2 id="dogH">Dog-ear quotes</h2><button class="btn" type="button" id="dogAdd">Dog-ear a quote</button></div>
+        <ul class="dog-list" id="dogList"></ul>
+      </section>
     </div>
 
     <div>
@@ -526,11 +538,24 @@ dialog::backdrop{background:rgba(8,6,14,.65)}
   </form>
 </dialog>
 
+<dialog id="quoteDlg" aria-labelledby="qdTitle" style="width:min(560px,calc(100vw - 32px))">
+  <form id="quoteForm" method="dialog">
+    <div class="dlg-head"><h2 id="qdTitle">Dog-ear a quote</h2><button class="btn" type="button" id="qdClose">Close</button></div>
+    <div style="padding:16px 20px;display:grid;grid-template-columns:minmax(0,1fr) 100px;gap:12px">
+      <div class="field"><label for="qdBook">Book</label><input id="qdBook" list="qdBooks" autocomplete="off" required><datalist id="qdBooks"></datalist></div>
+      <div class="field"><label for="qdPage">Page</label><input id="qdPage" type="number" min="1" inputmode="numeric"></div>
+      <div class="field" style="grid-column:1/-1"><label for="qdText">Quote</label><textarea id="qdText" rows="5" required></textarea></div>
+      <div class="field" style="grid-column:1/-1"><label for="qdWho">Said by (optional, for a character)</label><input id="qdWho" autocomplete="off"></div>
+    </div>
+    <div class="dlg-foot"><span class="muted" id="qdMsg" style="font-size:13px;align-self:center"></span><button class="btn btn-primary" type="submit" id="qdSave">Fold the corner</button></div>
+  </form>
+</dialog>
+
 <dialog id="bookDlg" aria-labelledby="dlgTitle">
   <form id="bookForm" method="dialog">
     <div class="dlg-head"><h2 id="dlgTitle">Edit book</h2><button class="btn" type="button" id="dlgClose">Close</button></div>
     <div class="dlg-body" id="dlgBody"></div>
-    <div class="dlg-foot"><span class="muted" id="dlgMsg" style="font-size:13px;align-self:center"></span><span class="dlg-actions"><label class="dlg-log" id="dlgLogWrap" hidden><input type="checkbox" id="dlgLog" checked> <span id="dlgLogText"></span></label><button class="btn btn-primary" type="submit" id="dlgSave">Save</button></span></div>
+    <div class="dlg-foot"><span class="muted" id="dlgMsg" style="font-size:13px;align-self:center"></span><span class="dlg-actions"><button class="btn" type="button" id="dlgQuote" hidden>Dog-ear a quote</button><label class="dlg-log" id="dlgLogWrap" hidden><input type="checkbox" id="dlgLog" checked> <span id="dlgLogText"></span></label><button class="btn btn-primary" type="submit" id="dlgSave">Save</button></span></div>
   </form>
 </dialog>
 
@@ -732,6 +757,7 @@ function renderBooks() {
         <label for="${inputId}">On page</label>
         <input type="number" id="${inputId}" min="1" ${b.pages ? `max="${b.pages}"` : ''} inputmode="numeric" aria-describedby="meta-${b.id}">
         <button class="btn btn-primary" type="button">Log</button>
+        <button class="btn dog-btn" type="button" title="Dog-ear a quote"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 1.5h6.5L13 5v9.5H3z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M9.5 1.5V5H13" fill="currentColor" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg></button>
         <span class="delta tnum" aria-live="polite"></span>
       </div>
       <div class="nb-extra"></div>`;
@@ -739,7 +765,21 @@ function renderBooks() {
     const rec = el.querySelector('.recent');
     const days = recentDays(b.id);
     if (!days.length) rec.innerHTML = '<span>Not logged yet</span>';
-    for (const d of days) { const sp = document.createElement('span'); sp.innerHTML = `${dayLabel(d.date)} <b>+${fmt(d.pages)}</b>`; rec.appendChild(sp); }
+    // Each day is a button: open it to fix or delete that day's entries for this book
+    for (const d of days) {
+      const key = b.id + '|' + d.date, open = state.editing === key;
+      const sp = document.createElement('button'); sp.type = 'button';
+      sp.innerHTML = `${dayLabel(d.date)} <b>+${fmt(d.pages)}</b>`;
+      sp.title = 'Edit or delete this day\'s entries';
+      sp.setAttribute('aria-expanded', String(open));
+      sp.addEventListener('click', () => { state.editing = open ? null : key; renderBooks(); });
+      rec.appendChild(sp);
+      if (open) for (const e of state.entries.filter(x => x.bookId === b.id && x.date === d.date && x._row)) {
+        const w = document.createElement('div'); w.className = 'today-list';
+        const lab = document.createElement('div'); lab.className = 'muted small'; lab.textContent = `${dayLabel(e.date)}: +${e.pages} pages${e.pageReached ? ' to p. ' + e.pageReached : ''}`;
+        w.append(lab, entryEditor(e)); extra.appendChild(w);
+      }
+    }
     el.querySelector('.nb-sub').textContent = bookPace(b);
     if (b.pages && last >= b.pages) {
       const fin = document.createElement('div');
@@ -762,7 +802,10 @@ function renderBooks() {
     el.querySelector('.book-title').textContent = b.title;
     el.querySelector('.book-meta').textContent = `${b.author ? b.author + ' · ' : ''}page ${fmt(last)}${b.pages ? ' of ' + fmt(b.pages) : ''}`;
     el.querySelector('.book-meta').id = 'meta-' + b.id;
-    const input = el.querySelector('input'), btn = el.querySelector('.nb-log button'), delta = el.querySelector('.delta');
+    const input = el.querySelector('input'), btn = el.querySelector('.nb-log .btn-primary'), delta = el.querySelector('.delta');
+    const dog = el.querySelector('.dog-btn');
+    dog.setAttribute('aria-label', `Dog-ear a quote from ${b.title}`);
+    dog.addEventListener('click', () => openQuoteDlg(state.allBooks.find(x => x.id === b.id) || b));
     const pctEl = el.querySelector('.book-pct'), bar = el.querySelector('.prog > i');
     const update = () => {
       const v = parseInt(input.value, 10);
@@ -787,41 +830,6 @@ function renderBooks() {
   }
 }
 
-// Recent entries: the last 7 days of log rows, newest first, each with Edit and Delete
-function renderToday() {
-  const t = today(), since = addDays(t, -6);
-  const list = $('todayList');
-  list.textContent = '';
-  const items = state.entries.filter(e => e.date >= since && e.date <= t)
-    .sort((a, b) => a.date !== b.date ? (a.date < b.date ? 1 : -1) : (b._row || 0) - (a._row || 0));
-  const todays = items.filter(e => e.date === t).length;
-  $('todayCount').textContent = `${todays} today · last 7 days`;
-  if (!items.length) {
-    const li = document.createElement('li');
-    li.className = 'muted';
-    li.textContent = 'Nothing logged this week. Type the page you\'re on above and press Log.';
-    list.appendChild(li);
-    return;
-  }
-  for (const e of items) {
-    const li = document.createElement('li');
-    li.className = 'ent';
-    li.innerHTML = '<span><span class="nm"></span> <span class="when"></span></span><span class="pg tnum"></span><span class="acts"></span>';
-    li.querySelector('.nm').textContent = e.title ? `${e.title}${e.pageReached ? ' → p. ' + e.pageReached : ''}` : (e.source === 'import' ? 'Daily total' : 'Pages');
-    li.querySelector('.when').textContent = dayLabel(e.date) + (e.loggedAt && e.loggedAt.slice(0, 10) !== e.date ? ' · logged later' : '');
-    li.querySelector('.pg').textContent = '+' + fmt(e.pages);
-    if (e._row && e.source !== 'import') {
-      const acts = li.querySelector('.acts');
-      const eb = document.createElement('button'); eb.type = 'button'; eb.textContent = 'Edit';
-      eb.setAttribute('aria-label', `Edit ${e.pages} pages on ${e.date}`);
-      eb.addEventListener('click', () => { state.editing = state.editing === e ? null : e; renderToday(); });
-      acts.appendChild(eb);
-    }
-    if (state.editing === e) li.appendChild(entryEditor(e));
-    list.appendChild(li);
-  }
-}
-
 function entryEditor(e) {
   const f = document.createElement('div');
   f.className = 'edit';
@@ -831,7 +839,7 @@ function entryEditor(e) {
   dIn.value = e.date; pIn.value = e.pages;
   f.addEventListener('click', ev => {
     const a = ev.target.closest('button')?.dataset.a;
-    if (a === 'cancel') { state.editing = null; renderToday(); }
+    if (a === 'cancel') { state.editing = null; renderBooks(); }
     if (a === 'save') {
       const d = toDate(dIn.value), p = parseInt(pIn.value, 10);
       if (!d || d > today() || !(p > 0)) { notice('Pick a day up to today and a page count above 0.', 'error'); return; }
@@ -1010,11 +1018,11 @@ function renderAll() {
   const totals = dailyTotals();
   renderStats(totals);
   renderBooks();
-  renderToday();
   chartBase();
   renderDaily(totals);
   if (state.libLoaded) { renderLibrary(); renderTBR(); }
   renderQuote();
+  renderDogears();
   if (state.libLoaded && !$('view-dashboard').hidden) renderDashboard();
   if (state.libLoaded && !$('view-tools').hidden) renderTools();
 }
@@ -1337,6 +1345,7 @@ function openBookDialog(book) {
     body.appendChild(wrap);
   }
   $('dlgLog').checked = true;
+  $('dlgQuote').hidden = !book;
   updateDlgLog();
   $('bookDlg').showModal();
 }
@@ -2000,12 +2009,14 @@ function loadDiscover() {
 }
 async function fetchDiscover() {
   const [q, w] = await Promise.allSettled([
-    state.mcp.callTool(SERVER, 'get_values', { spreadsheetId: QUOTES_ID, range: 'QUOTES!A1:D2000' }, { cache: false }),
+    state.mcp.callTool(SERVER, 'get_values', { spreadsheetId: QUOTES_ID, range: 'QUOTES!A1:G3000' }, { cache: false }),
     readRange('Wishlist!A1:L2000')
   ]);
   if (q.status === 'fulfilled') {
     const v = (q.value.payload && q.value.payload.values) || [];
-    disc.quotes = v.slice(1).map(r => ({ text: String(r[0] || '').trim(), from: String(r[1] || '').trim(), who: String(r[2] || '').trim(), by: String(r[3] || '').trim() })).filter(x => x.text && x.text.length <= 700);
+    // QUOTES columns: quote | from | character | by | bookId | page | added (row 1 is the header)
+    disc.quotes = v.slice(1).map((r, i) => ({ text: String(r[0] || '').trim(), from: String(r[1] || '').trim(), who: String(r[2] || '').trim(), by: String(r[3] || '').trim(),
+      bookId: String(r[4] || '').trim(), page: toNum(r[5]) || null, added: toDate(r[6]) || '', _row: i + 2 })).filter(x => x.text);
   } else disc.qErr = q.reason;
   if (w.status === 'fulfilled') {
     const v = w.value, h = (v[0] || []).map(x => String(x).trim());
@@ -2021,11 +2032,84 @@ async function renderQuote() {
   if (disc.quotes.length) {
     if (disc.qIdx == null) { const d = daysBetween('2026-01-01', today()); disc.qIdx = ((d * 7919) % disc.quotes.length + disc.quotes.length) % disc.quotes.length; }
     const q = disc.quotes[disc.qIdx];
+    if (q.text.length > 700) { disc.qIdx = (disc.qIdx + 1) % disc.quotes.length; return renderQuote(); }
     qb.innerHTML = `<blockquote class="quote"><p></p><footer></footer></blockquote><button class="btn" type="button" id="qNext">Another quote</button>`;
     qb.querySelector('p').textContent = q.text;
     qb.querySelector('footer').textContent = '— ' + [q.who, q.from, q.by && q.by !== q.who ? q.by : ''].filter(Boolean).join(', ');
     $('qNext').onclick = () => { disc.qIdx = (disc.qIdx + 1) % disc.quotes.length; renderQuote(); };
   } else qb.innerHTML = `<p class="empty">${disc.qErr ? 'Couldn\'t read your Quotes sheet: ' + escapeText(explain(disc.qErr)) : 'No quotes found.'}</p>`;
+}
+
+// Dog-ear quotes: lines you've saved while reading, newest first
+const dogState = { all: false, fresh: null };
+async function renderDogears() {
+  const box = $('dogList');
+  if (!isLive()) { box.innerHTML = '<li class="empty">Dog-ears save to your Quotes sheet. ' + connectHint() + '</li>'; return; }
+  if (!disc.loaded) { if (!box.firstChild) box.innerHTML = '<li class="empty">Loading…</li>'; await loadDiscover(); }
+  if (disc.qErr) { box.innerHTML = '<li class="empty">Couldn\'t read your Quotes sheet: ' + escapeText(explain(disc.qErr)) + '</li>'; return; }
+  const mine = disc.quotes.filter(q => q.added || q.bookId)
+    .sort((a, b) => a.added !== b.added ? (a.added < b.added ? 1 : -1) : b._row - a._row);
+  box.textContent = '';
+  if (!mine.length) { box.innerHTML = '<li class="empty">No dog-ears yet. Found a line you love? Fold the corner: press Dog-ear a quote, or the folded-page button next to Log.</li>'; return; }
+  for (const q of mine.slice(0, dogState.all ? 200 : 4)) {
+    const li = document.createElement('li');
+    li.className = 'dog' + (q === dogState.fresh ? ' new' : '');
+    li.innerHTML = '<p></p><footer></footer>';
+    li.querySelector('p').textContent = q.text;
+    li.querySelector('footer').textContent = [q.who ? '— ' + q.who : '', q.from, q.page ? 'p. ' + q.page : '', q.added ? fromIso(q.added).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: q.added.slice(0, 4) === today().slice(0, 4) ? undefined : 'numeric' }) : ''].filter(Boolean).join(' · ');
+    box.appendChild(li);
+  }
+  dogState.fresh = null;
+  if (mine.length > 4) {
+    const li = document.createElement('li'), b = document.createElement('button');
+    b.type = 'button'; b.className = 'linkbtn'; b.textContent = dogState.all ? 'Show fewer' : `Show all ${mine.length}`;
+    b.addEventListener('click', () => { dogState.all = !dogState.all; renderDogears(); });
+    li.appendChild(b); box.appendChild(li);
+  }
+}
+
+function openQuoteDlg(book) {
+  const dl = $('qdBooks'); dl.textContent = '';
+  // Books you're reading first, then everything you've read or are reading
+  const seen = new Set();
+  for (const b of [...state.allBooks.filter(x => x.status === 'Reading'), ...state.allBooks.filter(x => ['Read', 'Re-read', 'Paused', 'DNF'].includes(x.status))]) {
+    if (seen.has(b.title)) continue; seen.add(b.title);
+    const o = document.createElement('option'); o.value = b.title; dl.appendChild(o);
+  }
+  const first = book || state.allBooks.find(x => x.status === 'Reading');
+  $('qdBook').value = first ? first.title : '';
+  const reading = first && first.status === 'Reading';
+  const live = first && state.books.find(x => x.id === first.id);
+  $('qdPage').value = live ? lastPageFor(live) || '' : reading ? toNum(first.currentPage) || '' : '';
+  $('qdText').value = ''; $('qdWho').value = ''; $('qdMsg').textContent = '';
+  $('qdSave').disabled = false;
+  $('quoteDlg').showModal();
+  (first ? $('qdText') : $('qdBook')).focus();
+}
+
+async function saveQuote(e) {
+  e.preventDefault();
+  if (!isLive()) { $('qdMsg').textContent = 'Saving needs the live connection. ' + connectHint(); return; }
+  const title = $('qdBook').value.trim(), text = $('qdText').value.trim(), who = $('qdWho').value.trim(), page = parseInt($('qdPage').value, 10) || '';
+  if (!title || !text) { $('qdMsg').textContent = 'Add the book and the quote.'; return; }
+  const book = state.allBooks.find(x => x.title === title && x.status === 'Reading') || state.allBooks.find(x => x.title === title);
+  const t = v => v ? "'" + v : '';
+  const row = [t(text), t(title), t(who), t(book ? book.author : ''), t(book ? book.id : ''), page, today()];
+  $('qdSave').disabled = true; $('qdMsg').textContent = 'Saving…';
+  try {
+    await loadDiscover();
+    const res = await state.mcp.callTool(SERVER, 'append_values', { spreadsheetId: QUOTES_ID, range: 'QUOTES!A1', values: [row] }, { cache: false });
+    const p = (res && res.payload) || {};
+    const m = String((p.updates && p.updates.updatedRange) || p.updatedRange || '').match(/![A-Z]+(\d+)/);
+    const q = { text, from: title, who, by: book ? book.author : '', bookId: book ? book.id : '', page: page || null, added: today(), _row: m ? Number(m[1]) : 1e9 };
+    disc.quotes.push(q); dogState.fresh = q;
+    $('quoteDlg').close();
+    setStatus('live', `Dog-eared a quote from ${title}`);
+    renderDogears();
+  } catch (err) {
+    $('qdMsg').textContent = 'Couldn\'t save it: ' + (err.message || explain(err));
+    $('qdSave').disabled = false;
+  }
 }
 
 async function renderDiscover() {
@@ -2121,6 +2205,10 @@ $('refreshBtn').addEventListener('click', () => state.google && !google_.valid()
 document.querySelectorAll('.logday button').forEach(b => b.addEventListener('click', () => setLogDay(addDays(today(), Number(b.dataset.day)))));
 $('logDate').addEventListener('change', e => setLogDay(toDate(e.target.value)));
 setLogDay(null);
+$('dogAdd').addEventListener('click', () => openQuoteDlg(null));
+$('quoteForm').addEventListener('submit', saveQuote);
+$('qdClose').addEventListener('click', () => $('quoteDlg').close());
+$('dlgQuote').addEventListener('click', () => openQuoteDlg(editing));
 $('quickBtn').addEventListener('click', () => {
   const v = parseInt($('quickPages').value, 10);
   if (!v || v < 1) { $('quickPages').focus(); return; }
