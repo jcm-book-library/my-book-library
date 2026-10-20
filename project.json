@@ -1,0 +1,12 @@
+{
+  "name": "Jackets & Manuscripts",
+  "repo": "my-book-library",
+  "purpose": "Logs reading and keeps a library and dashboard of books, backed by the Entertainment Tracker Google Sheet.",
+  "family": "Entertainment",
+  "stage": "Mature",
+  "live": "https://jcm-book-library.github.io/my-book-library/",
+  "tags": [
+    "media-tracker"
+  ],
+  "updated": "2026-10-19"
+}
