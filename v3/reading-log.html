@@ -1581,7 +1581,7 @@ async function saveBookDialog(e) {
       // Came from the Wishlist: mark that row as got (it stays on the Wishlist as history)
       const w = wishState.promote; wishState.promote = null;
       if (w) {
-        const done = ['Pending Purchase', 'Preordered', 'Purchased'].includes(w.Status) ? 'Purchased' : 'Downloaded';
+        const done = ['To buy', 'Preordered', 'Bought'].includes(w.Status) ? 'Bought' : 'Downloaded';
         try { if (w.Status !== done) await writeWishFields(w.id, { Status: done }); setStatus('live', `Added “${b.title}” to your TBR and marked it ${done} on the Wishlist`); }
         catch (err) { notice(`“${b.title}” was added, but its Wishlist row wasn't updated: ${err.message || explain(err)}`, 'error'); }
       }
@@ -2443,10 +2443,9 @@ function renderTools() { renderRate(); renderRecs(); renderOwn(); renderDip(); r
 
 /* ---------- Wishlist (Library → Wishlist) ---------- */
 // Status values as they are in the sheet; "done" ones stay as history
-const WISH_STATUSES = ['Coming Soon', 'Sourcing Pending', 'Pending Download', 'Large File', 'Pending Purchase', 'Preordered', 'Sourcing Failed', 'Downloaded', 'Purchased', 'Internet Archive'];
-const WISH_DONE = ['Downloaded', 'Purchased', 'Internet Archive'];
-const WISH_CHIPS = [['Active', w => !WISH_DONE.includes(w.Status)], ['No status', w => !w.Status], ['Sourcing Pending', w => w.Status === 'Sourcing Pending'], ['Pending Download', w => w.Status === 'Pending Download' || w.Status === 'Large File'],
-  ['Pending Purchase', w => w.Status === 'Pending Purchase'], ['Preordered', w => w.Status === 'Preordered'], ['Coming Soon', w => w.Status === 'Coming Soon'], ['Sourcing Failed', w => w.Status === 'Sourcing Failed'], ['Got it', w => WISH_DONE.includes(w.Status)], ['All', () => true]];
+const WISH_STATUSES = ['To check', 'To download', 'To buy', 'Preordered', 'Coming soon', 'Not found', 'Downloaded', 'Bought'];
+const WISH_DONE = ['Downloaded', 'Bought'];
+const WISH_CHIPS = [['Active', w => !WISH_DONE.includes(w.Status)], ...WISH_STATUSES.filter(x => !WISH_DONE.includes(x)).map(x => [x, w => w.Status === x]), ['No status', w => !w.Status], ['Got it', w => WISH_DONE.includes(w.Status)], ['All', () => true]];
 const wishState = { chip: 'Active', limit: 100, promote: null };
 const wishKey = t => normQ(t).replace(/^(the|a|an) /, '');
 async function renderWish() {
@@ -2526,7 +2525,7 @@ async function writeWishFields(id, fields) {
   }
 }
 function openWishDlg() {
-  $('wdStatus').innerHTML = '<option value="">No status</option>' + WISH_STATUSES.map(s => `<option${s === 'Sourcing Pending' ? ' selected' : ''}>${s}</option>`).join('');
+  $('wdStatus').innerHTML = '<option value="">No status</option>' + WISH_STATUSES.map(s => `<option${s === 'To check' ? ' selected' : ''}>${s}</option>`).join('');
   $('wdLists').innerHTML = [...new Set((disc.wish || []).map(w => w['Reading List']).filter(Boolean))].sort().map(x => `<option value="${escapeText(x)}">`).join('');
   for (const id of ['wdTitleIn', 'wdAuthor', 'wdSeries', 'wdList', 'wdLink', 'wdNotes']) $(id).value = '';
   $('wdType').value = ''; $('wdMsg').textContent = ''; $('wdSave').disabled = false;
@@ -2580,7 +2579,7 @@ async function renderOwn() {
     li.innerHTML = '<span class="t"></span><span class="m"></span><span class="v"></span>';
     li.querySelector('.t').textContent = w.Title;
     li.querySelector('.m').textContent = ['Wishlist', w.Author, w.Status, w.Format].filter(Boolean).join(' · ');
-    li.querySelector('.v').textContent = /download|own|bought/i.test(w.Status || '') ? 'Got it' : 'Wishlist';
+    li.querySelector('.v').textContent = WISH_DONE.includes(w.Status) ? 'Got it' : 'Wishlist';
     box.appendChild(li);
   }
 }
@@ -2951,7 +2950,7 @@ async function renderDiscover() {
   void md;
   // Coming soon from the Wishlist
   const cs = $('discSoon'); cs.textContent = '';
-  const soon = disc.wish.filter(x => x.Status === 'Coming Soon' || x.Available === 'Preorder Only' || (x.ETA && /[a-z]|20\d\d/i.test(x.ETA) && !['Downloaded', 'Purchased', 'Released'].includes(x.Status)));
+  const soon = disc.wish.filter(x => x.Status === 'Coming soon' || x.Available === 'Preorder Only' || (x.ETA && /[a-z]|20\d\d/i.test(x.ETA) && !['Downloaded', 'Bought', 'Released'].includes(x.Status)));
   if (!soon.length) cs.innerHTML = `<li class="empty">${disc.wErr ? 'Couldn\'t read the Wishlist tab.' : 'Nothing marked coming soon.'}</li>`;
   for (const x of soon.slice(0, 12)) { const li = document.createElement('li'); li.innerHTML = '<span></span><span class="r"></span>'; li.firstChild.textContent = x.Title + (x.Author ? ' · ' + x.Author : ''); li.lastChild.textContent = [x.ETA, x.Status || x.Available, x.Type].filter(Boolean).join(' · '); cs.appendChild(li); }
   const counts = {}; for (const x of disc.wish) if (x.Status) counts[x.Status] = (counts[x.Status] || 0) + 1;
