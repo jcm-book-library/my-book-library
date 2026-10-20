@@ -138,6 +138,22 @@ input[type="number"]:focus{border-color:var(--accent);outline:none}
 .lib-bar input:focus,.lib-bar select:focus,.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent);outline:none}
 .lib-mode{display:inline-flex;border:1px solid var(--line);border-radius:999px;padding:3px;margin-bottom:12px;gap:2px}
 .lib-mode button{font:inherit;font-size:13px;font-weight:600;border:0;background:transparent;color:var(--muted);border-radius:999px;padding:5px 14px;cursor:pointer}
+.wish-tools{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.wish-tools input{vertical-align:-2px;margin-right:4px}
+#view-library.wish-mode .lib-bar select,#view-library.wish-mode #addBookBtn{display:none}
+.wish-group{margin:14px 0 4px;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.wish-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;align-items:center;padding:9px 0;border-top:1px solid var(--line)}
+.wish-row:first-child{border-top:0}
+.wish-row .t{font-weight:600}
+.wish-row .m{font-size:12px;color:var(--muted);overflow-wrap:anywhere}
+.wish-row>div{min-width:0}
+.wish-row .acts{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.wish-row select{font:inherit;font-size:12px;background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:999px;padding:3px 8px}
+.wish-row .acts a,.wish-row .acts button{font:inherit;font-size:12px;font-weight:600;border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:999px;padding:3px 10px;cursor:pointer;text-decoration:none}
+.wish-row .acts a:hover,.wish-row .acts button:hover{color:var(--fg);border-color:var(--accent)}
+.wish-row .have{font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;background:color-mix(in srgb,var(--accent) 26%,var(--raise));margin-left:6px}
+.wish-row.done .t{color:var(--muted);font-weight:500}
+@media (max-width:560px){.wish-row{grid-template-columns:minmax(0,1fr)}.wish-row .acts{justify-content:flex-start}}
 .lib-mode button[aria-pressed="true"]{background:color-mix(in srgb,var(--accent) 24%,var(--surface));color:var(--fg)}
 .plan-top{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;margin-bottom:20px}
 @media (max-width:860px){.plan-top{grid-template-columns:minmax(0,1fr)}}
@@ -509,8 +525,17 @@ dialog::backdrop{background:rgba(8,6,14,.65)}
       <select id="libOwned" aria-label="Owned"><option value="">Physical &amp; digital</option><option>Physical</option><option>Digital</option></select>
       <button class="btn btn-primary" id="addBookBtn" type="button">Add book</button>
     </div>
-    <div class="lib-mode" role="group" aria-label="Library view"><button type="button" data-mode="books" aria-pressed="true">Books</button><button type="button" data-mode="plan" aria-pressed="false">Plan your TBR</button></div>
+    <div class="lib-mode" role="group" aria-label="Library view"><button type="button" data-mode="books" aria-pressed="true">Books</button><button type="button" data-mode="plan" aria-pressed="false">Plan your TBR</button><button type="button" data-mode="wish" aria-pressed="false">Wishlist</button></div>
     <div class="chips" id="libChips" role="group" aria-label="Status"></div>
+    <div id="wishView" hidden>
+      <div class="chips" id="wishChips" role="group" aria-label="Wishlist status"></div>
+      <section class="panel" aria-labelledby="wishH">
+        <div class="panel-head"><h2 id="wishH">Wishlist</h2><span class="muted small tnum" id="wishNote"></span>
+          <span class="wish-tools"><label class="small muted"><input type="checkbox" id="wishGroup"> Group by series or list</label><button class="btn btn-primary" type="button" id="wishAddBtn">Add to Wishlist</button></span></div>
+        <div id="wishList"></div>
+        <button class="btn" type="button" id="wishMore" hidden>Show 100 more</button>
+      </section>
+    </div>
     <div id="planView" hidden>
       <section class="panel" aria-labelledby="upH"><div class="panel-head"><h2 id="upH">Up next</h2><span class="muted small tnum" id="upNote"></span></div><ol class="plan-list up-detail" id="upList"></ol></section>
       <section class="panel deck" aria-labelledby="deckH" id="deckPanel">
@@ -658,6 +683,23 @@ dialog::backdrop{background:rgba(8,6,14,.65)}
       <div class="field"><label for="gClient">OAuth Client ID</label><input id="gClient" autocomplete="off" spellcheck="false" placeholder="1234…apps.googleusercontent.com"></div>
     </div>
     <div class="dlg-foot"><span class="muted" id="gMsg" style="font-size:13px;align-self:center"></span><button class="btn btn-primary" type="submit">Connect</button></div>
+  </form>
+</dialog>
+
+<dialog id="wishDlg" aria-labelledby="wdTitle" style="width:min(560px,calc(100vw - 32px))">
+  <form id="wishForm" method="dialog">
+    <div class="dlg-head"><h2 id="wdTitle">Add to Wishlist</h2><button class="btn" type="button" id="wdClose">Close</button></div>
+    <div style="padding:16px 20px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px">
+      <div class="field" style="grid-column:1/-1"><label for="wdTitleIn">Title</label><input id="wdTitleIn" required autocomplete="off"></div>
+      <div class="field"><label for="wdAuthor">Author</label><input id="wdAuthor" autocomplete="off"></div>
+      <div class="field"><label for="wdStatus">Status</label><select id="wdStatus"></select></div>
+      <div class="field"><label for="wdType">Type</label><select id="wdType"><option value="">–</option><option>Novel</option><option>Non-Fiction</option><option>Comic</option><option>Graphic Novel</option><option>Manga</option><option>Manhwa</option><option>Omnibus</option><option>Box Set</option><option>Limited Edition</option></select></div>
+      <div class="field"><label for="wdSeries">Series</label><input id="wdSeries" autocomplete="off"></div>
+      <div class="field"><label for="wdList">Reading list</label><input id="wdList" list="wdLists" autocomplete="off"><datalist id="wdLists"></datalist></div>
+      <div class="field"><label for="wdLink">Link</label><input id="wdLink" type="url" autocomplete="off" placeholder="https://"></div>
+      <div class="field" style="grid-column:1/-1"><label for="wdNotes">Notes</label><input id="wdNotes" autocomplete="off"></div>
+    </div>
+    <div class="dlg-foot"><span class="muted" id="wdMsg" style="font-size:13px;align-self:center"></span><button class="btn btn-primary" type="submit" id="wdSave">Add</button></div>
   </form>
 </dialog>
 
@@ -1382,12 +1424,15 @@ function fillSelect(id, field, label) {
 }
 function renderLibrary() {
   const L = state.lib;
-  const plan = L.mode === 'plan';
-  document.querySelectorAll('.lib-mode button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.mode === (plan ? 'plan' : 'books'))));
+  const mode = L.mode || 'books', plan = mode === 'plan', wish = mode === 'wish';
+  document.querySelectorAll('.lib-mode button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.mode === mode)));
   $('planView').hidden = !plan;
-  for (const id of ['libChips']) $(id).hidden = plan;
-  document.querySelector('#view-library .table-wrap').hidden = plan;
-  document.querySelector('#view-library .lib-foot').hidden = plan;
+  $('wishView').hidden = !wish;
+  $('view-library').classList.toggle('wish-mode', wish);
+  $('libChips').hidden = mode !== 'books';
+  document.querySelector('#view-library .table-wrap').hidden = mode !== 'books';
+  document.querySelector('#view-library .lib-foot').hidden = mode !== 'books';
+  if (wish) { renderWish(); return; }
   if (plan) { if ($('libGenre').options.length <= 1) { fillSelect('libType', 'type', 'All types'); fillSelect('libFormat', 'format', 'All formats'); fillSelect('libGenre', 'genre', 'All genres'); } renderPlan(); return; }
   if ($('libGenre').options.length <= 1) { fillSelect('libType', 'type', 'All types'); fillSelect('libFormat', 'format', 'All formats'); fillSelect('libGenre', 'genre', 'All genres'); }
   // status chips with counts
@@ -1451,7 +1496,7 @@ const FORM = [
   { k: 'synopsis', type: 'textarea', w: 'w4' }, { k: 'notes', type: 'textarea', w: 'w4' }
 ];
 let editing = null;
-function openBookDialog(book) {
+function openBookDialog(book, prefill) {
   editing = book;
   $('dlgTitle').textContent = book ? 'Edit book' : 'Add a book';
   $('dlgMsg').textContent = book ? `ID ${book.id}` : 'A new ID is given when you save';
@@ -1465,7 +1510,7 @@ function openBookDialog(book) {
     const lab = document.createElement('label');
     lab.htmlFor = id; lab.textContent = f.label || (f.k[0].toUpperCase() + f.k.slice(1));
     let el;
-    const val = book ? (book[f.k] || '') : (f.k === 'status' ? 'TBR' : '');
+    const val = book ? (book[f.k] || '') : prefill && prefill[f.k] != null ? prefill[f.k] : (f.k === 'status' ? 'TBR' : '');
     if (f.type === 'select') {
       el = document.createElement('select');
       const opts = f.opts || ['', ...new Set(state.allBooks.map(b => b[f.from]).filter(Boolean))].sort();
@@ -1480,6 +1525,8 @@ function openBookDialog(book) {
   }
   $('dlgLog').checked = true;
   $('dlgQuote').hidden = !book;
+  wishState.promote = prefill && prefill._wish || null;
+  if (wishState.promote) $('dlgMsg').textContent = 'From your Wishlist. Check the details, then save to add it as TBR.';
   updateDlgLog();
   $('bookDlg').showModal();
 }
@@ -1531,6 +1578,13 @@ async function saveBookDialog(e) {
       savedId = b.id;
       state.lib.open = b.id;
       setStatus('live', `Added “${b.title}” with ID ${b.id}`);
+      // Came from the Wishlist: mark that row as got (it stays on the Wishlist as history)
+      const w = wishState.promote; wishState.promote = null;
+      if (w) {
+        const done = ['Pending Purchase', 'Preordered', 'Purchased'].includes(w.Status) ? 'Purchased' : 'Downloaded';
+        try { if (w.Status !== done) await writeWishFields(w.id, { Status: done }); setStatus('live', `Added “${b.title}” to your TBR and marked it ${done} on the Wishlist`); }
+        catch (err) { notice(`“${b.title}” was added, but its Wishlist row wasn't updated: ${err.message || explain(err)}`, 'error'); }
+      }
     }
     if (gain) {
       try { await appendLogRow({ pages: gain, bookId: savedId, title: data.title, pageReached: toNum(data.currentPage) }); }
@@ -2387,6 +2441,118 @@ function renderRevisit(box, normT) {
 }
 function renderTools() { renderRate(); renderRecs(); renderOwn(); renderDip(); renderStalled(); renderNextInSeries(); renderGoal(); renderYear(); }
 
+/* ---------- Wishlist (Library → Wishlist) ---------- */
+// Status values as they are in the sheet; "done" ones stay as history
+const WISH_STATUSES = ['Coming Soon', 'Sourcing Pending', 'Pending Download', 'Large File', 'Pending Purchase', 'Preordered', 'Sourcing Failed', 'Downloaded', 'Purchased', 'Internet Archive'];
+const WISH_DONE = ['Downloaded', 'Purchased', 'Internet Archive'];
+const WISH_CHIPS = [['Active', w => !WISH_DONE.includes(w.Status)], ['No status', w => !w.Status], ['Sourcing Pending', w => w.Status === 'Sourcing Pending'], ['Pending Download', w => w.Status === 'Pending Download' || w.Status === 'Large File'],
+  ['Pending Purchase', w => w.Status === 'Pending Purchase'], ['Preordered', w => w.Status === 'Preordered'], ['Coming Soon', w => w.Status === 'Coming Soon'], ['Sourcing Failed', w => w.Status === 'Sourcing Failed'], ['Got it', w => WISH_DONE.includes(w.Status)], ['All', () => true]];
+const wishState = { chip: 'Active', limit: 100, promote: null };
+const wishKey = t => normQ(t).replace(/^(the|a|an) /, '');
+async function renderWish() {
+  const box = $('wishList');
+  if (!isLive()) { box.innerHTML = '<p class="empty">Your Wishlist loads from the sheet. ' + connectHint() + '</p>'; return; }
+  if (!disc.loaded) { box.innerHTML = '<p class="empty">Loading your Wishlist…</p>'; await loadDiscover(); }
+  if (disc.wErr) { box.innerHTML = '<p class="empty">Couldn\'t read your Wishlist: ' + escapeText(explain(disc.wErr)) + '</p>'; return; }
+  const all = disc.wish, q = normQ(state.lib.q);
+  const lib = new Set(state.allBooks.map(b => wishKey(b.title)));
+  $('wishChips').innerHTML = WISH_CHIPS.map(([k, f]) => `<button class="chip" type="button" data-w="${k}" aria-pressed="${wishState.chip === k}">${k}<span class="n">${fmt(all.filter(f).length)}</span></button>`).join('');
+  const f = (WISH_CHIPS.find(c => c[0] === wishState.chip) || WISH_CHIPS[0])[1];
+  let list = all.filter(f).filter(w => !q || normQ([w.Title, w.Author, w.Series, w['Reading List'], w.Notes].join(' ')).includes(q));
+  const group = $('wishGroup').checked;
+  if (group) list = [...list].sort((a, b) => (a.Series || a['Reading List'] || '￿').localeCompare(b.Series || b['Reading List'] || '￿', undefined, { numeric: true }) || a._row - b._row);
+  $('wishNote').textContent = `${fmt(list.length)} of ${fmt(all.length)}`;
+  box.textContent = '';
+  if (!list.length) { box.innerHTML = '<p class="empty">Nothing here.</p>'; $('wishMore').hidden = true; return; }
+  let lastGroup = null;
+  for (const w of list.slice(0, wishState.limit)) {
+    const g = w.Series || w['Reading List'] || 'Not in a series or list';
+    if (group && g !== lastGroup) { const h = document.createElement('div'); h.className = 'wish-group'; h.textContent = g; box.appendChild(h); lastGroup = g; }
+    const row = document.createElement('div');
+    row.className = 'wish-row' + (WISH_DONE.includes(w.Status) ? ' done' : '');
+    row.innerHTML = '<div><span class="t"></span><br><span class="m"></span></div><div class="acts"></div>';
+    row.querySelector('.t').textContent = w.Title;
+    if (lib.has(wishKey(w.Title))) { const hv = document.createElement('span'); hv.className = 'have'; hv.textContent = 'In library'; row.querySelector('.t').after(hv); }
+    row.querySelector('.m').textContent = [w.Author, w.Type, w.Format, w.Series, w['Reading List'], w.Available === 'Preorder Only' ? 'Preorder only' : '', w.ETA ? 'ETA ' + w.ETA : '', w.Cost, w.Source, w.Notes].filter(Boolean).join(' · ');
+    const acts = row.querySelector('.acts');
+    const sel = document.createElement('select');
+    sel.setAttribute('aria-label', 'Status of ' + w.Title);
+    sel.innerHTML = `<option value="">No status</option>` + WISH_STATUSES.map(s => `<option${s === w.Status ? ' selected' : ''}>${s}</option>`).join('');
+    sel.addEventListener('change', async () => {
+      const old = w.Status; w.Status = sel.value; sel.disabled = true;
+      try { await writeWishFields(w.id, { Status: sel.value }); setStatus('live', `“${w.Title}” is now ${sel.value || 'without a status'}`); }
+      catch (err) { w.Status = old; notice('Couldn\'t update the Wishlist: ' + (err.message || explain(err)), 'error'); }
+      renderWish();
+    });
+    acts.appendChild(sel);
+    if (w.Link) { const a = document.createElement('a'); a.href = w.Link; a.target = '_blank'; a.rel = 'noopener'; a.textContent = 'Link'; acts.appendChild(a); }
+    if (!lib.has(wishKey(w.Title))) {
+      const add = document.createElement('button'); add.type = 'button'; add.textContent = 'Add to TBR';
+      add.addEventListener('click', () => promoteWish(w)); acts.appendChild(add);
+    }
+    box.appendChild(row);
+  }
+  $('wishMore').hidden = list.length <= wishState.limit;
+}
+
+// Open the Add book dialog filled in from a Wishlist row; saving adds it as TBR and marks the row as got
+function promoteWish(w) {
+  const t = w.Type, comic = ['Comic', 'Graphic Novel', 'Manga', 'Manhwa', 'Omnibus'].includes(t);
+  openBookDialog(null, {
+    _wish: w, title: w.Title, author: w.Author, status: 'TBR',
+    type: t === 'Non-Fiction' ? 'Non-Fiction' : t ? 'Fiction' : '',
+    format: t === 'Novel' ? 'Novel' : comic ? (t === 'Omnibus' ? 'Comic' : t) : '',
+    owned: w.Format === 'Physical' ? 'Physical' : w.Format ? 'Digital' : '',
+    series: w.Series || '', notes: ['From Wishlist', w['Reading List'], w.Notes].filter(Boolean).join(' · ')
+  });
+}
+
+// Wishlist writes: find the row by its id (column "id") right before writing, change only the given cells
+async function findWishRow(id) {
+  const header = ((await readRange('Wishlist!A1:Z1'))[0] || []).map(h => String(h).trim());
+  const c = header.indexOf('id');
+  if (c < 0) throw { code: 'tool_error', message: 'Wishlist has no id column' };
+  const ids = await readRange(`Wishlist!${colLetter(c)}1:${colLetter(c)}3000`);
+  const hits = ids.map((r, i) => String(r[0] ?? '').trim() === id ? i + 1 : 0).filter(Boolean);
+  if (hits.length !== 1) throw { code: 'tool_error', message: hits.length ? `Wishlist id ${id} appears ${hits.length} times` : `Wishlist id ${id} isn't there any more` };
+  return { header, row: hits[0] };
+}
+async function writeWishFields(id, fields) {
+  if (!id) throw { code: 'tool_error', message: 'this Wishlist row has no id yet' };
+  const { header, row } = await findWishRow(id);
+  for (const [k, v] of Object.entries(fields)) {
+    const c = header.indexOf(k); if (c < 0 || k === 'id') continue;
+    await state.mcp.callTool(SERVER, 'update_values', { spreadsheetId: SHEET_ID, range: `Wishlist!${colLetter(c)}${row}`, values: [[v ? "'" + v : '']] }, { cache: false });
+  }
+}
+function openWishDlg() {
+  $('wdStatus').innerHTML = '<option value="">No status</option>' + WISH_STATUSES.map(s => `<option${s === 'Sourcing Pending' ? ' selected' : ''}>${s}</option>`).join('');
+  $('wdLists').innerHTML = [...new Set((disc.wish || []).map(w => w['Reading List']).filter(Boolean))].sort().map(x => `<option value="${escapeText(x)}">`).join('');
+  for (const id of ['wdTitleIn', 'wdAuthor', 'wdSeries', 'wdList', 'wdLink', 'wdNotes']) $(id).value = '';
+  $('wdType').value = ''; $('wdMsg').textContent = ''; $('wdSave').disabled = false;
+  $('wishDlg').showModal(); $('wdTitleIn').focus();
+}
+async function saveWish(e) {
+  e.preventDefault();
+  if (!isLive()) { $('wdMsg').textContent = 'Saving needs the live connection. ' + connectHint(); return; }
+  const f = { Title: $('wdTitleIn').value.trim(), Author: $('wdAuthor').value.trim(), Status: $('wdStatus').value, Type: $('wdType').value,
+    Series: $('wdSeries').value.trim(), 'Reading List': $('wdList').value.trim(), Link: $('wdLink').value.trim(), Notes: $('wdNotes').value.trim() };
+  if (!f.Title) { $('wdMsg').textContent = 'A title is needed.'; return; }
+  $('wdSave').disabled = true; $('wdMsg').textContent = 'Saving…';
+  try {
+    const header = ((await readRange('Wishlist!A1:Z1'))[0] || []).map(h => String(h).trim());
+    const c = header.indexOf('id');
+    const ids = (await readRange(`Wishlist!${colLetter(c)}2:${colLetter(c)}3000`)).map(r => Number(String(r[0] || '').replace(/\D/g, '')) || 0);
+    f.id = 'W' + String(Math.max(0, ...ids) + 1).padStart(4, '0');
+    const row = header.map(h => f[h] ? (h === 'id' ? f[h] : "'" + f[h]) : '');
+    await state.mcp.callTool(SERVER, 'append_values', { spreadsheetId: SHEET_ID, range: 'Wishlist!A1', values: [row] }, { cache: false });
+    disc.wish.push({ ...Object.fromEntries(header.map(h => [h, f[h] || ''])), _row: 1e9 });
+    $('wishDlg').close();
+    setStatus('live', `Added “${f.Title}” to your Wishlist`);
+    renderWish();
+  } catch (err) { $('wdMsg').textContent = 'Couldn\'t save it: ' + (err.message || explain(err)); $('wdSave').disabled = false; }
+}
+
 /* ---------- Do I own this? ---------- */
 const normQ = t => String(t || '').toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
 async function renderOwn() {
@@ -2670,7 +2836,7 @@ function loadDiscover() {
 async function fetchDiscover() {
   const [q, w] = await Promise.allSettled([
     state.mcp.callTool(SERVER, 'get_values', { spreadsheetId: QUOTES_ID, range: 'QUOTES!A1:G3000' }, { cache: false }),
-    readRange('Wishlist!A1:L2000')
+    readRange('Wishlist!A1:Z3000')
   ]);
   if (q.status === 'fulfilled') {
     const v = (q.value.payload && q.value.payload.values) || [];
@@ -2680,7 +2846,8 @@ async function fetchDiscover() {
   } else disc.qErr = q.reason;
   if (w.status === 'fulfilled') {
     const v = w.value, h = (v[0] || []).map(x => String(x).trim());
-    disc.wish = v.slice(1).map(r => Object.fromEntries(h.map((k, i) => [k, String(r[i] || '').trim()]))).filter(x => x.Title);
+    disc.wishHeader = h;
+    disc.wish = v.slice(1).map((r, i) => ({ ...Object.fromEntries(h.map((k, j) => [k, String(r[j] || '').trim()])), _row: i + 2 })).filter(x => x.Title);
   } else disc.wErr = w.reason;
   disc.loaded = true;
 }
@@ -2866,6 +3033,12 @@ document.querySelectorAll('.logday button').forEach(b => b.addEventListener('cli
 $('logDate').addEventListener('change', e => setLogDay(toDate(e.target.value)));
 setLogDay(null);
 $('dogAdd').addEventListener('click', () => openQuoteDlg(null));
+$('wishChips').addEventListener('click', e => { const c = e.target.closest('.chip'); if (!c) return; wishState.chip = c.dataset.w; wishState.limit = 100; renderWish(); });
+$('wishGroup').addEventListener('change', renderWish);
+$('wishMore').addEventListener('click', () => { wishState.limit += 100; renderWish(); });
+$('wishAddBtn').addEventListener('click', openWishDlg);
+$('wishForm').addEventListener('submit', saveWish);
+$('wdClose').addEventListener('click', () => $('wishDlg').close());
 let ownT; $('ownQ').addEventListener('input', () => { clearTimeout(ownT); ownT = setTimeout(renderOwn, 120); });
 $('dipMoods').addEventListener('click', e => { const c = e.target.closest('.chip'); if (!c) return; dipState.mood = c.dataset.m; dipState.pick = null; renderDip(); });
 $('nisMore').addEventListener('click', () => { nisState.all = !nisState.all; renderNextInSeries(); });
