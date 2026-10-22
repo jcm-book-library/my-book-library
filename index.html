@@ -151,6 +151,46 @@ input[type="number"]:focus{border-color:var(--accent);outline:none}
 .lib-bar input:focus,.lib-bar select:focus,.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent);outline:none}
 .lib-mode{display:inline-flex;border:1px solid var(--line);border-radius:999px;padding:3px;margin-bottom:12px;gap:2px}
 .lib-mode button{font:inherit;font-size:13px;font-weight:600;border:0;background:transparent;color:var(--muted);border-radius:999px;padding:5px 14px;cursor:pointer}
+.wl-add{margin-bottom:14px}
+.wl-addrow{display:flex;gap:8px;flex-wrap:wrap}
+.wl-addrow .tool-input{flex:1;min-width:200px;margin:0}
+.wl-tabs{margin:0 0 14px}
+#wishSeries{font:inherit;font-size:13px;background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:5px 8px;max-width:240px}
+.wd-grid{padding:16px 20px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.wd-grid .w2{grid-column:span 2}.wd-grid .w4{grid-column:1/-1}
+@media (max-width:560px){.wd-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.wd-grid .w2{grid-column:1/-1}}
+.wd-gift{display:flex;gap:8px;align-items:center;font-size:14px}
+.wl-card{background:var(--raise);border-radius:12px;padding:16px 18px}
+.wl-card h3{font-family:var(--display);font-size:22px;margin:0}
+.wl-card .m{color:var(--muted);font-size:14px;margin-top:4px}
+.wl-card .warn{margin-top:8px;font-size:13px;color:var(--fg);background:color-mix(in srgb,var(--accent) 18%,transparent);border-radius:8px;padding:6px 10px}
+.wl-card .btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;align-items:center}
+.wl-card .btns select{font:inherit;font-size:13px;background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:6px 8px}
+.wl-gift{font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;background:color-mix(in srgb,#e8935a 30%,var(--raise));margin-left:6px}
+.wl-late{color:var(--danger);font-weight:600}
+.ser-card{padding:12px 0;border-top:1px solid var(--line)}
+.ser-card:first-child{border-top:0}
+.ser-card .top{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:baseline}
+.ser-card .t{font-weight:600}
+.ser-card .m{font-size:12px;color:var(--muted)}
+.ser-tiles{display:flex;flex-wrap:wrap;gap:4px;margin:8px 0}
+.ser-tiles span{min-width:26px;height:26px;padding:0 4px;border-radius:6px;display:inline-grid;place-items:center;font-size:11px;font-weight:700;background:var(--bg);color:var(--muted);border:1px dashed var(--line)}
+.ser-tiles .read{background:var(--accent);color:var(--bg);border:0}
+.ser-tiles .own{background:color-mix(in srgb,var(--accent) 35%,var(--raise));color:var(--fg);border:0}
+.ser-tiles .want{background:var(--raise);color:var(--fg);border:1px solid var(--accent)}
+.ser-tiles .soon{background:transparent;border:1px dotted var(--muted)}
+.ser-legend{display:flex;gap:12px;flex-wrap:wrap;font-size:11px;color:var(--muted);margin-bottom:6px}
+.ser-legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px;vertical-align:-1px}
+.rl-list{margin-bottom:18px}
+.rl-list h3{font-size:16px;margin:0 0 4px}
+.rl-items{list-style:none;margin:6px 0 0;padding:0;display:flex;flex-direction:column}
+.rl-items li{display:grid;grid-template-columns:2.2em minmax(0,1fr) auto;gap:8px;align-items:center;padding:5px 0;border-top:1px solid var(--line);font-size:14px}
+.rl-items .n{color:var(--muted);text-align:right;font-variant-numeric:tabular-nums}
+.rl-items .st{font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--raise);color:var(--muted)}
+.rl-items .st.read{background:var(--accent);color:var(--bg)}
+.rl-items .st.own{background:color-mix(in srgb,var(--accent) 30%,var(--raise));color:var(--fg)}
+.rl-items .st.want{border:1px solid var(--accent);color:var(--fg)}
+.rl-items button{font:inherit;font-size:11px;font-weight:600;border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:999px;padding:2px 8px;cursor:pointer}
 .wish-tools select{font:inherit;font-size:13px;background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:5px 8px;max-width:220px}
 .wish-row{grid-template-columns:auto minmax(0,1fr) auto !important}
 .wish-row .tick{width:22px;height:22px;accent-color:var(--accent);cursor:pointer}
@@ -549,15 +589,23 @@ dialog::backdrop{background:rgba(8,6,14,.65)}
     <div class="lib-mode" role="group" aria-label="Library view"><button type="button" data-mode="books" aria-pressed="true">Books</button><button type="button" data-mode="plan" aria-pressed="false">Plan your TBR</button><button type="button" data-mode="wish" aria-pressed="false">Wishlist</button></div>
     <div class="chips" id="libChips" role="group" aria-label="Status"></div>
     <div id="wishView" hidden>
-      <div class="chips" id="wishChips" role="group" aria-label="Wishlist status"></div>
-      <section class="panel" aria-labelledby="wishH">
-        <div class="panel-head"><h2 id="wishH">Wishlist session</h2><span class="muted small tnum" id="wishNote"></span>
-          <span class="wish-tools"><select id="wishSeries" aria-label="Series or reading list"><option value="">Any series or list</option></select><button class="btn" type="button" id="wishAddBtn">Add to Wishlist</button></span></div>
-        <p class="muted small" style="margin:-4px 0 10px">Tick a book when you get it. The list stays put while you work; pick another stage or search to start a new list. Anything marked Downloaded or Bought moves to your TBR automatically when the app refreshes.</p>
+      <section class="panel wl-add" aria-label="Add to your Wishlist">
+        <div class="wl-addrow"><input id="wlQuick" class="tool-input" placeholder="Add a book: Title, or Title by Author" autocomplete="off" aria-label="Book to add">
+          <button class="btn btn-primary" type="button" id="wlQuickBtn">Add to Inbox</button><button class="btn" type="button" id="wlPasteBtn">Paste a list</button><button class="btn" type="button" id="wlFullBtn">Add with details</button></div>
+        <div class="muted small" id="wlQuickMsg" aria-live="polite"></div>
+      </section>
+      <div class="lib-mode wl-tabs" role="group" aria-label="Wishlist view"><button type="button" data-wv="inbox" aria-pressed="true">Inbox</button><button type="button" data-wv="session" aria-pressed="false">Get them</button><button type="button" data-wv="series" aria-pressed="false">Series</button><button type="button" data-wv="lists" aria-pressed="false">Reading lists</button></div>
+      <section class="panel" id="wlInbox" aria-labelledby="wlInboxH"><div class="panel-head"><h2 id="wlInboxH">Inbox</h2><span class="muted small tnum" id="wlInboxNote"></span></div><div id="wlDeck"></div></section>
+      <section class="panel" id="wlSession" aria-labelledby="wlSessH" hidden>
+        <div class="panel-head"><h2 id="wlSessH">Get them</h2><span class="muted small tnum" id="wishNote"></span><select id="wishSeries" aria-label="Series or list"><option value="">Any series or list</option></select></div>
+        <div class="chips" id="wishChips" role="group" aria-label="Stage"></div>
+        <p class="muted small" style="margin:-4px 0 10px">Tick a book when you get it. The list stays put while you work. Ticked books move to your TBR with “Move to TBR now”, or on the next refresh.</p>
         <div id="wishList"></div>
         <button class="btn" type="button" id="wishMore" hidden>Show 100 more</button>
+        <div class="wish-bar" id="wishBar" hidden><span id="wishBarText"></span><button class="btn btn-primary" type="button" id="wishMoveBtn">Move to TBR now</button></div>
       </section>
-      <div class="wish-bar" id="wishBar" hidden><span id="wishBarText"></span><button class="btn btn-primary" type="button" id="wishMoveBtn">Move to TBR now</button></div>
+      <section class="panel" id="wlSeries" aria-labelledby="wlSerH" hidden><div class="panel-head"><h2 id="wlSerH">Series you're following</h2><button class="btn" type="button" id="wlSerAdd">Add a series</button></div><div id="wlSerList"></div></section>
+      <section class="panel" id="wlLists" aria-labelledby="wlListsH" hidden><div class="panel-head"><h2 id="wlListsH">Reading lists</h2><span class="muted small">In order, with where each one stands</span></div><div id="wlListBox"></div></section>
     </div>
     <div id="planView" hidden>
       <section class="panel" aria-labelledby="upH"><div class="panel-head"><h2 id="upH">Up next</h2><span class="muted small tnum" id="upNote"></span></div><ol class="plan-list up-detail" id="upList"></ol></section>
@@ -709,20 +757,57 @@ dialog::backdrop{background:rgba(8,6,14,.65)}
   </form>
 </dialog>
 
-<dialog id="wishDlg" aria-labelledby="wdTitle" style="width:min(560px,calc(100vw - 32px))">
+<dialog id="wishDlg" aria-labelledby="wdTitle" style="width:min(640px,calc(100vw - 32px))">
   <form id="wishForm" method="dialog">
     <div class="dlg-head"><h2 id="wdTitle">Add to Wishlist</h2><button class="btn" type="button" id="wdClose">Close</button></div>
-    <div style="padding:16px 20px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px">
-      <div class="field" style="grid-column:1/-1"><label for="wdTitleIn">Title</label><input id="wdTitleIn" required autocomplete="off"></div>
-      <div class="field"><label for="wdAuthor">Author</label><input id="wdAuthor" autocomplete="off"></div>
-      <div class="field"><label for="wdStatus">Status</label><select id="wdStatus"></select></div>
-      <div class="field"><label for="wdType">Type</label><select id="wdType"><option value="">–</option><option>Novel</option><option>Non-Fiction</option><option>Comic</option><option>Graphic Novel</option><option>Manga</option><option>Manhwa</option><option>Omnibus</option><option>Box Set</option><option>Limited Edition</option></select></div>
-      <div class="field"><label for="wdSeries">Series</label><input id="wdSeries" autocomplete="off"></div>
-      <div class="field"><label for="wdList">Reading list</label><input id="wdList" list="wdLists" autocomplete="off"><datalist id="wdLists"></datalist></div>
-      <div class="field"><label for="wdLink">Link</label><input id="wdLink" type="url" autocomplete="off" placeholder="https://"></div>
-      <div class="field" style="grid-column:1/-1"><label for="wdNotes">Notes</label><input id="wdNotes" autocomplete="off"></div>
+    <div class="wd-grid">
+      <div class="field w2"><label for="wd-title">Title</label><input id="wd-title" name="title" required autocomplete="off"></div>
+      <div class="field w2"><label for="wd-author">Author</label><input id="wd-author" name="author" autocomplete="off"></div>
+      <div class="field"><label for="wd-series">Series</label><input id="wd-series" name="series" list="wdSeriesList" autocomplete="off"><datalist id="wdSeriesList"></datalist></div>
+      <div class="field"><label for="wd-number">Number / volume</label><input id="wd-number" name="number" autocomplete="off"></div>
+      <div class="field"><label for="wd-type">Type</label><select id="wd-type" name="type"><option value="">–</option><option>Fiction</option><option>Non-fiction</option></select></div>
+      <div class="field"><label for="wd-format">Format</label><select id="wd-format" name="format"><option value="">–</option><option>Book</option><option>Comic</option><option>Graphic novel</option><option>Manga</option><option>Issues</option><option>Deluxe</option><option>Omnibus</option><option>Compendium</option><option>Box Set</option><option>Limited Edition</option></select></div>
+      <div class="field"><label for="wd-stage">Stage</label><select id="wd-stage" name="stage"></select></div>
+      <div class="field"><label for="wd-waiting">Waiting because</label><select id="wd-waiting" name="waiting"><option value="">–</option><option>Unreleased</option><option>Preordered</option><option>Unavailable</option><option>Wrong edition</option></select></div>
+      <div class="field"><label for="wd-wantAs">Get it as</label><select id="wd-wantAs" name="wantAs"><option value="">–</option><option>Kobo</option><option>PDF</option><option>Physical</option><option>Library</option><option>Either</option></select></div>
+      <div class="field"><label for="wd-release">Release date</label><input id="wd-release" name="release" autocomplete="off" placeholder="yyyy-mm-dd or 2027"></div>
+      <div class="field"><label for="wd-price">Price</label><input id="wd-price" name="price" autocomplete="off"></div>
+      <div class="field"><label for="wd-interest">Interest</label><select id="wd-interest" name="interest"><option value="">–</option><option>Must</option><option>Maybe</option></select></div>
+      <div class="field w2"><label for="wd-link">Link</label><input id="wd-link" name="link" type="url" autocomplete="off" placeholder="https://"></div>
+      <div class="field w2"><label for="wd-seenIn">Seen in</label><input id="wd-seenIn" name="seenIn" list="wdSeenList" autocomplete="off" placeholder="A list, podcast, friend…"><datalist id="wdSeenList"></datalist></div>
+      <div class="field w4"><label for="wd-notes">Notes</label><input id="wd-notes" name="notes" autocomplete="off"></div>
+      <label class="wd-gift w4"><input type="checkbox" id="wd-gift" name="gift"> Gift idea</label>
     </div>
-    <div class="dlg-foot"><span class="muted" id="wdMsg" style="font-size:13px;align-self:center"></span><button class="btn btn-primary" type="submit" id="wdSave">Add</button></div>
+    <div class="dlg-foot"><span class="muted" id="wdMsg" style="font-size:13px;align-self:center"></span><span class="dlg-actions"><button class="btn" type="button" id="wdDrop" hidden>Drop it</button><button class="btn btn-primary" type="submit" id="wdSave">Add</button></span></div>
+  </form>
+</dialog>
+
+<dialog id="pasteDlg" aria-labelledby="pdTitle" style="width:min(640px,calc(100vw - 32px))">
+  <form id="pasteForm" method="dialog">
+    <div class="dlg-head"><h2 id="pdTitle">Paste a list</h2><button class="btn" type="button" id="pdClose">Close</button></div>
+    <div style="padding:16px 20px;display:grid;gap:12px">
+      <div class="field"><label for="pdText">One book per line: Title, or Title by Author, or Title – Author</label><textarea id="pdText" rows="10"></textarea></div>
+      <div class="field"><label for="pdSeen">Seen in (optional, for every book on the list)</label><input id="pdSeen" autocomplete="off" placeholder="e.g. ABC Top 100 2026"></div>
+      <div class="muted small" id="pdPreview"></div>
+    </div>
+    <div class="dlg-foot"><span class="muted" id="pdMsg" style="font-size:13px;align-self:center"></span><button class="btn btn-primary" type="submit" id="pdSave">Add to Inbox</button></div>
+  </form>
+</dialog>
+
+<dialog id="seriesDlg" aria-labelledby="sdTitle" style="width:min(560px,calc(100vw - 32px))">
+  <form id="seriesForm" method="dialog">
+    <div class="dlg-head"><h2 id="sdTitle">Series</h2><button class="btn" type="button" id="sdClose">Close</button></div>
+    <div class="wd-grid">
+      <div class="field w2"><label for="sd-series">Series</label><input id="sd-series" name="series" required autocomplete="off"></div>
+      <div class="field w2"><label for="sd-author">Author</label><input id="sd-author" name="author" autocomplete="off"></div>
+      <div class="field"><label for="sd-kind">Kind</label><select id="sd-kind" name="kind"><option>Book series</option><option>Comic run</option></select></div>
+      <div class="field"><label for="sd-status">Status</label><select id="sd-status" name="status"><option value="">–</option><option>Ongoing</option><option>Complete</option><option>On hiatus</option></select></div>
+      <div class="field"><label for="sd-released">Released so far</label><input id="sd-released" name="released" type="number" min="0" inputmode="numeric"></div>
+      <div class="field"><label for="sd-soldAs">Sold as</label><select id="sd-soldAs" name="soldAs"><option value="">–</option><option>Book</option><option>Comic</option><option>Graphic novel</option><option>Manga</option><option>Issues</option><option>Deluxe</option><option>Omnibus</option><option>Compendium</option><option>Box Set</option></select></div>
+      <div class="field w4"><label for="sd-link">Link</label><input id="sd-link" name="link" type="url" autocomplete="off"></div>
+      <div class="field w4"><label for="sd-notes">Notes</label><input id="sd-notes" name="notes" autocomplete="off"></div>
+    </div>
+    <div class="dlg-foot"><span class="muted" id="sdMsg" style="font-size:13px;align-self:center"></span><button class="btn btn-primary" type="submit" id="sdSave">Save</button></div>
   </form>
 </dialog>
 
@@ -1290,7 +1375,7 @@ async function refresh() {
     state.live = true;
     notice('');
     setStatus('live', 'Live from your sheet · ' + new Date().toLocaleTimeString('en-AU', { hour: 'numeric', minute: '2-digit' }));
-    disc.loaded = false; wishState.snap = null;
+    disc.loaded = false; wl.snap = null;
     renderAll();
     loadDiscover().then(autoMoveWish).then(() => { if (state.lib.mode === 'wish' && !$('view-library').hidden) renderWish(); });
   } catch (err) {
@@ -1550,8 +1635,7 @@ function openBookDialog(book, prefill) {
   }
   $('dlgLog').checked = true;
   $('dlgQuote').hidden = !book;
-  wishState.promote = prefill && prefill._wish || null;
-  if (wishState.promote) $('dlgMsg').textContent = 'From your Wishlist. Check the details, then save to add it as TBR.';
+
   updateDlgLog();
   $('bookDlg').showModal();
 }
@@ -1603,13 +1687,6 @@ async function saveBookDialog(e) {
       savedId = b.id;
       state.lib.open = b.id;
       setStatus('live', `Added “${b.title}” with ID ${b.id}`);
-      // Came from the Wishlist: mark that row as got (it stays on the Wishlist as history)
-      const w = wishState.promote; wishState.promote = null;
-      if (w) {
-        const done = ['To buy', 'Preordered', 'Bought'].includes(w.Status) ? 'Bought' : 'Downloaded';
-        try { if (w.Status !== done) await writeWishFields(w.id, { Status: done }); setStatus('live', `Added “${b.title}” to your TBR and marked it ${done} on the Wishlist`); }
-        catch (err) { notice(`“${b.title}” was added, but its Wishlist row wasn't updated: ${err.message || explain(err)}`, 'error'); }
-      }
     }
     if (gain) {
       try { await appendLogRow({ pages: gain, bookId: savedId, title: data.title, pageReached: toNum(data.currentPage) }); }
@@ -2467,115 +2544,330 @@ function renderRevisit(box, normT) {
 function renderTools() { renderRate(); renderRecs(); renderOwn(); renderDip(); renderStalled(); renderNextInSeries(); renderGoal(); renderYear(); }
 
 /* ---------- Wishlist (Library → Wishlist) ---------- */
-// Status values as they are in the sheet; "done" ones stay as history
-const WISH_STATUSES = ['To check', 'To download', 'To buy', 'Preordered', 'Coming soon', 'Not found', 'Downloaded', 'Bought'];
-const WISH_DONE = ['Downloaded', 'Bought'];
-const WISH_CHIPS = [['Active', w => !WISH_DONE.includes(w.Status)], ...WISH_STATUSES.filter(x => !WISH_DONE.includes(x)).map(x => [x, w => w.Status === x]), ['No status', w => !w.Status], ['Got it', w => WISH_DONE.includes(w.Status)], ['All', () => true]];
-const wishState = { chip: 'To download', series: '', limit: 100, promote: null, snap: null, key: '', moving: false };
+// Inbox (quick capture) → a "get it" stage → Got it → moves to Books as TBR and leaves the Wishlist.
+// History of moved books goes to the "Wishlist archive" tab.
+const WL_STAGES = ['Inbox', 'To download', 'To buy', 'To borrow', 'Waiting', 'Got it'];
+const WL_WAITING = ['Unreleased', 'Preordered', 'Unavailable', 'Wrong edition'];
+const WL_CHIPS = [['To download', w => w.stage === 'To download'], ['To buy', w => w.stage === 'To buy'], ['To borrow', w => w.stage === 'To borrow'],
+  ['Waiting', w => w.stage === 'Waiting'], ['Gift ideas', w => w.gift === 'TRUE'], ['Inbox', w => w.stage === 'Inbox' || !w.stage], ['Got it', w => w.stage === 'Got it'], ['All', () => true]];
+const wl = { view: 'inbox', chip: 'To download', series: '', snap: null, key: '', limit: 100, moving: false, editing: null, skipped: new Set(), sorted: 0 };
 const wishKey = t => normQ(t).replace(/^(the|a|an) /, '');
 const wishById = id => (disc.wish || []).find(w => w.id === id);
+const libByTitle = () => new Map(state.allBooks.map(b => [wishKey(b.title), b]));
+const isLate = w => w.stage === 'Waiting' && /^\d{4}-\d\d-\d\d$/.test(w.release) && w.release <= today();
 
-// The session list is a snapshot: it's rebuilt when the stage, series/list or search changes,
-// not when you tick books, so rows don't jump away while you work
 async function renderWish() {
-  const box = $('wishList');
-  if (!isLive()) { box.innerHTML = '<p class="empty">Your Wishlist loads from the sheet. ' + connectHint() + '</p>'; return; }
-  if (!disc.loaded) { box.innerHTML = '<p class="empty">Loading your Wishlist…</p>'; await loadDiscover(); }
-  if (disc.wErr) { box.innerHTML = '<p class="empty">Couldn\'t read your Wishlist: ' + escapeText(explain(disc.wErr)) + '</p>'; return; }
-  const all = disc.wish, q = normQ(state.lib.q);
-  $('wishChips').innerHTML = WISH_CHIPS.filter(([k, f]) => k !== 'No status' || all.some(f)).map(([k, f]) => `<button class="chip" type="button" data-w="${k}" aria-pressed="${!q && wishState.chip === k}">${k}<span class="n">${fmt(all.filter(f).length)}</span></button>`).join('');
-  const groups = [...new Set(all.flatMap(w => [w.Series, w['Reading List']]).filter(Boolean))].sort((x, y) => x.localeCompare(y, undefined, { numeric: true }));
-  const sel = $('wishSeries');
-  if (sel.options.length !== groups.length + 1) sel.innerHTML = '<option value="">Any series or list</option>' + groups.map(g => `<option>${escapeText(g)}</option>`).join('');
-  sel.value = wishState.series;
-  const key = [wishState.chip, wishState.series, q].join('|');
-  if (!wishState.snap || wishState.key !== key) {
-    const f = (WISH_CHIPS.find(c => c[0] === wishState.chip) || WISH_CHIPS[0])[1];
-    // Searching looks across every stage, so nothing is hidden by the stage chips
-    const useChip = !q;
-    wishState.snap = all.filter(w => (!useChip || f(w))
-      && (!wishState.series || w.Series === wishState.series || w['Reading List'] === wishState.series)
-      && (!q || normQ([w.Title, w.Author, w.Series, w['Reading List'], w.Notes].join(' ')).includes(q)))
-      .sort((a, b) => wishState.series ? (a.Series || a['Reading List'] || '').localeCompare(b.Series || b['Reading List'] || '', undefined, { numeric: true }) || a._row - b._row : 0)
-      .map(w => w.id);
-    wishState.key = key; wishState.limit = 100;
+  document.querySelectorAll('.wl-tabs button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.wv === wl.view)));
+  for (const [id, v] of [['wlInbox', 'inbox'], ['wlSession', 'session'], ['wlSeries', 'series'], ['wlLists', 'lists']]) $(id).hidden = wl.view !== v;
+  const box = { inbox: 'wlDeck', session: 'wishList', series: 'wlSerList', lists: 'wlListBox' }[wl.view];
+  if (!isLive()) { $(box).innerHTML = '<p class="empty">Your Wishlist loads from the sheet. ' + connectHint() + '</p>'; return; }
+  if (!disc.loaded) { $(box).innerHTML = '<p class="empty">Loading your Wishlist…</p>'; await loadDiscover(); }
+  if (disc.wErr) { $(box).innerHTML = '<p class="empty">Couldn\'t read your Wishlist: ' + escapeText(explain(disc.wErr)) + '</p>'; return; }
+  const seriesNames = [...new Set([...(disc.series || []).map(s => s.series), ...disc.wish.map(w => w.series)].filter(Boolean))].sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+  $('wdSeriesList').innerHTML = seriesNames.map(x => `<option value="${escapeText(x)}">`).join('');
+  $('wdSeenList').innerHTML = [...new Set(disc.wish.map(w => w.seenIn).filter(Boolean))].sort().map(x => `<option value="${escapeText(x)}">`).join('');
+  if (wl.view === 'inbox') renderInbox();
+  else if (wl.view === 'session') renderSession();
+  else if (wl.view === 'series') renderSeriesView();
+  else renderListsView();
+}
+
+/* Inbox: one book at a time, decide where it goes */
+function renderInbox() {
+  const all = disc.wish.filter(w => w.stage === 'Inbox' || !w.stage);
+  const q = all.filter(w => !wl.skipped.has(w.id));
+  $('wlInboxNote').textContent = `${fmt(all.length)} to sort${wl.sorted ? ` · ${wl.sorted} sorted this visit` : ''}`;
+  const box = $('wlDeck');
+  if (!q.length) {
+    box.innerHTML = `<p class="empty">${all.length ? 'You skipped the rest. <button class="btn" type="button" id="wlUnskip">Start again</button>' : 'Inbox is empty. Add books above as you come across them.'}</p>`;
+    const u = $('wlUnskip'); if (u) u.addEventListener('click', () => { wl.skipped.clear(); renderInbox(); });
+    return;
   }
-  const list = wishState.snap.map(wishById).filter(Boolean);
-  const lib = new Set(state.allBooks.map(b => wishKey(b.title)));
-  const got = list.filter(w => WISH_DONE.includes(w.Status)).length;
+  const w = q[0], have = libByTitle().get(wishKey(w.title));
+  box.innerHTML = `<div class="wl-card"><h3></h3><div class="m"></div>${have ? '<div class="warn"></div>' : ''}
+    <div class="btns"><button class="btn btn-primary" type="button" data-s="To download">Download</button><button class="btn" type="button" data-s="To buy">Buy</button><button class="btn" type="button" data-s="To borrow">Borrow</button>
+    <select aria-label="Wait because"><option value="">Wait…</option>${WL_WAITING.map(x => `<option>${x}</option>`).join('')}</select>
+    <button class="btn" type="button" data-a="edit">Edit</button><button class="btn" type="button" data-a="drop">Drop</button><button class="btn" type="button" data-a="skip">Skip</button></div></div>`;
+  box.querySelector('h3').textContent = w.title;
+  box.querySelector('.m').textContent = [w.author, w.series && (w.series + (w.number ? ' #' + w.number : '')), w.format, w.seenIn && 'Seen in ' + w.seenIn, w.notes].filter(Boolean).join(' · ') || 'No details yet';
+  if (have) box.querySelector('.warn').textContent = `Already in your library as “${have.title}” (${have.status || 'no status'}). Drop it if it's the same book.`;
+  const done = () => { wl.sorted++; renderInbox(); };
+  box.querySelectorAll('[data-s]').forEach(b => b.addEventListener('click', () => { setWishFields(w, { stage: b.dataset.s }); done(); }));
+  box.querySelector('select').addEventListener('change', e => { if (e.target.value) { setWishFields(w, { stage: 'Waiting', waiting: e.target.value }); done(); } });
+  box.querySelector('[data-a="edit"]').addEventListener('click', () => openWishDlg(w));
+  box.querySelector('[data-a="drop"]').addEventListener('click', () => dropWish(w));
+  box.querySelector('[data-a="skip"]').addEventListener('click', () => { wl.skipped.add(w.id); renderInbox(); });
+}
+
+/* Get them: a checklist for a download/shopping session. The list is a snapshot, rebuilt only when
+   the stage, series or search changes, so ticked rows stay where they are. */
+function renderSession() {
+  const box = $('wishList'), all = disc.wish, q = normQ(state.lib.q);
+  $('wishChips').innerHTML = WL_CHIPS.filter(([k, f]) => !['Got it', 'Gift ideas'].includes(k) || all.some(f))
+    .map(([k, f]) => `<button class="chip" type="button" data-w="${k}" aria-pressed="${!q && wl.chip === k}">${k}<span class="n">${fmt(all.filter(f).length)}</span></button>`).join('');
+  const lists = [...new Set((disc.lists || []).map(x => x.list))].sort();
+  const groups = [...new Set(all.map(w => w.series).filter(Boolean))].sort((x, y) => x.localeCompare(y, undefined, { numeric: true }));
+  const sel = $('wishSeries');
+  const opts = '<option value="">Any series or list</option>' + groups.map(g => `<option value="s:${escapeText(g)}">${escapeText(g)}</option>`).join('') + lists.map(g => `<option value="l:${escapeText(g)}">List: ${escapeText(g)}</option>`).join('');
+  if (sel.dataset.opts !== opts) { sel.innerHTML = opts; sel.dataset.opts = opts; }
+  sel.value = wl.series;
+  const key = [wl.chip, wl.series, q].join('|');
+  if (!wl.snap || wl.key !== key) {
+    const f = (WL_CHIPS.find(c => c[0] === wl.chip) || WL_CHIPS[0])[1];
+    const [gk, gv] = [wl.series.slice(0, 1), wl.series.slice(2)];
+    const inList = gk === 'l' ? new Set((disc.lists || []).filter(x => x.list === gv).map(x => wishKey(x.title))) : null;
+    // Searching looks across every stage
+    wl.snap = all.filter(w => (q || f(w))
+      && (!wl.series || (gk === 's' ? w.series === gv : inList.has(wishKey(w.title))))
+      && (!q || normQ([w.title, w.author, w.series, w.seenIn, w.notes].join(' ')).includes(q)))
+      .sort((a, b) => wl.series ? (a.series || '').localeCompare(b.series || '') || toNum(a.number) - toNum(b.number) || a._row - b._row : 0)
+      .map(w => w.id);
+    wl.key = key; wl.limit = 100;
+  }
+  const list = wl.snap.map(wishById).filter(Boolean);
+  const lib = libByTitle();
+  const got = list.filter(w => w.stage === 'Got it').length;
   $('wishNote').textContent = `${fmt(list.length)} in this list · ${fmt(got)} got${q ? ' · searching every stage' : ''}`;
   box.textContent = '';
-  if (!list.length) { box.innerHTML = '<p class="empty">Nothing here. Try another stage, or clear the search.</p>'; $('wishMore').hidden = true; wishBar(); return; }
-  for (const w of list.slice(0, wishState.limit)) box.appendChild(wishRow(w, lib));
-  $('wishMore').hidden = list.length <= wishState.limit;
+  if (!list.length) box.innerHTML = '<p class="empty">Nothing here. Try another stage, or clear the search.</p>';
+  for (const w of list.slice(0, wl.limit)) box.appendChild(wishRow(w, lib));
+  $('wishMore').hidden = list.length <= wl.limit;
   wishBar();
 }
 function wishRow(w, lib) {
   const row = document.createElement('div');
-  const done = WISH_DONE.includes(w.Status);
-  row.className = 'wish-row' + (done ? ' done' : '') + (w.bookId ? ' moved' : '');
+  const done = w.stage === 'Got it';
+  row.className = 'wish-row' + (done ? ' done' : '');
   row.innerHTML = '<input type="checkbox" class="tick"><div><span class="t"></span><br><span class="m"></span></div><div class="acts"></div>';
   const tick = row.querySelector('.tick');
   tick.checked = done;
-  tick.setAttribute('aria-label', `Got ${w.Title}`);
-  row.querySelector('.t').textContent = w.Title;
-  if (!w.bookId && lib.has(wishKey(w.Title))) { const hv = document.createElement('span'); hv.className = 'have'; hv.textContent = 'In library'; row.querySelector('.t').after(hv); }
-  row.querySelector('.m').textContent = [w.Author, w.Type, w.Format, w.Series, w['Reading List'], w.Available === 'Preorder Only' ? 'Preorder only' : '', w.ETA ? 'ETA ' + w.ETA : '', w.Cost, w.Source, w.Notes].filter(Boolean).join(' · ');
+  tick.setAttribute('aria-label', `Got ${w.title}`);
+  const t = row.querySelector('.t');
+  t.textContent = w.title;
+  if (w.gift === 'TRUE') { const g = document.createElement('span'); g.className = 'wl-gift'; g.textContent = 'Gift idea'; t.after(g); }
+  if (lib.has(wishKey(w.title))) { const hv = document.createElement('span'); hv.className = 'have'; hv.textContent = 'In library'; t.after(hv); }
+  const m = row.querySelector('.m');
+  m.textContent = [w.author, w.series && (w.series + (w.number ? ' #' + w.number : '')), w.format, w.wantAs, w.stage === 'Waiting' ? w.waiting || 'Waiting' : '', w.release && !isLate(w) ? 'Out ' + w.release : '', w.price, w.notes].filter(Boolean).join(' · ');
+  if (isLate(w)) { const l = document.createElement('span'); l.className = 'wl-late'; l.textContent = ` · Should be out (${w.release})`; m.appendChild(l); }
   tick.addEventListener('change', () => {
-    if (tick.checked) { w._was = w.Status; setWishStatus(w, ['To buy', 'Preordered'].includes(w.Status) ? 'Bought' : 'Downloaded'); }
-    else setWishStatus(w, w._was && !WISH_DONE.includes(w._was) ? w._was : 'To download');
+    if (tick.checked) { w._was = w.stage; setWishFields(w, { stage: 'Got it' }); }
+    else setWishFields(w, { stage: w._was && w._was !== 'Got it' ? w._was : 'To download' });
   });
   const acts = row.querySelector('.acts');
   const sel = document.createElement('select');
-  sel.setAttribute('aria-label', 'Stage of ' + w.Title);
-  sel.innerHTML = WISH_STATUSES.map(x => `<option${x === w.Status ? ' selected' : ''}>${x}</option>`).join('') + (w.Status && !WISH_STATUSES.includes(w.Status) ? `<option selected>${escapeText(w.Status)}</option>` : '');
-  sel.addEventListener('change', () => { w._was = w.Status; setWishStatus(w, sel.value); });
+  sel.setAttribute('aria-label', 'Stage of ' + w.title);
+  sel.innerHTML = WL_STAGES.map(x => `<option${x === w.stage ? ' selected' : ''}>${x}</option>`).join('');
+  sel.addEventListener('change', () => { w._was = w.stage; setWishFields(w, { stage: sel.value }); });
   acts.appendChild(sel);
-  if (w.Link) { const a = document.createElement('a'); a.href = w.Link; a.target = '_blank'; a.rel = 'noopener'; a.textContent = 'Link'; acts.appendChild(a); }
+  if (w.link) { const a = document.createElement('a'); a.href = w.link; a.target = '_blank'; a.rel = 'noopener'; a.textContent = 'Link'; acts.appendChild(a); }
+  for (const [label, fn] of [['Edit', () => openWishDlg(w)], ['Drop', () => dropWish(w)]]) { const b = document.createElement('button'); b.type = 'button'; b.textContent = label; b.addEventListener('click', fn); acts.appendChild(b); }
   return row;
 }
-// Status changes update the row in place and save in the background, one after another
-const wishQ = { chain: Promise.resolve(), pending: 0 };
-function setWishStatus(w, status) {
-  const prev = w.Status; w.Status = status;
-  renderWish();
-  wishQ.pending++; setStatus('live', `Saving Wishlist… (${wishQ.pending})`);
-  wishQ.chain = wishQ.chain.then(() => writeWishFields(w.id, { Status: status })).catch(err => {
-    w.Status = prev; renderWish();
-    notice(`Couldn't update “${w.Title}” on the Wishlist: ${err.message || explain(err)}`, 'error');
-  }).finally(() => { wishQ.pending--; setStatus('live', wishQ.pending ? `Saving Wishlist… (${wishQ.pending})` : 'Wishlist saved'); });
-}
 function wishBar() {
-  const ready = (wishState.snap || []).map(wishById).filter(w => w && WISH_DONE.includes(w.Status) && !w.bookId);
+  const ready = (wl.snap || []).map(wishById).filter(w => w && w.stage === 'Got it');
   $('wishBar').hidden = !ready.length;
   $('wishBarText').textContent = `${ready.length} ticked and ready for your TBR`;
-  $('wishMoveBtn').disabled = wishState.moving;
+  $('wishMoveBtn').disabled = wl.moving;
 }
 
-// Wishlist row → new Books row, carrying everything that maps across
+// Field changes update the row in place and save in the background, one after another
+const wishQ = { chain: Promise.resolve(), pending: 0 };
+function setWishFields(w, fields) {
+  const prev = Object.fromEntries(Object.keys(fields).map(k => [k, w[k]]));
+  Object.assign(w, fields);
+  if (wl.view === 'session') renderSession();
+  wishQ.pending++; setStatus('live', `Saving Wishlist… (${wishQ.pending})`);
+  return wishQ.chain = wishQ.chain.then(() => writeWishFields(w.id, fields)).catch(err => {
+    Object.assign(w, prev); renderWish();
+    notice(`Couldn't update “${w.title}” on the Wishlist: ${err.message || explain(err)}`, 'error');
+  }).finally(() => { wishQ.pending--; setStatus('live', wishQ.pending ? `Saving Wishlist… (${wishQ.pending})` : 'Wishlist saved'); });
+}
+
+// Writes: find the row by its id right before writing, change only the given cells.
+const wishRows = new Map();
+async function findWishRow(id) {
+  const header = disc.wishHeader && disc.wishHeader.includes('id') ? disc.wishHeader : ((await readRange('Wishlist!A1:Z1'))[0] || []).map(h => String(h).trim());
+  const c = header.indexOf('id');
+  if (c < 0) throw { code: 'tool_error', message: 'Wishlist has no id column' };
+  const L = colLetter(c), known = wishRows.get(id);
+  if (known && String(((await readRange(`Wishlist!${L}${known}`))[0] || [])[0] ?? '').trim() === id) return { header, row: known };
+  const ids = await readRange(`Wishlist!${L}1:${L}3000`);
+  ids.forEach((r, i) => { const v = String(r[0] ?? '').trim(); if (v) wishRows.set(v, i + 1); });
+  const hits = ids.map((r, i) => String(r[0] ?? '').trim() === id ? i + 1 : 0).filter(Boolean);
+  if (hits.length !== 1) throw { code: 'tool_error', message: hits.length ? `Wishlist id ${id} appears ${hits.length} times` : `Wishlist id ${id} isn't there any more` };
+  return { header, row: hits[0] };
+}
+// Gift is a checkbox and release a date, so those go in as typed; everything else as plain text
+const wishCell = (k, v) => !v ? (k === 'gift' ? 'FALSE' : '') : k === 'gift' ? (v === 'TRUE' ? 'TRUE' : 'FALSE') : k === 'release' && /^\d{4}-\d\d-\d\d$/.test(v) ? v : "'" + v;
+async function writeWishFields(id, fields) {
+  if (!id) throw { code: 'tool_error', message: 'this Wishlist row has no id yet' };
+  const { header, row } = await findWishRow(id);
+  for (const [k, v] of Object.entries(fields)) {
+    const c = header.indexOf(k); if (c < 0 || k === 'id') continue;
+    await state.mcp.callTool(SERVER, 'update_values', { spreadsheetId: SHEET_ID, range: `Wishlist!${colLetter(c)}${row}`, values: [[wishCell(k, v)]] }, { cache: false });
+  }
+}
+// Removing a row: blank every cell (the sheet keeps an empty row, the app ignores it)
+async function clearWishRow(id) {
+  const { header, row } = await findWishRow(id);
+  await state.mcp.callTool(SERVER, 'update_values', { spreadsheetId: SHEET_ID, range: `Wishlist!A${row}:${colLetter(header.length - 1)}${row}`, values: [header.map(() => '')] }, { cache: false });
+  wishRows.delete(id);
+}
+async function dropWish(w) {
+  if (!confirm(`Drop “${w.title}” from your Wishlist? It's deleted, not archived.`)) return;
+  if (!isLive()) { notice('Dropping needs the live connection. ' + connectHint(), 'error'); return; }
+  const i = disc.wish.indexOf(w);
+  disc.wish.splice(i, 1); renderWish();
+  try { await (wishQ.chain = wishQ.chain.then(() => clearWishRow(w.id))); setStatus('live', `Dropped “${w.title}”`); }
+  catch (err) { disc.wish.splice(i, 0, w); renderWish(); notice(`Couldn't drop “${w.title}”: ${err.message || explain(err)}`, 'error'); }
+}
+
+// New rows: next WL id, today's date, appended under the table
+async function appendWishRows(items) {
+  const header = ((await readRange('Wishlist!A1:Z1'))[0] || []).map(h => String(h).trim());
+  const c = header.indexOf('id');
+  const ids = (await readRange(`Wishlist!${colLetter(c)}2:${colLetter(c)}3000`)).map(r => Number(String(r[0] || '').replace(/\D/g, '')) || 0);
+  let next = Math.max(0, ...ids, ...(disc.wish || []).map(w => Number(String(w.id).replace(/\D/g, '')) || 0));
+  const rows = items.map(f => ({ stage: 'Inbox', gift: 'FALSE', ...f, id: 'WL' + String(++next).padStart(4, '0'), added: today() }));
+  const values = rows.map(f => header.map(h => h === 'id' ? f.id : h === 'added' ? f.added : wishCell(h, f[h] || '')));
+  await state.mcp.callTool(SERVER, 'append_values', { spreadsheetId: SHEET_ID, range: 'Wishlist!A1', values }, { cache: false });
+  disc.wishHeader = header;
+  for (const f of rows) disc.wish.push({ ...Object.fromEntries(header.map(h => [h, f[h] || ''])), _row: 1e9 });
+  return rows;
+}
+// "Title by Author" or "Title – Author"; plain titles are fine too
+function parseWishLine(line) {
+  const s = line.replace(/^\s*(\d+[.)]\s*|[-*•]\s+)/, '').trim();
+  if (!s) return null;
+  const m = s.match(/^(.+?)\s+(?:by|[–—-])\s+(.+)$/i);
+  return m ? { title: m[1].trim(), author: m[2].trim() } : { title: s, author: '' };
+}
+// Already in Books, or already on the Wishlist?
+function wishDupe(title) {
+  const k = wishKey(title), b = libByTitle().get(k);
+  if (b) return `already in your library (${b.status || 'no status'})`;
+  const w = (disc.wish || []).find(x => wishKey(x.title) === k);
+  return w ? `already on your Wishlist (${w.stage || 'Inbox'})` : '';
+}
+async function quickAddWish() {
+  const p = parseWishLine($('wlQuick').value), msg = $('wlQuickMsg');
+  if (!p) { $('wlQuick').focus(); return; }
+  if (!isLive()) { msg.textContent = 'Adding needs the live connection. ' + connectHint(); return; }
+  if (!disc.loaded) await loadDiscover();
+  const d = wishDupe(p.title);
+  if (d && $('wlQuick').dataset.confirm !== p.title) { msg.textContent = `“${p.title}” is ${d}. Press Add again to add it anyway.`; $('wlQuick').dataset.confirm = p.title; return; }
+  $('wlQuickBtn').disabled = true; msg.textContent = 'Adding…';
+  try {
+    await appendWishRows([p]);
+    $('wlQuick').value = ''; delete $('wlQuick').dataset.confirm;
+    msg.textContent = `Added “${p.title}” to your Inbox.`;
+    wl.snap = null; renderWish();
+  } catch (err) { msg.textContent = 'Couldn\'t add it: ' + (err.message || explain(err)); }
+  finally { $('wlQuickBtn').disabled = false; $('wlQuick').focus(); }
+}
+function pasteItems() {
+  const seen = new Set();
+  return $('pdText').value.split('\n').map(parseWishLine).filter(Boolean).map(p => {
+    const k = wishKey(p.title), dup = seen.has(k) ? 'twice in this list' : wishDupe(p.title);
+    seen.add(k); return { ...p, dup };
+  });
+}
+function previewPaste() {
+  const items = pasteItems(), fresh = items.filter(x => !x.dup);
+  const box = $('pdPreview');
+  box.textContent = items.length ? `${fresh.length} new · ${items.length - fresh.length} skipped` : '';
+  const ul = document.createElement('ul');
+  for (const x of items.filter(x => x.dup).slice(0, 30)) { const li = document.createElement('li'); li.textContent = `${x.title}: ${x.dup}`; ul.appendChild(li); }
+  if (ul.children.length) box.appendChild(ul);
+  $('pdSave').textContent = fresh.length ? `Add ${fresh.length} to Inbox` : 'Add to Inbox';
+}
+async function savePaste(e) {
+  e.preventDefault();
+  if (!isLive()) { $('pdMsg').textContent = 'Adding needs the live connection. ' + connectHint(); return; }
+  if (!disc.loaded) await loadDiscover();
+  const seenIn = $('pdSeen').value.trim();
+  const fresh = pasteItems().filter(x => !x.dup).map(({ title, author }) => ({ title, author, seenIn }));
+  if (!fresh.length) { $('pdMsg').textContent = 'Nothing new to add.'; return; }
+  $('pdSave').disabled = true; $('pdMsg').textContent = 'Adding…';
+  try {
+    await appendWishRows(fresh);
+    $('pasteDlg').close();
+    setStatus('live', `Added ${fresh.length} book${fresh.length === 1 ? '' : 's'} to your Inbox`);
+    wl.view = 'inbox'; wl.snap = null; renderWish();
+  } catch (err) { $('pdMsg').textContent = 'Couldn\'t add them: ' + (err.message || explain(err)); $('pdSave').disabled = false; }
+}
+
+// One dialog for adding with details and for editing
+const WD_FIELDS = ['title', 'author', 'series', 'number', 'type', 'format', 'stage', 'waiting', 'wantAs', 'release', 'price', 'interest', 'link', 'seenIn', 'notes'];
+function openWishDlg(w) {
+  wl.editing = w || null;
+  $('wd-stage').innerHTML = WL_STAGES.map(s => `<option>${s}</option>`).join('');
+  for (const k of WD_FIELDS) $('wd-' + k).value = w ? w[k] || '' : k === 'stage' ? 'Inbox' : '';
+  $('wd-gift').checked = !!w && w.gift === 'TRUE';
+  $('wdTitle').textContent = w ? 'Edit Wishlist book' : 'Add to Wishlist';
+  $('wdSave').textContent = w ? 'Save' : 'Add';
+  $('wdDrop').hidden = !w;
+  $('wdMsg').textContent = ''; $('wdSave').disabled = false;
+  $('wishDlg').showModal(); $('wd-title').focus();
+}
+async function saveWish(e) {
+  e.preventDefault();
+  if (!isLive()) { $('wdMsg').textContent = 'Saving needs the live connection. ' + connectHint(); return; }
+  const f = Object.fromEntries(WD_FIELDS.map(k => [k, $('wd-' + k).value.trim()]));
+  f.gift = $('wd-gift').checked ? 'TRUE' : 'FALSE';
+  if (!f.title) { $('wdMsg').textContent = 'A title is needed.'; return; }
+  if (f.stage !== 'Waiting') f.waiting = '';
+  const w = wl.editing;
+  if (w) {
+    const changed = Object.fromEntries(Object.entries(f).filter(([k, v]) => v !== (w[k] || (k === 'gift' ? 'FALSE' : ''))));
+    $('wishDlg').close();
+    if (Object.keys(changed).length) { setWishFields(w, changed); wl.snap = wl.view === 'session' ? wl.snap : null; renderWish(); }
+    return;
+  }
+  if (!disc.loaded) await loadDiscover();
+  const d = wishDupe(f.title);
+  if (d && $('wdSave').dataset.confirm !== f.title) { $('wdMsg').textContent = `This is ${d}. Press Add again to add it anyway.`; $('wdSave').dataset.confirm = f.title; return; }
+  $('wdSave').disabled = true; $('wdMsg').textContent = 'Saving…';
+  try {
+    await appendWishRows([f]);
+    delete $('wdSave').dataset.confirm;
+    $('wishDlg').close();
+    setStatus('live', `Added “${f.title}” to your Wishlist`);
+    wl.snap = null; renderWish();
+  } catch (err) { $('wdMsg').textContent = 'Couldn\'t save it: ' + (err.message || explain(err)); $('wdSave').disabled = false; }
+}
+
+/* Moving to Books. Got it → new TBR row in Books (or a link if the title's already there),
+   a history row in "Wishlist archive", and the Wishlist row is cleared. */
+const WL_COMIC = ['Comic', 'Manga', 'Issues', 'Deluxe', 'Omnibus', 'Compendium', 'Box Set', 'Limited Edition'];
 function wishToBook(w) {
-  const t = w.Type, list = w['Reading List'] || '';
-  const nf = t === 'Non-Fiction', comic = ['Comic', 'Manga', 'Manhwa', 'Omnibus'].includes(t);
+  const nf = w.type === 'Non-fiction';
   return {
-    title: w.Title, author: w.Author, status: 'TBR', currentPage: '0',
-    type: nf ? 'Non-Fiction' : t ? 'Fiction' : '',
-    format: nf ? 'General Non-Fiction' : t === 'Novel' ? 'Novel' : comic ? 'Comic' : t === 'Graphic Novel' ? 'Graphic Novel' : '',
-    owned: w.Format === 'Physical' ? 'Physical' : w.Status === 'Bought' && !w.Format ? '' : 'Digital',
-    copies: { Epub: 'Kobo', PDF: 'PDF', Physical: 'Physical' }[w.Format] || '',
-    series: w.Series || '', awards: /ABC Top 100/.test(list) ? 'ABC Top 100' : '',
-    notes: ['From Wishlist', list, w.Source === 'Internet Archive' ? 'via Internet Archive' : '', w.Notes].filter(Boolean).join(' · '),
+    title: w.title, author: w.author, status: 'TBR', currentPage: '0',
+    type: nf ? 'Non-Fiction' : w.type ? 'Fiction' : '',
+    format: w.format === 'Book' ? (nf ? 'General Non-Fiction' : w.type ? 'Novel' : '') : WL_COMIC.includes(w.format) ? 'Comic' : w.format === 'Graphic novel' ? 'Graphic Novel' : '',
+    owned: w.wantAs === 'Physical' ? 'Physical' : w.wantAs === 'Library' ? '' : 'Digital',
+    copies: { Kobo: 'Kobo', PDF: 'PDF', Physical: 'Physical' }[w.wantAs] || '',
+    series: w.series || '', seriesNum: w.number || '',
+    awards: /ABC Top 100/i.test(w.seenIn) ? 'ABC Top 100' : '',
+    notes: ['From Wishlist', w.seenIn, w.wantAs === 'Library' ? 'Library' : '', w.notes].filter(Boolean).join(' · '),
     added: today()
   };
 }
-// Move Downloaded/Bought Wishlist books to Books as TBR in one go. Books already in the
-// library (same title) are just linked. Each Wishlist row gets the Books id so it never moves twice.
+function wishArchiveRow(w, bookId, header) {
+  const f = { Title: w.title, Author: w.author, Status: w.wantAs === 'Physical' ? 'Bought' : 'Downloaded', Type: w.type, Format: w.format, ETA: w.release,
+    Cost: w.price, 'Reading List': w.seenIn, Notes: [w.notes, 'Moved ' + today()].filter(Boolean).join(' · '), id: w.id, Series: w.series, Link: w.link, bookId };
+  return header.map(h => f[h] ? "'" + f[h] : '');
+}
 async function moveWishToBooks(rows, quiet) {
-  if (wishState.moving || !rows.length || !state.libLoaded) return 0;
-  wishState.moving = true; wishBar();
+  rows = rows.filter(w => w && w.id);
+  if (wl.moving || !rows.length || !state.libLoaded) return 0;
+  wl.moving = true; wishBar();
   try {
-    const byTitle = new Map(state.allBooks.map(b => [wishKey(b.title), b]));
+    await wishQ.chain;
+    const byTitle = libByTitle();
     const link = [], add = [];
-    for (const w of rows) { const b = byTitle.get(wishKey(w.Title)); if (b) link.push([w, b.id]); else add.push(w); }
+    for (const w of rows) { const b = byTitle.get(wishKey(w.title)); if (b) link.push([w, b.id]); else add.push(w); }
     if (add.length) {
       const header = ((await readRange('Books!A1:AZ1'))[0] || []).map(h => String(h).trim());
       const ic = header.indexOf('id');
@@ -2595,71 +2887,157 @@ async function moveWishToBooks(rows, quiet) {
       }
       books.forEach((f, i) => { state.allBooks.push({ ...Object.fromEntries(header.map(h => [h, String(f[h] ?? '')])), _row: r0 ? r0 - 2 + i : state.allBooks.length }); link.push([add[i], f.id]); });
     }
-    for (const [w, id] of link) { await writeWishFields(w.id, { bookId: id }); w.bookId = id; }
+    // History first, then clear the Wishlist rows
+    const ah = ((await readRange("'Wishlist archive'!A1:Z1"))[0] || []).map(h => String(h).trim());
+    if (ah.length) await state.mcp.callTool(SERVER, 'append_values', { spreadsheetId: SHEET_ID, range: "'Wishlist archive'!A1", values: link.map(([w, id]) => wishArchiveRow(w, id, ah)) }, { cache: false });
+    const failed = [];
+    for (const [w] of link) {
+      try { await clearWishRow(w.id); disc.wish.splice(disc.wish.indexOf(w), 1); }
+      catch (err) { failed.push(w.title); }
+    }
     syncReadingBooks(); renderAll();
-    if (add.length || !quiet) notice(`Moved ${add.length} book${add.length === 1 ? '' : 's'} from your Wishlist to your TBR${link.length > add.length ? ` and linked ${link.length - add.length} you already had` : ''}.`);
+    if (add.length || !quiet) notice(`Moved ${add.length} book${add.length === 1 ? '' : 's'} from your Wishlist to your TBR${link.length > add.length ? ` and cleared ${link.length - add.length} you already had` : ''}.`
+      + (failed.length ? ` Couldn't clear ${failed.join(', ')} from the Wishlist, so clear ${failed.length === 1 ? 'it' : 'them'} by hand.` : ''), failed.length ? 'error' : '');
     return add.length;
   } catch (err) {
     notice('Couldn\'t move Wishlist books to your TBR: ' + (err.message || explain(err)), 'error');
     return 0;
-  } finally { wishState.moving = false; wishBar(); if (state.lib.mode === 'wish') renderWish(); }
+  } finally { wl.moving = false; wl.snap = null; wishBar(); if (state.lib.mode === 'wish') renderWish(); }
 }
-// After each refresh: pick up anything marked Downloaded/Bought (in the app or in the sheet) that hasn't moved yet
+// After each refresh: move anything marked Got it (in the app or in the sheet)
 async function autoMoveWish() {
-  if (!isLive() || !state.libLoaded || !disc.wish || !(disc.wishHeader || []).includes('bookId')) return;
-  const due = disc.wish.filter(w => WISH_DONE.includes(w.Status) && !w.bookId && w.id);
+  if (!isLive() || !state.libLoaded || !disc.wish || !(disc.wishHeader || []).includes('stage')) return;
+  const due = disc.wish.filter(w => w.stage === 'Got it' && w.id);
   if (due.length) await moveWishToBooks(due, true);
 }
 
-// Wishlist writes: find the row by its id (column "id") right before writing, change only the given cells.
-// The row number is remembered and re-checked with a one-cell read next time.
-const wishRows = new Map();
-async function findWishRow(id) {
-  const header = disc.wishHeader && disc.wishHeader.includes('id') ? disc.wishHeader : ((await readRange('Wishlist!A1:Z1'))[0] || []).map(h => String(h).trim());
-  const c = header.indexOf('id');
-  if (c < 0) throw { code: 'tool_error', message: 'Wishlist has no id column' };
-  const L = colLetter(c), known = wishRows.get(id);
-  if (known && String(((await readRange(`Wishlist!${L}${known}`))[0] || [])[0] ?? '').trim() === id) return { header, row: known };
-  const ids = await readRange(`Wishlist!${L}1:${L}3000`);
-  ids.forEach((r, i) => { const v = String(r[0] ?? '').trim(); if (v) wishRows.set(v, i + 1); });
-  const hits = ids.map((r, i) => String(r[0] ?? '').trim() === id ? i + 1 : 0).filter(Boolean);
-  if (hits.length !== 1) throw { code: 'tool_error', message: hits.length ? `Wishlist id ${id} appears ${hits.length} times` : `Wishlist id ${id} isn't there any more` };
-  return { header, row: hits[0] };
+/* Series: tiles 1…n coloured by read / own / wanted / waiting */
+function seriesBooks(name) {
+  const k = normQ(name);
+  return state.allBooks.filter(b => normQ(b.series) === k);
 }
-async function writeWishFields(id, fields) {
-  if (!id) throw { code: 'tool_error', message: 'this Wishlist row has no id yet' };
-  const { header, row } = await findWishRow(id);
-  for (const [k, v] of Object.entries(fields)) {
-    const c = header.indexOf(k); if (c < 0 || k === 'id') continue;
-    await state.mcp.callTool(SERVER, 'update_values', { spreadsheetId: SHEET_ID, range: `Wishlist!${colLetter(c)}${row}`, values: [[v ? "'" + v : '']] }, { cache: false });
+function renderSeriesView() {
+  const box = $('wlSerList');
+  const names = new Map((disc.series || []).map(s => [s.series, s]));
+  for (const w of disc.wish) if (w.series && !names.has(w.series)) names.set(w.series, { series: w.series, author: w.author, _new: true });
+  if (!names.size) { box.innerHTML = '<p class="empty">No series yet. Add one to see where you\'re up to.</p>'; return; }
+  box.innerHTML = '<div class="ser-legend"><span><i style="background:var(--accent)"></i>Read</span><span><i style="background:color-mix(in srgb,var(--accent) 35%,var(--raise))"></i>Own</span><span><i style="border:1px solid var(--accent)"></i>Wishlist</span><span><i style="border:1px dashed var(--line)"></i>Not added</span></div>';
+  const list = [...names.values()].sort((a, b) => a.series.localeCompare(b.series, undefined, { numeric: true }));
+  for (const s of list) {
+    const books = seriesBooks(s.series), wants = disc.wish.filter(w => normQ(w.series) === normQ(s.series));
+    const by = new Map();
+    for (const b of books) { const n = toNum(b.seriesNum); if (n) by.set(n, b.status === 'Read' ? 'read' : 'own'); }
+    for (const w of wants) { const n = toNum(w.number); if (n && !by.has(n)) by.set(n, w.stage === 'Waiting' ? 'soon' : 'want'); }
+    const top = Math.max(toNum(s.released), ...by.keys(), 0);
+    const read = [...by.values()].filter(v => v === 'read').length, own = [...by.values()].filter(v => v === 'own').length;
+    const firstGap = Array.from({ length: top + 1 }, (_, i) => i + 1).find(n => !by.has(n));
+    const card = document.createElement('div');
+    card.className = 'ser-card';
+    card.innerHTML = '<div class="top"><div><span class="t"></span> <span class="m"></span></div><div class="acts" style="display:flex;gap:6px"></div></div><div class="ser-tiles"></div><div class="m sm"></div>';
+    card.querySelector('.t').textContent = s.series;
+    card.querySelector('.m').textContent = [s.author, s.kind, s.status, s.soldAs].filter(Boolean).join(' · ');
+    const tiles = card.querySelector('.ser-tiles');
+    for (let n = 1; n <= top; n++) { const t = document.createElement('span'); t.className = by.get(n) || ''; t.textContent = n; t.title = { read: 'Read', own: 'In your library', want: 'On your Wishlist', soon: 'Waiting on release' }[by.get(n)] || 'Not added yet'; tiles.appendChild(t); }
+    if (!top) tiles.innerHTML = '<span class="muted small" style="border:0;background:none">No numbers yet. Add the released count to see the gaps.</span>';
+    const unnumbered = books.filter(b => !toNum(b.seriesNum)).length + wants.filter(w => !toNum(w.number)).length;
+    card.querySelector('.sm').textContent = [`${read} read`, `${own} unread in library`, `${wants.length} on Wishlist`, s.released ? `${s.released} out` : '', unnumbered ? `${unnumbered} without a number` : ''].filter(Boolean).join(' · ');
+    const acts = card.querySelector('.acts');
+    if (firstGap && (!s.released || firstGap <= toNum(s.released))) {
+      const b = document.createElement('button'); b.className = 'btn'; b.type = 'button'; b.textContent = `Add #${firstGap}`;
+      b.addEventListener('click', async () => {
+        b.disabled = true;
+        try { await appendWishRows([{ title: `${s.series} #${firstGap}`, author: s.author || '', series: s.series, number: String(firstGap), format: s.soldAs || '', type: 'Fiction' }]); setStatus('live', `Added ${s.series} #${firstGap} to your Inbox`); renderSeriesView(); }
+        catch (err) { b.disabled = false; notice('Couldn\'t add it: ' + (err.message || explain(err)), 'error'); }
+      });
+      acts.appendChild(b);
+    }
+    const ed = document.createElement('button'); ed.className = 'btn'; ed.type = 'button'; ed.textContent = s._new ? 'Track' : 'Edit';
+    ed.addEventListener('click', () => openSeriesDlg(s._new ? { series: s.series, author: s.author } : s));
+    acts.appendChild(ed);
+    box.appendChild(card);
   }
 }
-function openWishDlg() {
-  $('wdStatus').innerHTML = '<option value="">No status</option>' + WISH_STATUSES.map(s => `<option${s === 'To check' ? ' selected' : ''}>${s}</option>`).join('');
-  $('wdLists').innerHTML = [...new Set((disc.wish || []).map(w => w['Reading List']).filter(Boolean))].sort().map(x => `<option value="${escapeText(x)}">`).join('');
-  for (const id of ['wdTitleIn', 'wdAuthor', 'wdSeries', 'wdList', 'wdLink', 'wdNotes']) $(id).value = '';
-  $('wdType').value = ''; $('wdMsg').textContent = ''; $('wdSave').disabled = false;
-  $('wishDlg').showModal(); $('wdTitleIn').focus();
+const SD_FIELDS = ['series', 'author', 'kind', 'status', 'released', 'soldAs', 'link', 'notes'];
+let sdEditing = null;
+function openSeriesDlg(s) {
+  sdEditing = s && s._row ? s : null;
+  for (const k of SD_FIELDS) $('sd-' + k).value = (s && s[k]) || (k === 'kind' ? 'Book series' : '');
+  $('sdTitle').textContent = sdEditing ? 'Edit series' : 'Track a series';
+  $('sdMsg').textContent = ''; $('sdSave').disabled = false;
+  $('seriesDlg').showModal(); $('sd-series').focus();
 }
-async function saveWish(e) {
+async function saveSeries(e) {
   e.preventDefault();
-  if (!isLive()) { $('wdMsg').textContent = 'Saving needs the live connection. ' + connectHint(); return; }
-  const f = { Title: $('wdTitleIn').value.trim(), Author: $('wdAuthor').value.trim(), Status: $('wdStatus').value, Type: $('wdType').value,
-    Series: $('wdSeries').value.trim(), 'Reading List': $('wdList').value.trim(), Link: $('wdLink').value.trim(), Notes: $('wdNotes').value.trim() };
-  if (!f.Title) { $('wdMsg').textContent = 'A title is needed.'; return; }
-  $('wdSave').disabled = true; $('wdMsg').textContent = 'Saving…';
+  if (!isLive()) { $('sdMsg').textContent = 'Saving needs the live connection. ' + connectHint(); return; }
+  const f = Object.fromEntries(SD_FIELDS.map(k => [k, $('sd-' + k).value.trim()]));
+  if (!f.series) { $('sdMsg').textContent = 'A series name is needed.'; return; }
+  $('sdSave').disabled = true; $('sdMsg').textContent = 'Saving…';
   try {
-    const header = ((await readRange('Wishlist!A1:Z1'))[0] || []).map(h => String(h).trim());
-    const c = header.indexOf('id');
-    const ids = (await readRange(`Wishlist!${colLetter(c)}2:${colLetter(c)}3000`)).map(r => Number(String(r[0] || '').replace(/\D/g, '')) || 0);
-    f.id = 'W' + String(Math.max(0, ...ids) + 1).padStart(4, '0');
-    const row = header.map(h => f[h] ? (h === 'id' ? f[h] : "'" + f[h]) : '');
-    await state.mcp.callTool(SERVER, 'append_values', { spreadsheetId: SHEET_ID, range: 'Wishlist!A1', values: [row] }, { cache: false });
-    disc.wish.push({ ...Object.fromEntries(header.map(h => [h, f[h] || ''])), _row: 1e9 });
-    $('wishDlg').close();
-    setStatus('live', `Added “${f.Title}” to your Wishlist`);
+    const v = await readRange("'Series Tracker'!A1:H500");
+    const header = (v[0] || []).map(h => String(h).trim());
+    const cell = (k, x) => !x ? '' : k === 'released' ? x : "'" + x;
+    // Find the row by the series name (the old name when editing)
+    const key = normQ(sdEditing ? sdEditing.series : f.series);
+    const hits = v.map((r, i) => i && normQ(r[header.indexOf('series')]) === key ? i + 1 : 0).filter(Boolean);
+    if (hits.length > 1) throw { code: 'tool_error', message: `“${f.series}” is in the Series Tracker ${hits.length} times` };
+    if (hits.length) {
+      const row = hits[0], cur = v[row - 1];
+      for (const k of SD_FIELDS) {
+        const c = header.indexOf(k); if (c < 0 || String(cur[c] ?? '').trim() === f[k]) continue;
+        await state.mcp.callTool(SERVER, 'update_values', { spreadsheetId: SHEET_ID, range: `'Series Tracker'!${colLetter(c)}${row}`, values: [[cell(k, f[k])]] }, { cache: false });
+      }
+      const s = disc.series.find(x => x._row === row);
+      if (s) Object.assign(s, f); else disc.series.push({ ...f, _row: row });
+    } else {
+      await state.mcp.callTool(SERVER, 'append_values', { spreadsheetId: SHEET_ID, range: "'Series Tracker'!A1", values: [header.map(h => cell(h, f[h]))] }, { cache: false });
+      disc.series.push({ ...f, _row: v.length + 1 });
+    }
+    $('seriesDlg').close();
+    setStatus('live', `Saved ${f.series}`);
     renderWish();
-  } catch (err) { $('wdMsg').textContent = 'Couldn\'t save it: ' + (err.message || explain(err)); $('wdSave').disabled = false; }
+  } catch (err) { $('sdMsg').textContent = 'Couldn\'t save it: ' + (err.message || explain(err)); $('sdSave').disabled = false; }
+}
+
+/* Reading lists: each list in order, matched against Books and the Wishlist */
+function renderListsView() {
+  const box = $('wlListBox');
+  const items = disc.lists || [];
+  if (!items.length) { box.innerHTML = '<p class="empty">No reading lists yet. Add rows to the “Reading Lists” tab (list, order, title, author).</p>'; return; }
+  const lib = libByTitle(), wish = new Map(disc.wish.map(w => [wishKey(w.title), w]));
+  box.textContent = '';
+  const names = [...new Set(items.map(x => x.list))];
+  for (const name of names) {
+    const rows = items.filter(x => x.list === name).sort((a, b) => (toNum(a.order) || 1e6) - (toNum(b.order) || 1e6) || a._row - b._row);
+    const st = rows.map(x => { const k = wishKey(x.title), b = lib.get(k), w = wish.get(k); return b ? (b.status === 'Read' ? ['read', 'Read'] : ['own', b.status || 'Owned']) : w ? ['want', w.stage || 'Wishlist'] : ['', 'Not added']; });
+    const read = st.filter(s => s[0] === 'read').length, have = st.filter(s => s[0] === 'own').length;
+    const sec = document.createElement('div');
+    sec.className = 'rl-list';
+    sec.innerHTML = '<h3></h3><div class="muted small"></div><div class="bar" style="height:6px;border-radius:3px;background:var(--raise);margin-top:6px;overflow:hidden"><div style="height:100%;background:var(--accent)"></div></div><ul class="rl-items"></ul>';
+    sec.querySelector('h3').textContent = name;
+    sec.querySelector('.small').textContent = `${read} of ${rows.length} read · ${have} more in your library · ${st.filter(s => s[0] === 'want').length} on Wishlist`;
+    sec.querySelector('.bar div').style.width = (rows.length ? read / rows.length * 100 : 0) + '%';
+    const ul = sec.querySelector('ul');
+    rows.forEach((x, i) => {
+      const li = document.createElement('li');
+      li.innerHTML = '<span class="n"></span><span><span class="t"></span><span class="muted small"></span></span><span></span>';
+      li.querySelector('.n').textContent = x.order || '–';
+      li.querySelector('.t').textContent = x.title;
+      li.querySelector('.small').textContent = x.author ? ' · ' + x.author : '';
+      const end = li.lastChild;
+      if (st[i][0]) { const s = document.createElement('span'); s.className = 'st ' + st[i][0]; s.textContent = st[i][1]; end.appendChild(s); }
+      else {
+        const b = document.createElement('button'); b.type = 'button'; b.textContent = '+ Wishlist';
+        b.addEventListener('click', async () => {
+          b.disabled = true;
+          try { await appendWishRows([{ title: x.title, author: x.author, seenIn: name }]); setStatus('live', `Added “${x.title}” to your Inbox`); renderListsView(); }
+          catch (err) { b.disabled = false; notice('Couldn\'t add it: ' + (err.message || explain(err)), 'error'); }
+        });
+        end.appendChild(b);
+      }
+      ul.appendChild(li);
+    });
+    box.appendChild(sec);
+  }
 }
 
 /* ---------- Do I own this? ---------- */
@@ -2672,7 +3050,7 @@ async function renderOwn() {
   const words = q.split(' ');
   const hit = (...f) => { const h = normQ(f.join(' ')); return words.every(w => h.includes(w)); };
   const lib = state.allBooks.filter(b => hit(b.title, b.author, b.series)).slice(0, 12);
-  const wish = (disc.wish || []).filter(w => hit(w.Title, w.Author)).slice(0, 6);
+  const wish = (disc.wish || []).filter(w => hit(w.title, w.author, w.series)).slice(0, 6);
   if (!lib.length && !wish.length) { box.innerHTML = '<li><span><span class="t">Not in your library or Wishlist</span><br><span class="m">You don\'t have anything matching that.</span></span><span class="v">No</span></li>'; return; }
   for (const b of lib) {
     const li = document.createElement('li');
@@ -2687,9 +3065,9 @@ async function renderOwn() {
   for (const w of wish) {
     const li = document.createElement('li');
     li.innerHTML = '<span class="t"></span><span class="m"></span><span class="v"></span>';
-    li.querySelector('.t').textContent = w.Title;
-    li.querySelector('.m').textContent = ['Wishlist', w.Author, w.Status, w.Format].filter(Boolean).join(' · ');
-    li.querySelector('.v').textContent = WISH_DONE.includes(w.Status) ? 'Got it' : 'Wishlist';
+    li.querySelector('.t').textContent = w.title;
+    li.querySelector('.m').textContent = ['Wishlist', w.author, w.stage, w.format].filter(Boolean).join(' · ');
+    li.querySelector('.v').textContent = w.stage === 'Got it' ? 'Got it' : 'Wishlist';
     box.appendChild(li);
   }
 }
@@ -2943,10 +3321,13 @@ function loadDiscover() {
   return disc.loading || (disc.loading = fetchDiscover().finally(() => { disc.loading = null; }));
 }
 async function fetchDiscover() {
-  const [q, w] = await Promise.allSettled([
+  const [q, w, sr, rl] = await Promise.allSettled([
     state.mcp.callTool(SERVER, 'get_values', { spreadsheetId: QUOTES_ID, range: 'QUOTES!A1:G3000' }, { cache: false }),
-    readRange('Wishlist!A1:Z3000')
+    readRange('Wishlist!A1:Z3000'), readRange("'Series Tracker'!A1:H500"), readRange("'Reading Lists'!A1:E2000")
   ]);
+  const rows = (v, key) => { const h = (v[0] || []).map(x => String(x).trim()); return { h, list: v.slice(1).map((r, i) => ({ ...Object.fromEntries(h.map((k, j) => [k, String(r[j] ?? '').trim()])), _row: i + 2 })).filter(x => x[key]) }; };
+  if (sr.status === 'fulfilled') disc.series = rows(sr.value, 'series').list; else disc.series = [];
+  if (rl.status === 'fulfilled') disc.lists = rows(rl.value, 'title').list; else disc.lists = [];
   if (q.status === 'fulfilled') {
     const v = (q.value.payload && q.value.payload.values) || [];
     // QUOTES columns: quote | from | character | by | bookId | page | added (row 1 is the header)
@@ -2956,7 +3337,7 @@ async function fetchDiscover() {
   if (w.status === 'fulfilled') {
     const v = w.value, h = (v[0] || []).map(x => String(x).trim());
     disc.wishHeader = h;
-    disc.wish = v.slice(1).map((r, i) => ({ ...Object.fromEntries(h.map((k, j) => [k, String(r[j] || '').trim()])), _row: i + 2 })).filter(x => x.Title);
+    disc.wish = v.slice(1).map((r, i) => ({ ...Object.fromEntries(h.map((k, j) => [k, String(r[j] ?? '').trim()])), _row: i + 2 })).filter(x => x.title);
   } else disc.wErr = w.reason;
   disc.loaded = true;
 }
@@ -3060,10 +3441,10 @@ async function renderDiscover() {
   void md;
   // Coming soon from the Wishlist
   const cs = $('discSoon'); cs.textContent = '';
-  const soon = disc.wish.filter(x => x.Status === 'Coming soon' || x.Available === 'Preorder Only' || (x.ETA && /[a-z]|20\d\d/i.test(x.ETA) && !['Downloaded', 'Bought', 'Released'].includes(x.Status)));
-  if (!soon.length) cs.innerHTML = `<li class="empty">${disc.wErr ? 'Couldn\'t read the Wishlist tab.' : 'Nothing marked coming soon.'}</li>`;
-  for (const x of soon.slice(0, 12)) { const li = document.createElement('li'); li.innerHTML = '<span></span><span class="r"></span>'; li.firstChild.textContent = x.Title + (x.Author ? ' · ' + x.Author : ''); li.lastChild.textContent = [x.ETA, x.Status || x.Available, x.Type].filter(Boolean).join(' · '); cs.appendChild(li); }
-  const counts = {}; for (const x of disc.wish) if (x.Status) counts[x.Status] = (counts[x.Status] || 0) + 1;
+  const soon = disc.wish.filter(x => x.stage === 'Waiting').sort((a, b) => (a.release || '9999').localeCompare(b.release || '9999'));
+  if (!soon.length) cs.innerHTML = `<li class="empty">${disc.wErr ? 'Couldn\'t read the Wishlist tab.' : 'Nothing waiting on a release.'}</li>`;
+  for (const x of soon.slice(0, 12)) { const li = document.createElement('li'); li.innerHTML = '<span></span><span class="r"></span>'; li.firstChild.textContent = x.title + (x.author ? ' · ' + x.author : ''); li.lastChild.textContent = [x.release, x.waiting, x.format].filter(Boolean).join(' · '); cs.appendChild(li); }
+  const counts = {}; for (const x of disc.wish) if (x.stage) counts[x.stage] = (counts[x.stage] || 0) + 1;
   $('discPipe').innerHTML = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 6).map(([k, n]) => `<span class="why-chip">${escapeText(k)} <b class="tnum">${n}</b></span>`).join('');
   // Award watch
   const normA = a => AWARDS.map(x => x.k).find(k => a.toLowerCase().includes(k.toLowerCase())) || a;
@@ -3142,13 +3523,24 @@ document.querySelectorAll('.logday button').forEach(b => b.addEventListener('cli
 $('logDate').addEventListener('change', e => setLogDay(toDate(e.target.value)));
 setLogDay(null);
 $('dogAdd').addEventListener('click', () => openQuoteDlg(null));
-$('wishChips').addEventListener('click', e => { const c = e.target.closest('.chip'); if (!c) return; wishState.chip = c.dataset.w; wishState.limit = 100; renderWish(); });
-$('wishSeries').addEventListener('change', e => { wishState.series = e.target.value; renderWish(); });
-$('wishMoveBtn').addEventListener('click', () => moveWishToBooks((wishState.snap || []).map(wishById).filter(w => w && WISH_DONE.includes(w.Status) && !w.bookId)));
-$('wishMore').addEventListener('click', () => { wishState.limit += 100; renderWish(); });
-$('wishAddBtn').addEventListener('click', openWishDlg);
+$('wishChips').addEventListener('click', e => { const c = e.target.closest('.chip'); if (!c) return; wl.chip = c.dataset.w; renderWish(); });
+$('wishSeries').addEventListener('change', e => { wl.series = e.target.value; renderWish(); });
+$('wishMoveBtn').addEventListener('click', () => moveWishToBooks((wl.snap || []).map(wishById).filter(w => w && w.stage === 'Got it')));
+$('wishMore').addEventListener('click', () => { wl.limit += 100; renderWish(); });
+document.querySelector('.wl-tabs').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; wl.view = b.dataset.wv; renderWish(); });
+$('wlQuickBtn').addEventListener('click', quickAddWish);
+$('wlQuick').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); quickAddWish(); } });
+$('wlPasteBtn').addEventListener('click', () => { $('pdText').value = ''; $('pdSeen').value = ''; $('pdPreview').textContent = ''; $('pdMsg').textContent = ''; $('pdSave').disabled = false; $('pasteDlg').showModal(); $('pdText').focus(); });
+$('pdText').addEventListener('input', previewPaste);
+$('pasteForm').addEventListener('submit', savePaste);
+$('pdClose').addEventListener('click', () => $('pasteDlg').close());
+$('wlFullBtn').addEventListener('click', () => openWishDlg(null));
 $('wishForm').addEventListener('submit', saveWish);
-$('wdClose').addEventListener('click', () => $('wishDlg').close());
+$('wdDrop').addEventListener('click', () => { const w = wl.editing; if (w) { $('wishDlg').close(); dropWish(w); } });
+$('wlSerAdd').addEventListener('click', () => openSeriesDlg(null));
+$('seriesForm').addEventListener('submit', saveSeries);
+$('sdClose').addEventListener('click', () => $('seriesDlg').close());
+$('wdClose').addEventListener('click', () => $('wishDlg').close());$('wdClose').addEventListener('click', () => $('wishDlg').close());
 let ownT; $('ownQ').addEventListener('input', () => { clearTimeout(ownT); ownT = setTimeout(renderOwn, 120); });
 $('dipMoods').addEventListener('click', e => { const c = e.target.closest('.chip'); if (!c) return; dipState.mood = c.dataset.m; dipState.pick = null; renderDip(); });
 $('nisMore').addEventListener('click', () => { nisState.all = !nisState.all; renderNextInSeries(); });
