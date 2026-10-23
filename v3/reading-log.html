@@ -264,6 +264,15 @@ table.lib{width:100%;border-collapse:collapse;font-size:14px;min-width:860px}
 .pill[data-s="Read"]{color:#8fb8f2;border-color:#34507a}
 .pill[data-s="TBR"]{color:#c2a8f0;border-color:#4d3f70}
 .pill[data-s="Re-read"]{color:#dba8ec;border-color:#5e3f6c}
+.rr{font-size:11px;font-weight:700;padding:1px 7px;border-radius:999px;margin-left:6px;background:color-mix(in srgb,#dba8ec 18%,transparent);color:#dba8ec;white-space:nowrap}
+.rr.up{background:color-mix(in srgb,var(--accent) 22%,transparent);color:var(--accent)}
+.rr.down{background:color-mix(in srgb,var(--danger) 20%,transparent);color:var(--danger)}
+.rr-list{list-style:none;margin:0;padding:0}
+.rr-list li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}
+.rr-list li:first-child{border-top:0}
+.rr-list .t{font-weight:600}
+.rr-list .m{font-size:12px;color:var(--muted)}
+.rr-list .chain{font-variant-numeric:tabular-nums;font-size:13px;white-space:nowrap}
 .pill[data-s="Paused"]{color:#f2c46d;border-color:#6b5631}
 .pill[data-s="DNF"]{color:#f29a9a;border-color:#6b3a3a}
 .stars{color:color-mix(in srgb,var(--accent) 60%,#fff);letter-spacing:1px;white-space:nowrap}
@@ -663,6 +672,7 @@ dialog::backdrop{background:rgba(8,6,14,.65)}
       <div class="chips" id="rbModes" role="group" aria-label="Break ratings down by" style="margin:0"><button class="chip" type="button" data-r="length" aria-pressed="true">Length</button><button class="chip" type="button" data-r="decade" aria-pressed="false">Published</button><button class="chip" type="button" data-r="kind" aria-pressed="false">Kind</button><button class="chip" type="button" data-r="format" aria-pressed="false">Format</button><button class="chip" type="button" data-r="owned" aria-pressed="false">Owned</button></div></div>
       <ul class="hbars" id="rbBars"></ul><p class="muted small" id="rbNote" style="margin:10px 0 0"></p></section>
   </div>
+  <section class="panel" aria-labelledby="rrH" style="margin-bottom:16px"><div class="panel-head"><h2 id="rrH">Re-reads</h2><span class="muted small" id="rrNote"></span></div><ul class="rr-list" id="rrList"></ul></section>
   <div class="dash-2">
     <section class="panel" aria-labelledby="tageH"><div class="panel-head"><h2 id="tageH">TBR age</h2><span class="muted small" id="tageNote"></span></div><ul class="hbars" id="tageBars"></ul></section>
     <section class="panel" aria-labelledby="tgrH"><div class="panel-head"><h2 id="tgrH">TBR in and out</h2><span class="muted small">Books added vs finished, last 12 months</span></div><ul class="hbars" id="tgrBars"></ul></section>
@@ -1044,7 +1054,8 @@ function renderBooks() {
     if (b.pages && last >= b.pages) {
       const fin = document.createElement('div');
       fin.className = 'finish';
-      fin.innerHTML = `<span>You've reached the last page.</span><label>Rating <select aria-label="Rating"><option value="">–</option>${['5','4.5','4','3.5','3','2.5','2','1.5','1','0.5'].map(r => `<option>${r}</option>`).join('')}</select></label><button class="btn btn-primary" type="button">Mark as read</button>`;
+      const pr = prevRated(b);
+      fin.innerHTML = `<span>You've reached the last page.${pr ? ` Last time (${readWhen(pr)}) you gave it ${pr.rating}★.` : ''}</span><label>Rating <select aria-label="Rating"><option value="">–</option>${['5','4.5','4','3.5','3','2.5','2','1.5','1','0.5'].map(r => `<option>${r}</option>`).join('')}</select></label><button class="btn btn-primary" type="button">Mark as read</button>`;
       const fb = fin.querySelector('button');
       fb.addEventListener('click', () => finishBook(b, fin.querySelector('select').value, fb));
       extra.appendChild(fin);
@@ -1274,6 +1285,7 @@ function renderHeat(totals, y = today().slice(0, 4)) {
 }
 
 function renderAll() {
+  readCache.map = null;
   applyTheme();
   const totals = dailyTotals();
   renderStats(totals);
@@ -1436,7 +1448,7 @@ async function appendLogRow({ pages, bookId = '', title = '', pageReached = '', 
 }
 
 /* ---------- Books sheet writes (changed cells only, row found by id just before writing) ---------- */
-const NUM_FIELDS = ['currentPage', 'pages', 'rating', 'year', 'seriesNum', 'ambition', 'upNextOrder'];
+const NUM_FIELDS = ['currentPage', 'pages', 'rating', 'year', 'seriesNum', 'upNextOrder'];
 const DATE_FIELDS = ['startDate', 'finishDate', 'triaged', 'added'];
 const FORMULA_FIELDS = ['remain', '%'];
 const colLetter = i => { let s = ''; i++; while (i) { const r = (i - 1) % 26; s = String.fromCharCode(65 + r) + s; i = Math.floor((i - 1) / 26); } return s; };
@@ -1481,8 +1493,8 @@ async function addBook(fields) {
   const ci = k => header.indexOf(k);
   if (m && ci('remain') >= 0 && ci('%') >= 0 && ci('pages') >= 0 && ci('currentPage') >= 0) {
     const r = m[1], P = colLetter(ci('pages')), C = colLetter(ci('currentPage'));
-    await state.mcp.callTool(SERVER, 'update_values', { spreadsheetId: SHEET_ID, range: `Books!${colLetter(ci('remain'))}${r}`, values: [[`=${P}${r}-${C}${r}`]] }, { cache: false });
-    await state.mcp.callTool(SERVER, 'update_values', { spreadsheetId: SHEET_ID, range: `Books!${colLetter(ci('%'))}${r}`, values: [[`=${C}${r}/${P}${r}*100`]] }, { cache: false });
+    await state.mcp.callTool(SERVER, 'update_values', { spreadsheetId: SHEET_ID, range: `Books!${colLetter(ci('remain'))}${r}`, values: [[`=IF(N(${P}${r})>0,${P}${r}-${C}${r},"")`]] }, { cache: false });
+    await state.mcp.callTool(SERVER, 'update_values', { spreadsheetId: SHEET_ID, range: `Books!${colLetter(ci('%'))}${r}`, values: [[`=IF(N(${P}${r})>0,${C}${r}/${P}${r}*100,"")`]] }, { cache: false });
   }
   const book = { ...Object.fromEntries(header.map(h => [h, ''])), ...Object.fromEntries(Object.entries(fields).map(([k, v]) => [k, String(v ?? '').trim()])), id };
   book._row = state.allBooks.length;
@@ -1499,6 +1511,35 @@ const LIB_COLS = [
   { k: '%', label: '%', num: true }, { k: 'rating', label: 'Rating', num: true },
   { k: 'startDate', label: 'Started' }, { k: 'finishDate', label: 'Finished' }, { k: 'year', label: 'Year', num: true }
 ];
+// What copies you hold, from the copies column: Physical, and Digital (Kobo or PDF)
+const hasCopy = (b, k) => !k || (k === 'Physical' ? /physical/i.test(b.copies || '') : /kobo|pdf/i.test(b.copies || ''));
+const ownedOf = b => /physical/i.test(b.copies || '') ? 'Physical' : /kobo|pdf/i.test(b.copies || '') ? 'Digital' : '';
+// Re-reads: each read has its own row. Rows for the same book (title + first author) are grouped,
+// finished reads in date order first, then any still to come.
+const readCache = { map: null };
+const readKey = b => normQ(b.title).replace(/^(the|a|an) /, '') + '|' + normQ(String(b.author || '').split(/,|&| and /)[0]);
+function readsOf(b) {
+  if (!readCache.map) {
+    readCache.map = new Map();
+    for (const x of state.allBooks) { const k = readKey(x); if (!readCache.map.has(k)) readCache.map.set(k, []); readCache.map.get(k).push(x); }
+    const done = x => x.status === 'Read' || x.status === 'DNF' ? 0 : 1;
+    for (const l of readCache.map.values()) l.sort((x, y) => done(x) - done(y) || (x.finishDate || '').localeCompare(y.finishDate || '') || toNum(x.id) - toNum(y.id));
+  }
+  return readCache.map.get(readKey(b)) || [b];
+}
+const ordinal = n => n + (n % 100 >= 11 && n % 100 <= 13 ? 'th' : { 1: 'st', 2: 'nd', 3: 'rd' }[n % 10] || 'th');
+const halfStr = d => { const a = Math.abs(d); return (Math.floor(a) || '') + (a % 1 ? '½' : '') || '0'; };
+// The read before this one that has a rating, if any
+function prevRated(b) { const l = readsOf(b); return l.slice(0, l.indexOf(b)).filter(x => toNum(x.rating)).pop() || null; }
+// Badge for a later read: "2nd read", plus ▲/▼ when the rating moved from the previous read
+function rereadBadge(b) {
+  const l = readsOf(b), i = l.indexOf(b);
+  if (l.length < 2 || i < 1 || b.status !== 'Read') return '';
+  const p = prevRated(b), d = p && toNum(b.rating) ? toNum(b.rating) - toNum(p.rating) : 0;
+  return `<span class="rr${d > 0 ? ' up' : d < 0 ? ' down' : ''}" title="${p && toNum(b.rating) ? `Rated ${p.rating}★ last time, ${b.rating}★ this time` : 'A re-read'}">↻ ${ordinal(i + 1)} read${d ? (d > 0 ? ' ▲' : ' ▼') + halfStr(d) : ''}</span>`;
+}
+const readWhen = x => x.finishDate ? new Date(x.finishDate + 'T00:00').toLocaleDateString('en-AU', { month: 'short', year: 'numeric' }) : x.status === 'Read' ? 'date unknown' : x.status.toLowerCase();
+const readsText = b => readsOf(b).map((x, i) => `${ordinal(i + 1)}: ${readWhen(x)}${toNum(x.rating) ? ' · ' + x.rating + '★' : ''}`).join('  →  ');
 const starStr = r => { const n = toNum(r); if (!n) return ''; return '★'.repeat(Math.floor(n)) + (n % 1 >= .5 ? '½' : ''); };
 const sortKey = (b, k) => {
   if (k === 'sheet') return b._row;
@@ -1510,7 +1551,7 @@ function libFiltered() {
   return state.allBooks.filter(b =>
     (L.status === 'All' || b.status === L.status) &&
     (!L.type || b.type === L.type) && (!L.format || b.format === L.format) && (!L.genre || b.genre === L.genre) &&
-    (!L.owned || b.owned === L.owned) &&
+    hasCopy(b, L.owned) &&
     (!q || [b.title, b.author, b.series, b.theme1, b.theme2, b.theme3, b.genre].some(v => String(v || '').toLowerCase().includes(q))));
 }
 function fillSelect(id, field, label) {
@@ -1554,6 +1595,7 @@ function renderLibrary() {
     };
     tr.innerHTML = LIB_COLS.map(c => `<td class="${c.num ? 'num tnum' : ''}">${cells[c.k]}</td>`).join('');
     tr.querySelector('.t').textContent = b.title;
+    { const rb = rereadBadge(b); if (rb) tr.querySelector('.t').insertAdjacentHTML('afterend', rb); }
     tr.children[1].textContent = b.author;
     body.appendChild(tr);
     if (L.open === b.id) body.appendChild(detailRow(b));
@@ -1569,7 +1611,7 @@ function detailRow(b) {
   const td = document.createElement('td');
   td.colSpan = LIB_COLS.length;
   const kv = [['Type', b.type], ['Format', b.format], ['Genre', b.genre], ['Themes', [b.theme1, b.theme2, b.theme3].filter(Boolean).join(', ')],
-    ['Series', b.series ? `${b.series}${b.seriesNum ? ' #' + b.seriesNum : ''}` : ''], ['Owned', b.owned], ['Awards', (b.awards || '').split('|').filter(Boolean).join(', ')],
+    ['Series', b.series ? `${b.series}${b.seriesNum ? ' #' + b.seriesNum : ''}` : ''], ['Copies', String(b.copies || '').split('|').map(x => x.trim()).filter(Boolean).join(', ')], ['Reads', readsOf(b).length > 1 ? readsText(b) : ''], ['Awards', (b.awards || '').split('|').filter(Boolean).join(', ')],
     ['ISBN', b.isbn], ['Plan', b.tier ? b.tier + (b.tier === 'Up next' && b.upNextOrder ? ' #' + b.upNextOrder : '') : ''], ['Why', b.why], ['Added', b.added], ['Loaned', b.loaned ? `${b.loaned}${b.loanee ? ' to ' + b.loanee : ''}` : ''], ['Notes', b.notes]].filter(([, v]) => v);
   td.innerHTML = `<div class="detail-grid"><div><div class="eyebrow">Synopsis</div><p class="syn"></p></div><div><dl class="kv"></dl><div style="margin-top:12px"><button class="btn btn-primary" type="button" data-edit="${b.id}">Edit book</button></div></div></div>`;
   td.querySelector('.syn').textContent = b.synopsis || 'No synopsis yet.';
@@ -1586,8 +1628,8 @@ const FORM = [
   { sec: 'Progress' }, { k: 'currentPage', type: 'number', label: 'Current page' }, { k: 'pages', type: 'number' },
   { k: 'startDate', type: 'date', label: 'Started' }, { k: 'finishDate', type: 'date', label: 'Finished' },
   { k: 'rating', type: 'select', opts: ['', '0.5', '1', '1.5', '2', '2.5', '3', '3.5', '4', '4.5', '5'] }, { k: 'year', type: 'number', label: 'Published' },
-  { k: 'owned', type: 'select', opts: ['', 'Physical', 'Digital'] }, { k: 'isbn', label: 'ISBN' },
-  { sec: 'Details' }, { k: 'series', w: 'w2' }, { k: 'seriesNum', type: 'number', label: 'Series #' }, { k: 'ambition', type: 'select', opts: ['', '1', '2', '3'] },
+  { k: 'copies', label: 'Copies (Kobo | PDF | Physical)' }, { k: 'isbn', label: 'ISBN' },
+  { sec: 'Details' }, { k: 'series', w: 'w2' }, { k: 'seriesNum', type: 'number', label: 'Series #' },
   { k: 'theme1', label: 'Theme 1' }, { k: 'theme2', label: 'Theme 2' }, { k: 'theme3', label: 'Theme 3' }, { k: 'tier', type: 'select', opts: ['', 'Up next', 'Soon', 'Someday'], label: 'Plan' }, { k: 'why', w: 'w2', label: 'Why it\'s on the list' },
   { k: 'awards', w: 'w2', label: 'Awards (separate with |)' }, { k: 'loaned', type: 'select', opts: ['', 'Yes'] }, { k: 'loanee', label: 'Loaned to' },
   { k: 'synopsis', type: 'textarea', w: 'w4' }, { k: 'notes', type: 'textarea', w: 'w4' }
@@ -1846,7 +1888,7 @@ function renderTBR() {
   const tbrPages = tbr.reduce((a, b) => a + toNum(b.pages), 0);
   const avgDaily = recentDailyAverage(30);
   $('tbrNote').textContent = `${fmt(tbr.length)} books · ${fmt(tbrPages)} known pages${avgDaily ? ` · about ${fmt(Math.round(tbrPages / avgDaily / 365 * 10) / 10)} years at your current pace` : ''}`;
-  const om = countBy(tbr, 'owned');
+  const om = countBy(tbr, ownedOf);
   split($('ownSplit'), [{ label: 'Digital', value: om.get('Digital') || 0 }, { label: 'Physical', value: om.get('Physical') || 0 }], [accent, MC[(+today().slice(5, 7) + 5) % 12]]);
   const quick = tbr.filter(b => toNum(b.pages) >= 40).sort((a, b) => toNum(a.pages) - toNum(b.pages)).slice(0, 5);
   $('quickList').textContent = '';
@@ -1935,6 +1977,7 @@ function renderStats2(read, inYear) {
   renderSessions(inYear);
   renderBookPace(read);
   renderRatingsBy(read);
+  renderRereads();
   renderTbrAge();
 }
 
@@ -2022,13 +2065,41 @@ function renderBookPace(read) {
     Math.max(...recent.map(x => x.pace)), it => `${fmt(Math.round(it.value))}/day`);
 }
 
+// Books read more than once: each read keeps its own rating, so you can see where your taste moved
+function renderRereads() {
+  const seen = new Set(), groups = [];
+  for (const b of state.allBooks) {
+    const l = readsOf(b); if (l.length < 2 || seen.has(l[0])) continue;
+    seen.add(l[0]);
+    if (l.filter(x => x.status === 'Read').length >= 2 || l.some(x => x.status === 'Reading')) groups.push(l);
+  }
+  const pile = state.allBooks.filter(b => b.status === 'Re-read').length;
+  const rated = groups.map(l => l.filter(x => x.status === 'Read' && toNum(x.rating))).filter(r => r.length >= 2);
+  const d = rated.map(r => toNum(r[r.length - 1].rating) - toNum(r[r.length - 2].rating));
+  $('rrNote').textContent = groups.length ? `${groups.length} read more than once · ${d.filter(x => x > 0).length} rated higher, ${d.filter(x => x < 0).length} lower, ${d.filter(x => !x).length} the same${pile ? ` · ${pile} on the re-read pile` : ''}`
+    : pile ? `${pile} on the re-read pile. Finish one and its new rating shows here next to the old one.` : '';
+  const ul = $('rrList'); ul.textContent = '';
+  if (!groups.length) { ul.innerHTML = '<li class="empty" style="display:block">No finished re-reads yet.</li>'; return; }
+  groups.sort((a, b) => (b[b.length - 1].finishDate || '').localeCompare(a[a.length - 1].finishDate || ''));
+  for (const l of groups.slice(0, 20)) {
+    const last = l.filter(x => x.status === 'Read').pop() || l[l.length - 1], p = prevRated(last);
+    const delta = p && toNum(last.rating) ? toNum(last.rating) - toNum(p.rating) : null;
+    const li = document.createElement('li');
+    li.innerHTML = '<span><span class="t"></span><br><span class="m"></span></span><span class="chain"></span>';
+    li.querySelector('.t').textContent = l[0].title;
+    li.querySelector('.m').textContent = readsText(l[0]);
+    li.querySelector('.chain').innerHTML = delta == null ? '<span class="rr">not rated yet</span>' : `<span class="rr${delta > 0 ? ' up' : delta < 0 ? ' down' : ''}">${delta > 0 ? '▲ ' + halfStr(delta) : delta < 0 ? '▼ ' + halfStr(delta) : 'same'}</span>`;
+    li.style.cursor = 'pointer'; li.addEventListener('click', () => openInLibrary(last.id));
+    ul.appendChild(li);
+  }
+}
 function renderRatingsBy(read) {
   document.querySelectorAll('#rbModes .chip').forEach(c => c.setAttribute('aria-pressed', String(c.dataset.r === rbState.mode)));
   const rated = read.filter(b => toNum(b.rating) > 0);
   const keyOf = {
     length: b => { const p = toNum(b.pages); return !p ? '' : p < 200 ? 'Under 200 pages' : p < 350 ? '200–349 pages' : p < 500 ? '350–499 pages' : '500+ pages'; },
     decade: b => { const y = toNum(b.year); return !y ? '' : y < 1900 ? 'Before 1900' : y < 1950 ? '1900–1949' : Math.floor(y / 10) * 10 + 's'; },
-    kind: categoryOf, format: b => b.format, owned: b => b.owned
+    kind: categoryOf, format: b => b.format, owned: ownedOf
   }[rbState.mode];
   const order = { length: ['Under 200 pages', '200–349 pages', '350–499 pages', '500+ pages'] }[rbState.mode];
   const g = new Map();
@@ -2118,7 +2189,7 @@ function planRow(b, { num, kind }) {
   li.querySelector('.why').textContent = b.why ? '“' + b.why + '”' : '';
   // Up next shows the full picture; Soon shows the description
   if (kind === 'up') {
-    li.querySelector('.m').textContent = [b.author, b.year, toNum(b.pages) ? fmt(toNum(b.pages)) + ' pp' : '', b.genre, b.format, b.owned, b.series ? `${b.series}${b.seriesNum ? ' #' + b.seriesNum : ''}` : ''].filter(Boolean).join(' · ');
+    li.querySelector('.m').textContent = [b.author, b.year, toNum(b.pages) ? fmt(toNum(b.pages)) + ' pp' : '', b.genre, b.format, b.copies, b.series ? `${b.series}${b.seriesNum ? ' #' + b.seriesNum : ''}` : ''].filter(Boolean).join(' · ');
     const tags = document.createElement('div'); tags.className = 'tags';
     for (const t of themesOf(b)) { const x = document.createElement('span'); x.textContent = t[0].toUpperCase() + t.slice(1); tags.appendChild(x); }
     for (const a of String(b.awards || '').split('|').filter(Boolean)) { const x = document.createElement('span'); x.className = 'aw'; x.textContent = a; tags.appendChild(x); }
@@ -2169,7 +2240,7 @@ function renderPlan() {
   const L = state.lib, q = L.q.toLowerCase();
   const pool = plannable();
   const rest = pool.filter(b => b.tier !== 'Up next' && b.tier !== 'Soon').filter(b =>
-    (!L.type || b.type === L.type) && (!L.format || b.format === L.format) && (!L.genre || b.genre === L.genre) && (!L.owned || b.owned === L.owned) &&
+    (!L.type || b.type === L.type) && (!L.format || b.format === L.format) && (!L.genre || b.genre === L.genre) && hasCopy(b, L.owned) &&
     (!q || [b.title, b.author, b.series, b.theme1, b.theme2, b.theme3, b.genre].some(v => String(v || '').toLowerCase().includes(q))));
   $('sheetNote').textContent = `${fmt(rest.length)} books`;
   const sl = $('sheetList'); sl.textContent = '';
@@ -2298,6 +2369,7 @@ function renderRate() {
           <div class="rate-score tnum" id="rateScore">${final ? final : '–'}</div>
           <div class="stars big">${final ? starStr(final) : ''}</div>
           <div class="muted small" id="rateExplain"></div>
+          <div class="muted small" id="ratePrev" style="margin-top:6px"></div>
           <div class="rate-adjust" ${sug == null ? 'hidden' : ''}><button class="btn" type="button" id="rateDown" aria-label="Lower by half a star">−½</button><span class="muted small">Nudge after comparing</span><button class="btn" type="button" id="rateUp" aria-label="Raise by half a star">+½</button></div>
           <button class="btn btn-primary" type="button" id="rateSave" ${final && book ? '' : 'disabled'}>Save ${final ? final + '★' : 'rating'} to the sheet</button>
           <div class="muted small" id="rateMsg"></div>
@@ -2340,13 +2412,14 @@ function renderRate() {
   } else ex.push('Pick a gut feeling, rate a few criteria, or both.');
   $('rateExplain').textContent = ex.join('. ').replace(/\.\./g, '.');
   renderCompare(book, final);
+  { const pr = book && prevRated(book); $('ratePrev').textContent = pr ? `↻ Re-read. Last time (${readWhen(pr)}) you gave it ${pr.rating}★. This rating is saved separately.` : ''; }
   if ($('rateSave')) $('rateSave').onclick = () => saveRating(book, final, sug);
 }
 function selectRateBook(id, reset) {
   const b = state.allBooks.find(x => x.id === id);
   rate.bookId = id;
   if (b) rate.cat = categoryOf(b);
-  if (reset) { rate.scores = {}; rate.gut = 0; rate.standout = ''; rate.flaw = b && b.fatalFlaw || ''; rate.adjust = 0; }
+  if (reset) { rate.scores = {}; rate.gut = 0; rate.standout = ''; rate.flaw = ''; rate.adjust = 0; }
 }
 // 2–3 rated books like this one: same category, then shared genre / themes / author, closest to the score
 function renderCompare(book, target) {
@@ -2384,7 +2457,6 @@ async function saveRating(book, final, sug) {
   const btn = $('rateSave'); btn.disabled = true; btn.textContent = 'Saving…';
   try {
     const f = { rating: String(final) };
-    if (rate.flaw.trim() || book.fatalFlaw) f.fatalFlaw = rate.flaw.trim();
     await writeBookFields(book.id, f);
     const now = new Date();
     const crit = Object.entries(rate.scores).map(([k, v]) => `${(RATE_SETS[rate.cat].find(c => c[0] === k) || [k, k])[1]} ${v}`).join('; ');
@@ -2467,7 +2539,7 @@ function renderRecs() {
   if (recState.kind === 'Fiction') tbr = tbr.filter(b => categoryOf(b) === 'Fiction');
   if (recState.kind === 'Non-fiction') tbr = tbr.filter(b => categoryOf(b) === 'Non-fiction');
   if (recState.kind === 'Comics & GN') tbr = tbr.filter(b => categoryOf(b) === 'Comics & GN');
-  if (recState.owned) tbr = tbr.filter(b => b.owned === recState.owned);
+  if (recState.owned) tbr = tbr.filter(b => hasCopy(b, recState.owned));
   if (recState.mode === 'quick') tbr = tbr.filter(b => toNum(b.pages) >= 40 && toNum(b.pages) <= 250);
   if (recState.mode === 'series') tbr = tbr.filter(b => b.series && (P.series.get(b.series) || {}).read);
   const scored = tbr.map(b => scoreBook(b, P, likeBook)).sort((a, b) => b.s - a.s).slice(0, 12);
@@ -2479,7 +2551,7 @@ function renderRecs() {
     el.innerHTML = `<div class="rec-head"><div><div class="t"></div><div class="muted small meta"></div></div><div class="rec-actions"><button class="btn" type="button" data-open>Open</button><button class="btn btn-primary" type="button" data-start>Start reading</button></div></div>
       <div class="why"></div><p class="syn small"></p>`;
     el.querySelector('.t').textContent = b.title;
-    el.querySelector('.meta').textContent = [b.author, b.genre, toNum(b.pages) ? fmt(toNum(b.pages)) + ' pages' : '', b.owned].filter(Boolean).join(' · ');
+    el.querySelector('.meta').textContent = [b.author, b.genre, toNum(b.pages) ? fmt(toNum(b.pages)) + ' pages' : '', b.copies].filter(Boolean).join(' · ');
     el.querySelector('.why').innerHTML = why.map(w => `<span class="why-chip"></span>`).join('');
     el.querySelectorAll('.why-chip').forEach((c, i) => { c.textContent = why[i]; });
     el.querySelector('.syn').textContent = b.synopsis || '';
@@ -2500,7 +2572,7 @@ function renderRevisit(box, normT) {
   for (const b of state.allBooks) if (b.status === 'Read') { const k = normT(b.title); const prev = reads.get(k); if (!prev || (b.finishDate || '') > (prev.finishDate || '')) reads.set(k, b); }
   let pile = state.allBooks.filter(b => b.status === 'Re-read').map(b => ({ b, orig: reads.get(normT(b.title)) }));
   if (recState.kind) pile = pile.filter(x => categoryOf(x.b) === recState.kind);
-  if (recState.owned) pile = pile.filter(x => x.b.owned === recState.owned);
+  if (recState.owned) pile = pile.filter(x => hasCopy(x.b, recState.owned));
   const yrs = d => d ? (daysBetween(d, today()) / 365) : 0;
   pile.sort((a, c) => (toNum(c.orig && c.orig.rating) - toNum(a.orig && a.orig.rating)) || (yrs(c.orig && c.orig.finishDate) - yrs(a.orig && a.orig.finishDate)));
   box.textContent = '';
@@ -2510,7 +2582,7 @@ function renderRevisit(box, normT) {
     el.className = 'rec';
     el.innerHTML = `<div class="rec-head"><div><div class="t"></div><div class="muted small meta"></div></div><div class="rec-actions"><button class="btn" type="button" data-open>Open</button><button class="btn btn-primary" type="button" data-start>Start re-read</button></div></div><div class="why"></div><p class="syn small"></p>`;
     el.querySelector('.t').textContent = b.title;
-    el.querySelector('.meta').textContent = [b.author, b.genre, b.owned].filter(Boolean).join(' · ');
+    el.querySelector('.meta').textContent = [b.author, b.genre, b.copies].filter(Boolean).join(' · ');
     const why = [];
     if (orig && toNum(orig.rating)) why.push(`You rated it ${orig.rating}★`);
     if (orig && orig.finishDate) { const y = yrs(orig.finishDate); why.push(y < 1 ? `Read ${Math.round(y * 12)} months ago` : `Read ${y.toFixed(1).replace('.0', '')} years ago`); }
@@ -2833,7 +2905,6 @@ function wishToBook(w) {
     title: w.title, author: w.author, status: 'TBR', currentPage: '0',
     type: nf ? 'Non-Fiction' : w.type ? 'Fiction' : '',
     format: w.format === 'Book' ? (nf ? 'General Non-Fiction' : w.type ? 'Novel' : '') : WL_COMIC.includes(w.format) ? 'Comic' : w.format === 'Graphic novel' ? 'Graphic Novel' : '',
-    owned: w.wantAs === 'Physical' ? 'Physical' : w.wantAs === 'Library' ? '' : 'Digital',
     copies: { Kobo: 'Kobo', PDF: 'PDF', Physical: 'Physical' }[w.wantAs] || '',
     series: w.series || '', seriesNum: w.number || '',
     awards: /ABC Top 100/i.test(w.seenIn) ? 'ABC Top 100' : '',
@@ -2867,7 +2938,7 @@ async function moveWishToBooks(rows, quiet) {
       const r0 = m ? Number(m[1]) : null, ci = k => header.indexOf(k);
       if (r0 && ci('remain') >= 0 && ci('%') >= 0) {
         const P = colLetter(ci('pages')), C = colLetter(ci('currentPage'));
-        for (const [k, f] of [['remain', r => `=${P}${r}-${C}${r}`], ['%', r => `=${C}${r}/${P}${r}*100`]]) {
+        for (const [k, f] of [['remain', r => `=IF(N(${P}${r})>0,${P}${r}-${C}${r},"")`], ['%', r => `=IF(N(${P}${r})>0,${C}${r}/${P}${r}*100,"")`]]) {
           const L = colLetter(ci(k));
           await state.mcp.callTool(SERVER, 'update_values', { spreadsheetId: SHEET_ID, range: `Books!${L}${r0}:${L}${r0 + books.length - 1}`, values: books.map((_, i) => [f(r0 + i)]) }, { cache: false });
         }
@@ -3041,10 +3112,10 @@ async function renderOwn() {
   if (!lib.length && !wish.length) { box.innerHTML = '<li><span><span class="t">Not in your library or Wishlist</span><br><span class="m">You don\'t have anything matching that.</span></span><span class="v">No</span></li>'; return; }
   for (const b of lib) {
     const li = document.createElement('li');
-    const have = b.copies || b.owned;
+    const have = b.copies;
     li.innerHTML = '<span class="t"></span><span class="m"></span><span class="v yes"></span>';
     li.querySelector('.t').textContent = b.title;
-    li.querySelector('.m').textContent = [b.author, b.status, b.copies || b.owned, b.series ? `${b.series}${b.seriesNum ? ' #' + b.seriesNum : ''}` : ''].filter(Boolean).join(' · ');
+    li.querySelector('.m').textContent = [b.author, b.status, b.copies, b.series ? `${b.series}${b.seriesNum ? ' #' + b.seriesNum : ''}` : ''].filter(Boolean).join(' · ');
     li.querySelector('.v').textContent = b.status === 'Read' ? 'Read it' : have ? 'Own it' : 'In library';
     li.style.cursor = 'pointer'; li.addEventListener('click', () => openInLibrary(b.id));
     box.appendChild(li);
