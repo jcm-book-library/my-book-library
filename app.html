@@ -579,6 +579,7 @@ dialog::backdrop{background:rgba(8,6,14,.65)}
       <select id="libType" aria-label="Type"><option value="">All types</option></select>
       <select id="libFormat" aria-label="Format"><option value="">All formats</option></select>
       <select id="libGenre" aria-label="Genre"><option value="">All genres</option></select>
+      <select id="libPublisher" aria-label="Publisher"><option value="">All publishers</option></select>
       <select id="libOwned" aria-label="Owned"><option value="">Physical &amp; digital</option><option>Physical</option><option>Digital</option></select>
       <button class="btn btn-primary" id="addBookBtn" type="button">Add book</button>
     </div>
@@ -669,7 +670,7 @@ dialog::backdrop{background:rgba(8,6,14,.65)}
   <div class="dash-2">
     <section class="panel" aria-labelledby="bpH"><div class="panel-head"><h2 id="bpH">Pace per book</h2><span class="muted small" id="bpNote"></span></div><ul class="hbars" id="bpBars"></ul></section>
     <section class="panel" aria-labelledby="rbH"><div class="panel-head"><h2 id="rbH">Ratings by</h2>
-      <div class="chips" id="rbModes" role="group" aria-label="Break ratings down by" style="margin:0"><button class="chip" type="button" data-r="length" aria-pressed="true">Length</button><button class="chip" type="button" data-r="decade" aria-pressed="false">Published</button><button class="chip" type="button" data-r="kind" aria-pressed="false">Kind</button><button class="chip" type="button" data-r="format" aria-pressed="false">Format</button><button class="chip" type="button" data-r="owned" aria-pressed="false">Owned</button></div></div>
+      <div class="chips" id="rbModes" role="group" aria-label="Break ratings down by" style="margin:0"><button class="chip" type="button" data-r="length" aria-pressed="true">Length</button><button class="chip" type="button" data-r="decade" aria-pressed="false">Published</button><button class="chip" type="button" data-r="kind" aria-pressed="false">Kind</button><button class="chip" type="button" data-r="format" aria-pressed="false">Format</button><button class="chip" type="button" data-r="owned" aria-pressed="false">Owned</button><button class="chip" type="button" data-r="publisher" aria-pressed="false">Publisher</button></div></div>
       <ul class="hbars" id="rbBars"></ul><p class="muted small" id="rbNote" style="margin:10px 0 0"></p></section>
   </div>
   <section class="panel" aria-labelledby="rrH" style="margin-bottom:16px"><div class="panel-head"><h2 id="rrH">Re-reads</h2><span class="muted small" id="rrNote"></span></div><ul class="rr-list" id="rrList"></ul></section>
@@ -762,6 +763,7 @@ dialog::backdrop{background:rgba(8,6,14,.65)}
       <div class="field w2"><label for="wd-author">Author</label><input id="wd-author" name="author" autocomplete="off"></div>
       <div class="field"><label for="wd-series">Series</label><input id="wd-series" name="series" list="wdSeriesList" autocomplete="off"><datalist id="wdSeriesList"></datalist></div>
       <div class="field"><label for="wd-number">Number / volume</label><input id="wd-number" name="number" autocomplete="off"></div>
+      <div class="field"><label for="wd-publisher">Publisher</label><input id="wd-publisher" name="publisher" list="wdPubList" autocomplete="off"><datalist id="wdPubList"></datalist></div>
       <div class="field"><label for="wd-type">Type</label><select id="wd-type" name="type"><option value="">–</option><option>Fiction</option><option>Non-fiction</option></select></div>
       <div class="field"><label for="wd-format">Format</label><select id="wd-format" name="format"><option value="">–</option><option>Book</option><option>Comic</option><option>Graphic novel</option><option>Manga</option><option>Issues</option><option>Deluxe</option><option>Omnibus</option><option>Compendium</option><option>Box Set</option><option>Limited Edition</option></select></div>
       <div class="field"><label for="wd-stage">Stage</label><select id="wd-stage" name="stage"></select></div>
@@ -797,6 +799,7 @@ dialog::backdrop{background:rgba(8,6,14,.65)}
     <div class="wd-grid">
       <div class="field w2"><label for="sd-series">Series</label><input id="sd-series" name="series" required autocomplete="off"></div>
       <div class="field w2"><label for="sd-author">Author</label><input id="sd-author" name="author" autocomplete="off"></div>
+      <div class="field w2"><label for="sd-publisher">Publisher</label><input id="sd-publisher" name="publisher" list="wdPubList" autocomplete="off"></div>
       <div class="field"><label for="sd-kind">Kind</label><select id="sd-kind" name="kind"><option>Book series</option><option>Comic run</option></select></div>
       <div class="field"><label for="sd-status">Status</label><select id="sd-status" name="status"><option value="">–</option><option>Ongoing</option><option>Complete</option><option>On hiatus</option></select></div>
       <div class="field"><label for="sd-released">Released so far</label><input id="sd-released" name="released" type="number" min="0" inputmode="numeric"></div>
@@ -903,7 +906,7 @@ const state = {
   settings: { ...SNAPSHOT.settings },
   mcp: null, live: false, busy: false, range: 90, logDate: null, editing: null,
   allBooks: [], header: [], libLoaded: false,
-  lib: { q: '', status: 'All', type: '', format: '', genre: '', owned: '', sort: 'sheet', dir: 1, limit: 100, open: null }
+  lib: { q: '', status: 'All', type: '', format: '', genre: '', publisher: '', owned: '', sort: 'sheet', dir: 1, limit: 100, open: null }
 };
 
 function dailyTotals() {
@@ -1551,7 +1554,7 @@ function libFiltered() {
   return state.allBooks.filter(b =>
     (L.status === 'All' || b.status === L.status) &&
     (!L.type || b.type === L.type) && (!L.format || b.format === L.format) && (!L.genre || b.genre === L.genre) &&
-    hasCopy(b, L.owned) &&
+    hasCopy(b, L.owned) && (!L.publisher || b.publisher === L.publisher) &&
     (!q || [b.title, b.author, b.series, b.theme1, b.theme2, b.theme3, b.genre].some(v => String(v || '').toLowerCase().includes(q))));
 }
 function fillSelect(id, field, label) {
@@ -1571,8 +1574,8 @@ function renderLibrary() {
   document.querySelector('#view-library .table-wrap').hidden = mode !== 'books';
   document.querySelector('#view-library .lib-foot').hidden = mode !== 'books';
   if (wish) { renderWish(); return; }
-  if (plan) { if ($('libGenre').options.length <= 1) { fillSelect('libType', 'type', 'All types'); fillSelect('libFormat', 'format', 'All formats'); fillSelect('libGenre', 'genre', 'All genres'); } renderPlan(); return; }
-  if ($('libGenre').options.length <= 1) { fillSelect('libType', 'type', 'All types'); fillSelect('libFormat', 'format', 'All formats'); fillSelect('libGenre', 'genre', 'All genres'); }
+  if (plan) { if ($('libGenre').options.length <= 1) { fillSelect('libType', 'type', 'All types'); fillSelect('libFormat', 'format', 'All formats'); fillSelect('libGenre', 'genre', 'All genres'); fillSelect('libPublisher', 'publisher', 'All publishers'); } renderPlan(); return; }
+  if ($('libGenre').options.length <= 1) { fillSelect('libType', 'type', 'All types'); fillSelect('libFormat', 'format', 'All formats'); fillSelect('libGenre', 'genre', 'All genres'); fillSelect('libPublisher', 'publisher', 'All publishers'); }
   // status chips with counts
   const counts = { All: state.allBooks.length };
   for (const b of state.allBooks) counts[b.status] = (counts[b.status] || 0) + 1;
@@ -1610,7 +1613,7 @@ function detailRow(b) {
   tr.className = 'detail';
   const td = document.createElement('td');
   td.colSpan = LIB_COLS.length;
-  const kv = [['Type', b.type], ['Format', b.format], ['Genre', b.genre], ['Themes', [b.theme1, b.theme2, b.theme3].filter(Boolean).join(', ')],
+  const kv = [['Type', b.type], ['Format', b.format], ['Publisher', b.publisher], ['Genre', b.genre], ['Themes', [b.theme1, b.theme2, b.theme3].filter(Boolean).join(', ')],
     ['Series', b.series ? `${b.series}${b.seriesNum ? ' #' + b.seriesNum : ''}` : ''], ['Copies', String(b.copies || '').split('|').map(x => x.trim()).filter(Boolean).join(', ')], ['Reads', readsOf(b).length > 1 ? readsText(b) : ''], ['Awards', (b.awards || '').split('|').filter(Boolean).join(', ')],
     ['ISBN', b.isbn], ['Plan', b.tier ? b.tier + (b.tier === 'Up next' && b.upNextOrder ? ' #' + b.upNextOrder : '') : ''], ['Why', b.why], ['Added', b.added], ['Loaned', b.loaned ? `${b.loaned}${b.loanee ? ' to ' + b.loanee : ''}` : ''], ['Notes', b.notes]].filter(([, v]) => v);
   td.innerHTML = `<div class="detail-grid"><div><div class="eyebrow">Synopsis</div><p class="syn"></p></div><div><dl class="kv"></dl><div style="margin-top:12px"><button class="btn btn-primary" type="button" data-edit="${b.id}">Edit book</button></div></div></div>`;
@@ -1624,7 +1627,7 @@ function detailRow(b) {
 /* ---------- edit / add dialog ---------- */
 const FORM = [
   { sec: 'Book' }, { k: 'title', w: 'w2', req: true }, { k: 'author', w: 'w2' },
-  { k: 'status', type: 'select', opts: STATUSES }, { k: 'type', type: 'select', from: 'type' }, { k: 'format', type: 'select', from: 'format' }, { k: 'genre', type: 'select', from: 'genre' },
+  { k: 'status', type: 'select', opts: STATUSES }, { k: 'type', type: 'select', from: 'type' }, { k: 'format', type: 'select', from: 'format' }, { k: 'genre', type: 'select', from: 'genre' }, { k: 'publisher', list: 'publisher' },
   { sec: 'Progress' }, { k: 'currentPage', type: 'number', label: 'Current page' }, { k: 'pages', type: 'number' },
   { k: 'startDate', type: 'date', label: 'Started' }, { k: 'finishDate', type: 'date', label: 'Finished' },
   { k: 'rating', type: 'select', opts: ['', '0.5', '1', '1.5', '2', '2.5', '3', '3.5', '4', '4.5', '5'] }, { k: 'year', type: 'number', label: 'Published' },
@@ -1657,6 +1660,7 @@ function openBookDialog(book, prefill) {
       for (const o of [...new Set(opts)]) { const op = document.createElement('option'); op.value = o; op.textContent = o || '–'; el.appendChild(op); }
     } else if (f.type === 'textarea') el = document.createElement('textarea');
     else { el = document.createElement('input'); el.type = f.type || 'text'; if (f.type === 'number') el.inputMode = 'numeric'; }
+    if (f.list) { const dl = document.createElement('datalist'); dl.id = 'dl-' + f.k; dl.innerHTML = [...new Set(state.allBooks.map(b => b[f.list]).filter(Boolean))].sort().map(v => `<option value="${escapeText(v)}">`).join(''); el.setAttribute('list', dl.id); wrap.appendChild(dl); }
     el.id = id; el.name = f.k; el.value = f.type === 'number' ? (toNum(val) || (val === '0' ? 0 : '')) : val;
     if (f.req) el.required = true;
     wrap.append(lab, el);
@@ -1936,7 +1940,7 @@ function openDrill(title, books) {
 }
 function openInLibrary(id) {
   Object.assign(state.lib, { mode: 'books', q: '', status: 'All', type: '', format: '', genre: '', owned: '', sort: 'sheet', dir: 1, open: id });
-  $('libSearch').value = ''; for (const s of ['libType', 'libFormat', 'libGenre', 'libOwned']) $(s).value = '';
+  $('libSearch').value = ''; for (const s of ['libType', 'libFormat', 'libGenre', 'libPublisher', 'libOwned']) $(s).value = '';
   const idx = state.allBooks.findIndex(b => b.id === id);
   state.lib.limit = Math.max(100, Math.ceil((idx + 1) / 100) * 100);
   showTab('library');
@@ -2099,7 +2103,7 @@ function renderRatingsBy(read) {
   const keyOf = {
     length: b => { const p = toNum(b.pages); return !p ? '' : p < 200 ? 'Under 200 pages' : p < 350 ? '200–349 pages' : p < 500 ? '350–499 pages' : '500+ pages'; },
     decade: b => { const y = toNum(b.year); return !y ? '' : y < 1900 ? 'Before 1900' : y < 1950 ? '1900–1949' : Math.floor(y / 10) * 10 + 's'; },
-    kind: categoryOf, format: b => b.format, owned: ownedOf
+    kind: categoryOf, format: b => b.format, owned: ownedOf, publisher: b => b.publisher
   }[rbState.mode];
   const order = { length: ['Under 200 pages', '200–349 pages', '350–499 pages', '500+ pages'] }[rbState.mode];
   const g = new Map();
@@ -2189,7 +2193,7 @@ function planRow(b, { num, kind }) {
   li.querySelector('.why').textContent = b.why ? '“' + b.why + '”' : '';
   // Up next shows the full picture; Soon shows the description
   if (kind === 'up') {
-    li.querySelector('.m').textContent = [b.author, b.year, toNum(b.pages) ? fmt(toNum(b.pages)) + ' pp' : '', b.genre, b.format, b.copies, b.series ? `${b.series}${b.seriesNum ? ' #' + b.seriesNum : ''}` : ''].filter(Boolean).join(' · ');
+    li.querySelector('.m').textContent = [b.author, b.year, toNum(b.pages) ? fmt(toNum(b.pages)) + ' pp' : '', b.genre, b.format, b.publisher, b.copies, b.series ? `${b.series}${b.seriesNum ? ' #' + b.seriesNum : ''}` : ''].filter(Boolean).join(' · ');
     const tags = document.createElement('div'); tags.className = 'tags';
     for (const t of themesOf(b)) { const x = document.createElement('span'); x.textContent = t[0].toUpperCase() + t.slice(1); tags.appendChild(x); }
     for (const a of String(b.awards || '').split('|').filter(Boolean)) { const x = document.createElement('span'); x.className = 'aw'; x.textContent = a; tags.appendChild(x); }
@@ -2240,7 +2244,7 @@ function renderPlan() {
   const L = state.lib, q = L.q.toLowerCase();
   const pool = plannable();
   const rest = pool.filter(b => b.tier !== 'Up next' && b.tier !== 'Soon').filter(b =>
-    (!L.type || b.type === L.type) && (!L.format || b.format === L.format) && (!L.genre || b.genre === L.genre) && hasCopy(b, L.owned) &&
+    (!L.type || b.type === L.type) && (!L.format || b.format === L.format) && (!L.genre || b.genre === L.genre) && hasCopy(b, L.owned) && (!L.publisher || b.publisher === L.publisher) &&
     (!q || [b.title, b.author, b.series, b.theme1, b.theme2, b.theme3, b.genre].some(v => String(v || '').toLowerCase().includes(q))));
   $('sheetNote').textContent = `${fmt(rest.length)} books`;
   const sl = $('sheetList'); sl.textContent = '';
@@ -2613,6 +2617,7 @@ const wl = { view: 'inbox', chip: 'To download', series: '', snap: null, key: ''
 const wishKey = t => normQ(t).replace(/^(the|a|an) /, '');
 const wishById = id => (disc.wish || []).find(w => w.id === id);
 const libByTitle = () => new Map(state.allBooks.map(b => [wishKey(b.title), b]));
+const pubNames = () => [...new Set([...state.allBooks.map(b => b.publisher), ...(disc.wish || []).map(w => w.publisher), ...(disc.series || []).map(x => x.publisher)].filter(Boolean))].sort();
 const isLate = w => w.stage === 'Waiting' && /^\d{4}-\d\d-\d\d$/.test(w.release) && w.release <= today();
 
 async function renderWish() {
@@ -2624,6 +2629,7 @@ async function renderWish() {
   if (disc.wErr) { $(box).innerHTML = '<p class="empty">Couldn\'t read your Wishlist: ' + escapeText(explain(disc.wErr)) + '</p>'; return; }
   const seriesNames = [...new Set([...(disc.series || []).map(s => s.series), ...disc.wish.map(w => w.series)].filter(Boolean))].sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
   $('wdSeriesList').innerHTML = seriesNames.map(x => `<option value="${escapeText(x)}">`).join('');
+  $('wdPubList').innerHTML = pubNames().map(x => `<option value="${escapeText(x)}">`).join('');
   $('wdSeenList').innerHTML = [...new Set(disc.wish.map(w => w.seenIn).filter(Boolean))].sort().map(x => `<option value="${escapeText(x)}">`).join('');
   if (wl.view === 'inbox') renderInbox();
   else if (wl.view === 'session') renderSession();
@@ -2667,7 +2673,7 @@ function renderSession() {
   const lists = [...new Set((disc.lists || []).map(x => x.list))].sort();
   const groups = [...new Set(all.map(w => w.series).filter(Boolean))].sort((x, y) => x.localeCompare(y, undefined, { numeric: true }));
   const sel = $('wishSeries');
-  const opts = '<option value="">Any series or list</option>' + groups.map(g => `<option value="s:${escapeText(g)}">${escapeText(g)}</option>`).join('') + lists.map(g => `<option value="l:${escapeText(g)}">List: ${escapeText(g)}</option>`).join('');
+  const opts = '<option value="">Any series or list</option>' + groups.map(g => `<option value="s:${escapeText(g)}">${escapeText(g)}</option>`).join('') + lists.map(g => `<option value="l:${escapeText(g)}">List: ${escapeText(g)}</option>`).join('') + [...new Set(all.map(w => w.publisher).filter(Boolean))].sort().map(g => `<option value="p:${escapeText(g)}">Publisher: ${escapeText(g)}</option>`).join('');
   if (sel.dataset.opts !== opts) { sel.innerHTML = opts; sel.dataset.opts = opts; }
   sel.value = wl.series;
   const key = [wl.chip, wl.series, q].join('|');
@@ -2677,7 +2683,7 @@ function renderSession() {
     const inList = gk === 'l' ? new Set((disc.lists || []).filter(x => x.list === gv).map(x => wishKey(x.title))) : null;
     // Searching looks across every stage
     wl.snap = all.filter(w => (q || f(w))
-      && (!wl.series || (gk === 's' ? w.series === gv : inList.has(wishKey(w.title))))
+      && (!wl.series || (gk === 's' ? w.series === gv : gk === 'p' ? w.publisher === gv : inList.has(wishKey(w.title))))
       && (!q || normQ([w.title, w.author, w.series, w.seenIn, w.notes].join(' ')).includes(q)))
       .sort((a, b) => wl.series ? (a.series || '').localeCompare(b.series || '') || toNum(a.number) - toNum(b.number) || a._row - b._row : 0)
       .map(w => w.id);
@@ -2706,7 +2712,7 @@ function wishRow(w, lib) {
   if (w.gift === 'TRUE') { const g = document.createElement('span'); g.className = 'wl-gift'; g.textContent = 'Gift idea'; t.after(g); }
   if (lib.has(wishKey(w.title))) { const hv = document.createElement('span'); hv.className = 'have'; hv.textContent = 'In library'; t.after(hv); }
   const m = row.querySelector('.m');
-  m.textContent = [w.author, w.series && (w.series + (w.number ? ' #' + w.number : '')), w.format, w.wantAs, w.stage === 'Waiting' ? w.waiting || 'Waiting' : '', w.release && !isLate(w) ? 'Out ' + w.release : '', w.price, w.notes].filter(Boolean).join(' · ');
+  m.textContent = [w.author, w.series && (w.series + (w.number ? ' #' + w.number : '')), w.publisher, w.format, w.wantAs, w.stage === 'Waiting' ? w.waiting || 'Waiting' : '', w.release && !isLate(w) ? 'Out ' + w.release : '', w.price, w.notes].filter(Boolean).join(' · ');
   if (isLate(w)) { const l = document.createElement('span'); l.className = 'wl-late'; l.textContent = ` · Should be out (${w.release})`; m.appendChild(l); }
   tick.addEventListener('change', () => {
     if (tick.checked) { w._was = w.stage; setWishFields(w, { stage: 'Got it' }); }
@@ -2785,11 +2791,14 @@ async function dropWish(w) {
 async function appendWishRows(items) {
   const header = ((await readRange('Wishlist!A1:Z1'))[0] || []).map(h => String(h).trim());
   const c = header.indexOf('id');
-  const ids = (await readRange(`Wishlist!${colLetter(c)}2:${colLetter(c)}3000`)).map(r => Number(String(r[0] || '').replace(/\D/g, '')) || 0);
+  const used = await readRange(`Wishlist!A2:${colLetter(Math.max(c, header.indexOf('title')))}3000`);
+  const ids = used.map(r => Number(String(r[c] || '').replace(/\D/g, '')) || 0);
+  let last = used.length; while (last && !used[last - 1].some(v => String(v ?? '').trim())) last--;
   let next = Math.max(0, ...ids, ...(disc.wish || []).map(w => Number(String(w.id).replace(/\D/g, '')) || 0));
   const rows = items.map(f => ({ stage: 'Inbox', gift: 'FALSE', ...f, id: 'WL' + String(++next).padStart(4, '0'), added: today() }));
   const values = rows.map(f => header.map(h => h === 'id' ? f.id : h === 'added' ? f.added : wishCell(h, f[h] || '')));
-  await state.mcp.callTool(SERVER, 'append_values', { spreadsheetId: SHEET_ID, range: 'Wishlist!A1', values }, { cache: false });
+  const r0 = last + 2;
+  await state.mcp.callTool(SERVER, 'update_values', { spreadsheetId: SHEET_ID, range: `Wishlist!A${r0}:${colLetter(header.length - 1)}${r0 + values.length - 1}`, values }, { cache: false });
   disc.wishHeader = header;
   for (const f of rows) disc.wish.push({ ...Object.fromEntries(header.map(h => [h, f[h] || ''])), _row: 1e9 });
   return rows;
@@ -2857,7 +2866,7 @@ async function savePaste(e) {
 }
 
 // One dialog for adding with details and for editing
-const WD_FIELDS = ['title', 'author', 'series', 'number', 'type', 'format', 'stage', 'waiting', 'wantAs', 'release', 'price', 'interest', 'link', 'seenIn', 'notes'];
+const WD_FIELDS = ['title', 'author', 'series', 'number', 'publisher', 'type', 'format', 'stage', 'waiting', 'wantAs', 'release', 'price', 'interest', 'link', 'seenIn', 'notes'];
 function openWishDlg(w) {
   wl.editing = w || null;
   $('wd-stage').innerHTML = WL_STAGES.map(s => `<option>${s}</option>`).join('');
@@ -2906,7 +2915,7 @@ function wishToBook(w) {
     type: nf ? 'Non-Fiction' : w.type ? 'Fiction' : '',
     format: w.format === 'Book' ? (nf ? 'General Non-Fiction' : w.type ? 'Novel' : '') : WL_COMIC.includes(w.format) ? 'Comic' : w.format === 'Graphic novel' ? 'Graphic Novel' : '',
     copies: { Kobo: 'Kobo', PDF: 'PDF', Physical: 'Physical' }[w.wantAs] || '',
-    series: w.series || '', seriesNum: w.number || '',
+    series: w.series || '', seriesNum: w.number || '', publisher: w.publisher || '',
     awards: /ABC Top 100/i.test(w.seenIn) ? 'ABC Top 100' : '',
     notes: ['From Wishlist', w.seenIn, w.wantAs === 'Library' ? 'Library' : '', w.notes].filter(Boolean).join(' · '),
     added: today()
@@ -2993,7 +3002,7 @@ function renderSeriesView() {
     card.className = 'ser-card';
     card.innerHTML = '<div class="top"><div><span class="t"></span> <span class="m"></span></div><div class="acts" style="display:flex;gap:6px"></div></div><div class="ser-tiles"></div><div class="m sm"></div>';
     card.querySelector('.t').textContent = s.series;
-    card.querySelector('.m').textContent = [s.author, s.kind, s.status, s.soldAs].filter(Boolean).join(' · ');
+    card.querySelector('.m').textContent = [s.author, s.publisher, s.kind, s.status, s.soldAs].filter(Boolean).join(' · ');
     const tiles = card.querySelector('.ser-tiles');
     for (let n = 1; n <= top; n++) { const t = document.createElement('span'); t.className = by.get(n) || ''; t.textContent = n; t.title = { read: 'Read', own: 'In your library', want: 'On your Wishlist', soon: 'Waiting on release' }[by.get(n)] || 'Not added yet'; tiles.appendChild(t); }
     if (!top) tiles.innerHTML = '<span class="muted small" style="border:0;background:none">No numbers yet. Add the released count to see the gaps.</span>';
@@ -3004,7 +3013,7 @@ function renderSeriesView() {
       const b = document.createElement('button'); b.className = 'btn'; b.type = 'button'; b.textContent = `Add #${firstGap}`;
       b.addEventListener('click', async () => {
         b.disabled = true;
-        try { await appendWishRows([{ title: `${s.series} #${firstGap}`, author: s.author || '', series: s.series, number: String(firstGap), format: s.soldAs || '', type: 'Fiction' }]); setStatus('live', `Added ${s.series} #${firstGap} to your Inbox`); renderSeriesView(); }
+        try { await appendWishRows([{ title: `${s.series} #${firstGap}`, author: s.author || '', series: s.series, publisher: s.publisher || '', number: String(firstGap), format: s.soldAs || '', type: 'Fiction' }]); setStatus('live', `Added ${s.series} #${firstGap} to your Inbox`); renderSeriesView(); }
         catch (err) { b.disabled = false; notice('Couldn\'t add it: ' + (err.message || explain(err)), 'error'); }
       });
       acts.appendChild(b);
@@ -3015,7 +3024,7 @@ function renderSeriesView() {
     box.appendChild(card);
   }
 }
-const SD_FIELDS = ['series', 'author', 'kind', 'status', 'released', 'soldAs', 'link', 'notes'];
+const SD_FIELDS = ['series', 'author', 'publisher', 'kind', 'status', 'released', 'soldAs', 'link', 'notes'];
 let sdEditing = null;
 function openSeriesDlg(s) {
   sdEditing = s && s._row ? s : null;
@@ -3031,7 +3040,7 @@ async function saveSeries(e) {
   if (!f.series) { $('sdMsg').textContent = 'A series name is needed.'; return; }
   $('sdSave').disabled = true; $('sdMsg').textContent = 'Saving…';
   try {
-    const v = await readRange("'Series Tracker'!A1:H500");
+    const v = await readRange("'Series Tracker'!A1:I500");
     const header = (v[0] || []).map(h => String(h).trim());
     const cell = (k, x) => !x ? '' : k === 'released' ? x : "'" + x;
     // Find the row by the series name (the old name when editing)
@@ -3381,7 +3390,7 @@ function loadDiscover() {
 async function fetchDiscover() {
   const [q, w, sr, rl] = await Promise.allSettled([
     state.mcp.callTool(SERVER, 'get_values', { spreadsheetId: QUOTES_ID, range: 'QUOTES!A1:G3000' }, { cache: false }),
-    readRange('Wishlist!A1:Z3000'), readRange("'Series Tracker'!A1:H500"), readRange("'Reading Lists'!A1:E2000")
+    readRange('Wishlist!A1:Z3000'), readRange("'Series Tracker'!A1:I500"), readRange("'Reading Lists'!A1:E2000")
   ]);
   const rows = (v, key) => { const h = (v[0] || []).map(x => String(x).trim()); return { h, list: v.slice(1).map((r, i) => ({ ...Object.fromEntries(h.map((k, j) => [k, String(r[j] ?? '').trim()])), _row: i + 2 })).filter(x => x[key]) }; };
   if (sr.status === 'fulfilled') disc.series = rows(sr.value, 'series').list; else disc.series = [];
@@ -3528,7 +3537,7 @@ function showTab(name) {
     $('view-' + t).hidden = t !== name;
   }
   if (name === 'library' && !state.libLoaded) $('libBody').innerHTML = `<tr><td colspan="${LIB_COLS.length}" class="muted" style="padding:18px">${isLive() ? 'Loading your library…' : 'Your library loads from the sheet. ' + connectHint()}</td></tr>`;
-  if (name === 'library' && state.libLoaded) { fillSelect('libType', 'type', 'All types'); fillSelect('libFormat', 'format', 'All formats'); fillSelect('libGenre', 'genre', 'All genres'); renderLibrary(); }
+  if (name === 'library' && state.libLoaded) { fillSelect('libType', 'type', 'All types'); fillSelect('libFormat', 'format', 'All formats'); fillSelect('libGenre', 'genre', 'All genres'); fillSelect('libPublisher', 'publisher', 'All publishers'); renderLibrary(); }
   if (name === 'log') redraw();
   if (name === 'dashboard') renderDashboard();
   if (name === 'tools') renderTools();
@@ -3550,7 +3559,7 @@ $('ctClose').addEventListener('click', () => $('contentsDlg').close());
 $('dashPeriods').addEventListener('click', e => { const c = e.target.closest('.chip'); if (!c) return; dashPeriod = c.dataset.p; renderDashboard(); });
 let searchT;
 $('libSearch').addEventListener('input', e => { clearTimeout(searchT); searchT = setTimeout(() => { state.lib.q = e.target.value; state.lib.limit = 100; renderLibrary(); }, 150); });
-for (const [id, key] of [['libType', 'type'], ['libFormat', 'format'], ['libGenre', 'genre'], ['libOwned', 'owned']])
+for (const [id, key] of [['libType', 'type'], ['libFormat', 'format'], ['libGenre', 'genre'], ['libPublisher', 'publisher'], ['libOwned', 'owned']])
   $(id).addEventListener('change', e => { state.lib[key] = e.target.value; state.lib.limit = 100; renderLibrary(); });
 $('libChips').addEventListener('click', e => { const c = e.target.closest('.chip'); if (!c) return; state.lib.status = c.dataset.st; state.lib.limit = 100; renderLibrary(); });
 $('libHead').addEventListener('click', e => {
