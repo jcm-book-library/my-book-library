@@ -1,4 +1,4 @@
-<title>Jackets &amp; Manuscripts</title>
+<title>The Library</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Figtree:wght@400;500;600&display=swap">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
@@ -22,7 +22,7 @@ h1,h2,.num{font-family:var(--display)}
 h1{font-size:clamp(26px,4vw,34px);font-weight:700;letter-spacing:-.02em;margin:0;text-wrap:balance}
 .lockup{--mk:52px;display:flex;align-items:center;gap:calc(var(--mk)*.14);margin-top:6px}
 .jm-mark{width:var(--mk);height:var(--mk);flex:none;color:var(--accent);display:block}
-.jm-wordmark{font-family:"Atkinson Hyperlegible",var(--body);font-weight:700;font-size:calc(var(--mk)*.38);line-height:1.06;letter-spacing:-.01em;color:#eef0fa}
+.jm-wordmark{font-family:"Atkinson Hyperlegible",var(--body);font-weight:700;font-size:calc(var(--mk)*.5);line-height:1.06;white-space:nowrap;letter-spacing:-.01em;color:#eef0fa}
 @media (max-width:520px){.lockup{--mk:44px}}
 h2{font-size:17px;font-weight:700;margin:0;letter-spacing:-.01em}
 .eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);font-weight:600}
@@ -460,20 +460,7 @@ dialog::backdrop{background:rgba(8,6,14,.65)}
   <header>
     <div>
       <div class="eyebrow" id="todayLabel">Today</div>
-      <h1 class="lockup" aria-label="Jackets &amp; Manuscripts"><svg class="jm-mark" viewBox="71 61 280 280" aria-hidden="true"><defs>
-<linearGradient id="jm-fold-a" gradientUnits="userSpaceOnUse" x1="200" y1="0" x2="270" y2="0">
-<stop offset="0" stop-color="#000" stop-opacity="0.08"/><stop offset="0.2" stop-color="#000" stop-opacity="0.3"/><stop offset="1" stop-color="#000" stop-opacity="0"/>
-</linearGradient>
-<linearGradient id="jm-fold-b" gradientUnits="userSpaceOnUse" x1="314" y1="143.2" x2="371.2" y2="171.8">
-<stop offset="0" stop-color="#000" stop-opacity="0.08"/><stop offset="0.2" stop-color="#000" stop-opacity="0.3"/><stop offset="1" stop-color="#000" stop-opacity="0"/>
-</linearGradient>
-</defs>
-<polygon points="292,94 336,94 336,304 314,282 292,304" fill="currentColor"/>
-<path d="M178 94 L246 230 L314 94 V200" fill="none" stroke="currentColor" stroke-width="44" stroke-linejoin="round" stroke-linecap="round"/>
-<path d="M156 270 V94 A22 22 0 0 1 200 94 V270 A60.4 60.4 0 0 1 89.9 304.4 A42 42 0 0 0 156 270 Z" fill="currentColor"/>
-<circle cx="112" cy="272" r="26" fill="currentColor"/>
-<polygon points="200,88.8 265.68,220.16 226.32,239.84 200,187.2" fill="url(#jm-fold-a)"/>
-<polygon points="292,187.2 336,99.2 336,304 314,282 292,304" fill="url(#jm-fold-b)"/></svg><span class="jm-wordmark" aria-hidden="true">Jackets &amp;<br>Manuscripts</span></h1>
+      <h1 class="lockup" aria-label="The Library"><svg class="jm-mark" viewBox="0 0 100 100" aria-hidden="true"><g fill="currentColor"><path fill-rule="evenodd" d="M4 41 L50 5 L96 41 Z M33 26 H67 V33 H33 Z"/><path fill-rule="evenodd" d="M16 42 H84 V85 H16 Z M24 48 H74 V80 H24 Z M79 61 a2.4 2.4 0 1 0 0.01 0 Z"/><rect x="24" y="61" width="50" height="2.4"/><rect x="29" y="52" width="4" height="9" rx=".6"/><rect x="34" y="49" width="4" height="12" rx=".6"/><rect x="39" y="51" width="4" height="10" rx=".6"/><rect x="44" y="48" width="4" height="13" rx=".6"/><rect x="49" y="50" width="4" height="11" rx=".6"/><rect x="54" y="49" width="4" height="12" rx=".6"/><rect x="59" y="52" width="4" height="9" rx=".6"/><rect x="64" y="49" width="4" height="12" rx=".6"/><rect x="69" y="51" width="4" height="10" rx=".6"/><rect x="29" y="66" width="4" height="12" rx=".6"/><rect x="34" y="68" width="4" height="10" rx=".6"/><rect x="39" y="65" width="4" height="13" rx=".6"/><rect x="44" y="67" width="4" height="11" rx=".6"/><rect x="49" y="66" width="4" height="12" rx=".6"/><rect x="54" y="68" width="4" height="10" rx=".6"/><rect x="59" y="65" width="4" height="13" rx=".6"/><rect x="64" y="67" width="4" height="11" rx=".6"/><rect x="69" y="66" width="4" height="12" rx=".6"/><rect x="45" y="85" width="10" height="13" rx="1"/></g></svg><span class="jm-wordmark" aria-hidden="true">The Library</span></h1>
     </div>
     <div class="status" id="status" data-state="loading" role="status">
       <span class="dot"></span><span id="statusText">Connecting to your sheet…</span>
