@@ -70,7 +70,13 @@ button{font:inherit;cursor:pointer}
 .logday button[aria-pressed="true"]{background:color-mix(in srgb,var(--accent) 22%,transparent);border-color:var(--accent);color:var(--fg)}
 .logday input[type=date]{font:inherit;font-size:12px;background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:999px;padding:3px 10px;color-scheme:dark}
 .logday-banner{margin:-4px 0 12px;padding:8px 12px;border-radius:10px;font-size:13px;font-weight:600;background:color-mix(in srgb,var(--accent) 16%,transparent);border:1px solid color-mix(in srgb,var(--accent) 45%,transparent)}
-.nb{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr) auto;gap:8px 22px;align-items:center;padding:14px 0;border-top:1px solid var(--line)}
+.nb{display:grid;grid-template-columns:minmax(0,1.25fr) 128px minmax(0,1fr) auto;gap:8px 26px;align-items:center;padding:16px 0;border-top:1px solid var(--line)}
+.nb .book-title{font-size:19px;line-height:1.25}
+.nb .book-meta{font-size:15px;margin-top:2px}
+.nb .nb-page{display:flex;align-items:baseline;gap:6px;white-space:nowrap;min-width:92px;justify-content:flex-end}
+.nb .pg-now{font-family:var(--display);font-size:38px;font-weight:700;line-height:1;color:var(--fg)}
+.nb .pg-of{font-size:17px;color:var(--muted)}
+.nb .pg-of::before{content:'/ ';opacity:.7}
 .nb:first-child{border-top:0;padding-top:4px}
 .nb .nb-prog{display:flex;flex-direction:column;gap:6px}
 .nb .nb-prog .row{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
@@ -84,8 +90,8 @@ button{font:inherit;cursor:pointer}
 .nb .nb-log input{width:84px}
 .nb .nb-extra{grid-column:1/-1;display:flex;flex-direction:column;gap:6px}
 .nb .nb-extra:empty{display:none}
-@media (max-width:860px){.nb{grid-template-columns:minmax(0,1fr) auto}.nb .nb-prog{grid-column:1/-1;order:3}.nb .nb-extra{order:4}}
-@media (max-width:560px){.nb{grid-template-columns:minmax(0,1fr)}.nb .nb-prog{order:2}.nb .nb-log{order:3}.nb .nb-log label{margin-right:auto}}
+@media (max-width:860px){.nb{grid-template-columns:minmax(0,1fr) auto}.nb .nb-prog{grid-column:1/-1;order:3}.nb .nb-log{grid-column:1/-1;order:4}.nb .nb-extra{order:5}}
+@media (max-width:560px){.nb .nb-log label{margin-right:auto}.nb .pg-now{font-size:32px}}
 .today-list .ent{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:8px;align-items:center}
 .today-list .ent .when{font-size:11px;color:var(--muted)}
 .today-list .ent .acts{display:flex;gap:4px}
@@ -135,6 +141,8 @@ input[type="number"]:focus{border-color:var(--accent);outline:none}
 .fy-rec{display:flex;flex-direction:column;height:calc(100% - 38px)}
 @media (max-width:900px){.fy{grid-template-columns:minmax(0,1fr)}}
 .lib-foot[hidden]{display:none}
+.tier-chip{font-size:11px;font-weight:700;padding:1px 7px;border-radius:999px;margin-left:6px;white-space:nowrap;background:color-mix(in srgb,var(--accent) 24%,transparent);color:var(--fg);border:1px solid var(--accent)}
+.tier-chip[data-t="Soon"]{background:transparent;color:var(--muted);border-color:var(--line)}
 .pill-sel{appearance:none;-webkit-appearance:none;font:inherit;font-size:12px;font-weight:600;cursor:pointer;text-align:center;background-color:transparent}
 .pill-sel option{background:var(--surface);color:var(--fg)}
 .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
@@ -593,6 +601,7 @@ dialog::backdrop{background:rgba(8,6,14,.65)}
       <select id="libType" aria-label="Type"><option value="">All types</option></select>
       <select id="libFormat" aria-label="Format"><option value="">All formats</option></select>
       <select id="libGenre" aria-label="Genre"><option value="">All genres</option></select>
+      <select id="libTier" aria-label="Plan"><option value="">All plans</option><option>Up next</option><option>Soon</option><option>Someday</option><option value="none">Not planned</option></select>
       <select id="libPublisher" aria-label="Publisher"><option value="">All publishers</option></select>
       <select id="libOwned" aria-label="Owned"><option value="">Physical &amp; digital</option><option>Physical</option><option>Digital</option></select>
       <button class="btn btn-primary" id="addBookBtn" type="button">Add book</button>
@@ -920,7 +929,7 @@ const state = {
   settings: { ...SNAPSHOT.settings },
   mcp: null, live: false, busy: false, range: 365, logDate: null, editing: null,
   allBooks: [], header: [], libLoaded: false,
-  lib: { q: '', status: 'All', type: '', format: '', genre: '', publisher: '', owned: '', sort: 'sheet', dir: 1, limit: 100, open: null }
+  lib: { q: '', status: 'All', type: '', format: '', genre: '', publisher: '', tier: '', owned: '', sort: 'sheet', dir: 1, limit: 100, open: null }
 };
 
 function dailyTotals() {
@@ -1042,10 +1051,12 @@ function renderBooks() {
     el.className = 'nb';
     const inputId = 'pg-' + b.id;
     el.innerHTML = `
-      <div class="nb-info"><div class="book-title"></div><div class="book-meta tnum"></div><div class="recent tnum"></div></div>
+      <div class="nb-info"><div class="book-title"></div><div class="book-meta"></div></div>
+      <div class="nb-page tnum" id="meta-${b.id}" aria-label="Page ${last}${b.pages ? ' of ' + b.pages : ''}"><span class="pg-now">${fmt(last)}</span>${b.pages ? `<span class="pg-of">${fmt(b.pages)}</span>` : ''}</div>
       <div class="nb-prog">
         <div class="row"><span class="nb-sub tnum"></span>${b.pages ? `<span class="book-pct tnum">${Math.round(pct)}%</span>` : ''}</div>
         <div class="prog" aria-hidden="true"><i style="width:${pct}%"></i></div>
+        <div class="recent tnum"></div>
       </div>
       <div class="nb-log logrow">
         <label for="${inputId}">On page</label>
@@ -1095,8 +1106,7 @@ function renderBooks() {
       cb.addEventListener('click', () => openContents(b)); ctRow.appendChild(cb); extra.appendChild(ctRow);
     }
     el.querySelector('.book-title').textContent = b.title;
-    el.querySelector('.book-meta').textContent = `${b.author ? b.author + ' · ' : ''}page ${fmt(last)}${b.pages ? ' of ' + fmt(b.pages) : ''}`;
-    el.querySelector('.book-meta').id = 'meta-' + b.id;
+    el.querySelector('.book-meta').textContent = b.author || '';
     const input = el.querySelector('input'), btn = el.querySelector('.nb-log .btn-primary'), delta = el.querySelector('.delta');
     const dog = el.querySelector('.dog-btn');
     dog.setAttribute('aria-label', `Dog-ear a quote from ${b.title}`);
@@ -1608,7 +1618,7 @@ const readWhen = x => x.finishDate ? new Date(x.finishDate + 'T00:00').toLocaleD
 const readsText = b => readsOf(b).map((x, i) => `${ordinal(i + 1)}: ${readWhen(x)}${toNum(x.rating) ? ' · ' + x.rating + '★' : ''}`).join('  →  ');
 const starStr = r => { const n = toNum(r); if (!n) return ''; return '★'.repeat(Math.floor(n)) + (n % 1 >= .5 ? '½' : ''); };
 const sortKey = (b, k) => {
-  if (k === 'sheet') return b._row;
+  if (k === 'sheet') return state.lib.tier === 'Up next' ? (toNum(b.upNextOrder) || 999) : b._row;
   if (['currentPage', 'pages', 'rating', 'year', 'remain', '%'].includes(k)) return b[k] === '' || b[k] == null ? -1 : toNum(b[k]);
   return String(b[k] || '').toLowerCase();
 };
@@ -1617,6 +1627,7 @@ function libFiltered() {
   return state.allBooks.filter(b =>
     (L.status === 'All' || b.status === L.status) &&
     (!L.type || b.type === L.type) && (!L.format || b.format === L.format) && (!L.genre || b.genre === L.genre) &&
+    (!L.tier || (L.tier === 'none' ? !b.tier : b.tier === L.tier)) &&
     hasCopy(b, L.owned) && (!L.publisher || b.publisher === L.publisher) &&
     (!q || [b.title, b.author, b.series, b.theme1, b.theme2, b.theme3, b.genre].some(v => String(v || '').toLowerCase().includes(q))));
 }
@@ -1634,6 +1645,7 @@ function renderLibrary() {
   $('wishView').hidden = !wish;
   $('view-library').classList.toggle('wish-mode', wish);
   $('libChips').hidden = mode !== 'books';
+  $('libTier').hidden = mode !== 'books';
   document.querySelector('#view-library .table-wrap').hidden = mode !== 'books';
   document.querySelector('#view-library .lib-foot').hidden = mode !== 'books';
   if (wish) { renderWish(); return; }
@@ -1663,6 +1675,7 @@ function renderLibrary() {
     tr.querySelector('.t').textContent = b.title;
     tr.querySelector('.t').insertAdjacentHTML('beforebegin', favBtn(b));
     { const rb = rereadBadge(b); if (rb) tr.querySelector('.t').insertAdjacentHTML('afterend', rb); }
+    if (b.tier && b.tier !== 'Someday') tr.querySelector('.t').insertAdjacentHTML('afterend', `<span class="tier-chip" data-t="${b.tier}">${b.tier === 'Up next' && b.upNextOrder ? 'Up next #' + escapeText(b.upNextOrder) : b.tier}</span>`);
     tr.children[1].textContent = b.author;
     body.appendChild(tr);
     if (L.open === b.id) body.appendChild(detailRow(b));
@@ -2028,7 +2041,7 @@ function openDrill(title, books) {
 }
 function openInLibrary(id) {
   Object.assign(state.lib, { mode: 'books', q: '', status: 'All', type: '', format: '', genre: '', owned: '', sort: 'sheet', dir: 1, open: id });
-  $('libSearch').value = ''; for (const s of ['libType', 'libFormat', 'libGenre', 'libPublisher', 'libOwned']) $(s).value = '';
+  $('libSearch').value = ''; for (const s of ['libType', 'libFormat', 'libGenre', 'libPublisher', 'libTier', 'libOwned']) $(s).value = '';
   const idx = state.allBooks.findIndex(b => b.id === id);
   state.lib.limit = Math.max(100, Math.ceil((idx + 1) / 100) * 100);
   showTab('library');
@@ -3672,7 +3685,7 @@ $('ctClose').addEventListener('click', () => $('contentsDlg').close());
 $('dashPeriods').addEventListener('click', e => { const c = e.target.closest('.chip'); if (!c) return; dashPeriod = c.dataset.p; renderDashboard(); });
 let searchT;
 $('libSearch').addEventListener('input', e => { clearTimeout(searchT); searchT = setTimeout(() => { state.lib.q = e.target.value; state.lib.limit = 100; renderLibrary(); }, 150); });
-for (const [id, key] of [['libType', 'type'], ['libFormat', 'format'], ['libGenre', 'genre'], ['libPublisher', 'publisher'], ['libOwned', 'owned']])
+for (const [id, key] of [['libType', 'type'], ['libFormat', 'format'], ['libGenre', 'genre'], ['libPublisher', 'publisher'], ['libTier', 'tier'], ['libOwned', 'owned']])
   $(id).addEventListener('change', e => { state.lib[key] = e.target.value; state.lib.limit = 100; renderLibrary(); });
 $('libChips').addEventListener('click', e => { const c = e.target.closest('.chip'); if (!c) return; state.lib.status = c.dataset.st; state.lib.limit = 100; renderLibrary(); });
 $('libHead').addEventListener('click', e => {
