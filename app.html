@@ -142,6 +142,42 @@ input[type="number"]:focus{border-color:var(--accent);outline:none}
 .fy-rec{display:flex;flex-direction:column;height:calc(100% - 38px)}
 @media (max-width:900px){.fy{grid-template-columns:minmax(0,1fr)}}
 .lib-foot[hidden]{display:none}
+.cov-s{width:26px;height:38px;object-fit:cover;border-radius:3px;margin-right:8px;vertical-align:-14px;background:var(--raise)}
+.cov-m{width:46px;height:68px;object-fit:cover;border-radius:4px;flex:none;background:var(--raise)}
+.nb-info{display:flex;gap:14px;align-items:center;min-width:0}
+.nb-info>div{min-width:0}
+.nb .book-title{cursor:pointer}
+.nb .book-title:hover{color:var(--accent)}
+.fy-rec .top{display:flex;gap:14px;align-items:flex-start}
+.fy-rec .cov-l{width:72px;height:108px;object-fit:cover;border-radius:5px;flex:none;background:var(--raise)}
+.lib tr.row.open td{background:color-mix(in srgb,var(--accent) 12%,var(--surface))}
+/* floating book card, left side */
+.bcard{position:fixed;z-index:30;left:max(16px,env(safe-area-inset-left,0px));bottom:max(16px,env(safe-area-inset-bottom,0px));width:340px;max-height:min(72vh,640px);overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:0 14px 44px rgba(0,0,0,.5);padding:16px;display:flex;flex-direction:column;gap:12px}
+.bcard[hidden]{display:none}
+.bcard .bc-top{display:flex;gap:14px;align-items:flex-start}
+.bcard .bc-cov{width:88px;height:132px;flex:none;border-radius:6px;object-fit:cover;background:var(--raise);display:grid;place-items:center;text-align:center;font-size:12px;color:var(--muted);padding:6px;overflow:hidden}
+.bcard h3{font-family:var(--display);font-size:19px;line-height:1.25;margin:0;overflow-wrap:anywhere}
+.bcard .bc-by{color:var(--muted);font-size:14px;margin-top:2px}
+.bcard .bc-x{position:absolute;top:8px;right:8px;width:30px;height:30px;border:0;border-radius:8px;background:transparent;color:var(--muted);font-size:20px;line-height:1;cursor:pointer}
+.bcard .bc-x:hover{background:var(--raise);color:var(--fg)}
+.bcard .bc-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px}
+.bcard dl{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 12px;margin:0;font-size:13px}
+.bcard dt{color:var(--muted)}
+.bcard dd{margin:0;overflow-wrap:anywhere}
+.bcard .bc-syn{font-size:13px;line-height:1.5;color:var(--muted);margin:0}
+.bcard .bc-acts{display:flex;gap:8px;flex-wrap:wrap}
+.bcard h3{padding-right:28px}
+@media (max-width:700px){.bcard{left:0;right:0;bottom:0;width:auto;border-radius:16px 16px 0 0;max-height:68vh;padding:16px max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}}
+/* cover finder */
+.cv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px}
+.cv-opt{display:flex;flex-direction:column;gap:6px;text-align:left;padding:8px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--fg);font:inherit;cursor:pointer;min-width:0}
+.cv-opt:hover,.cv-opt:focus-visible{border-color:var(--accent)}
+.cv-opt img{width:100%;aspect-ratio:2/3;object-fit:cover;border-radius:4px;background:var(--raise)}
+.cv-opt .t{font-size:13px;font-weight:500;line-height:1.3;overflow-wrap:anywhere}
+.cv-opt .m{font-size:12px;color:var(--muted);overflow-wrap:anywhere}
+.cv-book{font-family:var(--display);font-size:20px}
+.cv-have{display:flex;gap:12px;align-items:center}
+.cv-have img{width:46px;height:68px;object-fit:cover;border-radius:4px}
 .lib-sec{border:1px solid var(--line);border-radius:12px;background:var(--surface);margin-bottom:10px;overflow:hidden}
 .lib-sec-head{display:flex;align-items:center;gap:12px;width:100%;padding:14px 16px;background:none;border:0;color:var(--fg);font:inherit;cursor:pointer;text-align:left}
 .lib-sec-head:hover{background:color-mix(in srgb,var(--accent) 6%,transparent)}
@@ -728,6 +764,10 @@ dialog::backdrop{background:rgba(8,6,14,.65)}
     <section class="panel" aria-labelledby="stallH"><div class="panel-head"><h2 id="stallH">Stalled books</h2><span class="muted small">Reading or Paused, nothing logged for 10+ days</span></div><ul class="plan-list" id="stallList"></ul></section>
     <section class="panel" aria-labelledby="nisH"><div class="panel-head"><h2 id="nisH">Next in series</h2><span class="muted small">Series you've started, most recent first</span></div><ol class="plan-list" id="nisList"></ol><button class="btn" type="button" id="nisMore" hidden>Show all</button></section>
   </div>
+  <section class="panel" aria-labelledby="covH" style="margin-bottom:20px">
+    <div class="panel-head"><h2 id="covH">Book covers</h2><span class="muted small">From Open Library, one book at a time</span></div>
+    <div id="covBox"></div>
+  </section>
   <section class="panel" aria-labelledby="rateH" style="margin-bottom:20px">
     <div class="panel-head"><h2 id="rateH">Rate a book</h2><span class="muted small">For when you're not sure. Fiction, non-fiction and comics each have their own criteria.</span></div>
     <div id="rateBox"></div>
@@ -822,6 +862,19 @@ dialog::backdrop{background:rgba(8,6,14,.65)}
     </div>
     <div class="dlg-foot"><span class="muted" id="pdMsg" style="font-size:13px;align-self:center"></span><button class="btn btn-primary" type="submit" id="pdSave">Add to Inbox</button></div>
   </form>
+</dialog>
+
+<aside id="bookCard" class="bcard" role="dialog" aria-label="Book details" hidden></aside>
+
+<dialog id="coverDlg" aria-labelledby="cvTitle" style="width:min(760px,calc(100vw - 32px))">
+  <div class="dlg-head"><h2 id="cvTitle">Find cover</h2><span class="muted small" id="cvProg"></span><button class="btn" type="button" id="cvClose">Done for now</button></div>
+  <div style="padding:16px 20px;display:grid;gap:14px">
+    <div><div class="cv-book" id="cvBook"></div><div class="muted small" id="cvWhy"></div></div>
+    <div class="cv-have" id="cvHave" hidden></div>
+    <div class="cv-grid" id="cvGrid"></div>
+    <div class="muted" id="cvMsg" aria-live="polite" style="font-size:14px"></div>
+  </div>
+  <div class="dlg-foot"><span></span><span class="dlg-actions"><button class="btn" type="button" id="cvRemove" hidden>Remove cover</button><button class="btn" type="button" id="cvNone">None of these</button><button class="btn" type="button" id="cvSkip">Skip</button></span></div>
 </dialog>
 
 <dialog id="seriesDlg" aria-labelledby="sdTitle" style="width:min(560px,calc(100vw - 32px))">
@@ -1059,7 +1112,7 @@ function renderBooks() {
     el.className = 'nb';
     const inputId = 'pg-' + b.id;
     el.innerHTML = `
-      <div class="nb-info"><div class="book-title"></div><div class="book-meta"></div></div>
+      <div class="nb-info">${coverImg(b, 'cov-m', 'S')}<div><div class="book-title" tabindex="0" role="button"></div><div class="book-meta"></div></div></div>
       <div class="nb-page tnum" id="meta-${b.id}" aria-label="Page ${last}${b.pages ? ' of ' + b.pages : ''}"><span class="pg-now">${fmt(last)}</span>${b.pages ? `<span class="pg-of">${fmt(b.pages)}</span>` : ''}</div>
       <div class="nb-prog">
         <div class="row"><span class="nb-sub tnum"></span>${b.pages ? `<span class="book-pct tnum">${Math.round(pct)}%</span>` : ''}</div>
@@ -1115,6 +1168,7 @@ function renderBooks() {
     }
     el.querySelector('.book-title').textContent = b.title;
     el.querySelector('.book-meta').textContent = b.author || '';
+    { const bt = el.querySelector('.book-title'); bt.addEventListener('click', () => showCard(b.id)); bt.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); showCard(b.id); } }); }
     const input = el.querySelector('input'), btn = el.querySelector('.nb-log .btn-primary'), delta = el.querySelector('.delta');
     const dog = el.querySelector('.dog-btn');
     dog.setAttribute('aria-label', `Dog-ear a quote from ${b.title}`);
@@ -1329,6 +1383,143 @@ function renderHeat(totals, y = today().slice(0, 4)) {
   box.appendChild(frag);
 }
 
+/* ---------- Covers from Open Library ----------
+   A book keeps only a small reference in the cover column ("ol:<cover id>", or "none" once you've said none fit).
+   The picture itself is loaded from covers.openlibrary.org. The claude.ai page can't load outside pictures, so covers show on the GitHub Pages site. */
+const OL_API = 'https://openlibrary.org', OL_IMG = 'https://covers.openlibrary.org';
+const coverId = b => { const m = /^ol:(\d+)$/.exec(String(b.cover || '').trim()); return m ? m[1] : ''; };
+const coverUrl = (b, sz = 'M') => coverId(b) ? `${OL_IMG}/b/id/${coverId(b)}-${sz}.jpg` : '';
+const coverImg = (b, cls, sz) => coverUrl(b, sz) ? `<img class="${cls}" src="${coverUrl(b, sz)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">` : '';
+const hasCoverCol = () => state.allBooks.length && 'cover' in state.allBooks[0];
+let olLast = 0;
+// Open Library asks for gentle use: one search about every 1.2 seconds, never closer than 1.1
+async function olGet(path) {
+  const wait = olLast + 1200 - Date.now(); if (wait > 0) await new Promise(r => setTimeout(r, wait));
+  olLast = Date.now();
+  const r = await fetch(OL_API + path);
+  if (!r.ok) throw new Error('Open Library answered ' + r.status);
+  return r.json();
+}
+// Candidates with a picture: by ISBN when the book has one, then title and first author, then the title before any subtitle
+async function olSearch(b) {
+  const f = 'fields=key,title,author_name,cover_i,first_publish_year&limit=8', enc = encodeURIComponent;
+  const isbn = String(b.isbn || '').replace(/[^0-9Xx]/g, '');
+  const author = String(b.author || '').split(/,| & | and /)[0].trim();
+  const tries = [];
+  if (isbn.length >= 10) tries.push(`isbn=${isbn}`);
+  tries.push(`title=${enc(b.title)}${author ? '&author=' + enc(author) : ''}`);
+  const short = String(b.title).split(/[:(]/)[0].trim();
+  if (short && short !== b.title) tries.push(`title=${enc(short)}${author ? '&author=' + enc(author) : ''}`);
+  for (const q of tries) {
+    const docs = ((await olGet(`/search.json?${q}&${f}`)).docs || []).filter(d => d.cover_i);
+    if (docs.length) return [...new Map(docs.map(d => [d.cover_i, d])).values()].slice(0, 6);
+  }
+  return [];
+}
+const cv = { queue: [], i: 0, token: 0, chosen: 0 };
+function coverQueue() {
+  const rank = b => isFav(b) ? 0 : b.status === 'Reading' ? 1 : b.tier === 'Up next' ? 2 : b.tier === 'Soon' ? 3 : b.status === 'Finished' && toNum(b.rating) >= 4 ? 4 : b.status === 'TBR' ? 6 : 5;
+  const why = b => isFav(b) ? 'Favourite' : b.status === 'Reading' ? 'Reading now' : b.tier === 'Up next' ? 'Up next' : b.tier === 'Soon' ? 'Soon' : b.status === 'Finished' && toNum(b.rating) >= 4 ? `Rated ${b.rating}` : b.status;
+  return state.allBooks.filter(b => b.title && !String(b.cover || '').trim()).sort((a, b) => rank(a) - rank(b) || a.title.localeCompare(b.title)).map(b => ({ id: b.id, why: why(b) }));
+}
+function openCoverFinder(ids, why) {
+  if (!isLive()) { notice('Choosing a cover saves to your sheet, which needs the live connection. ' + connectHint(), 'error'); return; }
+  if (!hasCoverCol()) { notice('Add a column called cover to the Books tab first, then press Refresh.', 'error'); return; }
+  cv.queue = ids.map((id, i) => ({ id, why: why && why[i] || '' })); cv.i = 0; cv.chosen = 0;
+  $('coverDlg').showModal(); coverStep();
+}
+async function coverStep() {
+  const item = cv.queue[cv.i];
+  if (!item) { $('coverDlg').close(); renderAll(); notice(cv.chosen ? `Saved ${cv.chosen} cover${cv.chosen === 1 ? '' : 's'}.` : ''); return; }
+  const b = state.allBooks.find(x => x.id === item.id); if (!b) { cv.i++; return coverStep(); }
+  const my = ++cv.token;
+  $('cvProg').textContent = cv.queue.length > 1 ? `${cv.i + 1} of ${cv.queue.length}` : '';
+  $('cvBook').textContent = b.title;
+  $('cvWhy').textContent = [b.author, item.why].filter(Boolean).join(' · ');
+  $('cvGrid').textContent = ''; $('cvMsg').textContent = 'Searching Open Library…';
+  $('cvRemove').hidden = !String(b.cover || '').trim();
+  const have = $('cvHave'); have.hidden = !coverId(b); have.innerHTML = coverId(b) ? `${coverImg(b, '', 'M')}<span class="muted small">Current cover</span>` : '';
+  try {
+    const docs = await olSearch(b);
+    if (my !== cv.token) return;
+    $('cvMsg').textContent = docs.length ? 'Tap the right one.' : 'Open Library has no cover for this one. Choose None of these, or Skip.';
+    for (const d of docs) {
+      const o = document.createElement('button'); o.type = 'button'; o.className = 'cv-opt';
+      o.innerHTML = `<img src="${OL_IMG}/b/id/${d.cover_i}-M.jpg" alt="" referrerpolicy="no-referrer"><span class="t"></span><span class="m"></span>`;
+      o.querySelector('.t').textContent = d.title;
+      o.querySelector('.m').textContent = [(d.author_name || [])[0], d.first_publish_year].filter(Boolean).join(' · ');
+      o.addEventListener('click', () => coverSave(b, 'ol:' + d.cover_i));
+      $('cvGrid').appendChild(o);
+    }
+  } catch (err) {
+    if (my !== cv.token) return;
+    $('cvMsg').textContent = err instanceof TypeError ? "Open Library can't be reached from this page. The claude.ai version blocks outside lookups; use the GitHub Pages version for covers." : 'Open Library trouble: ' + (err.message || err);
+  }
+}
+async function coverSave(b, value) {
+  $('cvMsg').textContent = 'Saving…';
+  cv.token++;
+  try { await writeBookFields(b.id, { cover: value }); if (value.startsWith('ol:')) cv.chosen++; cv.i++; coverStep(); renderLibrary(); }
+  catch (err) { $('cvMsg').textContent = "Couldn't save: " + (err.message || explain(err)); }
+}
+$('cvNone').addEventListener('click', () => { const it = cv.queue[cv.i]; if (it) coverSave(state.allBooks.find(x => x.id === it.id), 'none'); });
+$('cvSkip').addEventListener('click', () => { cv.token++; cv.i++; coverStep(); });
+$('cvRemove').addEventListener('click', () => { const it = cv.queue[cv.i]; if (it) coverSave(state.allBooks.find(x => x.id === it.id), ''); });
+$('cvClose').addEventListener('click', () => { cv.token++; $('coverDlg').close(); renderAll(); });
+$('coverDlg').addEventListener('close', () => { cv.token++; });
+
+// Tools panel: how many books have no cover, and a button to work through them
+function renderCovers() {
+  const box = $('covBox'); if (!box) return;
+  if (!state.libLoaded) { box.innerHTML = '<p class="empty">Loading your library…</p>'; return; }
+  if (!hasCoverCol()) { box.innerHTML = '<p class="empty">Add a column called <b>cover</b> to the Books tab to turn this on.</p>'; return; }
+  const q = coverQueue(), got = state.allBooks.filter(coverId).length, none = state.allBooks.filter(b => String(b.cover || '').trim() === 'none').length;
+  box.innerHTML = `<div class="logrow"><span><b class="tnum">${fmt(got)}</b> with a cover · <b class="tnum">${fmt(q.length)}</b> still to look at${none ? ` · <span class="tnum">${fmt(none)}</span> said none` : ''}</span><button class="btn btn-primary" type="button" id="covGo"${q.length ? '' : ' disabled'}>Find covers</button>${none ? '<button class="btn" type="button" id="covRetry">Look again at the ones I said none to</button>' : ''}</div>
+    <p class="muted small" style="margin:10px 0 0">Favourites and the books you're reading come first, then Up next and Soon, then highly rated, then the rest. Each cover is saved as a small reference in the cover column, never as a picture.</p>`;
+  $('covGo').addEventListener('click', () => openCoverFinder(q.map(x => x.id), q.map(x => x.why)));
+  const r = $('covRetry');
+  if (r) r.addEventListener('click', async () => {
+    r.disabled = true;
+    for (const b of state.allBooks.filter(b => String(b.cover || '').trim() === 'none')) { try { await writeBookFields(b.id, { cover: '' }); } catch (err) { notice("Couldn't clear a 'none': " + (err.message || explain(err)), 'error'); break; } }
+    renderCovers();
+  });
+}
+
+/* ---------- Floating book card (left side) ---------- */
+const card = { id: null };
+function hideCard() { card.id = null; $('bookCard').hidden = true; }
+function showCard(id) {
+  const b = state.allBooks.find(x => x.id === id); if (!b) { hideCard(); return; }
+  card.id = id;
+  const el = $('bookCard');
+  const kv = [['Series', b.series ? `${b.series}${b.seriesNum ? ' #' + b.seriesNum : ''}` : ''], ['Genre', b.genre], ['Publisher', b.publisher], ['Pages', toNum(b.pages) ? fmt(toNum(b.pages)) : ''],
+    ['Copies', String(b.copies || '').split('|').map(x => x.trim()).filter(Boolean).join(', ')], ['Started', b.startDate], ['Finished', b.finishDate], ['Added', b.added],
+    ['Plan', b.tier ? b.tier + (b.tier === 'Up next' && b.upNextOrder ? ' #' + b.upNextOrder : '') : ''], ['Why', b.why], ['Reads', readsOf(b).length > 1 ? readsText(b) : ''],
+    ['Awards', (b.awards || '').split('|').filter(Boolean).join(', ')], ['Notes', b.notes]].filter(([, v]) => v);
+  el.innerHTML = `<button type="button" class="bc-x" aria-label="Close">×</button>
+    <div class="bc-top">${coverUrl(b) ? coverImg(b, 'bc-cov', 'M') : '<div class="bc-cov" aria-hidden="true"></div>'}<div style="min-width:0"><h3></h3><div class="bc-by"></div>
+      <div class="bc-row"><select class="pill pill-sel" data-s="${escapeText(b.status)}" aria-label="Status"></select>${favBtn(b)}<span class="stars"></span></div></div></div>
+    <dl></dl><p class="bc-syn"></p>
+    <div class="bc-acts"><button class="btn btn-primary" type="button" data-a="edit">Edit book</button><button class="btn" type="button" data-a="cover"></button></div>`;
+  const ph = el.querySelector('div.bc-cov'); if (ph) ph.textContent = 'No cover yet';
+  el.querySelector('h3').textContent = b.title;
+  el.querySelector('.bc-by').textContent = b.author || '';
+  el.querySelector('.stars').textContent = starStr(b.rating);
+  const sel = el.querySelector('select');
+  sel.innerHTML = [...new Set([...(b.status ? [] : ['']), ...STATUSES, ...(STATUSES.includes(b.status) || !b.status ? [] : [b.status])])].map(x => `<option${x === b.status ? ' selected' : ''} value="${escapeText(x)}">${escapeText(x || '–')}</option>`).join('');
+  sel.addEventListener('change', () => quickStatus(b.id, sel.value, sel));
+  const dl = el.querySelector('dl');
+  for (const [k, v] of kv) { const dt = document.createElement('dt'), dd = document.createElement('dd'); dt.textContent = k; dd.textContent = v; dl.append(dt, dd); }
+  el.querySelector('.bc-syn').textContent = b.synopsis || '';
+  el.querySelector('.bc-x').addEventListener('click', () => { hideCard(); state.lib.open = null; if (!$('view-library').hidden) renderLibrary(); });
+  el.querySelector('[data-a="edit"]').addEventListener('click', () => openBookDialog(b));
+  const cb = el.querySelector('[data-a="cover"]');
+  cb.textContent = coverId(b) ? 'Change cover' : String(b.cover || '').trim() === 'none' ? 'Look for a cover again' : 'Find cover';
+  cb.addEventListener('click', () => openCoverFinder([b.id], [coverId(b) ? 'Changing the cover' : b.status]));
+  el.hidden = false;
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && card.id && !document.querySelector('dialog[open]') && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) { hideCard(); state.lib.open = null; if (!$('view-library').hidden) renderLibrary(); } });
+
 let fyPick = 0;
 function renderForYou() {
   const box = $('forYou');
@@ -1345,8 +1536,9 @@ function renderForYou() {
   if (!top.length) rec.innerHTML = '<p class="empty">Nothing on your TBR to suggest yet.</p>';
   else {
     const { b, why } = top[fyPick % top.length];
-    rec.innerHTML = '<div><h3></h3><div class="m"></div><div class="chips"></div><p class="syn"></p></div><div class="btns"><button class="btn btn-primary" type="button" data-o>Open</button><button class="btn" type="button" data-n>Another</button></div>';
+    rec.innerHTML = '<div><div class="top"><div><h3></h3><div class="m"></div></div></div><div class="chips"></div><p class="syn"></p></div><div class="btns"><button class="btn btn-primary" type="button" data-o>Open</button><button class="btn" type="button" data-n>Another</button></div>';
     rec.querySelector('h3').textContent = b.title;
+    if (coverUrl(b)) rec.querySelector('.top').insertAdjacentHTML('afterbegin', coverImg(b, 'cov-l', 'M'));
     rec.querySelector('.m').textContent = [b.author, b.genre, toNum(b.pages) ? fmt(toNum(b.pages)) + ' pages' : '', b.copies].filter(Boolean).join(' · ');
     rec.querySelector('.chips').innerHTML = why.map(() => '<span class="why-chip"></span>').join('');
     rec.querySelectorAll('.why-chip').forEach((c, i) => { c.textContent = why[i]; });
@@ -1382,6 +1574,7 @@ function renderAll() {
   renderDogears();
   if (state.libLoaded && !$('view-dashboard').hidden) renderDashboard();
   if (state.libLoaded && !$('view-tools').hidden) renderTools();
+  if (card.id) showCard(card.id);
 }
 
 function syncReadingBooks() {
@@ -1667,6 +1860,7 @@ function renderLibrary() {
   $('wishView').hidden = !wish;
   $('view-library').classList.toggle('wish-mode', wish);
   $('libSecs').hidden = mode !== 'books';
+  if (mode !== 'books') hideCard();
   $('libTier').hidden = mode !== 'books';
   document.querySelector('#view-library .lib-foot').hidden = mode !== 'books';
   if (wish) { renderWish(); return; }
@@ -1706,12 +1900,11 @@ function renderLibrary() {
         };
         tr.innerHTML = LIB_COLS.map(c => `<td class="${c.num ? 'num tnum' : ''}">${cells[c.k]}</td>`).join('');
         tr.querySelector('.t').textContent = b.title;
-        tr.querySelector('.t').insertAdjacentHTML('beforebegin', favBtn(b));
+        tr.querySelector('.t').insertAdjacentHTML('beforebegin', favBtn(b) + coverImg(b, 'cov-s', 'S'));
         { const rb = rereadBadge(b); if (rb) tr.querySelector('.t').insertAdjacentHTML('afterend', rb); }
         if (b.tier && b.tier !== 'Someday') tr.querySelector('.t').insertAdjacentHTML('afterend', `<span class="tier-chip" data-t="${b.tier}">${b.tier === 'Up next' && b.upNextOrder ? 'Up next #' + escapeText(b.upNextOrder) : b.tier}</span>`);
         tr.children[1].textContent = b.author;
         body.appendChild(tr);
-        if (L.open === b.id) body.appendChild(detailRow(b));
       }
       sec.appendChild(wrap);
       if (list.length > lim) { const m = document.createElement('button'); m.type = 'button'; m.className = 'btn more'; m.dataset.more = name; m.textContent = `Show 100 more (${fmt(list.length - lim)} left)`; sec.appendChild(m); }
@@ -2092,6 +2285,7 @@ function openInLibrary(id) {
     state.lib.sec = { [name]: true }; state.lib.lim = { [name]: Math.max(100, Math.ceil((pos + 1) / 100) * 100) };
   }
   showTab('library');
+  showCard(id);
   const row = document.querySelector(`#libSecs tr[data-id="${CSS.escape(id)}"]`);
   if (row) row.scrollIntoView({ block: 'center', behavior: 'smooth' });
 }
@@ -2777,7 +2971,7 @@ function renderRevisit(box, normT) {
     box.appendChild(el);
   }
 }
-function renderTools() { renderRate(); renderRecs(); renderOwn(); renderDip(); renderStalled(); renderNextInSeries(); renderGoal(); renderYear(); }
+function renderTools() { renderCovers(); renderRate(); renderRecs(); renderOwn(); renderDip(); renderStalled(); renderNextInSeries(); renderGoal(); renderYear(); }
 
 /* ---------- Wishlist (Library → Wishlist) ---------- */
 // Inbox (quick capture) → a "get it" stage → Got it → moves to Books as TBR and leaves the Wishlist.
@@ -3705,6 +3899,7 @@ async function renderDiscover() {
 
 /* ---------- wiring ---------- */
 function showTab(name) {
+  hideCard();
   for (const t of ['log', 'library', 'dashboard', 'tools', 'discover']) {
     $('tab-' + t).setAttribute('aria-selected', String(t === name));
     $('view-' + t).hidden = t !== name;
@@ -3751,10 +3946,10 @@ $('libSecs').addEventListener('click', e => {
   if (mo) { const n = mo.dataset.more; state.lib.lim[n] = (state.lib.lim[n] || 100) + 100; renderLibrary(); return; }
   const fv = e.target.closest('[data-fav]'); if (fv) { e.stopPropagation(); toggleFav(fv.dataset.fav); return; }
   if (e.target.closest('[data-status]')) return;
-  const ed = e.target.closest('[data-edit]');
-  if (ed) { openBookDialog(state.allBooks.find(b => b.id === ed.dataset.edit)); return; }
   const tr = e.target.closest('tr.row'); if (!tr) return;
-  state.lib.open = state.lib.open === tr.dataset.id ? null : tr.dataset.id; renderLibrary();
+  if (state.lib.open === tr.dataset.id && card.id === tr.dataset.id) { state.lib.open = null; hideCard(); }
+  else { state.lib.open = tr.dataset.id; showCard(tr.dataset.id); }
+  renderLibrary();
 });
 $('addBookBtn').addEventListener('click', () => { if (!state.libLoaded) return; openBookDialog(null); });
 $('bookForm').addEventListener('submit', saveBookDialog);
