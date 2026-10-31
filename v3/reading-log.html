@@ -22,7 +22,7 @@ h1,h2,.num{font-family:var(--display)}
 #todayLabel{color:var(--accent)}
 h1{font-size:clamp(26px,4vw,34px);font-weight:700;letter-spacing:-.02em;margin:0;text-wrap:balance}
 .lockup{--mk:52px;display:flex;align-items:center;gap:calc(var(--mk)*.14);margin-top:6px}
-.jm-mark{width:var(--mk);height:var(--mk);flex:none;color:var(--accent);display:block}
+.lib-mark{width:var(--mk);height:var(--mk);flex:none;color:var(--accent);display:block}
 .jm-wordmark{font-family:var(--display);font-weight:700;font-size:calc(var(--mk)*.5);line-height:1.06;white-space:nowrap;letter-spacing:-.01em;color:#eef0fa}
 @media (max-width:520px){.lockup{--mk:44px}}
 h2{font-size:17px;font-weight:700;margin:0;letter-spacing:-.01em}
@@ -72,7 +72,7 @@ button{font:inherit;cursor:pointer}
 .logday input[type=date]{font:inherit;font-size:12px;background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:999px;padding:3px 10px;color-scheme:dark}
 .logday-banner{margin:-4px 0 12px;padding:8px 12px;border-radius:10px;font-size:13px;font-weight:500;background:color-mix(in srgb,var(--accent) 16%,transparent);border:1px solid color-mix(in srgb,var(--accent) 45%,transparent)}
 .nb{display:grid;grid-template-columns:minmax(0,1.25fr) 128px minmax(0,1fr) auto;gap:8px 26px;align-items:center;padding:16px 0;border-top:1px solid var(--line)}
-.nb .book-title{font-size:19px;line-height:1.25}
+.nb .book-title{font-size:19px;line-height:1.25;cursor:pointer}
 .nb .book-meta{font-size:15px;margin-top:2px}
 .nb .nb-page{display:flex;align-items:baseline;gap:6px;white-space:nowrap;min-width:92px;justify-content:flex-end}
 .nb .pg-now{font-family:var(--display);font-size:38px;font-weight:700;line-height:1;color:var(--fg)}
@@ -93,15 +93,9 @@ button{font:inherit;cursor:pointer}
 .nb .nb-extra:empty{display:none}
 @media (max-width:860px){.nb{grid-template-columns:minmax(0,1fr) auto}.nb .nb-prog{grid-column:1/-1;order:3}.nb .nb-log{grid-column:1/-1;order:4}.nb .nb-extra{order:5}}
 @media (max-width:560px){.nb .nb-log label{margin-right:auto}.nb .pg-now{font-size:32px}}
-.today-list .ent{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:8px;align-items:center}
-.today-list .ent .when{font-size:11px;color:var(--muted)}
-.today-list .ent .acts{display:flex;gap:4px}
-.today-list .ent .acts button{font:inherit;font-size:11px;background:none;border:0;color:var(--muted);cursor:pointer;padding:2px 4px;text-decoration:underline}
 .today-list .edit{display:flex;gap:6px;flex-wrap:wrap;align-items:center;grid-column:1/-1}
 .today-list .edit input{font:inherit;font-size:13px;background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:4px 8px;color-scheme:dark}
 .today-list .edit input[type=number]{width:80px}
-.quick{margin-bottom:10px}
-.book-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
 .book-pct{font-family:var(--display);font-size:28px;font-weight:700;line-height:1;color:var(--accent);flex:none}
 .book-pct[data-preview]{color:color-mix(in srgb,var(--accent) 65%,#fff)}
 .prog{height:5px;background:var(--raise);border-radius:3px;overflow:hidden}
@@ -112,7 +106,7 @@ input[type="number"]{width:92px;font:inherit;font-variant-numeric:tabular-nums;b
 input[type="number"]:focus{border-color:var(--accent);outline:none}
 .delta{font-size:13px;font-weight:500;color:color-mix(in srgb,var(--accent) 65%,#fff);min-width:70px}
 .delta[data-bad]{color:var(--danger)}
-.quick{margin-top:14px;padding-top:14px;border-top:1px dashed var(--line)}
+.quick{margin-bottom:10px;margin-top:14px;padding-top:14px;border-top:1px dashed var(--line)}
 .today-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;font-size:14px}
 .today-list li{display:flex;justify-content:space-between;gap:10px}
 .today-list .pg{font-weight:500}
@@ -165,7 +159,6 @@ input[type="number"]:focus{border-color:var(--accent);outline:none}
 .cov-m{width:46px;height:68px;object-fit:cover;border-radius:4px;flex:none;background:var(--raise)}
 .nb-info{display:flex;gap:14px;align-items:center;min-width:0}
 .nb-info>div{min-width:0}
-.nb .book-title{cursor:pointer}
 .nb .book-title:hover{color:var(--accent)}
 .fy-rec .top{display:flex;gap:14px;align-items:flex-start}
 .fy-rec .cov-l{width:72px;height:108px;object-fit:cover;border-radius:5px;flex:none;background:var(--raise)}
@@ -175,7 +168,7 @@ input[type="number"]:focus{border-color:var(--accent);outline:none}
 .bcard[hidden]{display:none}
 .bcard .bc-top{display:flex;gap:14px;align-items:flex-start}
 .bcard .bc-cov{width:88px;height:132px;flex:none;border-radius:6px;object-fit:cover;background:var(--raise);display:grid;place-items:center;text-align:center;font-size:12px;color:var(--muted);padding:6px;overflow:hidden}
-.bcard h3{font-family:var(--display);font-size:19px;line-height:1.25;margin:0;overflow-wrap:anywhere}
+.bcard h3{font-family:var(--display);font-size:19px;line-height:1.25;margin:0;overflow-wrap:anywhere;padding-right:28px}
 .bcard .bc-by{color:var(--muted);font-size:14px;margin-top:2px}
 .bcard .bc-x{position:absolute;top:8px;right:8px;width:30px;height:30px;border:0;border-radius:8px;background:transparent;color:var(--muted);font-size:20px;line-height:1;cursor:pointer}
 .bcard .bc-x:hover{background:var(--raise);color:var(--fg)}
@@ -185,7 +178,6 @@ input[type="number"]:focus{border-color:var(--accent);outline:none}
 .bcard dd{margin:0;overflow-wrap:anywhere}
 .bcard .bc-syn{font-size:13px;line-height:1.5;color:var(--muted);margin:0}
 .bcard .bc-acts{display:flex;gap:8px;flex-wrap:wrap}
-.bcard h3{padding-right:28px}
 @media (max-width:700px){.bcard{left:0;right:0;bottom:0;width:auto;border-radius:16px 16px 0 0;max-height:68vh;padding:16px max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}}
 /* cover finder */
 .cv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px}
@@ -220,8 +212,7 @@ input[type="number"]:focus{border-color:var(--accent);outline:none}
 
 .heat-scroll{overflow-x:auto;padding-bottom:4px}
 .heat{display:grid;grid-template-rows:14px;grid-auto-rows:auto;grid-auto-flow:column;grid-auto-columns:minmax(10px,1fr);gap:3px;min-width:640px}
-.heat .c{aspect-ratio:1}
-.heat .c{border-radius:2px;background:var(--raise)}
+.heat .c{aspect-ratio:1;border-radius:2px;background:var(--raise)}
 .heat .c[data-future]{background:transparent;outline:1px dashed var(--line);outline-offset:-1px}
 .heat .m{font-size:10px;color:var(--muted);white-space:nowrap;grid-row:1}
 
@@ -271,24 +262,12 @@ input[type="number"]:focus{border-color:var(--accent);outline:none}
 .ser-legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px;vertical-align:-1px}
 .rl-list{margin-bottom:18px}
 .rl-list h3{font-size:16px;margin:0 0 4px}
-.rl-items{list-style:none;margin:6px 0 0;padding:0;display:flex;flex-direction:column}
-.rl-items li{display:grid;grid-template-columns:2.2em minmax(0,1fr) auto;gap:8px;align-items:center;padding:5px 0;border-top:1px solid var(--line);font-size:14px}
-.rl-items .n{color:var(--muted);text-align:right;font-variant-numeric:tabular-nums}
-.rl-items .st{font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--raise);color:var(--muted)}
-.rl-items .st.read{background:var(--accent);color:var(--bg)}
-.rl-items .st.own{background:color-mix(in srgb,var(--accent) 30%,var(--raise));color:var(--fg)}
-.rl-items .st.want{border:1px solid var(--accent);color:var(--fg)}
-.rl-items button{font:inherit;font-size:11px;font-weight:500;border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:999px;padding:2px 8px;cursor:pointer}
-.wish-tools select{font:inherit;font-size:13px;background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:5px 8px;max-width:220px}
-.wish-row{grid-template-columns:auto minmax(0,1fr) auto !important}
 .wish-row .tick{width:22px;height:22px;accent-color:var(--accent);cursor:pointer}
 .wish-row.done{opacity:.75}
 .wish-row.moved .t::after{content:" · in TBR";font-size:11px;font-weight:500;color:var(--accent)}
 .wish-bar{position:sticky;bottom:12px;z-index:5;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:12px;padding:10px 14px;border-radius:12px;background:var(--raise);border:1px solid var(--accent);box-shadow:0 6px 24px rgba(0,0,0,.35)}
 .wish-bar[hidden]{display:none}
 @media (max-width:560px){.wish-row{grid-template-columns:auto minmax(0,1fr) !important}.wish-row .acts{grid-column:2}}
-.wish-tools{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
-.wish-tools input{vertical-align:-2px;margin-right:4px}
 #view-library.wish-mode .lib-bar select,#view-library.wish-mode #addBookBtn{display:none}
 .wl-ctl{display:flex;gap:12px 18px;flex-wrap:wrap;align-items:center;margin:0 0 12px;font-size:13px;color:var(--muted)}
 .wl-ctl label{display:flex;gap:6px;align-items:center}
@@ -313,7 +292,7 @@ input[type="number"]:focus{border-color:var(--accent);outline:none}
 .wa option{background:var(--surface);color:var(--fg)}
 .wish-group .n{font-weight:500;opacity:.7;margin-left:6px}
 .wish-group{margin:14px 0 4px;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
-.wish-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;align-items:center;padding:9px 0;border-top:1px solid var(--line)}
+.wish-row{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:4px 12px;align-items:center;padding:9px 0;border-top:1px solid var(--line)}
 .wish-row:first-child{border-top:0}
 .wish-row .t{font-weight:500}
 .wish-row .m{font-size:12px;color:var(--muted);overflow-wrap:anywhere}
@@ -326,10 +305,7 @@ input[type="number"]:focus{border-color:var(--accent);outline:none}
 .wish-row.done .t{color:var(--muted);font-weight:500}
 @media (max-width:560px){.wish-row{grid-template-columns:minmax(0,1fr)}.wish-row .acts{justify-content:flex-start}}
 .lib-mode button[aria-pressed="true"]{background:color-mix(in srgb,var(--accent) 24%,var(--surface));color:var(--fg)}
-.plan-top{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;margin-bottom:20px}
-@media (max-width:860px){.plan-top{grid-template-columns:minmax(0,1fr)}}
 #planView .panel{margin-bottom:20px}
-.plan-top .panel{margin:0}
 @media (max-width:560px){.plan-list li{grid-template-columns:auto minmax(0,1fr)}.plan-list .acts{grid-column:2;justify-content:flex-start}}
 .plan-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
 .plan-list li{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:4px 10px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}
@@ -372,15 +348,13 @@ input[type="number"]:focus{border-color:var(--accent);outline:none}
 .chip[aria-pressed="true"]{background:color-mix(in srgb,var(--accent) 24%,var(--surface));border-color:var(--accent);color:var(--fg)}
 .chip .n{font-variant-numeric:tabular-nums;opacity:.7;margin-left:4px;font-weight:500}
 .table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
-table.lib{width:100%;border-collapse:collapse;font-size:14px}
-.lib{table-layout:fixed;width:100%;min-width:680px}
+table.lib{width:100%;border-collapse:collapse;font-size:14px;table-layout:fixed;min-width:680px}
 .lib th:nth-child(1){width:34%}.lib th:nth-child(2){width:23%}.lib th:nth-child(3){width:11%}.lib th:nth-child(4){width:8%}.lib th:nth-child(5){width:10%}.lib th:nth-child(6){width:9%}.lib th:nth-child(7){width:6%}
-.lib td{overflow-wrap:anywhere}
 @media (max-width:560px){table.lib{min-width:0}.lib th:nth-child(n+4):not(:nth-child(5)),.lib td:nth-child(n+4):not(:nth-child(5)){display:none}.lib th:nth-child(1){width:38%}.lib th:nth-child(2){width:26%}.lib th:nth-child(3){width:20%}.lib th:nth-child(5){width:16%}.lib .pill-sel{padding:2px 4px}}
 .lib th{position:sticky;top:0;background:var(--raise);text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:500;padding:9px 10px;white-space:nowrap;cursor:pointer;user-select:none}
 .lib th[aria-sort="ascending"]::after{content:" ↑";color:var(--accent)} .lib th[aria-sort="descending"]::after{content:" ↓";color:var(--accent)}
 .lib th.num,.lib td.num{text-align:right}
-.lib td{padding:9px 10px;border-top:1px solid var(--line);vertical-align:top}
+.lib td{padding:9px 10px;border-top:1px solid var(--line);vertical-align:top;overflow-wrap:anywhere}
 .lib tbody tr.row{cursor:pointer}
 .lib tbody tr.row:hover td{background:color-mix(in srgb,var(--accent) 6%,var(--surface))}
 .lib tr.open td{background:color-mix(in srgb,var(--accent) 9%,var(--surface))}
@@ -402,9 +376,6 @@ table.lib{width:100%;border-collapse:collapse;font-size:14px}
 .pill[data-s="Paused"]{color:#f2c46d;border-color:#6b5631}
 .pill[data-s="DNF"]{color:#f29a9a;border-color:#6b3a3a}
 .stars{color:color-mix(in srgb,var(--accent) 60%,#fff);letter-spacing:1px;white-space:nowrap}
-.detail td{padding:4px 16px 16px;cursor:default}
-.detail-grid{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:18px}
-.detail p{margin:6px 0 0;max-width:70ch;color:var(--fg)}
 .kv{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:13px;margin:0}
 .kv dt{color:var(--muted)} .kv dd{margin:0}
 .lib-foot{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:12px;font-size:13px;color:var(--muted);flex-wrap:wrap}
@@ -414,13 +385,8 @@ table.lib{width:100%;border-collapse:collapse;font-size:14px}
 .dash-tiles{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px;margin-bottom:20px}
 .dash-tiles .stat .num{font-size:clamp(24px,3vw,32px)}
 .dash-2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;margin-bottom:20px;align-items:stretch}
-.dash-3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;margin-bottom:20px;align-items:start}
-.dash-2 .panel + .panel,.dash-3 .panel + .panel{margin-top:0}
+.dash-2 .panel + .panel{margin-top:0}
 .pace{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
-.pace-card{border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:8px;background:var(--bg);min-width:0}
-.pace-card .t{font-weight:500;line-height:1.3}
-.pace-card .big{font-family:var(--display);font-size:22px;font-weight:700;color:color-mix(in srgb,var(--accent) 70%,#fff)}
-.pace-card .sub{font-size:13px;color:var(--muted)}
 .map-wrap{display:grid;grid-template-columns:minmax(0,2.2fr) minmax(0,1fr);gap:20px;align-items:start}
 @media (max-width:860px){.map-wrap{grid-template-columns:minmax(0,1fr)}}
 .map-box svg{width:100%;height:auto;display:block}
@@ -570,15 +536,14 @@ dialog::backdrop{background:rgba(8,6,14,.65)}
 .finish select{font:inherit;background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:5px 8px}
 
 @media (max-width:860px){
-  .detail-grid{grid-template-columns:minmax(0,1fr)}
   .dash-tiles{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .dash-2,.dash-3{grid-template-columns:minmax(0,1fr)}
+  .dash-2{grid-template-columns:minmax(0,1fr)}
   .rate-grid,.rec-list,.rate-mods,.ct-grid{grid-template-columns:minmax(0,1fr)!important}
   .dlg-body{grid-template-columns:repeat(2,minmax(0,1fr))}
   .grid{grid-template-columns:minmax(0,1fr)}
   .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
-@media (min-width:861px) and (max-width:1100px){.dash-tiles{grid-template-columns:repeat(3,minmax(0,1fr))}.dash-3{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (min-width:861px) and (max-width:1100px){.dash-tiles{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 
@@ -586,7 +551,7 @@ dialog::backdrop{background:rgba(8,6,14,.65)}
   <header>
     <div>
       <div class="eyebrow" id="todayLabel">Today</div>
-      <h1 class="lockup" aria-label="The Library"><svg class="jm-mark" viewBox="0 0 100 100" aria-hidden="true"><g fill="currentColor"><path fill-rule="evenodd" d="M4 41 L50 5 L96 41 Z M33 26 H67 V33 H33 Z"/><path fill-rule="evenodd" d="M16 42 H84 V85 H16 Z M24 48 H74 V80 H24 Z M79 61 a2.4 2.4 0 1 0 0.01 0 Z"/><rect x="24" y="61" width="50" height="2.4"/><rect x="29" y="52" width="4" height="9" rx=".6"/><rect x="34" y="49" width="4" height="12" rx=".6"/><rect x="39" y="51" width="4" height="10" rx=".6"/><rect x="44" y="48" width="4" height="13" rx=".6"/><rect x="49" y="50" width="4" height="11" rx=".6"/><rect x="54" y="49" width="4" height="12" rx=".6"/><rect x="59" y="52" width="4" height="9" rx=".6"/><rect x="64" y="49" width="4" height="12" rx=".6"/><rect x="69" y="51" width="4" height="10" rx=".6"/><rect x="29" y="66" width="4" height="12" rx=".6"/><rect x="34" y="68" width="4" height="10" rx=".6"/><rect x="39" y="65" width="4" height="13" rx=".6"/><rect x="44" y="67" width="4" height="11" rx=".6"/><rect x="49" y="66" width="4" height="12" rx=".6"/><rect x="54" y="68" width="4" height="10" rx=".6"/><rect x="59" y="65" width="4" height="13" rx=".6"/><rect x="64" y="67" width="4" height="11" rx=".6"/><rect x="69" y="66" width="4" height="12" rx=".6"/><rect x="45" y="85" width="10" height="13" rx="1"/></g></svg><span class="jm-wordmark" aria-hidden="true">The Library</span></h1>
+      <h1 class="lockup" aria-label="The Library"><svg class="lib-mark" viewBox="0 0 100 100" aria-hidden="true"><g fill="currentColor"><path fill-rule="evenodd" d="M4 41 L50 5 L96 41 Z M33 26 H67 V33 H33 Z"/><path fill-rule="evenodd" d="M16 42 H84 V85 H16 Z M24 48 H74 V80 H24 Z M79 61 a2.4 2.4 0 1 0 0.01 0 Z"/><rect x="24" y="61" width="50" height="2.4"/><rect x="29" y="52" width="4" height="9" rx=".6"/><rect x="34" y="49" width="4" height="12" rx=".6"/><rect x="39" y="51" width="4" height="10" rx=".6"/><rect x="44" y="48" width="4" height="13" rx=".6"/><rect x="49" y="50" width="4" height="11" rx=".6"/><rect x="54" y="49" width="4" height="12" rx=".6"/><rect x="59" y="52" width="4" height="9" rx=".6"/><rect x="64" y="49" width="4" height="12" rx=".6"/><rect x="69" y="51" width="4" height="10" rx=".6"/><rect x="29" y="66" width="4" height="12" rx=".6"/><rect x="34" y="68" width="4" height="10" rx=".6"/><rect x="39" y="65" width="4" height="13" rx=".6"/><rect x="44" y="67" width="4" height="11" rx=".6"/><rect x="49" y="66" width="4" height="12" rx=".6"/><rect x="54" y="68" width="4" height="10" rx=".6"/><rect x="59" y="65" width="4" height="13" rx=".6"/><rect x="64" y="67" width="4" height="11" rx=".6"/><rect x="69" y="66" width="4" height="12" rx=".6"/><rect x="45" y="85" width="10" height="13" rx="1"/></g></svg><span class="jm-wordmark" aria-hidden="true">The Library</span></h1>
     </div>
     <div class="status" id="status" data-state="loading" role="status">
       <span class="dot"></span><span id="statusText">Connecting to your sheet…</span>
@@ -723,7 +688,7 @@ dialog::backdrop{background:rgba(8,6,14,.65)}
     </div>
     <div id="planView" hidden>
       <section class="panel" aria-labelledby="upH"><div class="panel-head"><h2 id="upH">Up next</h2><span class="muted small tnum" id="upNote"></span></div><ol class="plan-list up-detail" id="upList"></ol></section>
-      <section class="panel deck" aria-labelledby="deckH" id="deckPanel">
+      <section class="panel deck" aria-labelledby="deckH">
         <div class="panel-head"><h2 id="deckH">Sort deck</h2><span class="muted small tnum" id="deckNote"></span></div>
         <div id="deckBody"></div>
       </section>
@@ -957,7 +922,7 @@ dialog::backdrop{background:rgba(8,6,14,.65)}
       <div class="field"><label for="sd-kind">Kind</label><select id="sd-kind" name="kind"><option>Book series</option><option>Comic run</option></select></div>
       <div class="field"><label for="sd-status">Status</label><select id="sd-status" name="status"><option value="">–</option><option>Ongoing</option><option>Complete</option><option>On hiatus</option></select></div>
       <div class="field"><label for="sd-released">Released so far</label><input id="sd-released" name="released" type="number" min="0" inputmode="numeric"></div>
-      <div class="field"><label for="sd-soldAs">Sold as</label><select id="sd-soldAs" name="soldAs"><option value="">–</option><option>Book</option><option>Comic</option><option>Graphic novel</option><option>Manga</option><option>Issues</option><option>Deluxe</option><option>Omnibus</option><option>Compendium</option><option>Box Set</option></select></div>
+      <div class="field"><label for="sd-soldAs">Sold as</label><select id="sd-soldAs" name="soldAs"><option value="">–</option><option>Book</option><option>Comic</option><option>Graphic novel</option><option>Manga</option><option>Issues</option><option>Deluxe</option><option>Omnibus</option><option>Compendium</option><option>Box Set</option><option>Limited Edition</option></select></div>
       <div class="field w4"><label for="sd-link">Link</label><input id="sd-link" name="link" type="url" autocomplete="off"></div>
       <div class="field w4"><label for="sd-notes">Notes</label><input id="sd-notes" name="notes" autocomplete="off"></div>
     </div>
@@ -1014,6 +979,7 @@ const fmt = n => Number(n).toLocaleString('en-AU');
 const today = () => iso(new Date());
 const toNum = v => { const n = parseFloat(String(v ?? '').replace(/,/g, '')); return Number.isFinite(n) ? n : 0; };
 const toDate = v => { const m = String(v ?? '').match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? m[0] : null; };
+const escapeText = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
 /* ---------- Proton Seasons theme ---------- */
 // One soft colour per month through Melbourne's seasons (summer Dec–Feb … spring Sep–Nov).
@@ -1046,8 +1012,8 @@ function applyTheme() {
 
 /* Favicon follows the month colour (used when hosted outside claude.ai) */
 function setFavicon(c) {
-  const m = document.querySelector('.jm-mark'); if (!m) return;
-  const svg = m.outerHTML.replace('class="jm-mark"', 'xmlns="http://www.w3.org/2000/svg"').replace(/currentColor/g, c);
+  const m = document.querySelector('.lib-mark'); if (!m) return;
+  const svg = m.outerHTML.replace('class="lib-mark"', 'xmlns="http://www.w3.org/2000/svg"').replace(/currentColor/g, c);
   let l = document.querySelector('link[rel="icon"]');
   if (!l) { l = document.createElement('link'); l.rel = 'icon'; document.head.appendChild(l); }
   l.type = 'image/svg+xml'; l.href = 'data:image/svg+xml,' + encodeURIComponent(svg);
@@ -1713,7 +1679,6 @@ async function refresh() {
     state.editing = null;
     // Books: columns found by header name, so column moves in the sheet don't break this
     const bh = (books[0] || []).map(h => String(h).trim());
-    const bi = k => bh.indexOf(k);
     state.header = bh;
     state.allBooks = books.slice(1).map((r, idx) => {
       const o = { _row: idx };
@@ -1877,6 +1842,8 @@ async function addBook(fields) {
 
 /* ---------- library view ---------- */
 const STATUSES = ['Reading', 'TBR', 'Re-read', 'Finished', 'Paused', 'DNF'];
+const DONE_STATUSES = ['Finished', 'Re-read'];
+const ENDED_STATUSES = ['Finished', 'Re-read', 'Paused', 'DNF'];
 // Order of the boxes in the Library
 const LIB_SECS = ['Reading', 'Finished', 'Re-read', 'TBR', 'Paused', 'DNF'];
 const LIB_COLS = [
@@ -2025,21 +1992,6 @@ async function toggleFav(id) {
   const was = b.favourite;
   try { await writeBookFields(id, { favourite: isFav(b) ? '' : 'Yes' }); setStatus('live', isFav(b) ? `“${b.title}” is a favourite` : `“${b.title}” removed from favourites`); renderAll(); }
   catch (err) { b.favourite = was; notice(`Couldn't change “${b.title}”: ${err.message || explain(err)}`, 'error'); }
-}
-function detailRow(b) {
-  const tr = document.createElement('tr');
-  tr.className = 'detail';
-  const td = document.createElement('td');
-  td.colSpan = LIB_COLS.length;
-  const kv = [['Type', b.type], ['Format', b.format], ['Publisher', b.publisher], ['Genre', b.genre], ['Themes', [b.theme1, b.theme2, b.theme3].filter(Boolean).join(', ')],
-    ['Series', b.series ? `${b.series}${b.seriesNum ? ' #' + b.seriesNum : ''}` : ''], ['Copies', String(b.copies || '').split('|').map(x => x.trim()).filter(Boolean).join(', ')], ['Reads', readsOf(b).length > 1 ? readsText(b) : ''], ['Awards', (b.awards || '').split('|').filter(Boolean).join(', ')],
-    ['ISBN', b.isbn], ['Plan', b.tier ? b.tier + (b.tier === 'Up next' && b.upNextOrder ? ' #' + b.upNextOrder : '') : ''], ['Why', b.why], ['Added', b.added], ['Loaned', b.loaned ? `${b.loaned}${b.loanee ? ' to ' + b.loanee : ''}` : ''], ['Notes', b.notes]].filter(([, v]) => v);
-  td.innerHTML = `<div class="detail-grid"><div><div class="eyebrow">Synopsis</div><p class="syn"></p></div><div><dl class="kv"></dl><div style="margin-top:12px"><button class="btn btn-primary" type="button" data-edit="${b.id}">Edit book</button></div></div></div>`;
-  td.querySelector('.syn').textContent = b.synopsis || 'No synopsis yet.';
-  const dl = td.querySelector('.kv');
-  for (const [k, v] of kv) { const dt = document.createElement('dt'), dd = document.createElement('dd'); dt.textContent = k; dd.textContent = v; dl.append(dt, dd); }
-  tr.appendChild(td);
-  return tr;
 }
 
 /* ---------- edit / add dialog ---------- */
@@ -2396,7 +2348,6 @@ const COUNTRY_ALIAS = { 'USA': 'United States of America', 'US': 'United States 
   'UK': 'United Kingdom', 'England': 'United Kingdom', 'Scotland': 'United Kingdom', 'Wales': 'United Kingdom', 'Northern Ireland': 'United Kingdom', 'Britain': 'United Kingdom',
   'Congo (DRC)': 'Dem. Rep. Congo', 'DRC': 'Dem. Rep. Congo', 'Democratic Republic of the Congo': 'Dem. Rep. Congo', 'Czech Republic': 'Czechia', 'Bosnia': 'Bosnia and Herz.',
   'Dominican Republic': 'Dominican Rep.', 'Burma': 'Myanmar', 'Ivory Coast': "Côte d'Ivoire", 'South Sudan': 'S. Sudan', 'Eswatini': 'eSwatini', 'North Macedonia': 'Macedonia' };
-const NOT_ON_MAP = ['Imaginary', 'Space', 'World'];
 const settingsOf = b => String(b.setting || '').split('|').map(x => x.trim()).filter(Boolean).map(x => COUNTRY_ALIAS[x] || x);
 const whenState = { mode: 'day' }, rbState = { mode: 'length' };
 
@@ -2744,7 +2695,6 @@ function recentDailyAverage(days) {
   return sum / days;
 }
 
-const escapeText = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
 /* ================= TOOLS: RATED scorer ================= */
 const RATE_SETS = {
@@ -2820,7 +2770,7 @@ function renderRate() {
       <div>
         <div class="rate-result">
           <div class="eyebrow">Suggested rating</div>
-          <div class="rate-score tnum" id="rateScore">${final ? final : '–'}</div>
+          <div class="rate-score tnum">${final ? final : '–'}</div>
           <div class="stars big">${final ? starStr(final) : ''}</div>
           <div class="muted small" id="rateExplain"></div>
           <div class="muted small" id="ratePrev" style="margin-top:6px"></div>
@@ -3609,8 +3559,11 @@ async function saveSeries(e) {
       const s = disc.series.find(x => x._row === row);
       if (s) Object.assign(s, f); else disc.series.push({ ...f, _row: row });
     } else {
-      await state.mcp.callTool(SERVER, 'append_values', { spreadsheetId: SHEET_ID, range: "'Series Tracker'!A1", values: [header.map(h => cell(h, f[h]))] }, { cache: false });
-      disc.series.push({ ...f, _row: v.length + 1 });
+      // New series go below the last used row (not append_values, which can fill a row the prune cleared)
+      let last = v.length; while (last > 1 && !(v[last - 1] || []).some(x => String(x ?? '').trim())) last--;
+      const row = last + 1;
+      await state.mcp.callTool(SERVER, 'update_values', { spreadsheetId: SHEET_ID, range: `'Series Tracker'!A${row}:${colLetter(header.length - 1)}${row}`, values: [header.map(h => cell(h, f[h]))] }, { cache: false });
+      disc.series.push({ ...f, _row: row });
     }
     $('seriesDlg').close();
     setStatus('live', `Saved ${f.series}`);
@@ -3883,7 +3836,7 @@ function renderNextInSeries() {
   for (const b of state.allBooks) if (b.series) { if (!ser.has(b.series)) ser.set(b.series, []); ser.get(b.series).push(b); }
   const rows = [];
   for (const [name, books] of ser) {
-    const done = books.filter(b => ['Finished', 'Re-read'].includes(b.status));
+    const done = books.filter(b => DONE_STATUSES.includes(b.status));
     if (!done.length) continue;
     const reading = books.find(b => b.status === 'Reading');
     const maxDone = Math.max(0, ...done.map(b => toNum(b.seriesNum)));
@@ -4126,7 +4079,7 @@ function openQuoteDlg(book) {
   const dl = $('qdBooks'); dl.textContent = '';
   // Books you're reading first, then everything you've read or are reading
   const seen = new Set();
-  for (const b of [...state.allBooks.filter(x => x.status === 'Reading'), ...state.allBooks.filter(x => ['Finished', 'Re-read', 'Paused', 'DNF'].includes(x.status))]) {
+  for (const b of [...state.allBooks.filter(x => x.status === 'Reading'), ...state.allBooks.filter(x => ENDED_STATUSES.includes(x.status))]) {
     if (seen.has(b.title)) continue; seen.add(b.title);
     const o = document.createElement('option'); o.value = b.title; dl.appendChild(o);
   }
