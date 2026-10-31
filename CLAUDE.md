@@ -7,4 +7,4 @@
 - `python3 tools/build-pages.py` rebuilds `index.html` from `app.html` for GitHub Pages.
 - Data lives in the Entertainment Tracker Google Sheet.
 - `old.html` is kept for reference only: "Don't use its Save, because it rewrites the whole sheet."
-- The data model and sheet-safety rules are in `v3/README.md` on branch `claude/keen-sagan-yf9rqf`.
+- **Start with `HANDOVER.md`**: the current sheet layout, the owner's working rules (direct pushes to `main` are fine here; never read the `Brain tester` sheet beyond Date and Pages), conventions, known limits and open ideas. `v3/README.md` on branch `claude/keen-sagan-yf9rqf` is the older data-model note.
