@@ -1,6 +1,6 @@
 {
-  "name": "Jackets & Manuscripts",
-  "short_name": "J&M",
+  "name": "The Library",
+  "short_name": "Library",
   "description": "Reading log, library and dashboard backed by my Google Sheet.",
   "start_url": "./",
   "scope": "./",

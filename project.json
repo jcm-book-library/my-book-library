@@ -1,5 +1,5 @@
 {
-  "name": "Jackets & Manuscripts",
+  "name": "The Library",
   "repo": "my-book-library",
   "purpose": "Logs reading and keeps a library and dashboard of books, backed by the Entertainment Tracker Google Sheet.",
   "family": "Entertainment",
@@ -8,5 +8,5 @@
   "tags": [
     "media-tracker"
   ],
-  "updated": "2026-10-31"
+  "updated": "2026-11-01"
 }

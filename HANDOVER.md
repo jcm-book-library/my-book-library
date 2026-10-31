@@ -4,7 +4,7 @@ Read this after `CLAUDE.md` and the house rules. It records how the app and its 
 
 ## What it is
 - A personal reading tracker. One file, `app.html`, is both the private claude.ai artifact and (built by `python3 tools/build-pages.py` into `index.html`) the GitHub Pages site.
-- The app is called **The Library** for now. The final name comes with the domain, when it is shared with family; the repo, brand notes (`v3/brand`) and `v3/STARTER-PROMPT.md` still say "Jackets & Manuscripts" on purpose.
+- The app is called **The Library** (since October 2026; the owner confirmed it as the name on 1 Nov). "Jackets & Manuscripts" is retired. It survives only in the old branch notes (`v3/brand`, `v3/STARTER-PROMPT.md` on `claude/keen-sagan-yf9rqf`) and the house rules' "Look" line in `control-room`. The repo name stays `my-book-library`.
 - The data lives in the **Entertainment Tracker** Google Sheet. The app reads and writes it through the `Google Sheets` connector (claude.ai) or a small REST adapter with the owner's Google sign-in (Pages).
 - Look: Proton Seasons month colours, dark, Roboto everywhere with tabular figures on every element.
 
@@ -17,7 +17,7 @@ Read this after `CLAUDE.md` and the house rules. It records how the app and its 
 
 ## Sheet safety conventions (the app follows these, except where noted)
 - Find the row by its `id` immediately before every write and write only the changed cells. Never rewrite whole tabs, never sort from code, never delete and re-add rows (removing an item clears its cells; the empty row stays). The app clears rows in Wishlist, Reading Lists and Series Tracker; it never clears Books rows. Deleting a Reading Log entry is a soft delete: `pages` set to 0 and `source` to `deleted`.
-- New rows go **below the last used row** with an explicit range, not `append_values` (append fills gaps left by cleared rows and can overrun them). **Only Wishlist and Reading Lists do this so far.** Books, Reading Log, Ratings, Wishlist archive, Series Tracker, App Settings, Contents and the Quotes sheet still use `append_values`. That is harmless where rows are never cleared, but Series Tracker does clear rows (when a tracked series runs out of books), so a new series can land in a gap. See Known gaps.
+- New rows go **below the last used row** with an explicit range, not `append_values` (append fills gaps left by cleared rows and can overrun them). Wishlist, Reading Lists and Series Tracker do this. Books, Reading Log, Ratings, Wishlist archive, App Settings, Contents and the Quotes sheet still use `append_values`, which is safe only because the app never clears rows in those tabs. If a tab gains a "remove" that clears rows, move its adds to below-last-row first.
 - Formula columns (`remain`, `%` in Books) are never written by edits. The app writes them once, on a newly added Books row (add a book, or a Wishlist "Got it" move). The formulas are `=IF(N(pages)>0,pages-currentPage,"")` and `=IF(N(pages)>0,currentPage/pages*100,"")`.
 - The app reads columns **by header name**, so column order can change freely. Text is written with a leading `'`, numbers as numbers, dates as `yyyy-mm-dd`. Plain (unquoted) values: Wishlist `gift` (TRUE/FALSE), `release` and `checkedOn`; Series Tracker `released`; Reading Lists `order`; Reading Log `pages`, `pageReached`, `minutes` and `loggedAt`; the Contents timestamp.
 - Read ranges have caps: Books `A:AZ` to row 5000, Wishlist `A:Z` to 3000, Series Tracker `A:I` to 500 (**a 10th Series Tracker column would not be read**), Reading Lists `A:G` to 2000, Reading Log `A:H` to 20000.
@@ -57,7 +57,6 @@ Read this after `CLAUDE.md` and the house rules. It records how the app and its 
 - Tests were headless Playwright scripts with a stubbed `window.claude` at 390px and 1280px, run before every publish. They used copies of the real sheet data, so they are not in this public repo.
 
 ## Known gaps (from the 31 Oct audit)
-- **Series Tracker adds use `append_values`** while the prune clears rows, so a new series can fill a cleared gap. Fix: add below the last used row, as Wishlist does. The other `append_values` tabs never clear rows, so they are safe for now.
 - The three find-row-by-id helpers (Books, Wishlist, Reading Lists) and the per-field write loops are near-duplicates. They could be merged into one helper, but they guard every write, so do it with full write-path tests.
 - The Library filter chain is written twice (the Library list and the plan's "rest" pool). It could share one function; keep the tier difference.
 

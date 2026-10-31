@@ -1,8 +1,8 @@
-# Jackets & Manuscripts
+# The Library
 
 My reading log, library and dashboard. The Google Sheet "Entertainment Tracker" holds the data, and this app reads and writes it.
 
-The app currently calls itself **The Library**. The final name comes with the domain; the repo keeps "Jackets & Manuscripts" until then.
+The app was first called "Jackets & Manuscripts"; that name is retired. The repo is still `my-book-library`.
 
 - **Live site:** https://jcm-book-library.github.io/my-book-library/
 - **Old app:** `old.html`. It's kept for reference only. Don't use its Save, because it rewrites the whole sheet.

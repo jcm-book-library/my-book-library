@@ -22,7 +22,7 @@ h1,h2,.num{font-family:var(--display)}
 #todayLabel{color:var(--accent)}
 h1{font-size:clamp(26px,4vw,34px);font-weight:700;letter-spacing:-.02em;margin:0;text-wrap:balance}
 .lockup{--mk:52px;display:flex;align-items:center;gap:calc(var(--mk)*.14);margin-top:6px}
-.jm-mark{width:var(--mk);height:var(--mk);flex:none;color:var(--accent);display:block}
+.lib-mark{width:var(--mk);height:var(--mk);flex:none;color:var(--accent);display:block}
 .jm-wordmark{font-family:var(--display);font-weight:700;font-size:calc(var(--mk)*.5);line-height:1.06;white-space:nowrap;letter-spacing:-.01em;color:#eef0fa}
 @media (max-width:520px){.lockup{--mk:44px}}
 h2{font-size:17px;font-weight:700;margin:0;letter-spacing:-.01em}
@@ -551,7 +551,7 @@ dialog::backdrop{background:rgba(8,6,14,.65)}
   <header>
     <div>
       <div class="eyebrow" id="todayLabel">Today</div>
-      <h1 class="lockup" aria-label="The Library"><svg class="jm-mark" viewBox="0 0 100 100" aria-hidden="true"><g fill="currentColor"><path fill-rule="evenodd" d="M4 41 L50 5 L96 41 Z M33 26 H67 V33 H33 Z"/><path fill-rule="evenodd" d="M16 42 H84 V85 H16 Z M24 48 H74 V80 H24 Z M79 61 a2.4 2.4 0 1 0 0.01 0 Z"/><rect x="24" y="61" width="50" height="2.4"/><rect x="29" y="52" width="4" height="9" rx=".6"/><rect x="34" y="49" width="4" height="12" rx=".6"/><rect x="39" y="51" width="4" height="10" rx=".6"/><rect x="44" y="48" width="4" height="13" rx=".6"/><rect x="49" y="50" width="4" height="11" rx=".6"/><rect x="54" y="49" width="4" height="12" rx=".6"/><rect x="59" y="52" width="4" height="9" rx=".6"/><rect x="64" y="49" width="4" height="12" rx=".6"/><rect x="69" y="51" width="4" height="10" rx=".6"/><rect x="29" y="66" width="4" height="12" rx=".6"/><rect x="34" y="68" width="4" height="10" rx=".6"/><rect x="39" y="65" width="4" height="13" rx=".6"/><rect x="44" y="67" width="4" height="11" rx=".6"/><rect x="49" y="66" width="4" height="12" rx=".6"/><rect x="54" y="68" width="4" height="10" rx=".6"/><rect x="59" y="65" width="4" height="13" rx=".6"/><rect x="64" y="67" width="4" height="11" rx=".6"/><rect x="69" y="66" width="4" height="12" rx=".6"/><rect x="45" y="85" width="10" height="13" rx="1"/></g></svg><span class="jm-wordmark" aria-hidden="true">The Library</span></h1>
+      <h1 class="lockup" aria-label="The Library"><svg class="lib-mark" viewBox="0 0 100 100" aria-hidden="true"><g fill="currentColor"><path fill-rule="evenodd" d="M4 41 L50 5 L96 41 Z M33 26 H67 V33 H33 Z"/><path fill-rule="evenodd" d="M16 42 H84 V85 H16 Z M24 48 H74 V80 H24 Z M79 61 a2.4 2.4 0 1 0 0.01 0 Z"/><rect x="24" y="61" width="50" height="2.4"/><rect x="29" y="52" width="4" height="9" rx=".6"/><rect x="34" y="49" width="4" height="12" rx=".6"/><rect x="39" y="51" width="4" height="10" rx=".6"/><rect x="44" y="48" width="4" height="13" rx=".6"/><rect x="49" y="50" width="4" height="11" rx=".6"/><rect x="54" y="49" width="4" height="12" rx=".6"/><rect x="59" y="52" width="4" height="9" rx=".6"/><rect x="64" y="49" width="4" height="12" rx=".6"/><rect x="69" y="51" width="4" height="10" rx=".6"/><rect x="29" y="66" width="4" height="12" rx=".6"/><rect x="34" y="68" width="4" height="10" rx=".6"/><rect x="39" y="65" width="4" height="13" rx=".6"/><rect x="44" y="67" width="4" height="11" rx=".6"/><rect x="49" y="66" width="4" height="12" rx=".6"/><rect x="54" y="68" width="4" height="10" rx=".6"/><rect x="59" y="65" width="4" height="13" rx=".6"/><rect x="64" y="67" width="4" height="11" rx=".6"/><rect x="69" y="66" width="4" height="12" rx=".6"/><rect x="45" y="85" width="10" height="13" rx="1"/></g></svg><span class="jm-wordmark" aria-hidden="true">The Library</span></h1>
     </div>
     <div class="status" id="status" data-state="loading" role="status">
       <span class="dot"></span><span id="statusText">Connecting to your sheet…</span>
@@ -1012,8 +1012,8 @@ function applyTheme() {
 
 /* Favicon follows the month colour (used when hosted outside claude.ai) */
 function setFavicon(c) {
-  const m = document.querySelector('.jm-mark'); if (!m) return;
-  const svg = m.outerHTML.replace('class="jm-mark"', 'xmlns="http://www.w3.org/2000/svg"').replace(/currentColor/g, c);
+  const m = document.querySelector('.lib-mark'); if (!m) return;
+  const svg = m.outerHTML.replace('class="lib-mark"', 'xmlns="http://www.w3.org/2000/svg"').replace(/currentColor/g, c);
   let l = document.querySelector('link[rel="icon"]');
   if (!l) { l = document.createElement('link'); l.rel = 'icon'; document.head.appendChild(l); }
   l.type = 'image/svg+xml'; l.href = 'data:image/svg+xml,' + encodeURIComponent(svg);
@@ -3559,8 +3559,11 @@ async function saveSeries(e) {
       const s = disc.series.find(x => x._row === row);
       if (s) Object.assign(s, f); else disc.series.push({ ...f, _row: row });
     } else {
-      await state.mcp.callTool(SERVER, 'append_values', { spreadsheetId: SHEET_ID, range: "'Series Tracker'!A1", values: [header.map(h => cell(h, f[h]))] }, { cache: false });
-      disc.series.push({ ...f, _row: v.length + 1 });
+      // New series go below the last used row (not append_values, which can fill a row the prune cleared)
+      let last = v.length; while (last > 1 && !(v[last - 1] || []).some(x => String(x ?? '').trim())) last--;
+      const row = last + 1;
+      await state.mcp.callTool(SERVER, 'update_values', { spreadsheetId: SHEET_ID, range: `'Series Tracker'!A${row}:${colLetter(header.length - 1)}${row}`, values: [header.map(h => cell(h, f[h]))] }, { cache: false });
+      disc.series.push({ ...f, _row: row });
     }
     $('seriesDlg').close();
     setStatus('live', `Saved ${f.series}`);
