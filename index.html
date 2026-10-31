@@ -306,7 +306,13 @@ input[type="number"]:focus{border-color:var(--accent);outline:none}
 .wl-ctl{display:flex;gap:12px 18px;flex-wrap:wrap;align-items:center;margin:0 0 12px;font-size:13px;color:var(--muted)}
 .wl-ctl label{display:flex;gap:6px;align-items:center}
 .wl-ctl select{font:inherit;font-size:13px;background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:5px 8px}
-.wtags{display:inline-flex;gap:6px;margin-left:8px;vertical-align:middle;flex-wrap:wrap}
+.wish-row .ta{display:block}
+.wish-row .ta .t{display:block;font-weight:500;overflow-wrap:anywhere}
+.wish-row .ta .au{display:block;font-size:13px;color:var(--muted);overflow-wrap:anywhere}
+.tagline{display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center;margin-top:6px}
+.tagline .m{font-size:12px;color:var(--muted)}
+.tagline .have,.tagline .wl-gift{margin-left:0}
+.wf{max-width:150px}
 .chk,.wa{font:inherit;font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px;border:1px dashed var(--line);background:transparent;color:var(--muted);cursor:pointer;white-space:nowrap;line-height:1.5}
 .chk:hover,.wa:hover{border-color:var(--accent)}
 .chk[data-c="Available"]{border:1px solid #3f7f4f;background:color-mix(in srgb,#5fbf7a 20%,transparent);color:#9ee0ae}
@@ -717,8 +723,8 @@ dialog::backdrop{background:rgba(8,6,14,.65)}
         <div class="panel-head"><h2 id="wlSessH">Get them</h2><span class="muted small tnum" id="wishNote"></span><select id="wishSeries" aria-label="Series or list"><option value="">Any series or list</option></select></div>
         <div class="chips" id="wishChips" role="group" aria-label="Stage"></div>
         <div class="wl-ctl">
-          <label>Group by <select id="wlGroup"><option value="">Nothing</option><option value="format">Book, comic, graphic novel</option><option value="wantAs">Kobo or PDF</option><option value="checked">Checked or new</option></select></label>
-          <label>Get it as <select id="wlWant"><option value="">Any</option><option value="Kobo">Kobo (epub)</option><option value="PDF">PDF</option><option value="Either">Either</option><option value="Physical">Physical</option><option value="Library">Library</option><option value="-">Not set yet</option></select></label>
+          <label>Group by <select id="wlGroup"><option value="">Nothing</option><option value="format">Book, comic book, graphic novel, manga…</option><option value="wantAs">Kobo or PDF</option><option value="checked">Checked or new</option></select></label>
+          <label>Download as <select id="wlWant"><option value="">Any</option><option value="Kobo">Kobo (epub)</option><option value="PDF">PDF</option><option value="-">Not set yet</option></select></label>
           <label>Checked <select id="wlChk"><option value="">Any</option><option value="New">New (not checked)</option><option value="Available">Available</option><option value="Unavailable">Unavailable</option></select></label>
         </div>
         <p class="muted small" style="margin:-4px 0 10px">Tap <b>New</b> to mark a book as checked: Available, then Unavailable, then back to New. Tick a book when you get it. The list stays put while you work. Ticked books move to your TBR with “Move to TBR now”, or on the next refresh.</p>
@@ -2057,7 +2063,7 @@ const FORM = [
   { k: 'startDate', type: 'date', label: 'Started' }, { k: 'finishDate', type: 'date', label: 'Finished' },
   { k: 'rating', type: 'select', opts: ['', '0.5', '1', '1.5', '2', '2.5', '3', '3.5', '4', '4.5', '5'] }, { k: 'favourite', type: 'select', opts: ['', 'Yes'], label: 'Favourite' }, { k: 'year', type: 'number', label: 'Published' },
   { k: 'copies', label: 'Copies (Kobo | PDF | Physical)' }, { k: 'isbn', label: 'ISBN' },
-  { sec: 'Details' }, { k: 'series', w: 'w2' }, { k: 'seriesNum', type: 'number', label: 'Series #' },
+  { sec: 'Details' }, { k: 'series', w: 'w2' }, { k: 'seriesNum', type: 'number', label: 'Series #', step: 'any' },
   { k: 'theme1', label: 'Theme 1' }, { k: 'theme2', label: 'Theme 2' }, { k: 'theme3', label: 'Theme 3' }, { k: 'tier', type: 'select', opts: ['', 'Up next', 'Soon', 'Someday'], label: 'Plan' }, { k: 'why', w: 'w2', label: 'Why it\'s on the list' },
   { k: 'awards', w: 'w2', label: 'Awards (separate with |)' }, { k: 'loaned', type: 'select', opts: ['', 'Yes'] }, { k: 'loanee', label: 'Loaned to' },
   { k: 'synopsis', type: 'textarea', w: 'w4' }, { k: 'notes', type: 'textarea', w: 'w4' }
@@ -2084,7 +2090,7 @@ function openBookDialog(book, prefill) {
       if (val && !opts.includes(val)) opts.push(val);
       for (const o of [...new Set(opts)]) { const op = document.createElement('option'); op.value = o; op.textContent = o || '–'; el.appendChild(op); }
     } else if (f.type === 'textarea') el = document.createElement('textarea');
-    else { el = document.createElement('input'); el.type = f.type || 'text'; if (f.type === 'number') el.inputMode = 'numeric'; }
+    else { el = document.createElement('input'); el.type = f.type || 'text'; if (f.type === 'number') { el.inputMode = f.step === 'any' ? 'decimal' : 'numeric'; if (f.step) el.step = f.step; } }
     if (f.list) { const dl = document.createElement('datalist'); dl.id = 'dl-' + f.k; dl.innerHTML = [...new Set(state.allBooks.map(b => b[f.list]).filter(Boolean))].sort().map(v => `<option value="${escapeText(v)}">`).join(''); el.setAttribute('list', dl.id); wrap.appendChild(dl); }
     el.id = id; el.name = f.k; el.value = f.type === 'number' ? (toNum(val) || (val === '0' ? 0 : '')) : val;
     if (f.req) el.required = true;
@@ -3076,10 +3082,12 @@ const wishById = id => (disc.wish || []).find(w => w.id === id);
 const libByTitle = () => new Map(state.allBooks.map(b => [wishKey(b.title), b]));
 const pubNames = () => [...new Set([...state.allBooks.map(b => b.publisher), ...(disc.wish || []).map(w => w.publisher), ...(disc.series || []).map(x => x.publisher)].filter(Boolean))].sort();
 // Groups for the Get them list
-const FMT_GROUP = w => ({ Book: 'Books', 'Graphic novel': 'Graphic novels', Comic: 'Comics', Issues: 'Comics', Omnibus: 'Comics', Compendium: 'Comics', Deluxe: 'Comics', 'Box Set': 'Comics', 'Limited Edition': 'Comics', Manga: 'Manga' }[w.format] || 'No format yet');
-const WANT_LABEL = { Kobo: 'Kobo (epub)', PDF: 'PDF', Either: 'Either', Physical: 'Physical', Library: 'Library' };
-const GROUP_ORDER = { format: ['Books', 'Graphic novels', 'Comics', 'Manga', 'No format yet'], wantAs: ['Kobo (epub)', 'PDF', 'Either', 'Physical', 'Library', 'Not set yet'], checked: ['New (not checked)', 'Available', 'Unavailable'] };
-const groupOf = (w, g) => g === 'format' ? FMT_GROUP(w) : g === 'wantAs' ? (WANT_LABEL[w.wantAs] || 'Not set yet') : (w.checked ? w.checked : 'New (not checked)');
+const FMT_LABEL = { Comic: 'Comic book' };
+const FMT_ORDER = ['Book', 'Comic book', 'Graphic novel', 'Manga', 'Issues', 'Deluxe', 'Omnibus', 'Compendium', 'Box Set', 'Limited Edition'];
+const FMT_GROUP = w => w.format ? (FMT_LABEL[w.format] || w.format) : 'No format yet';
+const WANT_LABEL = { Kobo: 'Kobo (epub)', PDF: 'PDF' };
+const GROUP_ORDER = { format: [...FMT_ORDER, 'No format yet'], wantAs: ['Kobo (epub)', 'PDF', 'Not set yet', 'Physical', 'Either', 'Library'], checked: ['New (not checked)', 'Available', 'Unavailable'] };
+const groupOf = (w, g) => g === 'format' ? FMT_GROUP(w) : g === 'wantAs' ? (WANT_LABEL[w.wantAs] || w.wantAs || 'Not set yet') : (w.checked ? w.checked : 'New (not checked)');
 const CHK_NEXT = { '': 'Available', Available: 'Unavailable', Unavailable: '' };
 const isLate = w => w.stage === 'Waiting' && /^\d{4}-\d\d-\d\d$/.test(w.release) && w.release <= today();
 
@@ -3182,31 +3190,45 @@ function renderSession() {
   $('wlGroup').value = wl.group; $('wlWant').value = wl.want; $('wlChk').value = wl.chk;
   wishBar();
 }
+// "20 Oct", with the year when it isn't this one
+const dShort = d => { const m = /^(\d{4})-(\d\d)-(\d\d)$/.exec(String(d || '')); if (!m) return ''; return new Date(+m[1], +m[2] - 1, +m[3]).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', ...(m[1] !== today().slice(0, 4) ? { year: '2-digit' } : {}) }); };
 function wishRow(w, lib) {
   const row = document.createElement('div');
   const done = w.stage === 'Got it';
   row.className = 'wish-row' + (done ? ' done' : '');
-  row.innerHTML = '<input type="checkbox" class="tick"><div><span class="t"></span><br><span class="m"></span></div><div class="acts"></div>';
+  // Title and author sit alone in one block so a drag-select or triple-click copies just those two lines
+  row.innerHTML = '<input type="checkbox" class="tick"><div class="wmain"><div class="ta"><span class="t"></span><span class="au"></span></div><div class="tagline"></div></div><div class="acts"></div>';
   const tick = row.querySelector('.tick');
   tick.checked = done;
   tick.setAttribute('aria-label', `Got ${w.title}`);
-  const t = row.querySelector('.t');
-  t.textContent = w.title;
-  if (w.gift === 'TRUE') { const g = document.createElement('span'); g.className = 'wl-gift'; g.textContent = 'Gift idea'; t.after(g); }
-  if (lib.has(wishKey(w.title))) { const hv = document.createElement('span'); hv.className = 'have'; hv.textContent = 'In library'; t.after(hv); }
-  const m = row.querySelector('.m');
-  m.textContent = [w.author, w.series && (w.series + (w.number ? ' #' + w.number : '')), w.publisher, w.format, w.stage === 'Waiting' ? w.waiting || 'Waiting' : '', w.release && !isLate(w) ? 'Out ' + w.release : '', w.price, w.notes].filter(Boolean).join(' · ');
-  // Checked sticker (one tap cycles New, Available, Unavailable) and the Kobo / PDF tag
-  { const tags = document.createElement('span'); tags.className = 'wtags';
-    const c = document.createElement('button'); c.type = 'button'; c.className = 'chk'; c.dataset.c = w.checked || '';
-    c.textContent = w.checked || 'New';
-    c.title = w.checked ? `${w.checked}${w.checkedOn ? ', checked ' + w.checkedOn : ''}. Tap to change.` : 'Not checked yet. Tap when you have looked.';
-    c.addEventListener('click', () => { const n = CHK_NEXT[w.checked || '']; setWishFields(w, { checked: n, checkedOn: n ? today() : '' }); });
-    const a = document.createElement('select'); a.className = 'wa'; a.dataset.w = w.wantAs || ''; a.setAttribute('aria-label', 'Get ' + w.title + ' as');
-    a.innerHTML = ['', 'Kobo', 'PDF', 'Either', 'Physical', 'Library'].map(x => `<option value="${x}"${x === (w.wantAs || '') ? ' selected' : ''}>${x ? WANT_LABEL[x] : 'Set format'}</option>`).join('');
-    a.addEventListener('change', () => setWishFields(w, { wantAs: a.value }));
-    tags.append(c, a); t.after(tags); }
-  if (isLate(w)) { const l = document.createElement('span'); l.className = 'wl-late'; l.textContent = ` · Should be out (${w.release})`; m.appendChild(l); }
+  row.querySelector('.t').textContent = w.title;
+  row.querySelector('.au').textContent = w.author || '';
+  const tl = row.querySelector('.tagline');
+  // Checked sticker with the date it was set. One tap cycles New, Available, Unavailable.
+  const c = document.createElement('button'); c.type = 'button'; c.className = 'chk'; c.dataset.c = w.checked || '';
+  const when = dShort(w.checkedOn) || (!w.checked ? dShort(w.added) : '');
+  c.textContent = (w.checked || 'New') + (when ? ' · ' + when : '');
+  c.title = (w.checked ? w.checked : 'New') + (w.checkedOn ? ', set ' + w.checkedOn : w.added && !w.checked ? ', added ' + w.added : '') + '. Tap to change.';
+  c.addEventListener('click', () => { const n = CHK_NEXT[w.checked || '']; setWishFields(w, { checked: n, checkedOn: today() }); });
+  tl.appendChild(c);
+  // Kobo or PDF (anything else already stored is kept and shown)
+  const a = document.createElement('select'); a.className = 'wa'; a.dataset.w = w.wantAs || ''; a.setAttribute('aria-label', 'Download ' + w.title + ' as');
+  const wopts = ['', 'Kobo', 'PDF', ...(w.wantAs && !WANT_LABEL[w.wantAs] ? [w.wantAs] : [])];
+  a.innerHTML = wopts.map(x => `<option value="${x}"${x === (w.wantAs || '') ? ' selected' : ''}>${x ? WANT_LABEL[x] || x : 'Kobo or PDF?'}</option>`).join('');
+  a.addEventListener('change', () => setWishFields(w, { wantAs: a.value }));
+  tl.appendChild(a);
+  // Format: Book, Comic book, Graphic novel, Manga… left blank until you choose
+  const f = document.createElement('select'); f.className = 'wa wf'; f.dataset.w = w.format ? 'F' : ''; f.setAttribute('aria-label', 'Format of ' + w.title);
+  const fopts = ['', ...FMT_ORDER, ...(w.format && !FMT_ORDER.includes(w.format) && w.format !== 'Comic' ? [w.format] : [])];
+  f.innerHTML = fopts.map(x => { const v = x === 'Comic book' ? 'Comic' : x; return `<option value="${v}"${v === (w.format || '') ? ' selected' : ''}>${x || 'Format?'}</option>`; }).join('');
+  f.addEventListener('change', () => setWishFields(w, { format: f.value }));
+  tl.appendChild(f);
+  if (lib.has(wishKey(w.title))) { const hv = document.createElement('span'); hv.className = 'have'; hv.textContent = 'In library'; tl.appendChild(hv); }
+  if (w.gift === 'TRUE') { const g = document.createElement('span'); g.className = 'wl-gift'; g.textContent = 'Gift idea'; tl.appendChild(g); }
+  const m = document.createElement('span'); m.className = 'm';
+  m.textContent = [w.series && (w.series + (w.number ? ' #' + w.number : '')), w.publisher, w.stage === 'Waiting' ? w.waiting || 'Waiting' : '', w.release && !isLate(w) ? 'Out ' + w.release : '', w.price, w.notes].filter(Boolean).join(' · ');
+  if (isLate(w)) { const l = document.createElement('span'); l.className = 'wl-late'; l.textContent = `${m.textContent ? ' · ' : ''}Should be out (${w.release})`; m.appendChild(l); }
+  if (m.textContent) tl.appendChild(m);
   tick.addEventListener('change', () => {
     if (tick.checked) { w._was = w.stage; setWishFields(w, { stage: 'Got it' }); }
     else setWishFields(w, { stage: w._was && w._was !== 'Got it' ? w._was : 'To download' });
@@ -3217,9 +3239,23 @@ function wishRow(w, lib) {
   sel.innerHTML = WL_STAGES.map(x => `<option${x === w.stage ? ' selected' : ''}>${x}</option>`).join('');
   sel.addEventListener('change', () => { w._was = w.stage; setWishFields(w, { stage: sel.value }); });
   acts.appendChild(sel);
-  if (w.link) { const a = document.createElement('a'); a.href = w.link; a.target = '_blank'; a.rel = 'noopener'; a.textContent = 'Link'; acts.appendChild(a); }
-  for (const [label, fn] of [['Edit', () => openWishDlg(w)], ['Drop', () => dropWish(w)]]) { const b = document.createElement('button'); b.type = 'button'; b.textContent = label; b.addEventListener('click', fn); acts.appendChild(b); }
+  if (w.link) { const l = document.createElement('a'); l.href = w.link; l.target = '_blank'; l.rel = 'noopener'; l.textContent = 'Link'; acts.appendChild(l); }
+  for (const [label, fn] of [['Copy', null], ['Edit', () => openWishDlg(w)], ['Drop', () => dropWish(w)]]) {
+    const b = document.createElement('button'); b.type = 'button'; b.textContent = label;
+    if (!fn) { b.title = 'Copy title and author'; b.addEventListener('click', () => copyText([w.title, w.author].filter(Boolean).join(' '), b)); }
+    else b.addEventListener('click', fn);
+    acts.appendChild(b);
+  }
   return row;
+}
+// Copy to the clipboard, falling back to selecting the title and author block when the browser refuses
+function copyText(text, btn) {
+  const done = () => { const was = btn.textContent; btn.textContent = 'Copied'; setTimeout(() => { btn.textContent = was; }, 1200); };
+  const fallback = () => {
+    const ta = btn.closest('.wish-row') && btn.closest('.wish-row').querySelector('.ta');
+    if (ta) { const r = document.createRange(); r.selectNodeContents(ta); const sl = getSelection(); sl.removeAllRanges(); sl.addRange(r); btn.textContent = 'Selected'; setTimeout(() => { btn.textContent = 'Copy'; }, 1200); }
+  };
+  try { navigator.clipboard.writeText(text).then(done, fallback); } catch (e) { fallback(); }
 }
 function wishBar() {
   const ready = (wl.snap || []).map(wishById).filter(w => w && w.stage === 'Got it');
@@ -3532,7 +3568,8 @@ function renderSeriesView() {
     card.querySelector('.t').textContent = s.series;
     card.querySelector('.m').textContent = [s.author, s.publisher, s.kind, s.status, s.soldAs].filter(Boolean).join(' · ');
     const tiles = card.querySelector('.ser-tiles');
-    for (let n = 1; n <= top; n++) { const t = document.createElement('span'); t.className = by.get(n) || ''; t.textContent = n; t.title = { read: 'Finished', own: 'In your library', want: 'On your Wishlist', soon: 'Waiting on release' }[by.get(n)] || 'Not added yet'; tiles.appendChild(t); }
+    const tileNums = [...new Set([...Array.from({ length: top }, (_, i) => i + 1), ...[...by.keys()].filter(n => !Number.isInteger(n))])].sort((a, b) => a - b);
+    for (const n of tileNums) { const t = document.createElement('span'); t.className = by.get(n) || ''; t.textContent = n; t.title = { read: 'Finished', own: 'In your library', want: 'On your Wishlist', soon: 'Waiting on release' }[by.get(n)] || 'Not added yet'; tiles.appendChild(t); }
     if (!top) tiles.innerHTML = '<span class="muted small" style="border:0;background:none">No numbers yet. Add the released count to see the gaps.</span>';
     const unnumbered = books.filter(b => !toNum(b.seriesNum)).length + wants.filter(w => !toNum(w.number)).length;
     card.querySelector('.sm').textContent = [`${read} finished`, `${own} unread in library`, `${wants.length} on Wishlist`, s.released ? `${s.released} out` : '', unnumbered ? `${unnumbered} without a number` : ''].filter(Boolean).join(' · ');
