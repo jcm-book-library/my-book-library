@@ -303,6 +303,22 @@ input[type="number"]:focus{border-color:var(--accent);outline:none}
 .wish-tools{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
 .wish-tools input{vertical-align:-2px;margin-right:4px}
 #view-library.wish-mode .lib-bar select,#view-library.wish-mode #addBookBtn{display:none}
+.wl-ctl{display:flex;gap:12px 18px;flex-wrap:wrap;align-items:center;margin:0 0 12px;font-size:13px;color:var(--muted)}
+.wl-ctl label{display:flex;gap:6px;align-items:center}
+.wl-ctl select{font:inherit;font-size:13px;background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:5px 8px}
+.wtags{display:inline-flex;gap:6px;margin-left:8px;vertical-align:middle;flex-wrap:wrap}
+.chk,.wa{font:inherit;font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px;border:1px dashed var(--line);background:transparent;color:var(--muted);cursor:pointer;white-space:nowrap;line-height:1.5}
+.chk:hover,.wa:hover{border-color:var(--accent)}
+.chk[data-c="Available"]{border:1px solid #3f7f4f;background:color-mix(in srgb,#5fbf7a 20%,transparent);color:#9ee0ae}
+.chk[data-c="Unavailable"]{border:1px solid #8a4540;background:color-mix(in srgb,#e0675c 20%,transparent);color:#f0a59d}
+.wa{appearance:none;-webkit-appearance:none;text-align:center;border-style:solid}
+.wa[data-w=""]{border-style:dashed}
+.wa[data-w="Kobo"]{border-color:#3d6a9c;color:#9cc4f0}
+.wa[data-w="PDF"]{border-color:#9c7a3d;color:#f0cc8a}
+.wa[data-w="Physical"]{border-color:#7d5a9c;color:#d2b0ee}
+.wa[data-w="Either"],.wa[data-w="Library"]{border-color:var(--muted);color:var(--fg)}
+.wa option{background:var(--surface);color:var(--fg)}
+.wish-group .n{font-weight:500;opacity:.7;margin-left:6px}
 .wish-group{margin:14px 0 4px;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
 .wish-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;align-items:center;padding:9px 0;border-top:1px solid var(--line)}
 .wish-row:first-child{border-top:0}
@@ -700,7 +716,12 @@ dialog::backdrop{background:rgba(8,6,14,.65)}
       <section class="panel" id="wlSession" aria-labelledby="wlSessH" hidden>
         <div class="panel-head"><h2 id="wlSessH">Get them</h2><span class="muted small tnum" id="wishNote"></span><select id="wishSeries" aria-label="Series or list"><option value="">Any series or list</option></select></div>
         <div class="chips" id="wishChips" role="group" aria-label="Stage"></div>
-        <p class="muted small" style="margin:-4px 0 10px">Tick a book when you get it. The list stays put while you work. Ticked books move to your TBR with “Move to TBR now”, or on the next refresh.</p>
+        <div class="wl-ctl">
+          <label>Group by <select id="wlGroup"><option value="">Nothing</option><option value="format">Book, comic, graphic novel</option><option value="wantAs">Kobo or PDF</option><option value="checked">Checked or new</option></select></label>
+          <label>Get it as <select id="wlWant"><option value="">Any</option><option value="Kobo">Kobo (epub)</option><option value="PDF">PDF</option><option value="Either">Either</option><option value="Physical">Physical</option><option value="Library">Library</option><option value="-">Not set yet</option></select></label>
+          <label>Checked <select id="wlChk"><option value="">Any</option><option value="New">New (not checked)</option><option value="Available">Available</option><option value="Unavailable">Unavailable</option></select></label>
+        </div>
+        <p class="muted small" style="margin:-4px 0 10px">Tap <b>New</b> to mark a book as checked: Available, then Unavailable, then back to New. Tick a book when you get it. The list stays put while you work. Ticked books move to your TBR with “Move to TBR now”, or on the next refresh.</p>
         <div id="wishList"></div>
         <button class="btn" type="button" id="wishMore" hidden>Show 100 more</button>
         <div class="wish-bar" id="wishBar" hidden><span id="wishBarText"></span><button class="btn btn-primary" type="button" id="wishMoveBtn">Move to TBR now</button></div>
@@ -874,6 +895,7 @@ dialog::backdrop{background:rgba(8,6,14,.65)}
       <div class="field"><label for="wd-format">Format</label><select id="wd-format" name="format"><option value="">–</option><option>Book</option><option>Comic</option><option>Graphic novel</option><option>Manga</option><option>Issues</option><option>Deluxe</option><option>Omnibus</option><option>Compendium</option><option>Box Set</option><option>Limited Edition</option></select></div>
       <div class="field"><label for="wd-stage">Stage</label><select id="wd-stage" name="stage"></select></div>
       <div class="field"><label for="wd-waiting">Waiting because</label><select id="wd-waiting" name="waiting"><option value="">–</option><option>Unreleased</option><option>Preordered</option><option>Unavailable</option><option>Wrong edition</option></select></div>
+      <div class="field"><label for="wd-checked">Checked</label><select id="wd-checked" name="checked"><option value="">New (not checked)</option><option>Available</option><option>Unavailable</option></select></div>
       <div class="field"><label for="wd-wantAs">Get it as</label><select id="wd-wantAs" name="wantAs"><option value="">–</option><option>Kobo</option><option>PDF</option><option>Physical</option><option>Library</option><option>Either</option></select></div>
       <div class="field"><label for="wd-release">Release date</label><input id="wd-release" name="release" autocomplete="off" placeholder="yyyy-mm-dd or 2027"></div>
       <div class="field"><label for="wd-price">Price</label><input id="wd-price" name="price" autocomplete="off"></div>
@@ -3048,11 +3070,17 @@ const WL_STAGES = ['Inbox', 'To download', 'To buy', 'To borrow', 'Waiting', 'Go
 const WL_WAITING = ['Unreleased', 'Preordered', 'Unavailable', 'Wrong edition'];
 const WL_CHIPS = [['To download', w => w.stage === 'To download'], ['To buy', w => w.stage === 'To buy'], ['To borrow', w => w.stage === 'To borrow'],
   ['Waiting', w => w.stage === 'Waiting'], ['Gift ideas', w => w.gift === 'TRUE'], ['Inbox', w => w.stage === 'Inbox' || !w.stage], ['Got it', w => w.stage === 'Got it'], ['All', () => true]];
-const wl = { view: 'inbox', chip: 'To download', series: '', snap: null, key: '', limit: 100, moving: false, editing: null, skipped: new Set(), sorted: 0 };
+const wl = { group: '', want: '', chk: '', gmap: {}, view: 'inbox', chip: 'To download', series: '', snap: null, key: '', limit: 100, moving: false, editing: null, skipped: new Set(), sorted: 0 };
 const wishKey = t => normQ(t).replace(/^(the|a|an) /, '');
 const wishById = id => (disc.wish || []).find(w => w.id === id);
 const libByTitle = () => new Map(state.allBooks.map(b => [wishKey(b.title), b]));
 const pubNames = () => [...new Set([...state.allBooks.map(b => b.publisher), ...(disc.wish || []).map(w => w.publisher), ...(disc.series || []).map(x => x.publisher)].filter(Boolean))].sort();
+// Groups for the Get them list
+const FMT_GROUP = w => ({ Book: 'Books', 'Graphic novel': 'Graphic novels', Comic: 'Comics', Issues: 'Comics', Omnibus: 'Comics', Compendium: 'Comics', Deluxe: 'Comics', 'Box Set': 'Comics', 'Limited Edition': 'Comics', Manga: 'Manga' }[w.format] || 'No format yet');
+const WANT_LABEL = { Kobo: 'Kobo (epub)', PDF: 'PDF', Either: 'Either', Physical: 'Physical', Library: 'Library' };
+const GROUP_ORDER = { format: ['Books', 'Graphic novels', 'Comics', 'Manga', 'No format yet'], wantAs: ['Kobo (epub)', 'PDF', 'Either', 'Physical', 'Library', 'Not set yet'], checked: ['New (not checked)', 'Available', 'Unavailable'] };
+const groupOf = (w, g) => g === 'format' ? FMT_GROUP(w) : g === 'wantAs' ? (WANT_LABEL[w.wantAs] || 'Not set yet') : (w.checked ? w.checked : 'New (not checked)');
+const CHK_NEXT = { '': 'Available', Available: 'Unavailable', Unavailable: '' };
 const isLate = w => w.stage === 'Waiting' && /^\d{4}-\d\d-\d\d$/.test(w.release) && w.release <= today();
 
 async function renderWish() {
@@ -3110,7 +3138,7 @@ function renderSession() {
   const opts = '<option value="">Any series or list</option>' + groups.map(g => `<option value="s:${escapeText(g)}">${escapeText(g)}</option>`).join('') + lists.map(g => `<option value="l:${escapeText(g)}">List: ${escapeText(g)}</option>`).join('') + [...new Set(all.map(w => w.publisher).filter(Boolean))].sort().map(g => `<option value="p:${escapeText(g)}">Publisher: ${escapeText(g)}</option>`).join('');
   if (sel.dataset.opts !== opts) { sel.innerHTML = opts; sel.dataset.opts = opts; }
   sel.value = wl.series;
-  const key = [wl.chip, wl.series, q].join('|');
+  const key = [wl.chip, wl.series, q, wl.group, wl.want, wl.chk].join('|');
   if (!wl.snap || wl.key !== key) {
     const f = (WL_CHIPS.find(c => c[0] === wl.chip) || WL_CHIPS[0])[1];
     const [gk, gv] = [wl.series.slice(0, 1), wl.series.slice(2)];
@@ -3118,9 +3146,18 @@ function renderSession() {
     // Searching looks across every stage
     wl.snap = all.filter(w => (q || f(w))
       && (!wl.series || (gk === 's' ? w.series === gv : gk === 'p' ? w.publisher === gv : inList.has(wishKey(w.title))))
+      && (!wl.want || (wl.want === '-' ? !w.wantAs : w.wantAs === wl.want))
+      && (!wl.chk || (wl.chk === 'New' ? !w.checked : w.checked === wl.chk))
       && (!q || normQ([w.title, w.author, w.series, w.seenIn, w.notes].join(' ')).includes(q)))
-      .sort((a, b) => wl.series ? (a.series || '').localeCompare(b.series || '') || toNum(a.number) - toNum(b.number) || a._row - b._row : 0)
-      .map(w => w.id);
+      .sort((a, b) => wl.series ? (a.series || '').localeCompare(b.series || '') || toNum(a.number) - toNum(b.number) || a._row - b._row : 0);
+    // Groups are worked out now and kept until the list is rebuilt, so a book doesn't jump when you change its sticker
+    wl.gmap = {};
+    if (wl.group) {
+      const ord = GROUP_ORDER[wl.group];
+      for (const w of wl.snap) wl.gmap[w.id] = groupOf(w, wl.group);
+      wl.snap = wl.snap.map((w, i) => [w, i]).sort((a, b) => ord.indexOf(wl.gmap[a[0].id]) - ord.indexOf(wl.gmap[b[0].id]) || a[1] - b[1]).map(x => x[0]);
+    }
+    wl.snap = wl.snap.map(w => w.id);
     wl.key = key; wl.limit = 100;
   }
   const list = wl.snap.map(wishById).filter(Boolean);
@@ -3129,8 +3166,20 @@ function renderSession() {
   $('wishNote').textContent = `${fmt(list.length)} in this list · ${fmt(got)} got${q ? ' · searching every stage' : ''}`;
   box.textContent = '';
   if (!list.length) box.innerHTML = '<p class="empty">Nothing here. Try another stage, or clear the search.</p>';
-  for (const w of list.slice(0, wl.limit)) box.appendChild(wishRow(w, lib));
-  $('wishMore').hidden = list.length <= wl.limit;
+  let wishMoreFlag = false;
+  { let last = null;
+    const counts = {}; if (wl.group) for (const w of list) counts[wl.gmap[w.id]] = (counts[wl.gmap[w.id]] || 0) + 1;
+    const shownIn = {}; let more = false;
+    for (const w of list) {
+      const g = wl.group ? wl.gmap[w.id] : '';
+      shownIn[g] = (shownIn[g] || 0) + 1;
+      if (shownIn[g] > wl.limit) { more = true; continue; }
+      if (wl.group && wl.gmap[w.id] !== last) { last = wl.gmap[w.id]; const h = document.createElement('div'); h.className = 'wish-group'; h.innerHTML = '<span></span><span class="n tnum"></span>'; h.firstChild.textContent = last; h.lastChild.textContent = fmt(counts[last]); box.appendChild(h); }
+      box.appendChild(wishRow(w, lib));
+    }
+    wishMoreFlag = more; }
+  $('wishMore').hidden = !wishMoreFlag;
+  $('wlGroup').value = wl.group; $('wlWant').value = wl.want; $('wlChk').value = wl.chk;
   wishBar();
 }
 function wishRow(w, lib) {
@@ -3146,7 +3195,17 @@ function wishRow(w, lib) {
   if (w.gift === 'TRUE') { const g = document.createElement('span'); g.className = 'wl-gift'; g.textContent = 'Gift idea'; t.after(g); }
   if (lib.has(wishKey(w.title))) { const hv = document.createElement('span'); hv.className = 'have'; hv.textContent = 'In library'; t.after(hv); }
   const m = row.querySelector('.m');
-  m.textContent = [w.author, w.series && (w.series + (w.number ? ' #' + w.number : '')), w.publisher, w.format, w.wantAs, w.stage === 'Waiting' ? w.waiting || 'Waiting' : '', w.release && !isLate(w) ? 'Out ' + w.release : '', w.price, w.notes].filter(Boolean).join(' · ');
+  m.textContent = [w.author, w.series && (w.series + (w.number ? ' #' + w.number : '')), w.publisher, w.format, w.stage === 'Waiting' ? w.waiting || 'Waiting' : '', w.release && !isLate(w) ? 'Out ' + w.release : '', w.price, w.notes].filter(Boolean).join(' · ');
+  // Checked sticker (one tap cycles New, Available, Unavailable) and the Kobo / PDF tag
+  { const tags = document.createElement('span'); tags.className = 'wtags';
+    const c = document.createElement('button'); c.type = 'button'; c.className = 'chk'; c.dataset.c = w.checked || '';
+    c.textContent = w.checked || 'New';
+    c.title = w.checked ? `${w.checked}${w.checkedOn ? ', checked ' + w.checkedOn : ''}. Tap to change.` : 'Not checked yet. Tap when you have looked.';
+    c.addEventListener('click', () => { const n = CHK_NEXT[w.checked || '']; setWishFields(w, { checked: n, checkedOn: n ? today() : '' }); });
+    const a = document.createElement('select'); a.className = 'wa'; a.dataset.w = w.wantAs || ''; a.setAttribute('aria-label', 'Get ' + w.title + ' as');
+    a.innerHTML = ['', 'Kobo', 'PDF', 'Either', 'Physical', 'Library'].map(x => `<option value="${x}"${x === (w.wantAs || '') ? ' selected' : ''}>${x ? WANT_LABEL[x] : 'Set format'}</option>`).join('');
+    a.addEventListener('change', () => setWishFields(w, { wantAs: a.value }));
+    tags.append(c, a); t.after(tags); }
   if (isLate(w)) { const l = document.createElement('span'); l.className = 'wl-late'; l.textContent = ` · Should be out (${w.release})`; m.appendChild(l); }
   tick.addEventListener('change', () => {
     if (tick.checked) { w._was = w.stage; setWishFields(w, { stage: 'Got it' }); }
@@ -3197,7 +3256,7 @@ async function findWishRow(id) {
   return { header, row: hits[0] };
 }
 // Gift is a checkbox and release a date, so those go in as typed; everything else as plain text
-const wishCell = (k, v) => !v ? (k === 'gift' ? 'FALSE' : '') : k === 'gift' ? (v === 'TRUE' ? 'TRUE' : 'FALSE') : k === 'release' && /^\d{4}-\d\d-\d\d$/.test(v) ? v : "'" + v;
+const wishCell = (k, v) => !v ? (k === 'gift' ? 'FALSE' : '') : k === 'gift' ? (v === 'TRUE' ? 'TRUE' : 'FALSE') : (k === 'release' || k === 'checkedOn') && /^\d{4}-\d\d-\d\d$/.test(v) ? v : "'" + v;
 async function writeWishFields(id, fields) {
   if (!id) throw { code: 'tool_error', message: 'this Wishlist row has no id yet' };
   const { header, row } = await findWishRow(id);
@@ -3300,7 +3359,7 @@ async function savePaste(e) {
 }
 
 // One dialog for adding with details and for editing
-const WD_FIELDS = ['title', 'author', 'series', 'number', 'publisher', 'type', 'format', 'stage', 'waiting', 'wantAs', 'release', 'price', 'interest', 'link', 'seenIn', 'notes'];
+const WD_FIELDS = ['title', 'author', 'series', 'number', 'publisher', 'type', 'format', 'stage', 'waiting', 'wantAs', 'checked', 'release', 'price', 'interest', 'link', 'seenIn', 'notes'];
 function openWishDlg(w) {
   wl.editing = w || null;
   $('wd-stage').innerHTML = WL_STAGES.map(s => `<option>${s}</option>`).join('');
@@ -3322,6 +3381,7 @@ async function saveWish(e) {
   const w = wl.editing;
   if (w) {
     const changed = Object.fromEntries(Object.entries(f).filter(([k, v]) => v !== (w[k] || (k === 'gift' ? 'FALSE' : ''))));
+    if ('checked' in changed) changed.checkedOn = changed.checked ? today() : '';
     $('wishDlg').close();
     if (Object.keys(changed).length) { setWishFields(w, changed); wl.snap = wl.view === 'session' ? wl.snap : null; renderWish(); }
     return;
@@ -4184,6 +4244,7 @@ setLogDay(null);
 $('dogAdd').addEventListener('click', () => openQuoteDlg(null));
 $('wishChips').addEventListener('click', e => { const c = e.target.closest('.chip'); if (!c) return; wl.chip = c.dataset.w; renderWish(); });
 $('wishSeries').addEventListener('change', e => { wl.series = e.target.value; renderWish(); });
+for (const [id, k] of [['wlGroup', 'group'], ['wlWant', 'want'], ['wlChk', 'chk']]) $(id).addEventListener('change', e => { wl[k] = e.target.value; renderWish(); });
 $('wishMoveBtn').addEventListener('click', () => moveWishToBooks((wl.snap || []).map(wishById).filter(w => w && w.stage === 'Got it')));
 $('wishMore').addEventListener('click', () => { wl.limit += 100; renderWish(); });
 document.querySelector('.wl-tabs').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; wl.view = b.dataset.wv; renderWish(); });
