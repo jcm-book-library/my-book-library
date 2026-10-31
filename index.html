@@ -155,6 +155,25 @@ input[type="number"]:focus{border-color:var(--accent);outline:none}
 .fy-rec{display:flex;flex-direction:column;height:calc(100% - 38px)}
 @media (max-width:900px){.fy{grid-template-columns:minmax(0,1fr)}}
 .lib-foot[hidden]{display:none}
+.rl-bar{display:flex;gap:12px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
+.rl-prog{height:5px;background:var(--raise);border-radius:3px;overflow:hidden;margin:0 16px 4px}
+.rl-prog>i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--accent-next))}
+.rl-ol{list-style:none;margin:0;padding:6px 16px 4px;display:flex;flex-direction:column}
+.rl-ol li{display:grid;grid-template-columns:2.4em minmax(0,1fr) auto auto;gap:4px 12px;align-items:center;padding:9px 0;border-top:1px solid var(--line)}
+.rl-ol li:first-child{border-top:0}
+.rl-ol .n{color:var(--muted);text-align:right}
+.rl-ol .tt{background:none;border:0;padding:0;font:inherit;font-weight:500;color:var(--fg);text-align:left;cursor:pointer}
+.rl-ol .tt:hover{color:var(--accent)}
+.rl-ol .au{font-size:12px;color:var(--muted)}
+.rl-ol .acts{display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap}
+.rl-ol .acts button{font:inherit;font-size:12px;font-weight:500;border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:999px;padding:2px 10px;cursor:pointer}
+.rl-ol .acts button:hover{color:var(--fg);border-color:var(--accent)}
+.rl-ol li.next{background:color-mix(in srgb,var(--accent) 9%,transparent);margin:0 -16px;padding-left:16px;padding-right:16px}
+.rl-ol .nx{font-size:11px;font-weight:700;color:var(--accent);margin-left:8px;white-space:nowrap}
+.rl-ol .st2{font-size:11px;font-weight:700;padding:2px 10px;border-radius:999px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.rl-ol .st2.want{border-color:var(--accent);color:var(--fg)}
+.rl-add{padding:6px 16px 14px}
+@media (max-width:560px){.rl-ol li{grid-template-columns:2em minmax(0,1fr) auto}.rl-ol .acts{grid-column:2/-1;justify-content:flex-start}}
 .cov-s{width:26px;height:38px;object-fit:cover;border-radius:3px;margin-right:8px;vertical-align:-14px;background:var(--raise)}
 .cov-m{width:46px;height:68px;object-fit:cover;border-radius:4px;flex:none;background:var(--raise)}
 .nb-info{display:flex;gap:14px;align-items:center;min-width:0}
@@ -669,14 +688,14 @@ dialog::backdrop{background:rgba(8,6,14,.65)}
       <select id="libOwned" aria-label="Owned"><option value="">Physical &amp; digital</option><option>Physical</option><option>Digital</option></select>
       <button class="btn btn-primary" id="addBookBtn" type="button">Add book</button>
     </div>
-    <div class="lib-mode" role="group" aria-label="Library view"><button type="button" data-mode="books" aria-pressed="true">Books</button><button type="button" data-mode="plan" aria-pressed="false">Plan your TBR</button><button type="button" data-mode="wish" aria-pressed="false">Wishlist</button></div>
+    <div class="lib-mode" role="group" aria-label="Library view"><button type="button" data-mode="books" aria-pressed="true">Books</button><button type="button" data-mode="plan" aria-pressed="false">Plan your TBR</button><button type="button" data-mode="wish" aria-pressed="false">Wishlist</button><button type="button" data-mode="lists" aria-pressed="false">Reading lists</button></div>
     <div id="wishView" hidden>
       <section class="panel wl-add" aria-label="Add to your Wishlist">
         <div class="wl-addrow"><input id="wlQuick" class="tool-input" placeholder="Add a book: Title, or Title by Author" autocomplete="off" aria-label="Book to add">
           <button class="btn btn-primary" type="button" id="wlQuickBtn">Add to Inbox</button><button class="btn" type="button" id="wlPasteBtn">Paste a list</button><button class="btn" type="button" id="wlFullBtn">Add with details</button></div>
         <div class="muted small" id="wlQuickMsg" aria-live="polite"></div>
       </section>
-      <div class="lib-mode wl-tabs" role="group" aria-label="Wishlist view"><button type="button" data-wv="inbox" aria-pressed="true">Inbox</button><button type="button" data-wv="session" aria-pressed="false">Get them</button><button type="button" data-wv="series" aria-pressed="false">Series</button><button type="button" data-wv="lists" aria-pressed="false">Reading lists</button></div>
+      <div class="lib-mode wl-tabs" role="group" aria-label="Wishlist view"><button type="button" data-wv="inbox" aria-pressed="true">Inbox</button><button type="button" data-wv="session" aria-pressed="false">Get them</button><button type="button" data-wv="series" aria-pressed="false">Series</button></div>
       <section class="panel" id="wlInbox" aria-labelledby="wlInboxH"><div class="panel-head"><h2 id="wlInboxH">Inbox</h2><span class="muted small tnum" id="wlInboxNote"></span></div><div id="wlDeck"></div></section>
       <section class="panel" id="wlSession" aria-labelledby="wlSessH" hidden>
         <div class="panel-head"><h2 id="wlSessH">Get them</h2><span class="muted small tnum" id="wishNote"></span><select id="wishSeries" aria-label="Series or list"><option value="">Any series or list</option></select></div>
@@ -687,7 +706,6 @@ dialog::backdrop{background:rgba(8,6,14,.65)}
         <div class="wish-bar" id="wishBar" hidden><span id="wishBarText"></span><button class="btn btn-primary" type="button" id="wishMoveBtn">Move to TBR now</button></div>
       </section>
       <section class="panel" id="wlSeries" aria-labelledby="wlSerH" hidden><div class="panel-head"><h2 id="wlSerH">Series you're following</h2><button class="btn" type="button" id="wlSerAdd">Add a series</button></div><div id="wlSerList"></div></section>
-      <section class="panel" id="wlLists" aria-labelledby="wlListsH" hidden><div class="panel-head"><h2 id="wlListsH">Reading lists</h2><span class="muted small">In order, with where each one stands</span></div><div id="wlListBox"></div></section>
     </div>
     <div id="planView" hidden>
       <section class="panel" aria-labelledby="upH"><div class="panel-head"><h2 id="upH">Up next</h2><span class="muted small tnum" id="upNote"></span></div><ol class="plan-list up-detail" id="upList"></ol></section>
@@ -702,6 +720,10 @@ dialog::backdrop{background:rgba(8,6,14,.65)}
         <ol class="plan-list sheet-list" id="sheetList"></ol>
         <button class="btn" type="button" id="sheetMore" hidden>Show 50 more</button>
       </section>
+    </div>
+    <div id="listsView" hidden>
+      <div class="rl-bar"><button class="btn btn-primary" type="button" id="rlNew">New list</button><span class="muted small" id="rlNote"></span></div>
+      <div id="rlBoxes"></div>
     </div>
     <div id="libSecs"></div>
     <div class="lib-foot"><span><span id="libCount"></span> <button class="btn" id="libSheetOrder" type="button" hidden>Back to sheet order</button></span></div>
@@ -877,6 +899,11 @@ dialog::backdrop{background:rgba(8,6,14,.65)}
   </form>
 </dialog>
 
+<dialog id="askDlg" aria-labelledby="askMsg" style="width:min(440px,calc(100vw - 32px))">
+  <div style="padding:22px 22px 8px"><p id="askMsg" style="margin:0;font-size:16px;line-height:1.5"></p></div>
+  <div class="dlg-foot"><span></span><span class="dlg-actions"><button class="btn" type="button" id="askNo">Cancel</button><button class="btn btn-primary" type="button" id="askYes">Delete</button></span></div>
+</dialog>
+
 <aside id="bookCard" class="bcard" role="dialog" aria-label="Book details" hidden></aside>
 
 <dialog id="coverDlg" aria-labelledby="cvTitle" style="width:min(760px,calc(100vw - 32px))">
@@ -888,6 +915,21 @@ dialog::backdrop{background:rgba(8,6,14,.65)}
     <div class="muted" id="cvMsg" aria-live="polite" style="font-size:14px"></div>
   </div>
   <div class="dlg-foot"><span></span><span class="dlg-actions"><button class="btn" type="button" id="cvRemove" hidden>Remove cover</button><button class="btn" type="button" id="cvNone">None of these</button><button class="btn" type="button" id="cvSkip">Skip</button></span></div>
+</dialog>
+
+<dialog id="listDlg" aria-labelledby="rlTitleH" style="width:min(600px,calc(100vw - 32px))">
+  <form id="listForm" method="dialog">
+    <div class="dlg-head"><h2 id="rlTitleH">Add to a reading list</h2><button class="btn" type="button" id="rlClose">Close</button></div>
+    <div class="wd-grid">
+      <div class="field w2"><label for="rl-list">List</label><input id="rl-list" name="list" required list="rlNames" autocomplete="off" placeholder="e.g. Marvel Read List"><datalist id="rlNames"></datalist></div>
+      <div class="field"><label for="rl-order">Place in order</label><input id="rl-order" name="order" type="number" min="1" inputmode="numeric"></div>
+      <div class="field w4"><label for="rl-title">Title</label><input id="rl-title" name="title" required autocomplete="off"></div>
+      <div class="field w2"><label for="rl-author">Author</label><input id="rl-author" name="author" autocomplete="off"></div>
+      <div class="field w2"><label for="rl-notes">Notes</label><input id="rl-notes" name="notes" autocomplete="off"></div>
+      <div class="field w4"><label for="rl-book">Link to a book in your library (optional)</label><input id="rl-book" list="rlBooks" autocomplete="off" placeholder="Start typing a title. Only needed when it isn't matched by itself."><datalist id="rlBooks"></datalist><span class="muted small" id="rlBookNote"></span></div>
+    </div>
+    <div class="dlg-foot"><span class="muted" id="rlMsg" style="font-size:13px;align-self:center"></span><span class="dlg-actions"><button class="btn" type="button" id="rlRemove" hidden>Remove from list</button><button class="btn btn-primary" type="submit" id="rlSave">Add</button></span></div>
+  </form>
 </dialog>
 
 <dialog id="seriesDlg" aria-labelledby="sdTitle" style="width:min(560px,calc(100vw - 32px))">
@@ -1226,8 +1268,8 @@ function entryEditor(e) {
       editEntry(e, { date: d, pages: p }, ev.target.closest('button'));
     }
     if (a === 'del') {
-      if (!confirm(`Delete ${e.pages} pages${e.title ? ' of ' + e.title : ''} from ${e.date}?`)) return;
-      editEntry(e, { del: true }, ev.target.closest('button'));
+      const bt = ev.target.closest('button');
+      askOk(`Delete ${e.pages} pages${e.title ? ' of ' + e.title : ''} from ${e.date}?`).then(yes => { if (yes) editEntry(e, { del: true }, bt); });
     }
   });
   return f;
@@ -1396,6 +1438,17 @@ function renderHeat(totals, y = today().slice(0, 4)) {
   box.appendChild(frag);
 }
 
+// A confirmation the page draws itself, because confirm() is blocked inside claude.ai
+function askOk(msg, ok = 'Delete') {
+  return new Promise(res => {
+    const d = $('askDlg'); $('askMsg').textContent = msg; $('askYes').textContent = ok;
+    let v = false;
+    $('askYes').onclick = () => { v = true; d.close(); };
+    $('askNo').onclick = () => d.close();
+    d.onclose = () => res(v);
+    d.showModal(); $('askNo').focus();
+  });
+}
 /* ---------- Covers from Open Library ----------
    A book keeps only a small reference in the cover column ("ol:<cover id>", or "none" once you've said none fit).
    The picture itself is loaded from covers.openlibrary.org. The claude.ai page can't load outside pictures, so covers show on the GitHub Pages site. */
@@ -1867,16 +1920,18 @@ function fillSelect(id, field, label) {
 }
 function renderLibrary() {
   const L = state.lib;
-  const mode = L.mode || 'books', plan = mode === 'plan', wish = mode === 'wish';
+  const mode = L.mode || 'books', plan = mode === 'plan', wish = mode === 'wish', lists = mode === 'lists';
   document.querySelectorAll('.lib-mode button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.mode === mode)));
   $('planView').hidden = !plan;
   $('wishView').hidden = !wish;
-  $('view-library').classList.toggle('wish-mode', wish);
+  $('view-library').classList.toggle('wish-mode', wish || lists);
+  $('listsView').hidden = !lists;
   $('libSecs').hidden = mode !== 'books';
   if (mode !== 'books') hideCard();
   $('libTier').hidden = mode !== 'books';
   document.querySelector('#view-library .lib-foot').hidden = mode !== 'books';
   if (wish) { renderWish(); return; }
+  if (lists) { renderLists(); return; }
   if (plan) { if ($('libGenre').options.length <= 1) { fillSelect('libType', 'type', 'All types'); fillSelect('libFormat', 'format', 'All formats'); fillSelect('libGenre', 'genre', 'All genres'); fillSelect('libPublisher', 'publisher', 'All publishers'); } renderPlan(); return; }
   if ($('libGenre').options.length <= 1) { fillSelect('libType', 'type', 'All types'); fillSelect('libFormat', 'format', 'All formats'); fillSelect('libGenre', 'genre', 'All genres'); fillSelect('libPublisher', 'publisher', 'All publishers'); }
   // One box per status, in a fixed order. A box opens on click, or by itself when a search or filter finds books in it.
@@ -3002,8 +3057,8 @@ const isLate = w => w.stage === 'Waiting' && /^\d{4}-\d\d-\d\d$/.test(w.release)
 
 async function renderWish() {
   document.querySelectorAll('.wl-tabs button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.wv === wl.view)));
-  for (const [id, v] of [['wlInbox', 'inbox'], ['wlSession', 'session'], ['wlSeries', 'series'], ['wlLists', 'lists']]) $(id).hidden = wl.view !== v;
-  const box = { inbox: 'wlDeck', session: 'wishList', series: 'wlSerList', lists: 'wlListBox' }[wl.view];
+  for (const [id, v] of [['wlInbox', 'inbox'], ['wlSession', 'session'], ['wlSeries', 'series']]) $(id).hidden = wl.view !== v;
+  const box = { inbox: 'wlDeck', session: 'wishList', series: 'wlSerList' }[wl.view];
   if (!isLive()) { $(box).innerHTML = '<p class="empty">Your Wishlist loads from the sheet. ' + connectHint() + '</p>'; return; }
   if (!disc.loaded) { $(box).innerHTML = '<p class="empty">Loading your Wishlist…</p>'; await loadDiscover(); }
   if (disc.wErr) { $(box).innerHTML = '<p class="empty">Couldn\'t read your Wishlist: ' + escapeText(explain(disc.wErr)) + '</p>'; return; }
@@ -3013,8 +3068,7 @@ async function renderWish() {
   $('wdSeenList').innerHTML = [...new Set(disc.wish.map(w => w.seenIn).filter(Boolean))].sort().map(x => `<option value="${escapeText(x)}">`).join('');
   if (wl.view === 'inbox') renderInbox();
   else if (wl.view === 'session') renderSession();
-  else if (wl.view === 'series') renderSeriesView();
-  else renderListsView();
+  else renderSeriesView();
 }
 
 /* Inbox: one book at a time, decide where it goes */
@@ -3159,7 +3213,7 @@ async function clearWishRow(id) {
   wishRows.delete(id);
 }
 async function dropWish(w) {
-  if (!confirm(`Drop “${w.title}” from your Wishlist? It's deleted, not archived.`)) return;
+  if (!(await askOk(`Drop “${w.title}” from your Wishlist? It's deleted, not archived.`, 'Drop it'))) return;
   if (!isLive()) { notice('Dropping needs the live connection. ' + connectHint(), 'error'); return; }
   const i = disc.wish.indexOf(w);
   disc.wish.splice(i, 1); renderWish();
@@ -3363,13 +3417,47 @@ function seriesBooks(name) {
   const k = normQ(name);
   return state.allBooks.filter(b => normQ(b.series) === k);
 }
+// How many books (library plus Wishlist) carry each series name
+function seriesCounts() {
+  const m = new Map();
+  for (const b of state.allBooks) if (b.series) m.set(normQ(b.series), (m.get(normQ(b.series)) || 0) + 1);
+  for (const w of disc.wish || []) if (w.series) m.set(normQ(w.series), (m.get(normQ(w.series)) || 0) + 1);
+  return m;
+}
+// A tracked series with no books left in it is removed from the Series Tracker
+let pruning = false;
+async function pruneSeries() {
+  if (pruning || !isLive() || !state.libLoaded || !disc.loaded || disc.wErr) return;
+  const counts = seriesCounts(), empty = (disc.series || []).filter(x => x._row && !counts.get(normQ(x.series)));
+  if (!empty.length) return;
+  pruning = true;
+  try {
+    for (const s of empty) {
+      const v = await readRange("'Series Tracker'!A1:I500"), header = (v[0] || []).map(h => String(h).trim()), c = header.indexOf('series');
+      const hits = v.map((r, i) => i && normQ(r[c]) === normQ(s.series) ? i + 1 : 0).filter(Boolean);
+      if (hits.length !== 1) continue;
+      await state.mcp.callTool(SERVER, 'update_values', { spreadsheetId: SHEET_ID, range: `'Series Tracker'!A${hits[0]}:${colLetter(header.length - 1)}${hits[0]}`, values: [header.map(() => '')] }, { cache: false });
+      disc.series.splice(disc.series.indexOf(s), 1);
+    }
+    notice(`Removed ${empty.length} empty series from the tracker: ${empty.map(x => x.series).join(', ')}.`);
+  } catch (err) { notice("Couldn't tidy the Series Tracker: " + (err.message || explain(err)), 'error'); }
+  finally { pruning = false; renderSeriesView(); }
+}
 function renderSeriesView() {
   const box = $('wlSerList');
-  const names = new Map((disc.series || []).map(s => [s.series, s]));
-  for (const w of disc.wish) if (w.series && !names.has(w.series)) names.set(w.series, { series: w.series, author: w.author, _new: true });
-  if (!names.size) { box.innerHTML = '<p class="empty">No series yet. Add one to see where you\'re up to.</p>'; return; }
+  const counts = seriesCounts(), names = new Map();
+  // Followed series (with books), every series with two or more books, and any series on the Wishlist
+  for (const s of disc.series || []) if (counts.get(normQ(s.series))) names.set(normQ(s.series), s);
+  const seen = new Map();
+  for (const b of state.allBooks) if (b.series && !seen.has(normQ(b.series))) seen.set(normQ(b.series), { series: b.series, author: b.author, _new: true });
+  for (const w of disc.wish || []) if (w.series && !seen.has(normQ(w.series))) seen.set(normQ(w.series), { series: w.series, author: w.author, _new: true });
+  for (const [k, x] of seen) if (!names.has(k) && counts.get(k) >= 2) names.set(k, x);
+  for (const w of disc.wish || []) if (w.series && !names.has(normQ(w.series))) names.set(normQ(w.series), seen.get(normQ(w.series)));
+  if (!names.size) { box.innerHTML = '<p class="empty">No series yet. Add one to see where you\'re up to.</p>'; pruneSeries(); return; }
   box.innerHTML = '<div class="ser-legend"><span><i style="background:var(--accent)"></i>Finished</span><span><i style="background:color-mix(in srgb,var(--accent) 35%,var(--raise))"></i>Own</span><span><i style="border:1px solid var(--accent)"></i>Wishlist</span><span><i style="border:1px dashed var(--line)"></i>Not added</span></div>';
-  const list = [...names.values()].sort((a, b) => a.series.localeCompare(b.series, undefined, { numeric: true }));
+  const q = normQ(state.lib.q);
+  const list = [...names.values()].filter(s => !q || normQ(s.series + ' ' + (s.author || '')).includes(q)).sort((a, b) => a.series.localeCompare(b.series, undefined, { numeric: true }));
+  if (!list.length) box.insertAdjacentHTML('beforeend', '<p class="empty">No series match that search.</p>');
   for (const s of list) {
     const books = seriesBooks(s.series), wants = disc.wish.filter(w => normQ(w.series) === normQ(s.series));
     const by = new Map();
@@ -3387,13 +3475,13 @@ function renderSeriesView() {
     for (let n = 1; n <= top; n++) { const t = document.createElement('span'); t.className = by.get(n) || ''; t.textContent = n; t.title = { read: 'Finished', own: 'In your library', want: 'On your Wishlist', soon: 'Waiting on release' }[by.get(n)] || 'Not added yet'; tiles.appendChild(t); }
     if (!top) tiles.innerHTML = '<span class="muted small" style="border:0;background:none">No numbers yet. Add the released count to see the gaps.</span>';
     const unnumbered = books.filter(b => !toNum(b.seriesNum)).length + wants.filter(w => !toNum(w.number)).length;
-    card.querySelector('.sm').textContent = [`${read} read`, `${own} unread in library`, `${wants.length} on Wishlist`, s.released ? `${s.released} out` : '', unnumbered ? `${unnumbered} without a number` : ''].filter(Boolean).join(' · ');
+    card.querySelector('.sm').textContent = [`${read} finished`, `${own} unread in library`, `${wants.length} on Wishlist`, s.released ? `${s.released} out` : '', unnumbered ? `${unnumbered} without a number` : ''].filter(Boolean).join(' · ');
     const acts = card.querySelector('.acts');
     if (firstGap && (!s.released || firstGap <= toNum(s.released))) {
       const b = document.createElement('button'); b.className = 'btn'; b.type = 'button'; b.textContent = `Add #${firstGap}`;
       b.addEventListener('click', async () => {
         b.disabled = true;
-        try { await appendWishRows([{ title: `${s.series} #${firstGap}`, author: s.author || '', series: s.series, publisher: s.publisher || '', number: String(firstGap), format: s.soldAs || '', type: 'Fiction' }]); setStatus('live', `Added ${s.series} #${firstGap} to your Inbox`); renderSeriesView(); }
+        try { await appendWishRows([{ title: `${s.series} #${firstGap}`, author: s.author || '', series: s.series, publisher: s.publisher || '', format: s.soldAs || '', type: 'Fiction' }]); setStatus('live', `Added ${s.series} #${firstGap} to your Inbox`); renderSeriesView(); }
         catch (err) { b.disabled = false; notice('Couldn\'t add it: ' + (err.message || explain(err)), 'error'); }
       });
       acts.appendChild(b);
@@ -3403,6 +3491,7 @@ function renderSeriesView() {
     acts.appendChild(ed);
     box.appendChild(card);
   }
+  pruneSeries();
 }
 const SD_FIELDS = ['series', 'author', 'publisher', 'kind', 'status', 'released', 'soldAs', 'link', 'notes'];
 let sdEditing = null;
@@ -3446,46 +3535,163 @@ async function saveSeries(e) {
 }
 
 /* Reading lists: each list in order, matched against Books and the Wishlist */
-function renderListsView() {
-  const box = $('wlListBox');
-  const items = disc.lists || [];
-  if (!items.length) { box.innerHTML = '<p class="empty">No reading lists yet. Add rows to the “Reading Lists” tab (list, order, title, author).</p>'; return; }
-  const lib = libByTitle(), wish = new Map(disc.wish.map(w => [wishKey(w.title), w]));
+const rl = { open: {}, editing: null, bookId: '' };
+const listNames = () => [...new Set((disc.lists || []).map(x => x.list))];
+const listItems = name => (disc.lists || []).filter(x => x.list === name).sort((a, b) => (toNum(a.order) || 1e6) - (toNum(b.order) || 1e6) || a._row - b._row);
+// An item points at a book you own: the linked book if set, else the same title (and author, when given)
+function listBook(it) {
+  if (it.bookId) { const b = state.allBooks.find(x => x.id === it.bookId); if (b) return b; }
+  const k = wishKey(it.title), au = normQ(it.author).split(' ').filter(w => w.length > 2);
+  let c = state.allBooks.filter(b => wishKey(b.title) === k);
+  if (au.length && c.length) { const m = c.filter(b => { const ba = normQ(b.author); return au.some(w => ba.includes(w)); }); c = m.length ? m : c.filter(b => /read through/i.test(b.series || '')); }
+  if (!c.length) return null;
+  const rank = b => ({ Finished: 0, Reading: 1, Paused: 2, 'Re-read': 3, TBR: 4, DNF: 5 }[b.status] ?? 6);
+  return c.sort((a, b) => rank(a) - rank(b))[0];
+}
+async function renderLists() {
+  const box = $('rlBoxes');
+  if (!isLive()) { box.innerHTML = '<p class="empty">Your reading lists load from the sheet. ' + connectHint() + '</p>'; return; }
+  if (!state.libLoaded || !disc.loaded) { box.innerHTML = '<p class="empty">Loading your reading lists…</p>'; await loadDiscover(); }
+  if (!(disc.lists || []).length) { $('rlNote').textContent = ''; box.innerHTML = '<p class="empty">No reading lists yet. Press New list to start one, for example a suggested reading order.</p>'; return; }
+  const q = normQ(state.lib.q), wish = new Map((disc.wish || []).map(w => [wishKey(w.title), w]));
   box.textContent = '';
-  const names = [...new Set(items.map(x => x.list))];
-  for (const name of names) {
-    const rows = items.filter(x => x.list === name).sort((a, b) => (toNum(a.order) || 1e6) - (toNum(b.order) || 1e6) || a._row - b._row);
-    const st = rows.map(x => { const k = wishKey(x.title), b = lib.get(k), w = wish.get(k); return b ? (b.status === 'Finished' ? ['read', 'Finished'] : ['own', b.status || 'Owned']) : w ? ['want', w.stage || 'Wishlist'] : ['', 'Not added']; });
-    const read = st.filter(s => s[0] === 'read').length, have = st.filter(s => s[0] === 'own').length;
-    const sec = document.createElement('div');
-    sec.className = 'rl-list';
-    sec.innerHTML = '<h3></h3><div class="muted small"></div><div class="bar" style="height:6px;border-radius:3px;background:var(--raise);margin-top:6px;overflow:hidden"><div style="height:100%;background:var(--accent)"></div></div><ul class="rl-items"></ul>';
-    sec.querySelector('h3').textContent = name;
-    sec.querySelector('.small').textContent = `${read} of ${rows.length} read · ${have} more in your library · ${st.filter(s => s[0] === 'want').length} on Wishlist`;
-    sec.querySelector('.bar div').style.width = (rows.length ? read / rows.length * 100 : 0) + '%';
-    const ul = sec.querySelector('ul');
-    rows.forEach((x, i) => {
-      const li = document.createElement('li');
-      li.innerHTML = '<span class="n"></span><span><span class="t"></span><span class="muted small"></span></span><span></span>';
-      li.querySelector('.n').textContent = x.order || '–';
-      li.querySelector('.t').textContent = x.title;
-      li.querySelector('.small').textContent = x.author ? ' · ' + x.author : '';
-      const end = li.lastChild;
-      if (st[i][0]) { const s = document.createElement('span'); s.className = 'st ' + st[i][0]; s.textContent = st[i][1]; end.appendChild(s); }
-      else {
-        const b = document.createElement('button'); b.type = 'button'; b.textContent = '+ Wishlist';
-        b.addEventListener('click', async () => {
-          b.disabled = true;
-          try { await appendWishRows([{ title: x.title, author: x.author, seenIn: name }]); setStatus('live', `Added “${x.title}” to your Inbox`); renderListsView(); }
-          catch (err) { b.disabled = false; notice('Couldn\'t add it: ' + (err.message || explain(err)), 'error'); }
-        });
-        end.appendChild(b);
+  const names = listNames(); let shown = 0;
+  names.forEach((name, ni) => {
+    const all = listItems(name), rows = all.map(it => ({ it, b: listBook(it), w: wish.get(wishKey(it.title)) }));
+    const done = rows.filter(r => r.b && r.b.status === 'Finished').length;
+    const nextIdx = rows.findIndex(r => !(r.b && r.b.status === 'Finished'));
+    const list = q ? rows.filter(r => normQ(r.it.title + ' ' + r.it.author).includes(q)) : rows;
+    if (q && !list.length) return;
+    shown++;
+    const open = rl.open[name] ?? (q ? true : ni === 0);
+    const sec = document.createElement('section'); sec.className = 'lib-sec';
+    const nxt = nextIdx >= 0 ? rows[nextIdx].it.title : '';
+    sec.innerHTML = `<button type="button" class="lib-sec-head" data-rl="${escapeText(name)}" aria-expanded="${open}"><span style="font-weight:500;font-size:16px;overflow-wrap:anywhere"></span><span class="cnt tnum">${fmt(done)} of ${fmt(rows.length)}</span><span class="sub">${nxt ? 'next: ' + escapeText(nxt) : 'all finished'}</span><span class="chev" aria-hidden="true"></span></button><div class="rl-prog" aria-hidden="true"><i style="width:${rows.length ? done / rows.length * 100 : 0}%"></i></div>`;
+    sec.querySelector('.lib-sec-head > span').textContent = name;
+    if (open) {
+      const ol = document.createElement('ol'); ol.className = 'rl-ol';
+      for (const r of list) {
+        const { it, b, w } = r, li = document.createElement('li');
+        const isNext = rows[nextIdx] === r;
+        if (isNext) li.className = 'next';
+        li.innerHTML = '<span class="n tnum"></span><span><button type="button" class="tt"></button><span class="nx" hidden>Next in list</span><br><span class="au"></span></span><span class="stc"></span><span class="acts"></span>';
+        li.querySelector('.n').textContent = it.order || '–';
+        const tt = li.querySelector('.tt'); tt.textContent = it.title;
+        li.querySelector('.au').textContent = [it.author, b && b.title !== it.title ? 'in your library as “' + b.title + '”' : '', it.notes].filter(Boolean).join(' · ');
+        if (isNext) li.querySelector('.nx').hidden = false;
+        const stc = li.querySelector('.stc');
+        if (b) { stc.innerHTML = `<span class="pill" data-s="${escapeText(b.status)}">${escapeText(b.status)}</span>`; tt.addEventListener('click', () => { state.lib.mode = 'books'; openInLibrary(b.id); }); }
+        else if (w) stc.innerHTML = `<span class="st2 want">Wishlist · ${escapeText(w.stage || 'Inbox')}</span>`;
+        else stc.innerHTML = '<span class="st2">Not added</span>';
+        const acts = li.querySelector('.acts');
+        if (!b && !w) { const a = document.createElement('button'); a.type = 'button'; a.textContent = '+ Wishlist'; a.addEventListener('click', async () => { a.disabled = true; try { await appendWishRows([{ title: it.title, author: it.author, seenIn: name }]); setStatus('live', `Added “${it.title}” to your Inbox`); renderLists(); } catch (err) { a.disabled = false; notice('Couldn\'t add it: ' + (err.message || explain(err)), 'error'); } }); acts.appendChild(a); }
+        const e = document.createElement('button'); e.type = 'button'; e.textContent = 'Edit'; e.addEventListener('click', () => openListDlg(it)); acts.appendChild(e);
+        ol.appendChild(li);
       }
-      ul.appendChild(li);
-    });
+      sec.appendChild(ol);
+      const add = document.createElement('div'); add.className = 'rl-add';
+      add.innerHTML = '<button class="btn" type="button">Add to this list</button>';
+      add.firstChild.addEventListener('click', () => openListDlg(null, name));
+      sec.appendChild(add);
+    }
     box.appendChild(sec);
+  });
+  if (!shown) box.innerHTML = '<p class="empty">Nothing in your lists matches that.</p>';
+  $('rlNote').textContent = `${names.length} list${names.length === 1 ? '' : 's'} · ${fmt((disc.lists || []).length)} books`;
+}
+$('rlBoxes').addEventListener('click', e => { const h = e.target.closest('[data-rl]'); if (!h) return; const n = h.dataset.rl; rl.open[n] = h.getAttribute('aria-expanded') !== 'true'; renderLists(); });
+$('rlNew').addEventListener('click', () => openListDlg(null, ''));
+
+// Writes. Every item has an id (RL0001…); the row is found by it just before each write and only changed cells are written.
+const rlRows = new Map();
+async function listHeader() { return ((await readRange("'Reading Lists'!A1:Z1"))[0] || []).map(h => String(h).trim()); }
+async function findListRow(id) {
+  const header = await listHeader(), c = header.indexOf('id');
+  if (c < 0) throw { code: 'tool_error', message: 'Reading Lists has no id column' };
+  const L = colLetter(c), known = rlRows.get(id);
+  if (known && String(((await readRange(`'Reading Lists'!${L}${known}`))[0] || [])[0] ?? '').trim() === id) return { header, row: known };
+  const ids = await readRange(`'Reading Lists'!${L}1:${L}2000`);
+  const hits = ids.map((r, i) => String(r[0] ?? '').trim() === id ? i + 1 : 0).filter(Boolean);
+  if (hits.length !== 1) throw { code: 'tool_error', message: hits.length ? `Reading list id ${id} appears ${hits.length} times` : `Reading list id ${id} isn't there any more` };
+  rlRows.set(id, hits[0]);
+  return { header, row: hits[0] };
+}
+const listCell = (k, v) => !String(v ?? '').trim() ? '' : k === 'order' ? toNum(v) : "'" + String(v).trim();
+async function writeListFields(id, fields) {
+  const { header, row } = await findListRow(id);
+  for (const [k, v] of Object.entries(fields)) {
+    const c = header.indexOf(k); if (c < 0 || k === 'id') continue;
+    await state.mcp.callTool(SERVER, 'update_values', { spreadsheetId: SHEET_ID, range: `'Reading Lists'!${colLetter(c)}${row}`, values: [[listCell(k, v)]] }, { cache: false });
   }
 }
+async function appendListItem(f) {
+  const header = await listHeader(), c = header.indexOf('id');
+  if (c < 0) throw { code: 'tool_error', message: 'Reading Lists has no id column' };
+  const used = await readRange(`'Reading Lists'!A2:${colLetter(header.length - 1)}2000`);
+  const ids = used.map(r => Number(String(r[c] || '').replace(/\D/g, '')) || 0);
+  let last = used.length; while (last && !used[last - 1].some(v => String(v ?? '').trim())) last--;
+  const id = 'RL' + String(Math.max(0, ...ids, ...(disc.lists || []).map(x => Number(String(x.id).replace(/\D/g, '')) || 0)) + 1).padStart(4, '0');
+  const r0 = last + 2, row = header.map(h => h === 'id' ? id : listCell(h, f[h]));
+  await state.mcp.callTool(SERVER, 'update_values', { spreadsheetId: SHEET_ID, range: `'Reading Lists'!A${r0}:${colLetter(header.length - 1)}${r0}`, values: [row] }, { cache: false });
+  const item = { ...Object.fromEntries(header.map(h => [h, String(f[h] ?? '').trim()])), id, _row: r0 };
+  disc.lists.push(item); rlRows.set(id, r0);
+  return item;
+}
+async function clearListItem(id) {
+  const { header, row } = await findListRow(id);
+  await state.mcp.callTool(SERVER, 'update_values', { spreadsheetId: SHEET_ID, range: `'Reading Lists'!A${row}:${colLetter(header.length - 1)}${row}`, values: [header.map(() => '')] }, { cache: false });
+  rlRows.delete(id);
+}
+function bookLabel(b) { return `${b.title}${b.author ? ' — ' + b.author : ''}${b.status ? ' (' + b.status + ')' : ''}`; }
+function openListDlg(it, listName) {
+  rl.editing = it || null;
+  $('rlNames').innerHTML = listNames().map(n => `<option value="${escapeText(n)}">`).join('');
+  $('rlTitleH').textContent = it ? 'Edit list item' : listName ? 'Add to ' + listName : 'New reading list';
+  $('rl-list').value = it ? it.list : listName || '';
+  const next = listName ? Math.max(0, ...listItems(listName).map(x => toNum(x.order))) + 1 : 1;
+  $('rl-order').value = it ? (it.order || '') : next;
+  $('rl-title').value = it ? it.title : ''; $('rl-author').value = it ? it.author : ''; $('rl-notes').value = it ? it.notes : '';
+  rl.bookId = it ? it.bookId || '' : '';
+  const lb = rl.bookId && state.allBooks.find(x => x.id === rl.bookId);
+  $('rl-book').value = lb ? bookLabel(lb) : '';
+  $('rlBookNote').textContent = it && !lb ? (listBook(it) ? 'Matched by title: ' + bookLabel(listBook(it)) : 'No match in your library yet.') : '';
+  $('rlRemove').hidden = !it; $('rlSave').textContent = it ? 'Save' : 'Add';
+  $('rlMsg').textContent = ''; $('rlSave').disabled = false;
+  $('listDlg').showModal(); $((it || listName) ? 'rl-title' : 'rl-list').focus();
+}
+$('rl-book').addEventListener('input', e => {
+  const v = e.target.value.trim(), all = state.allBooks;
+  const exact = all.find(b => bookLabel(b) === v);
+  rl.bookId = exact ? exact.id : '';
+  $('rlBookNote').textContent = exact ? 'Linked.' : '';
+  if (v.length < 2 || exact) return;
+  const k = normQ(v);
+  $('rlBooks').innerHTML = all.filter(b => normQ(b.title + ' ' + b.author).includes(k)).slice(0, 15).map(b => `<option value="${escapeText(bookLabel(b))}">`).join('');
+});
+$('rlClose').addEventListener('click', () => $('listDlg').close());
+$('listForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  if (!isLive()) { $('rlMsg').textContent = 'Saving needs the live connection. ' + connectHint(); return; }
+  const f = { list: $('rl-list').value.trim(), order: $('rl-order').value.trim(), title: $('rl-title').value.trim(), author: $('rl-author').value.trim(), notes: $('rl-notes').value.trim(), bookId: $('rl-book').value.trim() ? rl.bookId : '' };
+  if (!f.list || !f.title) { $('rlMsg').textContent = 'A list and a title are needed.'; return; }
+  $('rlSave').disabled = true; $('rlMsg').textContent = 'Saving…';
+  try {
+    const it = rl.editing;
+    if (it) {
+      const changed = Object.fromEntries(Object.entries(f).filter(([k, v]) => v !== String(it[k] ?? '')));
+      if (Object.keys(changed).length) { await writeListFields(it.id, changed); Object.assign(it, changed); }
+    } else await appendListItem(f);
+    rl.open[f.list] = true;
+    $('listDlg').close(); setStatus('live', it ? `Saved “${f.title}”` : `Added “${f.title}” to ${f.list}`); renderLists();
+  } catch (err) { $('rlMsg').textContent = "Couldn't save it: " + (err.message || explain(err)); $('rlSave').disabled = false; }
+});
+$('rlRemove').addEventListener('click', async () => {
+  const it = rl.editing; if (!it) return;
+  $('listDlg').close();
+  if (!(await askOk(`Remove “${it.title}” from ${it.list}? The book itself isn't touched.`, 'Remove'))) { $('listDlg').showModal(); return; }
+  try { await clearListItem(it.id); disc.lists.splice(disc.lists.indexOf(it), 1); setStatus('live', `Removed “${it.title}”`); renderLists(); }
+  catch (err) { notice(`Couldn't remove “${it.title}”: ${err.message || explain(err)}`, 'error'); }
+});
 
 /* ---------- Do I own this? ---------- */
 const normQ = t => String(t || '').toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
@@ -3770,7 +3976,7 @@ function loadDiscover() {
 async function fetchDiscover() {
   const [q, w, sr, rl] = await Promise.allSettled([
     state.mcp.callTool(SERVER, 'get_values', { spreadsheetId: QUOTES_ID, range: 'QUOTES!A1:G3000' }, { cache: false }),
-    readRange('Wishlist!A1:Z3000'), readRange("'Series Tracker'!A1:I500"), readRange("'Reading Lists'!A1:E2000")
+    readRange('Wishlist!A1:Z3000'), readRange("'Series Tracker'!A1:I500"), readRange("'Reading Lists'!A1:G2000")
   ]);
   const rows = (v, key) => { const h = (v[0] || []).map(x => String(x).trim()); return { h, list: v.slice(1).map((r, i) => ({ ...Object.fromEntries(h.map((k, j) => [k, String(r[j] ?? '').trim()])), _row: i + 2 })).filter(x => x[key]) }; };
   if (sr.status === 'fulfilled') disc.series = rows(sr.value, 'series').list; else disc.series = [];
