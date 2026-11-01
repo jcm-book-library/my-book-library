@@ -1797,26 +1797,47 @@ function cellValue(field, v) {
   if (DATE_FIELDS.includes(field)) return toDate(v) || '';
   return "'" + v; // keep text as text (e.g. a title like 1984)
 }
-async function findBookRow(id) {
-  const header = (await readRange('Books!A1:AZ1'))[0] || [];
-  const idCol = header.findIndex(h => String(h).trim() === 'id');
-  if (idCol < 0) throw { code: 'tool_error', message: 'Books tab has no id column' };
-  const ids = await readRange(`Books!${colLetter(idCol)}1:${colLetter(idCol)}5000`);
+// Shared write-path helpers. tab is a plain tab name; ranges quote it when it has spaces.
+const tabRef = tab => /\s/.test(tab) ? `'${tab}'` : tab;
+const readHeader = async range => ((await readRange(range))[0] || []).map(h => String(h).trim());
+// Find the one row whose id column equals id. o: header() -> trimmed header row, last (last row to read),
+// cache (Map id -> row, re-checked with a one-cell read), cacheAll (remember every id seen), noCol, dup(id, n), gone(id) messages.
+async function findRowById(tab, id, o) {
+  const header = await o.header(), c = header.indexOf('id');
+  if (c < 0) throw { code: 'tool_error', message: o.noCol };
+  const L = colLetter(c), t = tabRef(tab), known = o.cache && o.cache.get(id);
+  if (known && String(((await readRange(`${t}!${L}${known}`))[0] || [])[0] ?? '').trim() === id) return { header, row: known };
+  const ids = await readRange(`${t}!${L}1:${L}${o.last}`);
+  if (o.cacheAll) ids.forEach((r, i) => { const v = String(r[0] ?? '').trim(); if (v) o.cache.set(v, i + 1); });
   const hits = ids.map((r, i) => String(r[0] ?? '').trim() === id ? i + 1 : 0).filter(Boolean);
-  if (hits.length !== 1) throw { code: 'tool_error', message: hits.length ? `ID ${id} appears ${hits.length} times in Books` : `ID ${id} isn't in Books any more` };
-  return { header: header.map(h => String(h).trim()), row: hits[0] };
+  if (hits.length !== 1) throw { code: 'tool_error', message: hits.length ? o.dup(id, hits.length) : o.gone(id) };
+  if (o.cache && !o.cacheAll) o.cache.set(id, hits[0]);
+  return { header, row: hits[0] };
 }
+// Write each field to its own cell in one row (skipping fields with no column, id, and anything in skip).
+async function writeCells(tab, header, row, fields, cellFn, skip = []) {
+  for (const [k, v] of Object.entries(fields)) {
+    const c = header.indexOf(k); if (c < 0 || k === 'id' || skip.includes(k)) continue;
+    await state.mcp.callTool(SERVER, 'update_values', { spreadsheetId: SHEET_ID, range: `${tabRef(tab)}!${colLetter(c)}${row}`, values: [[cellFn(k, v)]] }, { cache: false });
+  }
+}
+// Add rows below the last used row with an explicit range (not append_values, which fills rows a clear left behind).
+// used = the rows under the header the caller has already read; returns the first new row number.
+async function addRowsBelowLast(tab, header, values, used) {
+  let last = used.length; while (last && !used[last - 1].some(v => String(v ?? '').trim())) last--;
+  const r0 = last + 2;
+  await state.mcp.callTool(SERVER, 'update_values', { spreadsheetId: SHEET_ID, range: `${tabRef(tab)}!A${r0}:${colLetter(header.length - 1)}${r0 + values.length - 1}`, values }, { cache: false });
+  return r0;
+}
+const findBookRow = id => findRowById('Books', id, { header: () => readHeader('Books!A1:AZ1'), last: 5000, noCol: 'Books tab has no id column',
+  dup: (id, n) => `ID ${id} appears ${n} times in Books`, gone: id => `ID ${id} isn't in Books any more` });
 async function writeBookFields(id, fields) {
   // A book that starts being read leaves the plan: no tier, no Up next number
   const cur = state.allBooks.find(x => x.id === id);
   const leaving = fields.status === 'Reading' && cur && (cur.tier || cur.upNextOrder);
   if (leaving) fields = { ...fields, tier: '', upNextOrder: '' };
   const { header, row } = await findBookRow(id);
-  for (const [k, v] of Object.entries(fields)) {
-    const c = header.indexOf(k);
-    if (c < 0 || FORMULA_FIELDS.includes(k) || k === 'id') continue;
-    await state.mcp.callTool(SERVER, 'update_values', { spreadsheetId: SHEET_ID, range: `Books!${colLetter(c)}${row}`, values: [[cellValue(k, v)]] }, { cache: false });
-  }
+  await writeCells('Books', header, row, fields, cellValue, FORMULA_FIELDS);
   const b = state.allBooks.find(x => x.id === id);
   if (b) Object.assign(b, Object.fromEntries(Object.entries(fields).map(([k, v]) => [k, String(v ?? '').trim()])));
   syncReadingBooks();
@@ -3229,27 +3250,15 @@ function setWishFields(w, fields) {
 
 // Writes: find the row by its id right before writing, change only the given cells.
 const wishRows = new Map();
-async function findWishRow(id) {
-  const header = disc.wishHeader && disc.wishHeader.includes('id') ? disc.wishHeader : ((await readRange('Wishlist!A1:Z1'))[0] || []).map(h => String(h).trim());
-  const c = header.indexOf('id');
-  if (c < 0) throw { code: 'tool_error', message: 'Wishlist has no id column' };
-  const L = colLetter(c), known = wishRows.get(id);
-  if (known && String(((await readRange(`Wishlist!${L}${known}`))[0] || [])[0] ?? '').trim() === id) return { header, row: known };
-  const ids = await readRange(`Wishlist!${L}1:${L}3000`);
-  ids.forEach((r, i) => { const v = String(r[0] ?? '').trim(); if (v) wishRows.set(v, i + 1); });
-  const hits = ids.map((r, i) => String(r[0] ?? '').trim() === id ? i + 1 : 0).filter(Boolean);
-  if (hits.length !== 1) throw { code: 'tool_error', message: hits.length ? `Wishlist id ${id} appears ${hits.length} times` : `Wishlist id ${id} isn't there any more` };
-  return { header, row: hits[0] };
-}
+const findWishRow = id => findRowById('Wishlist', id, { cache: wishRows, cacheAll: true, last: 3000, noCol: 'Wishlist has no id column',
+  header: async () => disc.wishHeader && disc.wishHeader.includes('id') ? disc.wishHeader : readHeader('Wishlist!A1:Z1'),
+  dup: (id, n) => `Wishlist id ${id} appears ${n} times`, gone: id => `Wishlist id ${id} isn't there any more` });
 // Gift is a checkbox and release a date, so those go in as typed; everything else as plain text
 const wishCell = (k, v) => !v ? (k === 'gift' ? 'FALSE' : '') : k === 'gift' ? (v === 'TRUE' ? 'TRUE' : 'FALSE') : (k === 'release' || k === 'checkedOn') && /^\d{4}-\d\d-\d\d$/.test(v) ? v : "'" + v;
 async function writeWishFields(id, fields) {
   if (!id) throw { code: 'tool_error', message: 'this Wishlist row has no id yet' };
   const { header, row } = await findWishRow(id);
-  for (const [k, v] of Object.entries(fields)) {
-    const c = header.indexOf(k); if (c < 0 || k === 'id') continue;
-    await state.mcp.callTool(SERVER, 'update_values', { spreadsheetId: SHEET_ID, range: `Wishlist!${colLetter(c)}${row}`, values: [[wishCell(k, v)]] }, { cache: false });
-  }
+  await writeCells('Wishlist', header, row, fields, wishCell);
 }
 // Removing a row: blank every cell (the sheet keeps an empty row, the app ignores it)
 async function clearWishRow(id) {
@@ -3272,12 +3281,10 @@ async function appendWishRows(items) {
   const c = header.indexOf('id');
   const used = await readRange(`Wishlist!A2:${colLetter(Math.max(c, header.indexOf('title')))}3000`);
   const ids = used.map(r => Number(String(r[c] || '').replace(/\D/g, '')) || 0);
-  let last = used.length; while (last && !used[last - 1].some(v => String(v ?? '').trim())) last--;
   let next = Math.max(0, ...ids, ...(disc.wish || []).map(w => Number(String(w.id).replace(/\D/g, '')) || 0));
   const rows = items.map(f => ({ stage: 'Inbox', gift: 'FALSE', ...f, id: 'WL' + String(++next).padStart(4, '0'), added: today() }));
   const values = rows.map(f => header.map(h => h === 'id' ? f.id : h === 'added' ? f.added : wishCell(h, f[h] || '')));
-  const r0 = last + 2;
-  await state.mcp.callTool(SERVER, 'update_values', { spreadsheetId: SHEET_ID, range: `Wishlist!A${r0}:${colLetter(header.length - 1)}${r0 + values.length - 1}`, values }, { cache: false });
+  await addRowsBelowLast('Wishlist', header, values, used);
   disc.wishHeader = header;
   for (const f of rows) disc.wish.push({ ...Object.fromEntries(header.map(h => [h, f[h] || ''])), _row: 1e9 });
   return rows;
@@ -3565,17 +3572,13 @@ async function saveSeries(e) {
     if (hits.length > 1) throw { code: 'tool_error', message: `“${f.series}” is in the Series Tracker ${hits.length} times` };
     if (hits.length) {
       const row = hits[0], cur = v[row - 1];
-      for (const k of SD_FIELDS) {
-        const c = header.indexOf(k); if (c < 0 || String(cur[c] ?? '').trim() === f[k]) continue;
-        await state.mcp.callTool(SERVER, 'update_values', { spreadsheetId: SHEET_ID, range: `'Series Tracker'!${colLetter(c)}${row}`, values: [[cell(k, f[k])]] }, { cache: false });
-      }
+      const changed = Object.fromEntries(SD_FIELDS.filter(k => { const c = header.indexOf(k); return c >= 0 && String(cur[c] ?? '').trim() !== f[k]; }).map(k => [k, f[k]]));
+      await writeCells('Series Tracker', header, row, changed, (k, x) => cell(k, x));
       const s = disc.series.find(x => x._row === row);
       if (s) Object.assign(s, f); else disc.series.push({ ...f, _row: row });
     } else {
       // New series go below the last used row (not append_values, which can fill a row the prune cleared)
-      let last = v.length; while (last > 1 && !(v[last - 1] || []).some(x => String(x ?? '').trim())) last--;
-      const row = last + 1;
-      await state.mcp.callTool(SERVER, 'update_values', { spreadsheetId: SHEET_ID, range: `'Series Tracker'!A${row}:${colLetter(header.length - 1)}${row}`, values: [header.map(h => cell(h, f[h]))] }, { cache: false });
+      const row = await addRowsBelowLast('Series Tracker', header, [header.map(h => cell(h, f[h]))], v.slice(1));
       disc.series.push({ ...f, _row: row });
     }
     $('seriesDlg').close();
@@ -3654,35 +3657,22 @@ $('rlNew').addEventListener('click', () => openListDlg(null, ''));
 
 // Writes. Every item has an id (RL0001…); the row is found by it just before each write and only changed cells are written.
 const rlRows = new Map();
-async function listHeader() { return ((await readRange("'Reading Lists'!A1:Z1"))[0] || []).map(h => String(h).trim()); }
-async function findListRow(id) {
-  const header = await listHeader(), c = header.indexOf('id');
-  if (c < 0) throw { code: 'tool_error', message: 'Reading Lists has no id column' };
-  const L = colLetter(c), known = rlRows.get(id);
-  if (known && String(((await readRange(`'Reading Lists'!${L}${known}`))[0] || [])[0] ?? '').trim() === id) return { header, row: known };
-  const ids = await readRange(`'Reading Lists'!${L}1:${L}2000`);
-  const hits = ids.map((r, i) => String(r[0] ?? '').trim() === id ? i + 1 : 0).filter(Boolean);
-  if (hits.length !== 1) throw { code: 'tool_error', message: hits.length ? `Reading list id ${id} appears ${hits.length} times` : `Reading list id ${id} isn't there any more` };
-  rlRows.set(id, hits[0]);
-  return { header, row: hits[0] };
-}
+const listHeader = () => readHeader("'Reading Lists'!A1:Z1");
+const findListRow = id => findRowById('Reading Lists', id, { cache: rlRows, last: 2000, noCol: 'Reading Lists has no id column', header: listHeader,
+  dup: (id, n) => `Reading list id ${id} appears ${n} times`, gone: id => `Reading list id ${id} isn't there any more` });
 const listCell = (k, v) => !String(v ?? '').trim() ? '' : k === 'order' ? toNum(v) : "'" + String(v).trim();
 async function writeListFields(id, fields) {
   const { header, row } = await findListRow(id);
-  for (const [k, v] of Object.entries(fields)) {
-    const c = header.indexOf(k); if (c < 0 || k === 'id') continue;
-    await state.mcp.callTool(SERVER, 'update_values', { spreadsheetId: SHEET_ID, range: `'Reading Lists'!${colLetter(c)}${row}`, values: [[listCell(k, v)]] }, { cache: false });
-  }
+  await writeCells('Reading Lists', header, row, fields, listCell);
 }
 async function appendListItem(f) {
   const header = await listHeader(), c = header.indexOf('id');
   if (c < 0) throw { code: 'tool_error', message: 'Reading Lists has no id column' };
   const used = await readRange(`'Reading Lists'!A2:${colLetter(header.length - 1)}2000`);
   const ids = used.map(r => Number(String(r[c] || '').replace(/\D/g, '')) || 0);
-  let last = used.length; while (last && !used[last - 1].some(v => String(v ?? '').trim())) last--;
   const id = 'RL' + String(Math.max(0, ...ids, ...(disc.lists || []).map(x => Number(String(x.id).replace(/\D/g, '')) || 0)) + 1).padStart(4, '0');
-  const r0 = last + 2, row = header.map(h => h === 'id' ? id : listCell(h, f[h]));
-  await state.mcp.callTool(SERVER, 'update_values', { spreadsheetId: SHEET_ID, range: `'Reading Lists'!A${r0}:${colLetter(header.length - 1)}${r0}`, values: [row] }, { cache: false });
+  const row = header.map(h => h === 'id' ? id : listCell(h, f[h]));
+  const r0 = await addRowsBelowLast('Reading Lists', header, [row], used);
   const item = { ...Object.fromEntries(header.map(h => [h, String(f[h] ?? '').trim()])), id, _row: r0 };
   disc.lists.push(item); rlRows.set(id, r0);
   return item;
