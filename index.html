@@ -405,6 +405,53 @@ table.lib{width:100%;border-collapse:collapse;font-size:14px;table-layout:fixed;
 .dash-tiles .stat .num{font-size:clamp(24px,3vw,32px)}
 .dash-2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;margin-bottom:20px;align-items:stretch}
 .dash-2 .panel + .panel{margin-top:0}
+.soon-more{display:block;margin:10px auto 0}
+.fd-top{display:flex;gap:8px;flex-wrap:wrap;justify-content:space-between;align-items:center;margin-bottom:10px}
+.fd-top .chips{display:flex;gap:6px;flex-wrap:wrap}
+.fd-count{justify-content:space-between;margin-bottom:6px}
+.fd-list{list-style:none;margin:0;padding:0}
+.fd-list li{border-top:1px solid var(--line)}
+.fd-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;width:100%;text-align:left;background:none;border:0;color:var(--fg);font:inherit;padding:7px 4px;cursor:pointer;border-radius:6px}
+.fd-row:hover,.fd-row:focus-visible{background:color-mix(in srgb,var(--accent) 12%,transparent)}
+.fd-main{display:flex;flex-direction:column;min-width:0}
+.fd-main .t{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fd-main .m{font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fd-n{font-size:12px;min-width:1.8em;text-align:center;padding:2px 8px;border-radius:999px;background:color-mix(in srgb,var(--accent) 22%,var(--raise))}
+.fd-head{display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:10px}
+.fd-title{margin:0;font-size:17px}
+.fd-picks{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-bottom:12px}
+.fd-pick{display:flex;flex-direction:column;gap:4px;min-width:0}
+.fd-pick p{margin:0}
+.fd-pick select{width:100%;min-width:0;font:inherit;font-size:13px;background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:6px 8px}
+.fd-err{color:var(--danger,#e07a7a)}
+.fd-table{border:1px solid var(--line);border-radius:12px;background:var(--bg);margin-bottom:12px;overflow:hidden}
+.fd-r{display:grid;grid-template-columns:5.5rem repeat(3,minmax(0,1fr));gap:10px;padding:8px 12px;border-top:1px solid var(--line);align-items:start}
+.fd-r:first-child{border-top:0}
+.fd-hd{font-size:11px;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);font-weight:500;padding:8px 12px}
+.fd-k{font-weight:600;font-size:13px}
+.fd-cell{display:flex;gap:8px;align-items:flex-start;min-width:0;font-size:13px}
+.fd-cell input[type=checkbox]{margin-top:2px;flex:none}
+.fd-cell::before{display:none;content:attr(data-l);font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);flex:none;width:6.2rem;margin-top:2px}
+.fd-v{min-width:0;flex:1}
+.fd-t{display:block;overflow-wrap:anywhere}
+.fd-t.clamp{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.fd-sug{margin-bottom:8px}
+.fd-sug .chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.fd-slots{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:10px}
+.fd-msg{min-height:1.4em;margin:6px 0}
+.fd-act{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.fd-gap{flex:1}
+@media (max-width:640px){
+  .fd-picks{grid-template-columns:minmax(0,1fr)}
+  .fd-hd{display:none}
+  .fd-r{grid-template-columns:minmax(0,1fr);gap:4px}
+  .fd-cell::before{display:block}
+  .fd-slots{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .fd-act{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+  .fd-gap{display:none}
+  .fd-act #fdSkip{order:-2}.fd-act #fdSave,.fd-act #fdNext{order:-1}
+  .fd-act #fdNext{grid-column:1/-1}
+}
 .pace{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
 .map-wrap{display:grid;grid-template-columns:minmax(0,2.2fr) minmax(0,1fr);gap:20px;align-items:start}
 @media (max-width:860px){.map-wrap{grid-template-columns:minmax(0,1fr)}}
@@ -722,7 +769,7 @@ body[data-bg="plain"] .ground{display:none}
       <button class="tab tb" id="toolboxBtn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="toolboxPop"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg>Toolbox</button>
     </nav>
     <div class="pop" id="toolboxPop" hidden>
-      <div class="pg"><p class="pg-label">Books</p><div class="tgrid two"><button class="btn" type="button" data-tool="rate">Rate a book</button><button class="btn" type="button" data-tool="covers">Find covers</button></div></div>
+      <div class="pg"><p class="pg-label">Books</p><div class="tgrid"><button class="btn" type="button" data-tool="rate">Rate a book</button><button class="btn" type="button" data-tool="fill">Fill details</button><button class="btn" type="button" data-tool="covers">Find covers</button></div></div>
       <div class="pg"><p class="pg-label">Plan</p><div class="tgrid"><button class="btn" type="button" data-tool="goal">Goal planner</button><button class="btn" type="button" data-tool="dip">Lucky dip</button><button class="btn" type="button" data-tool="own">Do I own this?</button></div></div>
       <div class="pg"><p class="pg-label">Look</p>
         <div class="look-row"><span>Background</span><div class="seg"><button type="button" data-bg="shelf" aria-pressed="true">Shelf</button><button type="button" data-bg="plain" aria-pressed="false">Plain</button></div></div>
@@ -836,7 +883,7 @@ body[data-bg="plain"] .ground{display:none}
     <div id="planView" class="vstack" hidden>
       <div class="dash-2">
         <section class="panel" aria-labelledby="upH"><div class="panel-head"><h2 id="upH">Up next</h2><span class="muted small tnum" id="upNote"></span></div><ol class="plan-list up-detail" id="upList"></ol></section>
-        <section class="panel" aria-labelledby="soonH"><div class="panel-head"><h2 id="soonH">Soon</h2><span class="muted small tnum" id="soonNote"></span></div><ol class="plan-list" id="soonList"></ol></section>
+        <section class="panel" aria-labelledby="soonH"><div class="panel-head"><h2 id="soonH">Soon</h2><span class="muted small tnum" id="soonNote"></span></div><ol class="plan-list" id="soonList"></ol><button type="button" class="btn soon-more" id="soonMore" hidden aria-expanded="false"></button></section>
       </div>
       <section class="panel deck" aria-labelledby="deckH">
         <div class="panel-head"><h2 id="deckH">Sort deck</h2><span class="muted small tnum" id="deckNote"></span></div>
@@ -973,6 +1020,10 @@ body[data-bg="plain"] .ground{display:none}
     <section class="panel" data-tool="rate" aria-labelledby="rateH">
     <div class="panel-head"><h2 id="rateH">Rate a book</h2><span class="muted small">For when you're not sure. Fiction, non-fiction and comics each have their own criteria.</span></div>
     <div id="rateBox"></div>
+  </section>
+    <section class="panel" data-tool="fill" aria-labelledby="fillH">
+    <div class="panel-head"><h2 id="fillH">Fill details</h2><span class="muted small">Pages, synopsis, year, publisher, ISBN, genre and themes from Google Books and Open Library, one book at a time</span></div>
+    <div id="fdBox"></div>
   </section>
     <section class="panel" data-tool="covers" aria-labelledby="covH">
     <div class="panel-head"><h2 id="covH">Book covers</h2><span class="muted small">From Open Library, one book at a time</span></div>
@@ -1146,7 +1197,7 @@ body[data-bg="plain"] .ground{display:none}
   <form id="bookForm" method="dialog">
     <div class="dlg-head"><h2 id="dlgTitle">Edit book</h2><button class="btn" type="button" id="dlgClose">Close</button></div>
     <div class="dlg-body" id="dlgBody"></div>
-    <div class="dlg-foot"><span class="muted" id="dlgMsg" style="font-size:13px;align-self:center"></span><span class="dlg-actions"><button class="btn" type="button" id="dlgQuote" hidden>Dog-ear a quote</button><label class="dlg-log" id="dlgLogWrap" hidden><input type="checkbox" id="dlgLog" checked> <span id="dlgLogText"></span></label><button class="btn btn-primary" type="submit" id="dlgSave">Save</button></span></div>
+    <div class="dlg-foot"><span class="muted" id="dlgMsg" style="font-size:13px;align-self:center"></span><span class="dlg-actions"><button class="btn" type="button" id="dlgQuote" hidden>Dog-ear a quote</button><button class="btn" type="button" id="dlgFill" hidden>Fill details</button><label class="dlg-log" id="dlgLogWrap" hidden><input type="checkbox" id="dlgLog" checked> <span id="dlgLogText"></span></label><button class="btn btn-primary" type="submit" id="dlgSave">Save</button></span></div>
   </form>
 </dialog>
 
@@ -2288,6 +2339,26 @@ const FORM_SECS = [
   ['Details', false, ['genre', 'year', 'theme1', 'theme2', 'theme3', 'awards', 'synopsis', 'notes']]
 ];
 const FORM_FULL = ['title', 'copies', 'synopsis', 'notes'];
+// Copies as three toggle chips; the hidden input keeps the "Kobo | PDF | Physical" text the save code reads.
+// Any other text already in the cell is kept after the chosen chips.
+const COPY_KINDS = ['Kobo', 'PDF', 'Physical'];
+function copiesChips(input) {
+  const parts = String(input.value || '').split('|').map(x => x.trim()).filter(Boolean);
+  const on = new Set(COPY_KINDS.filter(k => parts.some(p => p.toLowerCase() === k.toLowerCase())));
+  const extra = parts.filter(p => !COPY_KINDS.some(k => k.toLowerCase() === p.toLowerCase()));
+  const box = document.createElement('div'); box.className = 'q-chips'; box.setAttribute('role', 'group'); box.setAttribute('aria-labelledby', 'f-copiesL');
+  for (const k of COPY_KINDS) {
+    const c = document.createElement('button'); c.type = 'button'; c.className = 'q-chip'; c.textContent = k; c.dataset.v = k; c.setAttribute('aria-pressed', String(on.has(k)));
+    c.addEventListener('click', () => {
+      if (on.has(k)) on.delete(k); else on.add(k);
+      c.setAttribute('aria-pressed', String(on.has(k)));
+      input.value = [...COPY_KINDS.filter(x => on.has(x)), ...extra].join(' | ');
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    box.appendChild(c);
+  }
+  return box;
+}
 let editing = null;
 function openBookDialog(book, prefill) {
   editing = book;
@@ -2312,16 +2383,18 @@ function openBookDialog(book, prefill) {
       if (val && !opts.includes(val)) opts.push(val);
       for (const o of [...new Set(opts)]) { const op = document.createElement('option'); op.value = o; op.textContent = o || '–'; el.appendChild(op); }
     } else if (f.type === 'textarea') el = document.createElement('textarea');
+    else if (f.k === 'copies') { el = document.createElement('input'); el.type = 'hidden'; }
     else { el = document.createElement('input'); el.type = f.type || 'text'; if (f.type === 'number') { el.inputMode = f.step === 'any' ? 'decimal' : 'numeric'; if (f.step) el.step = f.step; } }
     if (f.list) { const dl = document.createElement('datalist'); dl.id = 'dl-' + f.k; dl.innerHTML = [...new Set(state.allBooks.map(b => b[f.list]).filter(Boolean))].sort().map(v => `<option value="${escapeText(v)}">`).join(''); el.setAttribute('list', dl.id); wrap.appendChild(dl); }
     el.id = id; el.name = f.k; el.value = f.type === 'number' ? (toNum(val) || (val === '0' ? 0 : '')) : val;
     if (f.req) el.required = true;
     wrap.append(lab, el);
+    if (f.k === 'copies') { lab.removeAttribute('for'); lab.id = 'f-copiesL'; lab.textContent = 'Copies'; wrap.appendChild(copiesChips(el)); }
     grid.appendChild(wrap);
   }
   }
   $('dlgLog').checked = true;
-  $('dlgQuote').hidden = !book;
+  $('dlgQuote').hidden = !book; $('dlgFill').hidden = !book;
 
   updateDlgLog();
   $('bookDlg').showModal();
@@ -2867,7 +2940,7 @@ function moveUp(b, dir) {
   renderPlan(); renderTBR();
 }
 
-const planUI = { limit: 50, whyOpen: null, deck: [], deckDone: 0, deckSkipped: new Set() };
+const planUI = { soonAll: false, limit: 50, whyOpen: null, deck: [], deckDone: 0, deckSkipped: new Set() };
 function planRow(b, { num, kind }) {
   const li = document.createElement('li');
   li.dataset.id = b.id;
@@ -2913,6 +2986,7 @@ function planRow(b, { num, kind }) {
   return li;
 }
 
+const SOON_SHOW = 10;
 function renderPlan() {
   if (!state.libLoaded) return;
   const ups = upNext(), soon = soonList();
@@ -2924,7 +2998,10 @@ function renderPlan() {
     list.forEach((b, i) => el.appendChild(planRow(b, { num: kind === 'up' ? i + 1 : '', kind })));
   };
   fill($('upList'), ups, 'up', 'Pick up to 10 books from Soon or the list below.');
-  fill($('soonList'), soon, 'soon', 'Nothing here yet.');
+  fill($('soonList'), planUI.soonAll ? soon : soon.slice(0, SOON_SHOW), 'soon', 'Nothing here yet.');
+  const sm = $('soonMore'); sm.hidden = soon.length <= SOON_SHOW;
+  sm.textContent = planUI.soonAll ? 'Show fewer' : `Show ${soon.length - SOON_SHOW} more`;
+  sm.setAttribute('aria-expanded', String(planUI.soonAll));
   // Sheet-order list of everything still Someday (picked or not), with the Library filters applied
   const L = state.lib, q = L.q.toLowerCase();
   const pool = plannable();
@@ -3289,8 +3366,245 @@ function renderRevisit(box, normT) {
   }
 }
 // Toolbox panels (Rate a book, Find covers, Goal planner, Lucky dip, Do I own this?) and the Insights analysis panels
-function renderTools() { renderCovers(); renderRate(); renderOwn(); renderDip(); renderGoal(); }
+function renderTools() { renderFill(); renderCovers(); renderRate(); renderOwn(); renderDip(); renderGoal(); }
 function renderAnalysis() { renderStalled(); renderNextInSeries(); renderYear(); }
+
+/* ---------- Fill details (Toolbox → Fill details) ----------
+   A queue of Books rows with blank details. For one book it looks up Google Books and Open Library, one request at a time,
+   shows both answers beside what the sheet has, and writes only the fields you tick, in one writeBookFields call. */
+const FD_FIELDS = ['pages', 'synopsis', 'year', 'publisher', 'isbn', 'genre', 'theme1', 'theme2', 'theme3'];
+const FD_LABEL = { pages: 'Pages', synopsis: 'Synopsis', year: 'Year', publisher: 'Publisher', isbn: 'ISBN', genre: 'Genre', theme1: 'Theme 1', theme2: 'Theme 2', theme3: 'Theme 3' };
+const FD_TABLE = ['pages', 'synopsis', 'year', 'publisher', 'isbn'];
+const FD_SLOTS = ['genre', 'theme1', 'theme2', 'theme3'];
+const FD_PREF = { pages: 'gb', synopsis: 'gb', publisher: 'gb', isbn: 'gb', year: 'ol' };
+const FD_SRC = { gb: 'Google Books', ol: 'Open Library' };
+const fd = { filter: 'All', onlyPages: false, limit: 50, queue: [], pos: 0, cur: null, single: false, token: 0, busy: false, saved: null, msg: '',
+  gb: null, ol: null, tick: {}, touched: new Set(), slots: {}, more: new Set() };
+const fdBlank = (b, k) => k === 'pages' || k === 'year' ? !(toNum(b[k]) > 0) : !String(b[k] ?? '').trim();
+const fdGaps = b => FD_FIELDS.filter(k => fdBlank(b, k));
+const fdOther = b => !['Reading', 'TBR', 'Finished'].includes(b.status);
+const fdPool = () => state.allBooks.filter(b => b.title && fdGaps(b).length);
+const fdQueue = () => fd.onlyPages ? fdPool().filter(b => fdBlank(b, 'pages')) : fdPool();
+const fdInStatus = (b, f) => f === 'All' || (f === 'Other' ? fdOther(b) : b.status === f);
+const fdFiltered = () => fdQueue().filter(b => fdInStatus(b, fd.filter)).sort((a, b) => fdGaps(b).length - fdGaps(a).length || a.title.localeCompare(b.title));
+const stripHtml = t => String(t || '').replace(/<[^>]*>/g, ' ').replace(/&nbsp;/g, ' ').replace(/&quot;/g, '"').replace(/&#0?39;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&').replace(/\s+/g, ' ').trim();
+const fdIsbn = v => String(v || '').replace(/[^0-9Xx]/g, '').toUpperCase();
+const fdYear = v => { const m = /\b(\d{4})\b/.exec(String(v || '')); return m ? m[1] : ''; };
+const fdPages = v => { const n = Math.round(toNum(v)); return n > 0 ? String(n) : ''; };
+const fdBestIsbn = list => { const a = (list || []).map(fdIsbn).filter(Boolean); return a.find(x => x.length === 13) || a[0] || ''; };
+function fdGbCand(it) {
+  const v = it.volumeInfo || {}, ids = v.industryIdentifiers || [];
+  return { title: v.title || '', author: (v.authors || []).join(', '), year: fdYear(v.publishedDate), pages: fdPages(v.pageCount), publisher: String(v.publisher || '').trim(),
+    isbn: fdBestIsbn(ids.filter(x => /ISBN_13/.test(x.type)).concat(ids.filter(x => /ISBN_10/.test(x.type))).map(x => x.identifier)),
+    synopsis: stripHtml(v.description), tags: (v.categories || []).flatMap(c => String(c).split('/')).map(x => x.trim()).filter(x => x && !/^general$/i.test(x)) };
+}
+const fdOlCand = d => ({ key: d.key || '', title: d.title || '', author: (d.author_name || []).join(', '), year: fdYear(d.first_publish_year), pages: fdPages(d.number_of_pages_median),
+  publisher: String((d.publisher || [])[0] || '').trim(), isbn: fdBestIsbn(d.isbn), synopsis: undefined, tags: (d.subject || []).slice(0, 8) });
+const fdSel = src => { const s = fd[src]; return s && s.cands && s.cands[s.idx] || null; };
+const fdVal = (src, k) => { const c = fdSel(src); return c && c[k] ? String(c[k]) : ''; };
+// Pre-tick only fields the sheet has blank: the preferred source if it has a value, else the other one
+function fdAutoTick(b) {
+  for (const k of FD_TABLE) {
+    if (fd.touched.has(k)) continue;
+    fd.tick[k] = null;
+    if (!fdBlank(b, k)) continue;
+    const first = FD_PREF[k], other = first === 'gb' ? 'ol' : 'gb';
+    fd.tick[k] = fdVal(first, k) ? first : fdVal(other, k) ? other : null;
+  }
+}
+const fdErr = (src, err) => `${FD_SRC[src]} didn't answer${err instanceof TypeError ? '' : ' (' + ((err && err.message) || 'error') + ')'}. Try again or use ${src === 'gb' ? "Open Library's" : "Google Books'"} values.`;
+const fdAuthor = b => String(b.author || '').split(/,| & | and /)[0].trim();
+async function fdFetchGb(b) {
+  const enc = encodeURIComponent, isbn = fdIsbn(b.isbn), author = fdAuthor(b), qs = [];
+  if (isbn.length >= 10) qs.push('isbn:' + enc(isbn));
+  qs.push('intitle:' + enc(b.title) + (author ? '+inauthor:' + enc(author) : ''));
+  for (const q of qs) {
+    const r = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${q}&maxResults=5`);
+    if (!r.ok) throw new Error('status ' + r.status);
+    const items = ((await r.json()).items || []).map(fdGbCand);
+    if (items.length) return items;
+  }
+  return [];
+}
+async function fdFetchOl(b) {
+  const enc = encodeURIComponent, isbn = fdIsbn(b.isbn), author = fdAuthor(b), qs = [];
+  const f = 'fields=key,title,author_name,first_publish_year,number_of_pages_median,publisher,isbn,subject&limit=5';
+  if (isbn.length >= 10) qs.push('isbn=' + isbn);
+  qs.push(`title=${enc(b.title)}${author ? '&author=' + enc(author) : ''}`);
+  for (const q of qs) {
+    const docs = ((await olGet(`/search.json?${q}&${f}`)).docs || []).map(fdOlCand);
+    if (docs.length) return docs;
+  }
+  return [];
+}
+// Open Library keeps the description on the work, so fetch it only when the sheet has no synopsis
+async function fdOlWork(b, my) {
+  const c = fdSel('ol');
+  if (!c || !c.key || c.synopsis !== undefined || !fdBlank(b, 'synopsis')) return;
+  fd.busy = true;
+  try {
+    const w = await olGet(c.key + '.json');
+    if (my !== fd.token) return;
+    const d = w && w.description;
+    c.synopsis = stripHtml(typeof d === 'string' ? d : d && d.value);
+  } catch (err) { if (my !== fd.token) return; c.synopsis = ''; }
+  fd.busy = false; fdAutoTick(b); renderFill();
+}
+async function fdLookup() {
+  const b = state.allBooks.find(x => x.id === fd.cur); if (!b) return;
+  const my = ++fd.token;
+  fd.busy = true; fd.gb = { loading: true }; fd.ol = { loading: true }; fd.saved = null; fd.msg = '';
+  renderFill();
+  try { const cands = await fdFetchGb(b); if (my !== fd.token) return; fd.gb = { cands, idx: 0 }; }
+  catch (err) { if (my !== fd.token) return; fd.gb = { err: fdErr('gb', err), net: err instanceof TypeError }; }
+  fdAutoTick(b); renderFill();
+  try { const cands = await fdFetchOl(b); if (my !== fd.token) return; fd.ol = { cands, idx: 0 }; }
+  catch (err) { if (my !== fd.token) return; fd.ol = { err: fdErr('ol', err), net: err instanceof TypeError }; }
+  fd.busy = false; fdAutoTick(b); renderFill();
+  await fdOlWork(b, my);
+}
+function fdOpen(id, pos, single) {
+  const b = state.allBooks.find(x => x.id === id); if (!b) return;
+  Object.assign(fd, { cur: id, pos, single: !!single, tick: {}, touched: new Set(), more: new Set(), gb: null, ol: null, saved: null, msg: '',
+    slots: Object.fromEntries(FD_SLOTS.map(k => [k, String(b[k] || '').trim()])) });
+  fdLookup();
+}
+function fdNext() {
+  fd.token++; fd.busy = false;
+  if (fd.single || fd.pos + 1 >= fd.queue.length) { fd.cur = null; fd.msg = fd.single ? '' : 'That was the last one in the queue.'; renderFill(); return; }
+  fdOpen(fd.queue[fd.pos + 1], fd.pos + 1, false);
+}
+// What would be written: the ticked table values, plus any genre / theme slot you changed
+function fdPending(b) {
+  const f = {};
+  for (const k of FD_TABLE) { const s = fd.tick[k], v = s && fdVal(s, k); if (v) f[k] = v; }
+  for (const k of FD_SLOTS) { const v = String(fd.slots[k] || '').trim(); if (v && v !== String(b[k] || '').trim()) f[k] = v; }
+  return f;
+}
+async function fdSave() {
+  const b = state.allBooks.find(x => x.id === fd.cur); if (!b) return;
+  if (!isLive()) { fd.msg = 'Saving needs the live connection to your sheet. ' + connectHint(); renderFill(); return; }
+  const f = fdPending(b), keys = Object.keys(f);
+  if (!keys.length) { fd.msg = 'Nothing is ticked, so nothing was saved.'; renderFill(); return; }
+  fd.msg = 'Saving…'; fd.busy = true; renderFill();
+  try {
+    await writeBookFields(b.id, f);
+    fd.saved = keys; fd.msg = `Saved ${keys.length} field${keys.length === 1 ? '' : 's'}: ${keys.map(k => FD_LABEL[k].toLowerCase()).join(', ')}.`;
+    setStatus('live', `Filled details for “${b.title}”`);
+  } catch (err) { fd.msg = "Couldn't save: " + (err.message || explain(err)); }
+  fd.busy = false; renderFill();
+}
+const fdCandLine = c => [c.title, c.author, c.year, c.pages ? c.pages + ' pp' : '', c.publisher].filter(Boolean).join(' · ');
+function fdPick(src) {
+  const s = fd[src], name = FD_SRC[src], head = `<span class="eyebrow">${name}</span>`;
+  if (!s || s.loading) return `<div class="fd-pick">${head}<p class="muted small">Looking up…</p></div>`;
+  if (s.err) return `<div class="fd-pick">${head}<p class="small fd-err">${escapeText(s.err)}</p></div>`;
+  if (!s.cands.length) return `<div class="fd-pick">${head}<p class="muted small">No match found.</p></div>`;
+  if (s.cands.length === 1) return `<div class="fd-pick">${head}<p class="small fd-one">${escapeText(fdCandLine(s.cands[0]))}</p></div>`;
+  const opts = s.cands.map((c, i) => `<option value="${i}"${i === s.idx ? ' selected' : ''}>${escapeText(fdCandLine(c))}</option>`).join('');
+  return `<div class="fd-pick"><label class="eyebrow" for="fdSel-${src}">${name} · ${s.cands.length} editions</label><select id="fdSel-${src}" data-src="${src}">${opts}</select></div>`;
+}
+function fdCell(b, k, src) {
+  const now = src === 'now', l = now ? 'Now' : FD_SRC[src];
+  const v = now ? (fdBlank(b, k) ? '' : String(b[k]).trim()) : fdVal(src, k);
+  const loading = !now && fd[src] && fd[src].loading;
+  const long = k === 'synopsis' && v.length > 120, open = fd.more.has(k + src);
+  const body = `<span class="fd-t${k === 'synopsis' && !open ? ' clamp' : ''}">${v ? escapeText(v) : `<span class="muted">${loading ? 'looking up…' : '–'}</span>`}</span>`;
+  const more = long ? `<button type="button" class="linkbtn" data-more="${k}${src}">${open ? 'less' : 'more'}</button>` : '';
+  if (now) return `<div class="fd-cell" data-l="${l}"><div class="fd-v">${body}${more}</div></div>`;
+  const id = `fd-${k}-${src}`;
+  return `<div class="fd-cell" data-l="${l}"><input type="checkbox" id="${id}" data-k="${k}" data-src="${src}" aria-label="Use ${l} ${FD_LABEL[k].toLowerCase()}"${fd.tick[k] === src ? ' checked' : ''}${!v || fd.saved ? ' disabled' : ''}><div class="fd-v"><label for="${id}">${body}</label>${more}</div></div>`;
+}
+function fdChips() {
+  const tags = [];
+  const add = (t, src) => { t = String(t).trim(); if (t && !tags.some(x => x.t.toLowerCase() === t.toLowerCase())) tags.push({ t, src }); };
+  const g = fdSel('gb'), o = fdSel('ol');
+  if (g) g.tags.forEach(t => add(t, 'Google Books'));
+  if (o) o.tags.forEach(t => add(t, 'Open Library'));
+  const used = new Set(FD_SLOTS.map(k => String(fd.slots[k] || '').trim().toLowerCase()));
+  const chips = tags.length ? tags.map(x => `<button type="button" class="chip" data-tag="${escapeText(x.t)}" title="${x.src}" aria-pressed="${used.has(x.t.toLowerCase())}">${escapeText(x.t)}</button>`).join('')
+    : `<span class="muted small">${(fd.gb && fd.gb.loading) || (fd.ol && fd.ol.loading) ? 'Looking up…' : 'No suggestions from either source.'}</span>`;
+  return `<div class="fd-sug"><span class="eyebrow">Genre and themes · tap a suggestion to fill the next empty slot</span><div class="chips fd-chips">${chips}</div></div>
+    <div class="fd-slots">${FD_SLOTS.map(k => `<div class="field"><label for="fd-slot-${k}">${FD_LABEL[k]}</label><input type="text" id="fd-slot-${k}" data-slot="${k}" value="${escapeText(fd.slots[k] || '')}"${fd.saved ? ' disabled' : ''}></div>`).join('')}</div>`;
+}
+function renderFillQueue(box) {
+  const base = fdQueue(), list = fdFiltered(), total = fdPool().length;
+  const chips = ['All', 'Reading', 'TBR', 'Finished', 'Other'].map(f => `<button type="button" class="chip" data-f="${f}" aria-pressed="${fd.filter === f}">${f}<span class="n">${fmt(base.filter(b => fdInStatus(b, f)).length)}</span></button>`).join('');
+  const rows = list.slice(0, fd.limit).map(b => {
+    const g = fdGaps(b);
+    return `<li><button type="button" class="fd-row" data-id="${escapeText(b.id)}"><span class="fd-main"><span class="t">${escapeText(b.title)}</span><span class="m muted">${escapeText([b.author, b.status].filter(Boolean).join(' · '))}</span><span class="m muted fd-miss">${g.map(k => FD_LABEL[k].toLowerCase()).join(' · ')}</span></span><span class="fd-n tnum">${g.length}</span></button></li>`;
+  }).join('');
+  box.innerHTML = `<div class="fd-top"><div class="chips" role="group" aria-label="Status">${chips}</div><button type="button" class="chip" id="fdPages" aria-pressed="${fd.onlyPages}">Only missing pages</button></div>
+    <div class="logrow fd-count"><span id="fdCount"><b class="tnum">${fmt(list.length)}</b> book${list.length === 1 ? '' : 's'} ${list.length === 1 ? 'has' : 'have'} gaps${fd.filter !== 'All' || fd.onlyPages ? ` <span class="muted">(of ${fmt(total)})</span>` : ''}</span><button class="btn btn-primary" type="button" id="fdStart"${list.length ? '' : ' disabled'}>Start</button></div>
+    <p class="muted small" id="fdMsg" aria-live="polite">${escapeText(fd.msg)}</p>
+    <ul class="fd-list">${rows || '<li class="empty">Nothing to fill here.</li>'}</ul>
+    ${list.length > fd.limit ? `<button type="button" class="btn soon-more" id="fdMore">Show ${fmt(Math.min(50, list.length - fd.limit))} more</button>` : ''}`;
+}
+function renderFillReview(box, b) {
+  const both = fd.gb && fd.ol && fd.gb.net && fd.ol.net, n = Object.keys(fdPending(b)).length;
+  const rows = FD_TABLE.map(k => `<div class="fd-r"><span class="fd-k">${FD_LABEL[k]}</span>${fdCell(b, k, 'now')}${fdCell(b, k, 'gb')}${fdCell(b, k, 'ol')}</div>`).join('');
+  box.innerHTML = `<div class="fd-head"><div><h3 class="fd-title"></h3><div class="muted small fd-sub"></div></div><span class="muted small tnum">${fd.single ? '' : `${fd.pos + 1} of ${fd.queue.length}`}</span></div>
+    ${both ? '<p class="small fd-err">Both lookups failed. If this is the claude.ai version, outside lookups are blocked here; use the GitHub Pages version to fill details.</p>' : ''}
+    <div class="fd-picks">${fdPick('gb')}${fdPick('ol')}</div>
+    <div class="fd-table"><div class="fd-r fd-hd"><span class="fd-k"></span><span>Now</span><span>Google Books</span><span>Open Library</span></div>${rows}</div>
+    ${fdChips()}
+    <p class="small fd-msg" id="fdMsg" aria-live="polite">${escapeText(fd.msg)}</p>
+    <div class="fd-act"><button class="btn" type="button" id="fdBack">Back to list</button><button class="btn" type="button" id="fdRetry"${fd.busy ? ' disabled' : ''}>Try again</button><span class="fd-gap"></span>${fd.saved
+      ? '<button class="btn btn-primary" type="button" id="fdNext">Next</button>'
+      : `<button class="btn" type="button" id="fdSkip">Skip</button><button class="btn btn-primary" type="button" id="fdSave"${fd.busy ? ' disabled' : ''}>Save ticked${n ? ` (${n})` : ''}</button>`}</div>`;
+  box.querySelector('.fd-title').textContent = b.title;
+  box.querySelector('.fd-sub').textContent = [b.author, b.status, `${fdGaps(b).length} gap${fdGaps(b).length === 1 ? '' : 's'}`].filter(Boolean).join(' · ');
+}
+function renderFill() {
+  const box = $('fdBox'); if (!box) return;
+  if (!state.libLoaded) { box.innerHTML = '<p class="empty">Loading your library…</p>'; return; }
+  const b = fd.cur && state.allBooks.find(x => x.id === fd.cur);
+  if (b) renderFillReview(box, b); else { fd.cur = null; renderFillQueue(box); }
+}
+function fdSaveLabel() {
+  const s = $('fdSave'), b = state.allBooks.find(x => x.id === fd.cur);
+  if (s && b) { const n = Object.keys(fdPending(b)).length; s.textContent = n ? `Save ticked (${n})` : 'Save ticked'; }
+}
+$('fdBox').addEventListener('click', e => {
+  const q = s => e.target.closest(s);
+  let el;
+  if ((el = q('[data-f]'))) { fd.filter = el.dataset.f; fd.limit = 50; fd.msg = ''; return renderFill(); }
+  if (q('#fdPages')) { fd.onlyPages = !fd.onlyPages; fd.limit = 50; return renderFill(); }
+  if (q('#fdMore')) { fd.limit += 50; return renderFill(); }
+  if (q('#fdStart')) { fd.queue = fdFiltered().map(b => b.id); if (fd.queue.length) fdOpen(fd.queue[0], 0, false); return; }
+  if ((el = q('.fd-row'))) { fd.queue = fdFiltered().map(b => b.id); fdOpen(el.dataset.id, Math.max(0, fd.queue.indexOf(el.dataset.id)), false); return; }
+  if (q('#fdBack')) { fd.token++; fd.busy = false; fd.cur = null; fd.msg = ''; return renderFill(); }
+  if (q('#fdRetry')) return fdLookup();
+  if (q('#fdSkip') || q('#fdNext')) return fdNext();
+  if (q('#fdSave')) return fdSave();
+  if ((el = q('[data-more]'))) { const k = el.dataset.more; if (fd.more.has(k)) fd.more.delete(k); else fd.more.add(k); return renderFill(); }
+  if ((el = q('[data-tag]'))) {
+    const tag = el.dataset.tag, low = tag.toLowerCase(), b = state.allBooks.find(x => x.id === fd.cur);
+    const hit = FD_SLOTS.find(k => String(fd.slots[k] || '').trim().toLowerCase() === low);
+    if (hit) { if (b && String(b[hit] || '').trim().toLowerCase() === low) return; fd.slots[hit] = ''; fd.msg = ''; }
+    else { const free = FD_SLOTS.find(k => !String(fd.slots[k] || '').trim()); if (free) { fd.slots[free] = tag; fd.msg = ''; } else fd.msg = 'Genre and all three themes are filled. Clear one first.'; }
+    return renderFill();
+  }
+});
+$('fdBox').addEventListener('change', e => {
+  const t = e.target, b = state.allBooks.find(x => x.id === fd.cur);
+  if (t.matches('input[type=checkbox][data-k]')) {   // one source per field: ticking one clears the other
+    fd.touched.add(t.dataset.k); fd.tick[t.dataset.k] = t.checked ? t.dataset.src : null; fd.msg = '';
+    document.querySelectorAll(`#fdBox input[data-k="${t.dataset.k}"]`).forEach(x => { x.checked = fd.tick[t.dataset.k] === x.dataset.src; });
+    $('fdMsg').textContent = ''; fdSaveLabel(); return;
+  }
+  if (t.matches('select[data-src]')) {
+    const s = fd[t.dataset.src]; if (!s) return;
+    s.idx = +t.value; fd.touched.clear(); if (b) fdAutoTick(b); renderFill();
+    if (t.dataset.src === 'ol' && b && !fd.busy) fdOlWork(b, fd.token);
+  }
+});
+$('fdBox').addEventListener('input', e => { if (e.target.matches('input[data-slot]')) { fd.slots[e.target.dataset.slot] = e.target.value; fdSaveLabel(); } });
+// The edit dialog's "Fill details" button: review just this book
+function openFillFor(book) {
+  showTab('toolbox', 'fill'); window.scrollTo({ top: 0 });
+  fd.queue = [book.id]; fdOpen(book.id, 0, true);
+}
 
 /* ---------- Wishlist (Library → Wishlist) ---------- */
 // Inbox (quick capture) → a "get it" stage → Got it → moves to Books as TBR and leaves the Wishlist.
@@ -4553,7 +4867,7 @@ function renderLinks() {
 const TABS = ['now', 'library', 'next', 'insights', 'toolbox'];
 const TAB_ALIAS = { log: 'now', dashboard: 'insights', discover: 'next', tools: 'toolbox' };   // the old tab names still work (saved tab, tests)
 const nav = { tab: 'now', last: 'now', tool: null };
-const TOOL_PANELS = { rate: 'Rate a book', covers: 'Find covers', goal: 'Goal planner', dip: 'Lucky dip', own: 'Do I own this?' };
+const TOOL_PANELS = { rate: 'Rate a book', fill: 'Fill details', covers: 'Find covers', goal: 'Goal planner', dip: 'Lucky dip', own: 'Do I own this?' };
 const isPlanMode = m => m === 'plan' || m === 'wish';
 function showTab(name, tool) {
   name = TAB_ALIAS[name] || name; if (!TABS.includes(name)) name = 'now';
@@ -4682,11 +4996,23 @@ drawTimer();
 $('whenModes').addEventListener('click', e => { const c = e.target.closest('.chip'); if (!c) return; whenState.mode = c.dataset.w; renderDashboard(); });
 $('rbModes').addEventListener('click', e => { const c = e.target.closest('.chip'); if (!c) return; rbState.mode = c.dataset.r; renderDashboard(); });
 document.querySelectorAll('.lib-mode').forEach(g => g.addEventListener('click', e => { const m = e.target.closest('button[data-mode]'); if (m) setLibMode(m.dataset.mode); }));
+$('soonMore').addEventListener('click', () => { planUI.soonAll = !planUI.soonAll; renderPlan(); });
 $('sheetMore').addEventListener('click', () => { planUI.limit += 50; renderPlan(); });
 $('planLink').addEventListener('click', () => setLibMode('plan'));
 $('quoteForm').addEventListener('submit', saveQuote);
 $('qdClose').addEventListener('click', () => $('quoteDlg').close());
 $('dlgQuote').addEventListener('click', () => openQuoteDlg(editing));
+$('dlgFill').addEventListener('click', async () => {
+  const b = editing; if (!b) return;
+  // Leaving the dialog drops typed changes, so ask first when there are any
+  const dirty = FORM.some(f => {
+    if (!f.k) return false;
+    const v = $('bookForm').elements[f.k].value.trim(), old = String(b[f.k] || '').trim();
+    return NUM_FIELDS.includes(f.k) ? !(toNum(old) === toNum(v) && (!!old === !!v || toNum(v) === 0)) : old !== v;
+  });
+  if (dirty && !(await askOk('You have unsaved changes to this book. Leave them and fill details?', 'Leave changes'))) return;
+  $('bookDlg').close(); openFillFor(b);
+});
 $('quickBtn').addEventListener('click', () => {
   const v = parseInt($('quickPages').value, 10);
   if (!v || v < 1) { $('quickPages').focus(); return; }
@@ -4851,7 +5177,7 @@ $('lentBody').addEventListener('click', async e => {
 
 /* ---------- Toolbox popover: tools open their panel, Look changes the background and spine colours ---------- */
 $('toolboxPop').addEventListener('click', e => {
-  const t = e.target.closest('button[data-tool]'); if (t) { showTab('toolbox', t.dataset.tool); window.scrollTo({ top: 0 }); return; }
+  const t = e.target.closest('button[data-tool]'); if (t) { if (t.dataset.tool === 'fill' && !fd.busy) fd.cur = null; showTab('toolbox', t.dataset.tool); window.scrollTo({ top: 0 }); return; }
   const bg = e.target.closest('button[data-bg]'); if (bg) { look.bg = bg.dataset.bg; saveLook(); applyLook(); return; }
   const cm = e.target.closest('button[data-cm]'); if (cm) { look.spines = cm.dataset.cm; saveLook(); applyTheme(); }
 });

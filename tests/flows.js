@@ -219,6 +219,63 @@ flow('q4-paste-wish-columns', async ({ page }) => {
   await settle(page, 800);
 });
 
+
+// (r0) Copies toggle chips in the full edit form: add Physical to a Kobo book; add Kobo to a book with unrecognised text (kept)
+const setBook = (id, o) => s => { const h = s.Books[0], r = s.Books.find((x, i) => i && x[h.indexOf('id')] === id); for (const [k, v] of Object.entries(o)) r[h.indexOf(k)] = v; };
+flow('r0-copies-chips', async ({ page }) => {
+  await page.evaluate(() => { showTab('library'); openBookDialog(state.allBooks.find(x => x.id === '17')); });
+  await page.click('#bookForm [data-v="Physical"]');
+  await submit(page, '#bookForm'); await settle(page, 800);
+  await page.evaluate(() => openBookDialog(state.allBooks.find(x => x.id === '21')));
+  await page.click('#bookForm [data-v="Kobo"]');
+  await submit(page, '#bookForm'); await settle(page, 800);
+}, { mutate: setBook('21', { copies: 'Library copy' }) });
+
+// Fill details: stubbed Google Books and Open Library answers (the build network blocks both)
+const GB = { items: [
+  { volumeInfo: { title: 'Paper Towns Revisited', authors: ['Cleo Park'], publishedDate: '2018-05-01', pageCount: 312, publisher: 'GB Pub', categories: ['Fiction / Thrillers / General'],
+    description: '<p>A <b>quiet</b> town &amp; its   secrets.</p><br>Second line.', industryIdentifiers: [{ type: 'ISBN_10', identifier: '1234567890' }, { type: 'ISBN_13', identifier: '9781234567897' }] } },
+  { volumeInfo: { title: 'Paper Towns Revisited (Large Print)', authors: ['Cleo Park'], publishedDate: '2020', pageCount: 500, publisher: 'Big Print' } }] };
+const OLS = { docs: [
+  { key: '/works/OL1W', title: 'Paper Towns Revisited', author_name: ['Cleo Park'], first_publish_year: 2016, number_of_pages_median: 300, publisher: ['OL Pub', 'Other'], isbn: ['1234567890', '9781234567897'],
+    subject: ['Mystery fiction', 'Small towns', 'Detective', 'Secrets', 'Friendship', 'Suspense', 'Murder', 'Fiction', 'Ninth one'] },
+  { key: '/works/OL2W', title: 'Paper Towns Revisited II', author_name: ['Cleo Park'], first_publish_year: 2019 }] };
+// the fake sheet's rows are shared between flows in one run, so each flow sets the fields it needs
+const BLANK9 = { pages: '', synopsis: '', year: '', publisher: '', isbn: '', theme1: '', theme2: '', theme3: '' };
+const stubLookups = async page => {
+  await page.route('https://www.googleapis.com/**', r => r.fulfill({ contentType: 'application/json', body: JSON.stringify(GB), headers: { 'access-control-allow-origin': '*' } }));
+  await page.route('https://openlibrary.org/**', r => r.fulfill({ contentType: 'application/json', headers: { 'access-control-allow-origin': '*' },
+    body: JSON.stringify(/search\.json/.test(r.request().url()) ? OLS : { description: { type: '/type/text', value: 'OL description of the work.' } }) }));
+};
+const lookupDone = page => page.waitForFunction(() => !fd.busy && fd.gb && fd.gb.cands && fd.ol && fd.ol.cands, null, { timeout: 15000 });
+const pending = page => page.evaluate(() => JSON.stringify(fdPending(state.allBooks.find(x => x.id === fd.cur))));
+// (r1) blank pages / synopsis / year: the pre-ticked values save (pages, synopsis, publisher, isbn from Google Books; year from Open Library)
+flow('r1-fill-preticked', async ({ page }) => {
+  await stubLookups(page);
+  await page.evaluate(() => { showTab('toolbox', 'fill'); });
+  await page.click('.fd-row[data-id="9"]'); await lookupDone(page);
+  await page.waitForFunction(() => fdSel('ol') && fdSel('ol').synopsis !== undefined);
+  await page.click('#fdSave'); await settle(page, 800);
+}, { mutate: setBook('9', BLANK9) });
+// (r2) untick the synopsis and tap a suggestion chip (goes into the first empty slot, Theme 1); save
+flow('r2-fill-untick-chip', async ({ page }) => {
+  await stubLookups(page);
+  await page.evaluate(() => { showTab('toolbox', 'fill'); });
+  await page.click('.fd-row[data-id="9"]'); await lookupDone(page);
+  await page.waitForFunction(() => fdSel('ol') && fdSel('ol').synopsis !== undefined);
+  await page.click('#fd-synopsis-gb');
+  await page.click('.fd-chips [data-tag="Thrillers"]');
+  await page.click('#fdSave'); await settle(page, 800);
+}, { mutate: setBook('9', BLANK9) });
+// (r3) every field already filled: nothing is pre-ticked, so Save writes nothing; ticking Google Books' pages writes just pages
+flow('r3-fill-nothing-ticked', async ({ page }) => {
+  await stubLookups(page);
+  await page.evaluate(() => openFillFor(state.allBooks.find(x => x.id === '9')));
+  await lookupDone(page);
+  await page.click('#fdSave'); await settle(page, 400);
+  await page.click('#fd-pages-gb'); await page.click('#fdSave'); await settle(page, 800);
+}, { mutate: setBook('9', { pages: '280', synopsis: 'Has one', year: '2015', publisher: 'Mine', isbn: '9780000000002', genre: 'Mystery', theme1: 'a', theme2: 'b', theme3: 'c' }) });
+
 (async () => {
   const browser = await launch();
   const only = process.argv[4] ? new Set(process.argv[4].split(',')) : null;
