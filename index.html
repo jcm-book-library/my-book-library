@@ -30,20 +30,20 @@
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--fg);font:15px/1.5 var(--body);margin:0}
 *,*::before,*::after{font-variant-numeric:tabular-nums!important;font-feature-settings:"tnum" 1}
-.wrap{max-width:1180px;margin:0 auto;padding-inline:16px;padding-block:20px 0}
+.wrap{position:relative;z-index:1;max-width:1180px;margin:0 auto;padding-inline:16px;padding-block:18px 150px}
 h1,h2,.num{font-family:var(--display)}
 #todayLabel{color:var(--accent)}
 h1{font-size:clamp(26px,4vw,34px);font-weight:700;letter-spacing:-.02em;margin:0;text-wrap:balance}
-.lockup{--mk:52px;display:flex;align-items:center;gap:calc(var(--mk)*.14);margin-top:6px}
-.lib-mark{width:var(--mk);height:var(--mk);flex:none;color:var(--accent);display:block}
-.jm-wordmark{font-family:var(--display);font-weight:700;font-size:calc(var(--mk)*.5);line-height:1.06;white-space:nowrap;letter-spacing:-.01em;color:#eef0fa}
-@media (max-width:520px){.lockup{--mk:44px}}
+.lockup{--mk:52px;display:flex;align-items:center;gap:calc(var(--mk)*.14);margin-top:0}
+.lib-mark{width:var(--mk);height:var(--mk);flex:none;display:block}
+.jm-wordmark{font-family:var(--display);font-weight:700;font-size:calc(var(--mk)*.62);line-height:1.06;white-space:nowrap;letter-spacing:-.01em;color:#eef0fa}
+@media (max-width:560px){.lockup{--mk:44px}}
 h2{font-size:17px;font-weight:700;margin:0;letter-spacing:-.01em}
 .eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);font-weight:500}
 .muted{color:var(--muted)}
 .tnum{font-variant-numeric:tabular-nums}
 
-header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:20px}
+header{margin-bottom:16px}
 .status{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
 .dot{width:8px;height:8px;border-radius:50%;background:var(--muted);flex:none}
 .status[data-state="live"] .dot{background:var(--accent)}
@@ -219,7 +219,7 @@ input[type="number"]:focus{border-color:var(--accent);outline:none}
 .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
 .legend span{display:inline-flex;align-items:center;gap:6px}
 .sw{width:10px;height:10px;border-radius:2px;display:inline-block}
-.range-tabs{display:flex;gap:4px}
+.range-tabs{display:flex;gap:4px;flex-wrap:wrap}
 .range-tabs button{border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:6px;padding:3px 9px;font-size:12px;font-weight:500}
 .range-tabs button[aria-pressed="true"]{background:color-mix(in srgb,var(--accent) 28%,var(--surface));color:var(--fg);border-color:var(--accent)}
 
@@ -230,8 +230,15 @@ input[type="number"]:focus{border-color:var(--accent);outline:none}
 .heat .m{font-size:10px;color:var(--muted);white-space:nowrap;grid-row:1}
 
 /* tabs */
-.tabs{display:flex;gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:4px;margin-bottom:20px;width:max-content;max-width:100%;overflow-x:auto}
-.tab{border:0;background:transparent;color:var(--muted);border-radius:8px;padding:7px 16px;font-weight:500;font-size:14px;white-space:nowrap}
+.bar{position:relative;margin-bottom:18px}
+.tabs{display:flex;gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:4px;width:100%;align-items:stretch}
+.tab{border:0;background:transparent;color:var(--muted);border-radius:8px;padding:8px 6px;font-weight:500;font-size:14px;white-space:nowrap;flex:0 0 108px;text-align:center}
+.tab:hover{color:var(--fg)}
+.tabs .sep{flex:1}
+.tab.tb{flex:0 0 auto;padding:8px 14px;border:1px solid var(--line);color:var(--fg);display:inline-flex;align-items:center;gap:6px}
+.tab.tb[aria-expanded="true"],.tab.tb[aria-current="page"]{border-color:var(--accent)}
+.tab.tb svg{width:14px;height:14px}
+@media (max-width:560px){.tab{flex:1 1 0;font-size:13px;padding:8px 2px}.tabs .sep{display:none}.tab.tb{flex:0 0 auto;padding:8px 10px;margin-left:2px}}
 .tab[aria-selected="true"]{background:color-mix(in srgb,var(--accent) 24%,var(--surface));color:var(--fg);box-shadow:inset 0 -2px 0 var(--accent)}
 .tab:disabled{opacity:.45;cursor:default}
 .tab small{font-weight:500;font-size:11px;margin-left:4px}
@@ -241,7 +248,7 @@ input[type="number"]:focus{border-color:var(--accent);outline:none}
 .lib-bar input[type="search"],.lib-bar select,.field input,.field select,.field textarea{font:inherit;font-size:14px;background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:7px 10px}
 .lib-bar input[type="search"]{flex:1 1 220px;min-width:0}
 .lib-bar input:focus,.lib-bar select:focus,.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent);outline:none}
-.lib-mode{display:inline-flex;border:1px solid var(--line);border-radius:999px;padding:3px;margin-bottom:12px;gap:2px}
+.lib-mode{display:inline-grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);min-width:min(100%,300px);border:1px solid var(--line);border-radius:999px;padding:3px;margin-bottom:12px;gap:2px}
 .lib-mode button{font:inherit;font-size:13px;font-weight:500;border:0;background:transparent;color:var(--muted);border-radius:999px;padding:5px 14px;cursor:pointer}
 .wl-add{margin-bottom:14px}
 .wl-addrow{display:flex;gap:8px;flex-wrap:wrap}
@@ -281,7 +288,6 @@ input[type="number"]:focus{border-color:var(--accent);outline:none}
 .wish-bar{position:sticky;bottom:12px;z-index:5;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:12px;padding:10px 14px;border-radius:12px;background:var(--raise);border:1px solid var(--accent);box-shadow:0 6px 24px rgba(0,0,0,.35)}
 .wish-bar[hidden]{display:none}
 @media (max-width:560px){.wish-row{grid-template-columns:auto minmax(0,1fr) !important}.wish-row .acts{grid-column:2}}
-#view-library.wish-mode .lib-bar select,#view-library.wish-mode #addBookBtn{display:none}
 .wl-ctl{display:flex;gap:12px 18px;flex-wrap:wrap;align-items:center;margin:0 0 12px;font-size:13px;color:var(--muted)}
 .wl-ctl label{display:flex;gap:6px;align-items:center}
 .wl-ctl select{font:inherit;font-size:13px;background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:5px 8px}
@@ -557,32 +563,124 @@ dialog::backdrop{background:rgba(8,6,14,.65)}
   .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 @media (min-width:861px) and (max-width:1100px){.dash-tiles{grid-template-columns:repeat(3,minmax(0,1fr))}}
+
+/* Stage 2a layout: header buttons, popovers, shelf background, stacked views */
+[hidden]{display:none!important}
+.vstack{display:flex;flex-direction:column;gap:20px}
+.vstack>*{margin:0!important}
+.vstack>.lib-mode{align-self:flex-start}
+.vstack>.lib-mode,.vstack .lib-mode.wl-tabs{margin-bottom:0!important}
+.dash-3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;align-items:stretch}
+.dash-3>.panel,.dash-2>.panel{margin:0!important}
+@media (max-width:1000px){.dash-3{grid-template-columns:minmax(0,1fr)}}
+.note{margin:0;font-size:13px;color:var(--muted)}
+.ground{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
+.ground .row{position:absolute;left:0;right:0;bottom:0;height:40vh;display:flex;align-items:flex-end;gap:3px;padding:0 0 18px;opacity:.32}
+.ground .row i{display:block;flex:none;border-radius:3px 3px 1px 1px;position:relative}
+.ground .row i::before,.ground .row i::after{content:"";position:absolute;left:0;right:0;height:3px;background:#0d0b14;opacity:.3}
+.ground .row i::before{top:12%}.ground .row i::after{bottom:9%}
+.ground .row i.lean{transform:rotate(9deg);transform-origin:bottom left;margin-right:16px}
+.ground .plank{position:absolute;left:0;right:0;bottom:0;height:18px;background:#ebe4d3;opacity:.32}
+body[data-bg="plain"] .ground{display:none}
+@media (max-width:700px){.ground .row{height:34vh}}
+.hd-top{display:flex;justify-content:space-between;align-items:center;gap:6px 12px;flex-wrap:wrap}
+.hd-main{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:4px}
+.hd-r{display:flex;gap:8px}
+.hd-r .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:34px;white-space:nowrap;line-height:1.3}
+.badge{background:var(--accent);color:var(--accent-ink);font-size:11px;font-weight:700;min-width:18px;height:18px;border-radius:9px;display:inline-grid;place-items:center;padding:0 5px}
+@media (max-width:560px){
+  .hd-main{flex-direction:column;align-items:stretch;gap:12px}
+  .hd-r{display:grid;grid-template-columns:1fr 1fr}
+  .hd-r .btn{width:100%}
+  .hd-r .btn:only-child,.hd-r #lentBtn[hidden]+.btn{grid-column:1/-1}
+}
+.pop-wrap{position:relative}
+.pop{position:absolute;z-index:40;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:0 14px 44px rgba(0,0,0,.55);padding:14px}
+#toolboxPop{top:calc(100% + 6px);right:0;width:min(380px,100%)}
+#filterPop{top:calc(100% + 6px);left:0;width:min(440px,100%)}
+.pg-label{font-size:11px;text-transform:uppercase;letter-spacing:.09em;color:var(--accent);font-weight:700;margin:0 0 6px}
+.pg + .pg{margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+.tgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.tgrid.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+.tgrid .btn{font-size:12.5px;white-space:normal;text-align:center;min-height:42px;line-height:1.2;padding:6px}
+.look-row{display:grid;grid-template-columns:96px minmax(0,1fr);gap:8px;align-items:center;margin-bottom:6px}
+.look-row:last-child{margin-bottom:0}
+.look-row>span{font-size:12.5px;color:var(--muted)}
+.seg{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);border:1px solid var(--line);border-radius:999px;padding:3px;gap:2px;background:var(--bg)}
+.seg button{border:0;background:transparent;color:var(--muted);border-radius:999px;padding:4px 6px;font-size:12px;font-weight:500;white-space:nowrap;min-height:26px}
+.seg button[aria-pressed="true"]{background:color-mix(in srgb,var(--accent) 26%,var(--surface));color:var(--fg)}
+#discLinks{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+#discLinks .link-chip{text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:6px 8px}
+.lib-tools{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center}
+.lib-tools input[type="search"]{font:inherit;font-size:14px;background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:7px 10px;min-width:0;min-height:36px}
+.lib-tools input[type="search"]:focus{border-color:var(--accent);outline:none}
+#filterBtn{min-height:36px;display:inline-flex;align-items:center;gap:6px}
+#filterBtn[aria-expanded="true"]{border-color:var(--accent)}
+.fgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 12px}
+.fgrid select{font:inherit;font-size:14px;background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:7px 10px;width:100%;min-width:0;min-height:36px}
+.fgrid select:focus{border-color:var(--accent);outline:none}
+.pop-foot{display:flex;justify-content:space-between;align-items:center;margin-top:14px}
+.fchips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.fchips:empty{display:none}
+.fchip{border:1px solid var(--accent);background:color-mix(in srgb,var(--accent) 20%,var(--surface));color:var(--fg);border-radius:999px;padding:2px 6px 2px 11px;font-size:12px;font-weight:500;display:inline-flex;align-items:center;gap:6px}
+.fchip b{font-weight:500;color:var(--muted)}
+.fchip button{border:0;background:transparent;color:var(--muted);width:18px;height:18px;border-radius:50%;line-height:1;font-size:14px;padding:0}
+.fchip button:hover{background:var(--raise);color:var(--fg)}
+.tool-bar{display:flex;align-items:center;gap:12px}
+.lent-body{padding:6px 20px 12px;overflow:auto}
+.lent-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+.lent-row:first-child{border-top:0}
+.lent-row .t{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lent-row .m{font-size:12.5px;color:var(--muted)}
+.lent-msg{padding:0 20px 14px}
+.quote-panel{display:flex;flex-direction:column}
+.quote-panel #discQuote{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:12px}
+.quote-panel .quote{margin:0}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 
+<div class="ground" aria-hidden="true"><div class="row" id="gRow"></div><div class="plank"></div></div>
 <div class="wrap">
   <header>
-    <div>
+    <div class="hd-top">
       <div class="eyebrow" id="todayLabel">Today</div>
-      <h1 class="lockup" aria-label="The Library"><svg class="lib-mark" viewBox="0 0 100 100" aria-hidden="true"><g fill="currentColor"><path fill-rule="evenodd" d="M4 41 L50 5 L96 41 Z M33 26 H67 V33 H33 Z"/><path fill-rule="evenodd" d="M16 42 H84 V85 H16 Z M24 48 H74 V80 H24 Z M79 61 a2.4 2.4 0 1 0 0.01 0 Z"/><rect x="24" y="61" width="50" height="2.4"/><rect x="29" y="52" width="4" height="9" rx=".6"/><rect x="34" y="49" width="4" height="12" rx=".6"/><rect x="39" y="51" width="4" height="10" rx=".6"/><rect x="44" y="48" width="4" height="13" rx=".6"/><rect x="49" y="50" width="4" height="11" rx=".6"/><rect x="54" y="49" width="4" height="12" rx=".6"/><rect x="59" y="52" width="4" height="9" rx=".6"/><rect x="64" y="49" width="4" height="12" rx=".6"/><rect x="69" y="51" width="4" height="10" rx=".6"/><rect x="29" y="66" width="4" height="12" rx=".6"/><rect x="34" y="68" width="4" height="10" rx=".6"/><rect x="39" y="65" width="4" height="13" rx=".6"/><rect x="44" y="67" width="4" height="11" rx=".6"/><rect x="49" y="66" width="4" height="12" rx=".6"/><rect x="54" y="68" width="4" height="10" rx=".6"/><rect x="59" y="65" width="4" height="13" rx=".6"/><rect x="64" y="67" width="4" height="11" rx=".6"/><rect x="69" y="66" width="4" height="12" rx=".6"/><rect x="45" y="85" width="10" height="13" rx="1"/></g></svg><span class="jm-wordmark" aria-hidden="true">The Library</span></h1>
-    </div>
-    <div class="status" id="status" data-state="loading" role="status">
+      <div class="status" id="status" data-state="loading" role="status">
       <span class="dot"></span><span id="statusText">Connecting to your sheet…</span>
       <button class="btn" id="refreshBtn" type="button">Refresh</button>
+    </div>
+    </div>
+    <div class="hd-main">
+      <h1 class="lockup" aria-label="The Library"><svg class="lib-mark" viewBox="0 0 100 100" aria-hidden="true"><rect x="12" y="26" width="14" height="60" rx="1.6" style="fill:var(--l1)"/><rect x="12" y="32" width="14" height="2.4" fill="#0d0b14" opacity=".35"/><rect x="12" y="76" width="14" height="2.4" fill="#0d0b14" opacity=".35"/><rect x="28" y="15" width="11" height="71" rx="1.6" style="fill:var(--l2)"/><rect x="31" y="24" width="5" height="22" rx="1" fill="#0d0b14" opacity=".28"/><rect x="41" y="31" width="16" height="55" rx="1.6" style="fill:var(--l3)"/><rect x="41" y="38" width="16" height="2" style="fill:var(--l1)"/><rect x="41" y="77" width="16" height="2" style="fill:var(--l1)"/><g transform="rotate(16 59 86)"><rect x="59" y="21" width="12.5" height="65" rx="1.6" style="fill:var(--l4)" opacity=".78"/><rect x="62" y="30" width="6.5" height="18" rx="1" fill="#0d0b14" opacity=".28"/></g><rect x="5" y="86" width="90" height="6" rx="1.4" fill="#ebe4d3"/></svg><span class="jm-wordmark" aria-hidden="true">The Library</span></h1>
+      <div class="hd-r">
+        <button class="btn" id="lentBtn" type="button" hidden>Lent out <span class="badge" id="lentN">0</span></button>
+        <button class="btn btn-primary" id="addBookBtn" type="button">+ Add book</button>
+      </div>
     </div>
   </header>
 
   <div class="notice" id="notice" hidden></div>
 
-  <nav class="tabs" role="tablist" aria-label="Sections">
-    <button class="tab" role="tab" id="tab-log" aria-selected="true" aria-controls="view-log" type="button">Log</button>
-    <button class="tab" role="tab" id="tab-library" aria-selected="false" aria-controls="view-library" type="button">Library</button>
-    <button class="tab" role="tab" id="tab-dashboard" aria-selected="false" aria-controls="view-dashboard" type="button">Dashboard</button>
-    <button class="tab" role="tab" id="tab-tools" aria-selected="false" aria-controls="view-tools" type="button">Tools</button>
-    <button class="tab" role="tab" id="tab-discover" aria-selected="false" aria-controls="view-discover" type="button">Discover</button>
-  </nav>
+  <div class="bar pop-wrap">
+    <nav class="tabs" role="tablist" aria-label="Sections">
+      <button class="tab" role="tab" id="tab-now" aria-selected="true" aria-controls="view-now" type="button">Now</button>
+      <button class="tab" role="tab" id="tab-library" aria-selected="false" aria-controls="view-library" type="button">Library</button>
+      <button class="tab" role="tab" id="tab-next" aria-selected="false" aria-controls="view-next" type="button">Next</button>
+      <button class="tab" role="tab" id="tab-insights" aria-selected="false" aria-controls="view-insights" type="button">Insights</button>
+      <span class="sep"></span>
+      <button class="tab tb" id="toolboxBtn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="toolboxPop"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg>Toolbox</button>
+    </nav>
+    <div class="pop" id="toolboxPop" hidden>
+      <div class="pg"><p class="pg-label">Books</p><div class="tgrid two"><button class="btn" type="button" data-tool="rate">Rate a book</button><button class="btn" type="button" data-tool="covers">Find covers</button></div></div>
+      <div class="pg"><p class="pg-label">Plan</p><div class="tgrid"><button class="btn" type="button" data-tool="goal">Goal planner</button><button class="btn" type="button" data-tool="dip">Lucky dip</button><button class="btn" type="button" data-tool="own">Do I own this?</button></div></div>
+      <div class="pg"><p class="pg-label">Look</p>
+        <div class="look-row"><span>Background</span><div class="seg"><button type="button" data-bg="shelf" aria-pressed="true">Shelf</button><button type="button" data-bg="plain" aria-pressed="false">Plain</button></div></div>
+        <div class="look-row"><span>Spine colours</span><div class="seg"><button type="button" data-cm="month" aria-pressed="false">Month</button><button type="button" data-cm="daily" aria-pressed="true">Daily mix</button><button type="button" data-cm="contrast" aria-pressed="false">Contrast</button></div></div>
+      </div>
+      <div class="pg"><p class="pg-label">Links</p><div class="links" id="discLinks"></div></div>
+    </div>
+  </div>
 
-  <div id="view-log" role="tabpanel" aria-labelledby="tab-log">
+  <div id="view-now" class="vstack" role="tabpanel" aria-labelledby="tab-now">
   <section class="stats" aria-label="Summary">
     <div class="stat streak">
       <span class="eyebrow">Reading streak</span>
@@ -606,7 +704,6 @@ dialog::backdrop{background:rgba(8,6,14,.65)}
       <span class="sub" id="sYearSub"></span>
     </div>
   </section>
-
   <section class="panel reading-now" aria-labelledby="logH">
     <div class="panel-head">
       <h2 id="logH">Reading now</h2>
@@ -626,19 +723,20 @@ dialog::backdrop{background:rgba(8,6,14,.65)}
       <button class="btn" id="quickBtn" type="button">Add</button>
     </div>
   </section>
-
   <div class="fy" id="forYou" hidden>
     <section class="panel" aria-labelledby="fyRecH"><div class="panel-head"><h2 id="fyRecH">Read next</h2><span class="muted small">From your TBR</span></div><div class="fy-rec" id="fyRec"></div></section>
     <section class="panel" aria-labelledby="fyLastH"><div class="panel-head"><h2 id="fyLastH">Last five finished</h2></div><ul class="fy-list" id="fyLast"></ul></section>
     <section class="panel" aria-labelledby="fyFavH"><div class="panel-head"><h2 id="fyFavH">Favourites</h2><span class="muted small" id="fyFavNote"></span></div><ul class="fy-list" id="fyFav"></ul></section>
   </div>
-  <section class="panel" style="margin-top:20px" aria-labelledby="dailyH">
+  <div class="dash-2">
+    <section class="panel" aria-labelledby="dailyH">
         <div class="panel-head">
           <h2 id="dailyH">Pages per day</h2>
           <div class="range-tabs" role="group" aria-label="Range">
             <button type="button" data-range="30" aria-pressed="false">30 days</button>
             <button type="button" data-range="90" aria-pressed="false">90 days</button>
-            <button type="button" data-range="365" aria-pressed="true">Year</button>
+            <button type="button" data-range="ytd" aria-pressed="true">This year</button>
+            <button type="button" data-range="365" aria-pressed="false">Last 12 months</button>
           </div>
         </div>
         <div class="chart-box tall"><canvas id="dailyChart" aria-label="Pages read per day"></canvas></div>
@@ -648,35 +746,83 @@ dialog::backdrop{background:rgba(8,6,14,.65)}
           <span><i class="sw" style="background:var(--accent-2)"></i>7-day average</span>
         </div>
       </section>
-  <div class="dash-2" style="margin:20px 0 0">
-    <section class="panel" aria-labelledby="qH"><div class="panel-head"><h2 id="qH">Quote of the day</h2><span class="muted small">From your Quotes sheet</span></div><div id="discQuote"></div></section>
-    <section class="panel" aria-labelledby="dogH">
-        <div class="panel-head"><h2 id="dogH">Dog-ear quotes</h2><button class="btn" type="button" id="dogAdd">Dog-ear a quote</button></div>
-        <ul class="dog-list" id="dogList"></ul>
-      </section>
+    <section class="panel quote-panel" aria-labelledby="qH"><div class="panel-head"><h2 id="qH">Quote of the day</h2><span class="muted small">From your Quotes sheet</span></div><div id="discQuote"></div></section>
   </div>
-  <section class="panel" style="margin-top:20px" aria-labelledby="tbrH">
+  </div>
+
+  <div id="view-library" class="vstack" role="tabpanel" aria-labelledby="tab-library" hidden>
+    <div class="lib-mode" role="group" aria-label="Library view"><button type="button" data-mode="books" aria-pressed="true">Books</button><button type="button" data-mode="lists" aria-pressed="false">Reading lists</button></div>
+    <div id="toolsMountLib"><div id="libTools">
+      <div class="lib-tools pop-wrap" id="libBar">
+        <input type="search" id="libSearch" placeholder="Search title, author, series or theme" aria-label="Search books">
+        <button class="btn" id="filterBtn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="filterPop">Filter <span class="badge" id="filterN" hidden>0</span></button>
+        <div class="pop" id="filterPop" hidden>
+          <div class="fgrid">
+            <div class="field"><label for="libType">Type</label><select id="libType" aria-label="Type"><option value="">All types</option></select></div>
+            <div class="field"><label for="libFormat">Format</label><select id="libFormat" aria-label="Format"><option value="">All formats</option></select></div>
+            <div class="field"><label for="libGenre">Genre</label><select id="libGenre" aria-label="Genre"><option value="">All genres</option></select></div>
+            <div class="field"><label for="libTier">Plan</label><select id="libTier" aria-label="Plan"><option value="">All plans</option><option>Up next</option><option>Soon</option><option>Someday</option><option value="none">Not planned</option></select></div>
+            <div class="field"><label for="libPublisher">Publisher</label><select id="libPublisher" aria-label="Publisher"><option value="">All publishers</option></select></div>
+            <div class="field"><label for="libOwned">Owned</label><select id="libOwned" aria-label="Owned"><option value="">Physical &amp; digital</option><option>Physical</option><option>Digital</option></select></div>
+          </div>
+          <div class="pop-foot"><button class="linkbtn" id="fClear" type="button">Clear all</button><button class="btn btn-primary" id="fDone" type="button">Done</button></div>
+        </div>
+      </div>
+      <div class="fchips" id="fchips" aria-label="Active filters"></div>
+    </div></div>
+    <div id="listsView" hidden>
+      <div class="rl-bar"><button class="btn btn-primary" type="button" id="rlNew">New list</button><span class="muted small" id="rlNote"></span></div>
+      <div id="rlBoxes"></div>
+    </div>
+    <div id="libSecs"></div>
+    <div class="lib-foot"><span><span id="libCount"></span> <button class="btn" id="libSheetOrder" type="button" hidden>Back to sheet order</button></span></div>
+  </div>
+
+  <div id="view-next" class="vstack" role="tabpanel" aria-labelledby="tab-next" hidden>
+    <div class="lib-mode" role="group" aria-label="Next view"><button type="button" data-mode="plan" aria-pressed="true">Plan</button><button type="button" data-mode="wish" aria-pressed="false">Wishlist</button></div>
+    <div id="toolsMountNext"></div>
+    <div id="planView" class="vstack" hidden>
+      <div class="dash-2">
+        <section class="panel" aria-labelledby="upH"><div class="panel-head"><h2 id="upH">Up next</h2><span class="muted small tnum" id="upNote"></span></div><ol class="plan-list up-detail" id="upList"></ol></section>
+        <section class="panel" aria-labelledby="soonH"><div class="panel-head"><h2 id="soonH">Soon</h2><span class="muted small tnum" id="soonNote"></span></div><ol class="plan-list" id="soonList"></ol></section>
+      </div>
+      <section class="panel deck" aria-labelledby="deckH">
+        <div class="panel-head"><h2 id="deckH">Sort deck</h2><span class="muted small tnum" id="deckNote"></span></div>
+        <div id="deckBody"></div>
+      </section>
+      <section class="panel" aria-labelledby="tbrH">
     <div class="panel-head"><h2 id="tbrH">Your TBR</h2><span class="muted" id="tbrNote" style="font-size:13px"></span></div>
     <div class="dash-2" style="margin-bottom:0">
       <div><div class="eyebrow" style="margin-bottom:4px">Digital or physical</div><div id="ownSplit"></div><div class="eyebrow" style="margin:18px 0 8px">Quick wins · shortest on your TBR</div><ul class="mini-list" id="quickList"></ul></div>
       <div><div class="eyebrow" style="margin-bottom:8px;display:flex;justify-content:space-between">Up next <button type="button" class="linkbtn" id="planLink">Plan</button></div><ol class="mini-list up-mini" id="spotList"></ol></div>
     </div>
   </section>
-  </div>
-
-  <div id="view-library" role="tabpanel" aria-labelledby="tab-library" hidden>
+      <section class="panel" aria-labelledby="recH">
+    <div class="panel-head"><h2 id="recH">What to read next</h2><span class="muted small">From your ratings, themes, genres, authors and series</span></div>
     <div class="lib-bar">
-      <input type="search" id="libSearch" placeholder="Search title, author, series or theme" aria-label="Search books">
-      <select id="libType" aria-label="Type"><option value="">All types</option></select>
-      <select id="libFormat" aria-label="Format"><option value="">All formats</option></select>
-      <select id="libGenre" aria-label="Genre"><option value="">All genres</option></select>
-      <select id="libTier" aria-label="Plan"><option value="">All plans</option><option>Up next</option><option>Soon</option><option>Someday</option><option value="none">Not planned</option></select>
-      <select id="libPublisher" aria-label="Publisher"><option value="">All publishers</option></select>
-      <select id="libOwned" aria-label="Owned"><option value="">Physical &amp; digital</option><option>Physical</option><option>Digital</option></select>
-      <button class="btn btn-primary" id="addBookBtn" type="button">Add book</button>
+      <div class="chips" id="recModes" role="group" aria-label="Mode" style="margin:0">
+        <button class="chip" type="button" data-m="best" aria-pressed="true">Best match</button>
+        <button class="chip" type="button" data-m="series" aria-pressed="false">Next in series</button>
+        <button class="chip" type="button" data-m="change" aria-pressed="false">Change of pace</button>
+        <button class="chip" type="button" data-m="quick" aria-pressed="false">Quick win</button>
+        <button class="chip" type="button" data-m="like" aria-pressed="false">More like…</button>
+        <button class="chip" type="button" data-m="revisit" aria-pressed="false">Revisit a favourite</button>
+      </div>
+      <select id="recKind" aria-label="Kind"><option value="">Everything</option><option>Fiction</option><option>Non-fiction</option><option>Comics &amp; GN</option></select>
+      <select id="recOwned" aria-label="Owned"><option value="">Physical &amp; digital</option><option>Physical</option><option>Digital</option></select>
     </div>
-    <div class="lib-mode" role="group" aria-label="Library view"><button type="button" data-mode="books" aria-pressed="true">Books</button><button type="button" data-mode="plan" aria-pressed="false">Plan your TBR</button><button type="button" data-mode="wish" aria-pressed="false">Wishlist</button><button type="button" data-mode="lists" aria-pressed="false">Reading lists</button></div>
-    <div id="wishView" hidden>
+    <div id="recLikeWrap" hidden style="margin-bottom:12px"><select id="recLike" aria-label="Book you loved" style="max-width:100%"><option value="">Pick a book you loved…</option></select></div>
+    <div id="recList" class="rec-list"></div>
+  </section>
+      <section class="panel" aria-labelledby="sheetH">
+        <div class="panel-head"><h2 id="sheetH">Your TBR, in sheet order</h2><span class="muted small tnum" id="sheetNote"></span></div>
+        <p class="muted small" style="margin:-4px 0 10px">First books in a series and standalones only. Later books in a series wait for Next in series. Anything you don't pick stays Someday.</p>
+        <ol class="plan-list sheet-list" id="sheetList"></ol>
+        <button class="btn" type="button" id="sheetMore" hidden>Show 50 more</button>
+      </section>
+    </div>
+    <div id="wishView" class="vstack" hidden>
+      
       <section class="panel wl-add" aria-label="Add to your Wishlist">
         <div class="wl-addrow"><input id="wlQuick" class="tool-input" placeholder="Add a book: Title, or Title by Author" autocomplete="off" aria-label="Book to add">
           <button class="btn btn-primary" type="button" id="wlQuickBtn">Add to Inbox</button><button class="btn" type="button" id="wlPasteBtn">Paste a list</button><button class="btn" type="button" id="wlFullBtn">Add with details</button></div>
@@ -698,32 +844,17 @@ dialog::backdrop{background:rgba(8,6,14,.65)}
         <div class="wish-bar" id="wishBar" hidden><span id="wishBarText"></span><button class="btn btn-primary" type="button" id="wishMoveBtn">Move to TBR now</button></div>
       </section>
       <section class="panel" id="wlSeries" aria-labelledby="wlSerH" hidden><div class="panel-head"><h2 id="wlSerH">Series you're following</h2><button class="btn" type="button" id="wlSerAdd">Add a series</button></div><div id="wlSerList"></div></section>
+      <div class="dash-3">
+        <section class="panel" aria-labelledby="csH"><div class="panel-head"><h2 id="csH">Coming soon</h2><span class="muted small">From your Wishlist</span></div><ul class="mini-list" id="discSoon"></ul><div class="why" id="discPipe" style="margin-top:14px"></div></section>
+        <section class="panel" aria-labelledby="awwH"><div class="panel-head"><h2 id="awwH">Award watch</h2><span class="muted small">Your progress · roughly when each is announced</span></div><ul class="aw-list" id="discAwards"></ul></section>
+        <section class="panel" aria-labelledby="odH"><div class="panel-head"><h2 id="odH">On this day</h2><span class="muted small">Finished around this date in past years</span></div><ul class="mini-list" id="discOnDay"></ul></section>
+      </div>
     </div>
-    <div id="planView" hidden>
-      <section class="panel" aria-labelledby="upH"><div class="panel-head"><h2 id="upH">Up next</h2><span class="muted small tnum" id="upNote"></span></div><ol class="plan-list up-detail" id="upList"></ol></section>
-      <section class="panel deck" aria-labelledby="deckH">
-        <div class="panel-head"><h2 id="deckH">Sort deck</h2><span class="muted small tnum" id="deckNote"></span></div>
-        <div id="deckBody"></div>
-      </section>
-      <section class="panel" aria-labelledby="soonH"><div class="panel-head"><h2 id="soonH">Soon</h2><span class="muted small tnum" id="soonNote"></span></div><ol class="plan-list" id="soonList"></ol></section>
-      <section class="panel" aria-labelledby="sheetH">
-        <div class="panel-head"><h2 id="sheetH">Your TBR, in sheet order</h2><span class="muted small tnum" id="sheetNote"></span></div>
-        <p class="muted small" style="margin:-4px 0 10px">First books in a series and standalones only. Later books in a series wait for Next in series. Anything you don't pick stays Someday.</p>
-        <ol class="plan-list sheet-list" id="sheetList"></ol>
-        <button class="btn" type="button" id="sheetMore" hidden>Show 50 more</button>
-      </section>
-    </div>
-    <div id="listsView" hidden>
-      <div class="rl-bar"><button class="btn btn-primary" type="button" id="rlNew">New list</button><span class="muted small" id="rlNote"></span></div>
-      <div id="rlBoxes"></div>
-    </div>
-    <div id="libSecs"></div>
-    <div class="lib-foot"><span><span id="libCount"></span> <button class="btn" id="libSheetOrder" type="button" hidden>Back to sheet order</button></span></div>
   </div>
-</div>
 
-<div class="wrap" style="padding-block:0 48px"><div id="view-dashboard" role="tabpanel" aria-labelledby="tab-dashboard" hidden>
-  <div class="periods" id="dashPeriods" role="group" aria-label="Period"></div>
+  <div id="view-insights" class="vstack" role="tabpanel" aria-labelledby="tab-insights" hidden>
+    <p class="note">Charts will be redesigned in a later stage.</p>
+    <div class="periods" id="dashPeriods" role="group" aria-label="Period"></div>
   <section class="dash-tiles" id="dashTiles" aria-label="Totals"></section>
   <div class="dash-2">
     <section class="panel" aria-labelledby="monthH">
@@ -754,79 +885,62 @@ dialog::backdrop{background:rgba(8,6,14,.65)}
     <div class="panel-head"><h2 id="mapH">Where your books are set</h2><span class="muted small" id="mapNote"></span></div>
     <div class="map-wrap"><div class="map-box" id="mapBox"></div><div><ul class="hbars" id="mapBars"></ul><div class="map-other" id="mapOther"></div></div></div>
   </section>
-  <div class="dash-2">
+    <div class="dash-2">
     <section class="panel" aria-labelledby="whenH"><div class="panel-head"><h2 id="whenH">When you read</h2>
       <div class="chips" id="whenModes" role="group" aria-label="Show" style="margin:0"><button class="chip" type="button" data-w="day" aria-pressed="true">Weekday</button><button class="chip" type="button" data-w="time" aria-pressed="false">Time of day</button></div></div>
       <ul class="hbars" id="whenBars"></ul><p class="muted small" id="whenNote" style="margin:10px 0 0"></p></section>
     <section class="panel" aria-labelledby="sessH"><div class="panel-head"><h2 id="sessH">Reading sessions</h2><span class="muted small" id="sessNote"></span></div>
       <div class="mini-tiles" id="sessTiles"></div><ul class="hbars" id="sessBars" style="margin-top:14px"></ul></section>
   </div>
-  <div class="dash-2">
+    <div class="dash-2">
     <section class="panel" aria-labelledby="bpH"><div class="panel-head"><h2 id="bpH">Pace per book</h2><span class="muted small" id="bpNote"></span></div><div class="chart-box tall"><canvas id="bpChart" aria-label="Pages a day for each book against its length"></canvas></div></section>
     <section class="panel" aria-labelledby="rbH"><div class="panel-head"><h2 id="rbH">Ratings by</h2>
       <div class="chips" id="rbModes" role="group" aria-label="Break ratings down by" style="margin:0"><button class="chip" type="button" data-r="length" aria-pressed="true">Length</button><button class="chip" type="button" data-r="decade" aria-pressed="false">Published</button><button class="chip" type="button" data-r="kind" aria-pressed="false">Kind</button><button class="chip" type="button" data-r="format" aria-pressed="false">Format</button><button class="chip" type="button" data-r="owned" aria-pressed="false">Owned</button><button class="chip" type="button" data-r="publisher" aria-pressed="false">Publisher</button></div></div>
       <ul class="hbars" id="rbBars"></ul><p class="muted small" id="rbNote" style="margin:10px 0 0"></p></section>
   </div>
-  <section class="panel" aria-labelledby="rrH" style="margin-bottom:16px"><div class="panel-head"><h2 id="rrH">Re-reads</h2><span class="muted small" id="rrNote"></span></div><ul class="rr-list" id="rrList"></ul></section>
-  <div class="dash-2">
+    <div class="dash-2">
     <section class="panel" aria-labelledby="tageH"><div class="panel-head"><h2 id="tageH">TBR age</h2><span class="muted small" id="tageNote"></span></div><div class="chart-box"><canvas id="tageChart" aria-label="TBR books by how long ago they were added"></canvas></div></section>
     <section class="panel" aria-labelledby="tgrH"><div class="panel-head"><h2 id="tgrH">TBR in and out</h2><span class="muted small">Books added vs finished, last 12 months</span></div><div class="chart-box"><canvas id="tgrChart" aria-label="Books added and finished each month"></canvas></div></section>
   </div>
-</div></div>
-
-<div class="wrap" style="padding-block:0 48px"><div id="view-tools" role="tabpanel" aria-labelledby="tab-tools" hidden>
-  <div class="dash-2">
-    <section class="panel" aria-labelledby="ownH"><div class="panel-head"><h2 id="ownH">Do I own this?</h2><span class="muted small">Searches your library and Wishlist</span></div>
-      <input type="search" id="ownQ" class="tool-input" placeholder="Title or author" aria-label="Title or author to check" autocomplete="off"><ul class="own-list" id="ownList"></ul></section>
-    <section class="panel" aria-labelledby="goalH"><div class="panel-head"><h2 id="goalH">Goal planner</h2><span class="muted small" id="goalYear"></span></div>
-      <div class="logrow"><label for="goalIn">Books this year</label><input type="number" id="goalIn" min="1" max="1000" inputmode="numeric"><button class="btn btn-primary" type="button" id="goalSave">Save goal</button></div>
-      <div id="goalOut" style="margin-top:14px"></div></section>
-  </div>
-  <div class="dash-2">
-    <section class="panel" aria-labelledby="dipH"><div class="panel-head"><h2 id="dipH">Lucky dip</h2><span class="muted small">Pick a mood, get a book from your TBR</span></div>
-      <div class="chips" id="dipMoods" role="group" aria-label="Mood"></div><div id="dipCard"></div></section>
+    <div class="dash-2">
+      <section class="panel" aria-labelledby="stallH"><div class="panel-head"><h2 id="stallH">Stalled books</h2><span class="muted small">Reading or Paused, nothing logged for 10+ days</span></div><ul class="plan-list" id="stallList"></ul></section>
+      <section class="panel" aria-labelledby="nisH"><div class="panel-head"><h2 id="nisH">Next in series</h2><span class="muted small">Series you've started, most recent first</span></div><ol class="plan-list" id="nisList"></ol><button class="btn" type="button" id="nisMore" hidden>Show all</button></section>
+    </div>
+    <div class="dash-2">
+      <section class="panel" aria-labelledby="rrH"><div class="panel-head"><h2 id="rrH">Re-reads</h2><span class="muted small" id="rrNote"></span></div><ul class="rr-list" id="rrList"></ul></section>
+      <section class="panel" aria-labelledby="dogH">
+        <div class="panel-head"><h2 id="dogH">Dog-ear quotes</h2><button class="btn" type="button" id="dogAdd">Dog-ear a quote</button></div>
+        <ul class="dog-list" id="dogList"></ul>
+      </section>
+    </div>
     <section class="panel" aria-labelledby="yirH"><div class="panel-head"><h2 id="yirH">Year in review</h2><select id="yirYear" aria-label="Year"></select></div><div id="yirBox"></div></section>
   </div>
-  <div class="dash-2">
-    <section class="panel" aria-labelledby="stallH"><div class="panel-head"><h2 id="stallH">Stalled books</h2><span class="muted small">Reading or Paused, nothing logged for 10+ days</span></div><ul class="plan-list" id="stallList"></ul></section>
-    <section class="panel" aria-labelledby="nisH"><div class="panel-head"><h2 id="nisH">Next in series</h2><span class="muted small">Series you've started, most recent first</span></div><ol class="plan-list" id="nisList"></ol><button class="btn" type="button" id="nisMore" hidden>Show all</button></section>
-  </div>
-  <section class="panel" aria-labelledby="covH" style="margin-bottom:20px">
-    <div class="panel-head"><h2 id="covH">Book covers</h2><span class="muted small">From Open Library, one book at a time</span></div>
-    <div id="covBox"></div>
-  </section>
-  <section class="panel" aria-labelledby="rateH" style="margin-bottom:20px">
+
+  <div id="view-toolbox" class="vstack" role="tabpanel" aria-label="Toolbox" hidden>
+    <div class="tool-bar"><button class="btn" type="button" id="toolBack">Back</button><h2 id="toolTitle">Toolbox</h2></div>
+    <section class="panel" data-tool="rate" aria-labelledby="rateH">
     <div class="panel-head"><h2 id="rateH">Rate a book</h2><span class="muted small">For when you're not sure. Fiction, non-fiction and comics each have their own criteria.</span></div>
     <div id="rateBox"></div>
   </section>
-  <section class="panel" aria-labelledby="recH">
-    <div class="panel-head"><h2 id="recH">What to read next</h2><span class="muted small">From your ratings, themes, genres, authors and series</span></div>
-    <div class="lib-bar">
-      <div class="chips" id="recModes" role="group" aria-label="Mode" style="margin:0">
-        <button class="chip" type="button" data-m="best" aria-pressed="true">Best match</button>
-        <button class="chip" type="button" data-m="series" aria-pressed="false">Next in series</button>
-        <button class="chip" type="button" data-m="change" aria-pressed="false">Change of pace</button>
-        <button class="chip" type="button" data-m="quick" aria-pressed="false">Quick win</button>
-        <button class="chip" type="button" data-m="like" aria-pressed="false">More like…</button>
-        <button class="chip" type="button" data-m="revisit" aria-pressed="false">Revisit a favourite</button>
-      </div>
-      <select id="recKind" aria-label="Kind"><option value="">Everything</option><option>Fiction</option><option>Non-fiction</option><option>Comics &amp; GN</option></select>
-      <select id="recOwned" aria-label="Owned"><option value="">Physical &amp; digital</option><option>Physical</option><option>Digital</option></select>
-    </div>
-    <div id="recLikeWrap" hidden style="margin-bottom:12px"><select id="recLike" aria-label="Book you loved" style="max-width:100%"><option value="">Pick a book you loved…</option></select></div>
-    <div id="recList" class="rec-list"></div>
+    <section class="panel" data-tool="covers" aria-labelledby="covH">
+    <div class="panel-head"><h2 id="covH">Book covers</h2><span class="muted small">From Open Library, one book at a time</span></div>
+    <div id="covBox"></div>
   </section>
+    <section class="panel" data-tool="goal" aria-labelledby="goalH"><div class="panel-head"><h2 id="goalH">Goal planner</h2><span class="muted small" id="goalYear"></span></div>
+      <div class="logrow"><label for="goalIn">Books this year</label><input type="number" id="goalIn" min="1" max="1000" inputmode="numeric"><button class="btn btn-primary" type="button" id="goalSave">Save goal</button></div>
+      <div id="goalOut" style="margin-top:14px"></div></section>
+    <section class="panel" data-tool="dip" aria-labelledby="dipH"><div class="panel-head"><h2 id="dipH">Lucky dip</h2><span class="muted small">Pick a mood, get a book from your TBR</span></div>
+      <div class="chips" id="dipMoods" role="group" aria-label="Mood"></div><div id="dipCard"></div></section>
+    <section class="panel" data-tool="own" aria-labelledby="ownH"><div class="panel-head"><h2 id="ownH">Do I own this?</h2><span class="muted small">Searches your library and Wishlist</span></div>
+      <input type="search" id="ownQ" class="tool-input" placeholder="Title or author" aria-label="Title or author to check" autocomplete="off"><ul class="own-list" id="ownList"></ul></section>
+  </div>
 </div>
-<div id="view-discover" role="tabpanel" aria-labelledby="tab-discover" hidden>
-  <div class="dash-2">
-    <section class="panel" aria-labelledby="odH"><div class="panel-head"><h2 id="odH">On this day</h2><span class="muted small">Finished around this date in past years</span></div><ul class="mini-list" id="discOnDay"></ul></section>
-    <section class="panel" aria-labelledby="lkH"><div class="panel-head"><h2 id="lkH">Links</h2></div><div class="links" id="discLinks"></div></section>
-  </div>
-  <div class="dash-2">
-    <section class="panel" aria-labelledby="csH"><div class="panel-head"><h2 id="csH">Coming soon</h2><span class="muted small">From your Wishlist</span></div><ul class="mini-list" id="discSoon"></ul><div class="why" id="discPipe" style="margin-top:14px"></div></section>
-    <section class="panel" aria-labelledby="awwH"><div class="panel-head"><h2 id="awwH">Award watch</h2><span class="muted small">Your progress · roughly when each is announced</span></div><ul class="aw-list" id="discAwards"></ul></section>
-  </div>
-</div></div>
+
+<dialog id="lentDlg" aria-labelledby="lentTitle" style="width:min(480px,calc(100vw - 32px))">
+  <div class="dlg-head"><h2 id="lentTitle">Lent out</h2><button class="btn" type="button" id="lentClose">Close</button></div>
+  <div class="lent-body" id="lentBody"></div>
+  <div class="muted small lent-msg" id="lentMsg" aria-live="polite" hidden></div>
+</dialog>
 
 <dialog id="contentsDlg" aria-labelledby="ctTitle">
   <div class="dlg-head"><h2 id="ctTitle">Contents</h2><button class="btn" type="button" id="ctClose">Close</button></div>
@@ -1009,6 +1123,39 @@ function dayColour(isoDate) {
   return mix(MC[m], MC[(m + 1) % 12], ((d - 1) / (len - 1)) * 0.6);
 }
 const underColour = c => mix(BASE.raise, c, 0.42);
+/* Spine colours for the logo, the favicon and the shelf background. Look settings live in localStorage (mbl_bg, mbl_spines).
+   Month: shades of today's accent. Daily mix (default): the accent plus four other month colours picked by day of year.
+   Contrast: the accent, its complementary hue and a blend. The theme --accent itself keeps its monthly drift. */
+const look = { bg: 'shelf', spines: 'daily' };
+try {
+  const b = localStorage.getItem('mbl_bg'), m = localStorage.getItem('mbl_spines');
+  if (b === 'shelf' || b === 'plain') look.bg = b;
+  if (m === 'month' || m === 'daily' || m === 'contrast') look.spines = m;
+} catch (e) {}
+function saveLook() { try { localStorage.setItem('mbl_bg', look.bg); localStorage.setItem('mbl_spines', look.spines); } catch (e) {} }
+const rgbHex = a => '#' + a.map(v => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, '0')).join('');
+function hslRot(hex, deg) {
+  const [r, g, b] = hexRgb(hex).map(v => v / 255), mx = Math.max(r, g, b), mn = Math.min(r, g, b), l = (mx + mn) / 2;
+  let h = 0, sat = 0;
+  if (mx !== mn) { const d = mx - mn; sat = l > .5 ? d / (2 - mx - mn) : d / (mx + mn); h = mx === r ? (g - b) / d + (g < b ? 6 : 0) : mx === g ? (b - r) / d + 2 : (r - g) / d + 4; h *= 60; }
+  h = (h + deg + 360) % 360;
+  const f = n => { const k = (n + h / 30) % 12, a = sat * Math.min(l, 1 - l); return l - a * Math.max(-1, Math.min(k - 3, 9 - k, 1)); };
+  return rgbHex([f(0) * 255, f(8) * 255, f(4) * 255]);
+}
+function spinePalette(mode, isoDate) {
+  const y = +isoDate.slice(0, 4), m = +isoDate.slice(5, 7) - 1, d = +isoDate.slice(8, 10), acc = dayColour(isoDate);
+  if (mode === 'month') return [acc, mix(acc, '#ffffff', .45), mix(BASE.bg, acc, .42), mix(BASE.bg, acc, .7), mix(acc, '#ffffff', .2)];
+  if (mode === 'contrast') { const c = hslRot(acc, 180); return [acc, c, mix(acc, c, .5), mix(BASE.bg, acc, .6), mix(BASE.bg, c, .6)]; }
+  const n = Math.floor((Date.UTC(y, m, d) - Date.UTC(y, 0, 0)) / 864e5), out = [];
+  let k = 0, i = (n * 5 + 3) % 12;
+  while (out.length < 4 && k < 24) { if (i !== m && !out.includes(i)) out.push(i); i = (i + 7) % 12; k++; }
+  return [acc, ...out.map(j => mix(MC[j], BASE.bg, .2))];
+}
+function applyLook() {
+  document.body.dataset.bg = look.bg;
+  document.querySelectorAll('button[data-bg]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.bg === look.bg)));
+  document.querySelectorAll('button[data-cm]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.cm === look.spines)));
+}
 function applyTheme() {
   const t = today(), m = +t.slice(5, 7) - 1, c = dayColour(t), r = document.documentElement.style;
   r.setProperty('--accent', c);
@@ -1020,24 +1167,41 @@ function applyTheme() {
   const g = document.getElementById('lgGoal'), u = document.getElementById('lgUnder');
   if (g) g.style.background = `linear-gradient(90deg,${MC[(m + 10) % 12]},${MC[(m + 11) % 12]},${MC[m]})`;
   if (u) u.style.background = underColour(c);
-  setFavicon(c);
+  const pal = spinePalette(look.spines, t);
+  pal.slice(0, 4).forEach((p, i) => r.setProperty('--l' + (i + 1), p));
+  pal.forEach((p, i) => r.setProperty('--g' + i, mix(p, BASE.bg, .25)));   // the shelf background is a little softer than the logo
+  applyLook();
+  setFavicon(pal);
 }
 
-/* Favicon follows the month colour (used when hosted outside claude.ai) */
-function setFavicon(c) {
+/* Favicon follows the spine colours (used when hosted outside claude.ai) */
+function setFavicon(pal) {
   const m = document.querySelector('.lib-mark'); if (!m) return;
-  const svg = m.outerHTML.replace('class="lib-mark"', 'xmlns="http://www.w3.org/2000/svg"').replace(/currentColor/g, c);
+  const svg = m.outerHTML.replace('class="lib-mark"', 'xmlns="http://www.w3.org/2000/svg"').replace(/var\(--l(\d)\)/g, (_, n) => pal[n - 1]);
   let l = document.querySelector('link[rel="icon"]');
   if (!l) { l = document.createElement('link'); l.rel = 'icon'; document.head.appendChild(l); }
   l.type = 'image/svg+xml'; l.href = 'data:image/svg+xml,' + encodeURIComponent(svg);
 }
+// The fixed shelf of spines along the bottom of the screen: 70 spines, the same every time
+function buildGround() {
+  const row = document.getElementById('gRow'); if (!row) return;
+  let x = 12345; const rnd = () => (x = (x * 1664525 + 1013904223) % 4294967296) / 4294967296;
+  for (let i = 0; i < 70; i++) {
+    const e = document.createElement('i');
+    e.style.width = (22 + Math.round(rnd() * 26)) + 'px'; e.style.height = (48 + rnd() * 48) + '%';
+    e.style.background = `var(--g${Math.floor(rnd() * 5)})`;
+    if (i % 17 === 9) e.className = 'lean';
+    row.appendChild(e);
+  }
+}
+buildGround();
 
 /* ---------- state ---------- */
 const state = {
   entries: SNAPSHOT.pages.map((p, i) => ({ date: addDays(SNAPSHOT.start, i), pages: p, bookId: '', title: '', pageReached: null, source: 'import' })),
   books: SNAPSHOT.books.map(b => ({ ...b })),
   settings: { ...SNAPSHOT.settings },
-  mcp: null, live: false, busy: false, range: 365, logDate: null, editing: null,
+  mcp: null, live: false, busy: false, range: 'ytd', logDate: null, editing: null,
   allBooks: [], header: [], libLoaded: false,
   lib: { sec: {}, lim: {}, q: '', status: 'All', type: '', format: '', genre: '', publisher: '', tier: '', owned: '', sort: 'sheet', dir: 1, limit: 100, open: null }
 };
@@ -1323,7 +1487,7 @@ function chartBase() {
 function renderDaily(totals) {
   const goal = state.settings.dailyGoalPages || 100;
   const t = today();
-  const n = state.range === 365 ? daysBetween(t.slice(0, 4) + '-01-01', t) + 1 : state.range;
+  const n = state.range === 'ytd' ? daysBetween(t.slice(0, 4) + '-01-01', t) + 1 : state.range;   // This year = 1 Jan to today; 365 = last 12 months
   const labels = [], data = [], avg = [];
   for (let i = n - 1; i >= 0; i--) {
     const d = addDays(t, -i);
@@ -1632,8 +1796,10 @@ function renderAll() {
   if (state.libLoaded) { renderLibrary(); renderTBR(); renderForYou(); }
   renderQuote();
   renderDogears();
-  if (state.libLoaded && !$('view-dashboard').hidden) renderDashboard();
-  if (state.libLoaded && !$('view-tools').hidden) renderTools();
+  renderLent();
+  if (state.libLoaded && !$('view-insights').hidden) { renderDashboard(); renderAnalysis(); }
+  if (state.libLoaded && !$('view-next').hidden) renderRecs();
+  if (state.libLoaded && !$('view-toolbox').hidden) renderTools();
   if (card.id) showCard(card.id);
 }
 
@@ -1714,7 +1880,7 @@ async function refresh() {
     setStatus('live', 'Live from your sheet · ' + new Date().toLocaleTimeString('en-AU', { hour: 'numeric', minute: '2-digit' }));
     disc.loaded = false; wl.snap = null;
     renderAll();
-    loadDiscover().then(autoMoveWish).then(() => { if (state.lib.mode === 'wish' && !$('view-library').hidden) renderWish(); });
+    loadDiscover().then(autoMoveWish).then(() => { if (state.lib.mode === 'wish' && !$('view-next').hidden) renderWish(); });
   } catch (err) {
     setStatus('error', state.live ? 'Showing the last data loaded' : 'Showing the 9 Oct snapshot');
     notice(explain(err), 'error');
@@ -1937,14 +2103,15 @@ function fillSelect(id, field, label) {
 function renderLibrary() {
   const L = state.lib;
   const mode = L.mode || 'books', plan = mode === 'plan', wish = mode === 'wish', lists = mode === 'lists';
-  document.querySelectorAll('.lib-mode button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.mode === mode)));
+  document.querySelectorAll('.lib-mode button[data-mode]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.mode === mode)));
+  placeLibTools(mode); renderFilterChips();
   $('planView').hidden = !plan;
   $('wishView').hidden = !wish;
   $('view-library').classList.toggle('wish-mode', wish || lists);
   $('listsView').hidden = !lists;
   $('libSecs').hidden = mode !== 'books';
   if (mode !== 'books') hideCard();
-  $('libTier').hidden = mode !== 'books';
+  $('libTier').parentElement.hidden = mode !== 'books';
   document.querySelector('#view-library .lib-foot').hidden = mode !== 'books';
   if (wish) { renderWish(); return; }
   if (lists) { renderLists(); return; }
@@ -2716,7 +2883,7 @@ function deckPick(b, tier) {
   else { planUI.deckSkipped.add(b.id); renderDeck(); }
 }
 document.addEventListener('keydown', e => {
-  if ($('view-library').hidden || state.lib.mode !== 'plan' || /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName) || document.querySelector('dialog[open]')) return;
+  if ($('view-next').hidden || state.lib.mode !== 'plan' || /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName) || document.querySelector('dialog[open]')) return;
   const i = ['1', '2', '3', '4'].indexOf(e.key);
   if (i < 0) return;
   const btn = document.querySelectorAll('#deckBody .deck-btns button')[i];
@@ -3038,7 +3205,9 @@ function renderRevisit(box, normT) {
     box.appendChild(el);
   }
 }
-function renderTools() { renderCovers(); renderRate(); renderRecs(); renderOwn(); renderDip(); renderStalled(); renderNextInSeries(); renderGoal(); renderYear(); }
+// Toolbox panels (Rate a book, Find covers, Goal planner, Lucky dip, Do I own this?) and the Insights analysis panels
+function renderTools() { renderCovers(); renderRate(); renderOwn(); renderDip(); renderGoal(); }
+function renderAnalysis() { renderStalled(); renderNextInSeries(); renderYear(); }
 
 /* ---------- Wishlist (Library → Wishlist) ---------- */
 // Inbox (quick capture) → a "get it" stage → Got it → moves to Books as TBR and leaves the Wishlist.
@@ -4153,29 +4322,51 @@ async function renderDiscover() {
     if (books.length) makeDrill(li.querySelector('.track'), `${a.k} books in your library`, books);
     aw.appendChild(li);
   }
-  $('discLinks').innerHTML = LINKS.map(([n, u]) => `<a class="link-chip" href="${u}" target="_blank" rel="noopener">${escapeText(n)}</a>`).join('');
+  renderLinks();
+}
+function renderLinks() {
+  $('discLinks').innerHTML = LINKS.map(([n, u]) => `<a class="link-chip" href="${u}" target="_blank" rel="noopener" title="${escapeText(n)}">${escapeText(n)}</a>`).join('');
 }
 
 /* ---------- wiring ---------- */
-function showTab(name) {
-  hideCard();
-  for (const t of ['log', 'library', 'dashboard', 'tools', 'discover']) {
-    $('tab-' + t).setAttribute('aria-selected', String(t === name));
+const TABS = ['now', 'library', 'next', 'insights', 'toolbox'];
+const TAB_ALIAS = { log: 'now', dashboard: 'insights', discover: 'next', tools: 'toolbox' };   // the old tab names still work (saved tab, tests)
+const nav = { tab: 'now', last: 'now', tool: null };
+const TOOL_PANELS = { rate: 'Rate a book', covers: 'Find covers', goal: 'Goal planner', dip: 'Lucky dip', own: 'Do I own this?' };
+const isPlanMode = m => m === 'plan' || m === 'wish';
+function showTab(name, tool) {
+  name = TAB_ALIAS[name] || name; if (!TABS.includes(name)) name = 'now';
+  hideCard(); closePops();
+  const L = state.lib;
+  if (name === 'library' && isPlanMode(L.mode)) L.mode = L.libMode || 'books';
+  if (name === 'next' && !isPlanMode(L.mode)) L.mode = L.nextMode || 'plan';
+  if (name !== 'toolbox') nav.last = name; else nav.tool = tool || null;
+  nav.tab = name;
+  for (const t of TABS) {
+    const b = $('tab-' + t); if (b) b.setAttribute('aria-selected', String(t === name));
     $('view-' + t).hidden = t !== name;
   }
+  if (name === 'toolbox') {
+    $('toolboxBtn').setAttribute('aria-current', 'page');
+    $('toolTitle').textContent = nav.tool ? TOOL_PANELS[nav.tool] : 'Toolbox';
+    document.querySelectorAll('#view-toolbox [data-tool]').forEach(p => { p.hidden = !!nav.tool && p.dataset.tool !== nav.tool; });
+  } else $('toolboxBtn').removeAttribute('aria-current');
+  const fillSelects = () => { fillSelect('libType', 'type', 'All types'); fillSelect('libFormat', 'format', 'All formats'); fillSelect('libGenre', 'genre', 'All genres'); fillSelect('libPublisher', 'publisher', 'All publishers'); };
   if (name === 'library' && !state.libLoaded) $('libSecs').innerHTML = `<p class="muted" style="padding:18px">${isLive() ? 'Loading your library…' : 'Your library loads from the sheet. ' + connectHint()}</p>`;
-  if (name === 'library' && state.libLoaded) { fillSelect('libType', 'type', 'All types'); fillSelect('libFormat', 'format', 'All formats'); fillSelect('libGenre', 'genre', 'All genres'); fillSelect('libPublisher', 'publisher', 'All publishers'); renderLibrary(); }
-  if (name === 'log') redraw();
-  if (name === 'dashboard') renderDashboard();
-  if (name === 'tools') renderTools();
-  if (name === 'discover') renderDiscover();
-  try { localStorage.setItem('mbl-tab', name); } catch (e) {}
+  if ((name === 'library' || name === 'next') && state.libLoaded) { fillSelects(); renderLibrary(); }
+  if (name === 'now') redraw();
+  if (name === 'next') { renderRecs(); renderDiscover(); }
+  if (name === 'insights') { renderDashboard(); renderAnalysis(); }
+  if (name === 'toolbox') renderTools();
+  if (name !== 'toolbox') { try { localStorage.setItem('mbl-tab', name); } catch (e) {} }
 }
-$('tab-log').addEventListener('click', () => showTab('log'));
-$('tab-library').addEventListener('click', () => showTab('library'));
-$('tab-dashboard').addEventListener('click', () => showTab('dashboard'));
-$('tab-tools').addEventListener('click', () => showTab('tools'));
-$('tab-discover').addEventListener('click', () => showTab('discover'));
+// Switch the Library / Next sub-view (Books, Reading lists | Plan, Wishlist); it moves to the tab it belongs to
+function setLibMode(mode) {
+  const L = state.lib, tab = isPlanMode(mode) ? 'next' : 'library';
+  L.mode = mode; L[tab === 'next' ? 'nextMode' : 'libMode'] = mode;
+  if (nav.tab !== tab) showTab(tab); else renderLibrary();
+}
+for (const t of TABS.slice(0, 4)) $('tab-' + t).addEventListener('click', () => showTab(t));
 $('recModes').addEventListener('click', e => { const c = e.target.closest('.chip'); if (!c) return; recState.mode = c.dataset.m; $('recModes').querySelectorAll('.chip').forEach(x => x.setAttribute('aria-pressed', String(x === c))); renderRecs(); });
 $('recKind').addEventListener('change', e => { recState.kind = e.target.value; renderRecs(); });
 $('recOwned').addEventListener('change', e => { recState.owned = e.target.value; renderRecs(); });
@@ -4258,9 +4449,9 @@ $('timerBtn').addEventListener('click', () => timerStart() ? stopTimer() : start
 drawTimer();
 $('whenModes').addEventListener('click', e => { const c = e.target.closest('.chip'); if (!c) return; whenState.mode = c.dataset.w; renderDashboard(); });
 $('rbModes').addEventListener('click', e => { const c = e.target.closest('.chip'); if (!c) return; rbState.mode = c.dataset.r; renderDashboard(); });
-document.querySelector('.lib-mode').addEventListener('click', e => { const m = e.target.closest('button'); if (!m) return; state.lib.mode = m.dataset.mode; renderLibrary(); });
+document.querySelectorAll('.lib-mode').forEach(g => g.addEventListener('click', e => { const m = e.target.closest('button[data-mode]'); if (m) setLibMode(m.dataset.mode); }));
 $('sheetMore').addEventListener('click', () => { planUI.limit += 50; renderPlan(); });
-$('planLink').addEventListener('click', () => { state.lib.mode = 'plan'; showTab('library'); });
+$('planLink').addEventListener('click', () => setLibMode('plan'));
 $('quoteForm').addEventListener('submit', saveQuote);
 $('qdClose').addEventListener('click', () => $('quoteDlg').close());
 $('dlgQuote').addEventListener('click', () => openQuoteDlg(editing));
@@ -4270,7 +4461,7 @@ $('quickBtn').addEventListener('click', () => {
   logEntry({ pages: v }, $('quickBtn')).then(ok => { if (ok) $('quickPages').value = ''; });
 });
 document.querySelectorAll('.range-tabs button').forEach(b => b.addEventListener('click', () => {
-  state.range = Number(b.dataset.range);
+  state.range = b.dataset.range === 'ytd' ? 'ytd' : Number(b.dataset.range);
   document.querySelectorAll('.range-tabs button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
   renderDaily(dailyTotals());
 }));
@@ -4354,8 +4545,89 @@ $('gForm').addEventListener('submit', e => {
   googleConnect();
 });
 
+/* ---------- popovers (Toolbox, Filter): close on outside click or Escape ---------- */
+const POPS = [['toolboxPop', 'toolboxBtn'], ['filterPop', 'filterBtn']];
+function closePops(except) { for (const [p, b] of POPS) if (p !== except) { $(p).hidden = true; $(b).setAttribute('aria-expanded', 'false'); } }
+function togglePop(p, b) { const open = $(p).hidden; closePops(open ? p : null); $(p).hidden = !open; $(b).setAttribute('aria-expanded', String(open)); }
+$('toolboxBtn').addEventListener('click', () => togglePop('toolboxPop', 'toolboxBtn'));
+$('filterBtn').addEventListener('click', () => togglePop('filterPop', 'filterBtn'));
+document.addEventListener('click', e => { for (const [p, b] of POPS) if (!$(p).hidden && !e.target.closest('#' + p) && !e.target.closest('#' + b)) closePops(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && POPS.some(([p]) => !$(p).hidden)) { const f = POPS.find(([p]) => !$(p).hidden); closePops(); $(f[1]).focus(); } });
+$('fDone').addEventListener('click', () => { closePops(); $('filterBtn').focus(); });
+
+/* ---------- Library filters: the selects live in the Filter popover, active ones show as chips ---------- */
+const FILTERS = [['type', 'libType', 'Type'], ['format', 'libFormat', 'Format'], ['genre', 'libGenre', 'Genre'], ['tier', 'libTier', 'Plan'], ['publisher', 'libPublisher', 'Publisher'], ['owned', 'libOwned', 'Owned']];
+const filterText = (k, v) => k === 'tier' && v === 'none' ? 'Not planned' : v;
+function renderFilterChips() {
+  const L = state.lib, plan = L.mode === 'plan';
+  const act = FILTERS.filter(([k]) => L[k] && !(plan && k === 'tier'));
+  $('filterN').hidden = !act.length; $('filterN').textContent = act.length;
+  $('fchips').innerHTML = act.map(([k, , label]) => `<span class="fchip"><b>${label}:</b> ${escapeText(filterText(k, L[k]))}<button type="button" data-fx="${k}" aria-label="Remove ${label} filter">×</button></span>`).join('');
+}
+function setFilter(k, v) {
+  const f = FILTERS.find(x => x[0] === k); state.lib[k] = v; $(f[1]).value = v;
+  state.lib.lim = {}; state.lib.sec = {}; renderLibrary();
+}
+$('fchips').addEventListener('click', e => { const x = e.target.closest('[data-fx]'); if (x) setFilter(x.dataset.fx, ''); });
+$('fClear').addEventListener('click', () => { for (const [k, id] of FILTERS) { state.lib[k] = ''; $(id).value = ''; } state.lib.lim = {}; state.lib.sec = {}; renderLibrary(); });
+// One search-and-filter toolbar serves Library > Books and Next > Plan; it moves to whichever is showing
+function placeLibTools(mode) {
+  const host = $(mode === 'plan' ? 'toolsMountNext' : 'toolsMountLib');
+  if ($('libTools').parentNode !== host) host.appendChild($('libTools'));
+  $('libTools').hidden = !(mode === 'books' || mode === 'plan');
+  if ($('libTools').hidden) closePops('toolboxPop');
+}
+
+/* ---------- Lent out ---------- */
+const lentBooks = () => state.allBooks.filter(b => String(b.loaned || '').trim());
+function renderLent() {
+  const list = lentBooks();
+  $('lentN').textContent = list.length; $('lentBtn').hidden = !list.length;
+  const box = $('lentBody'); box.textContent = '';
+  if (!list.length) { box.innerHTML = '<p class="empty" style="padding:14px 0">Nothing is lent out.</p>'; return; }
+  const since = b => toDate(b.loaned) || '';
+  list.sort((a, b) => (since(a) || '9999').localeCompare(since(b) || '9999'));
+  for (const b of list) {
+    const d = toDate(b.loaned), text = String(b.loaned).trim(), row = document.createElement('div');
+    row.className = 'lent-row';
+    row.innerHTML = '<div><div class="t"></div><div class="m"></div></div><button class="btn" type="button" data-ret>Returned</button>';
+    row.querySelector('.t').textContent = b.title;
+    const who = b.loanee ? 'with ' + b.loanee : 'lent out';
+    const when = d ? `since ${fromIso(d).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })} · ${fmt(Math.max(0, daysBetween(d, today())))} days` : (/^yes$/i.test(text) ? '' : text);
+    row.querySelector('.m').textContent = [who, when].filter(Boolean).join(' · ');
+    row.querySelector('[data-ret]').dataset.ret = b.id;
+    box.appendChild(row);
+  }
+}
+$('lentBtn').addEventListener('click', () => { $('lentMsg').hidden = true; renderLent(); $('lentDlg').showModal(); });
+$('lentClose').addEventListener('click', () => $('lentDlg').close());
+$('lentBody').addEventListener('click', async e => {
+  const btn = e.target.closest('[data-ret]'); if (!btn) return;
+  const b = state.allBooks.find(x => x.id === btn.dataset.ret); if (!b) return;
+  const msg = $('lentMsg'); msg.hidden = true;
+  if (!isLive()) { msg.textContent = 'Marking a book as returned needs the live connection. ' + connectHint(); msg.hidden = false; return; }
+  if (!await askOk(`Mark “${b.title}” as returned?`, 'Returned')) return;
+  btn.disabled = true;
+  try {
+    await writeBookFields(b.id, { loaned: '', loanee: '' });
+    setStatus('live', `“${b.title}” is back on the shelf`);
+  } catch (err) { msg.textContent = `Couldn't update “${b.title}”: ${err.message || explain(err)}`; msg.hidden = false; }
+  renderLent();
+  if (!lentBooks().length) $('lentDlg').close();
+  if (!$('view-library').hidden) renderLibrary();
+});
+
+/* ---------- Toolbox popover: tools open their panel, Look changes the background and spine colours ---------- */
+$('toolboxPop').addEventListener('click', e => {
+  const t = e.target.closest('button[data-tool]'); if (t) { showTab('toolbox', t.dataset.tool); window.scrollTo({ top: 0 }); return; }
+  const bg = e.target.closest('button[data-bg]'); if (bg) { look.bg = bg.dataset.bg; saveLook(); applyLook(); return; }
+  const cm = e.target.closest('button[data-cm]'); if (cm) { look.spines = cm.dataset.cm; saveLook(); applyTheme(); }
+});
+$('toolBack').addEventListener('click', () => showTab(nav.last || 'now'));
+
 renderAll();
-try { const t = localStorage.getItem('mbl-tab'); if (['library', 'dashboard', 'tools', 'discover'].includes(t)) showTab(t); } catch (e) {}
+try { const t = TAB_ALIAS[localStorage.getItem('mbl-tab')] || localStorage.getItem('mbl-tab'); if (['library', 'next', 'insights'].includes(t)) showTab(t); } catch (e) {}
+renderLinks();
 setStatus('loading', 'Connecting to your sheet…');
 (async () => {
   if (!(window.claude && window.claude.use)) { googleBoot(); return; }
