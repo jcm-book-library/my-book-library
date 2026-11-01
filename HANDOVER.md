@@ -66,6 +66,8 @@ Order: 1 Foundations (screenshot and write-flow tests in `tests/`, one find-row 
 - **Logo:** shelf of spines, with a shelf of spines along the bottom of the screen as the background (a Plain option too).
 - **Layout:** tabs Now · Library · Next · Insights, a Toolbox menu, header buttons "+ Add book" and "Lent out". The owner wants symmetry and condensed rows.
 - **Colour:** the theme keeps the slow monthly drift; spines (logo, background, shelves) rotate faster or use a contrast colour. The mock offers Month / Daily mix / Contrast.
+- **Mock approved 1 Nov** (with changes: softer background spines; Pages per day toggles 30 days / 90 days / This year / Last 12 months, keeping the 7-day average worm).
+- **Spine titles (Shelves stage):** never "…". Shrink the font to fit the spine; if a title still won't fit at the smallest size, cut it after a whole word.
 - **Kept manual on purpose:** logging pages read. Don't automate it (no Kobo sync).
 - **Not wanted for now:** spending stats, loan reminders (a Lent out popup instead), imports (done), family sharing (a future version; then consider Wishlist items as Books rows).
 - **Later:** once Open Library has filled what it can, add the remaining covers from Google Drive, as other projects do.
