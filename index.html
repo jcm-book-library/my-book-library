@@ -814,6 +814,47 @@ body[data-bg="plain"] .ground{display:none}
   .se-slots{grid-column:1/-1;order:3}
   #view-library>.lib-mode button{padding:5px 8px;font-size:12.5px;white-space:nowrap}
 }
+
+/* Library > Books > Shelves */
+#libViewSeg{align-self:center}#libViewSeg[hidden]{display:none}
+#libViewSeg button{min-height:28px;padding:4px 12px;font-size:13px}
+.lib-tools.has-seg{grid-template-columns:minmax(0,1fr) auto auto}
+#libShelves[hidden]{display:none}
+.shelf-sec{font-size:11px;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);font-weight:700;margin:22px 0 10px;display:flex;align-items:center;gap:10px}
+.shelf-sec::after{content:"";flex:1;height:1px;background:var(--line)}
+.shelf-sec:first-child{margin-top:0}
+.sgrid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px;align-items:stretch}
+.sgrid+.shelf-sec{margin-top:22px}
+.sgrid>.shelf{grid-column:span 6;margin:0;padding:12px;display:flex;flex-direction:column;min-width:0}
+.shelf .panel-head{margin-bottom:6px;min-height:20px}
+.shelf .panel-head h2{margin:0}
+.shelf .cnt{color:var(--muted);font-size:13px;font-weight:400;margin-left:6px}
+@media (min-width:861px){
+ .sgrid>.shelf{grid-column:span 3}
+ .sgrid>.shelf:last-child:nth-child(odd){grid-column:span 6}
+}
+@media (min-width:1280px){
+ .sgrid.s3>.shelf{grid-column:span 2}
+ .sgrid.s3>.shelf:last-child:nth-child(3n+1){grid-column:span 6}
+ .sgrid.s3>.shelf:last-child:nth-child(3n+2){grid-column:span 3}
+ .sgrid.s3>.shelf:nth-last-child(2):nth-child(3n+1){grid-column:span 3}
+}
+.shelf-row{position:relative;display:flex;align-items:flex-end;gap:4px;height:120px;padding:0 4px 8px;overflow:hidden;margin-top:auto}
+.shelf-row::after{content:"";position:absolute;left:0;right:0;bottom:0;height:7px;background:#ebe4d3;opacity:.5;border-radius:2px}
+.spine{flex:none;border:0;padding:0;margin:0;font:inherit;border-radius:3px 3px 1px 1px;position:relative;display:flex;align-items:flex-start;justify-content:center;overflow:hidden;cursor:pointer;box-shadow:inset -3px 0 0 rgba(0,0,0,.18),inset 1px 0 0 rgba(255,255,255,.12);transition:transform .12s}
+.spine:hover{transform:translateY(-5px)}
+.spine:focus-visible,.shelf-more:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
+.spine::before,.spine::after{content:"";position:absolute;left:0;right:0;height:3px;background:#0d0b14;opacity:.28}
+.spine::before{top:6px}.spine::after{bottom:6px}
+.spine span{writing-mode:vertical-rl;font-weight:500;line-height:1.1;white-space:pre;overflow:hidden;margin-top:14px;pointer-events:none}
+.spine.sfav::after{background:#f5c85a;height:5px;opacity:.95;border-radius:2px;left:25%;right:25%}
+.spine.rd::before{background:#fff;opacity:.8;left:25%;right:25%;border-radius:2px}
+.shelf-more{flex:none;width:40px;align-self:stretch;display:grid;place-items:center;color:var(--muted);font:inherit;font-size:13px;font-weight:500;border:1px dashed var(--line);border-radius:6px;background:transparent;cursor:pointer}
+.shelf-more:hover{color:var(--fg);border-color:var(--accent)}
+@media (max-width:640px){
+  .lib-tools.has-seg{grid-template-columns:minmax(0,1fr) auto}
+  .lib-tools.has-seg input[type="search"]{grid-column:1/-1}
+}
 </style>
 
 <div class="ground" aria-hidden="true"><div class="row" id="gRow"></div><div class="plank"></div></div>
@@ -930,9 +971,10 @@ body[data-bg="plain"] .ground{display:none}
   <div id="view-library" class="vstack" role="tabpanel" aria-labelledby="tab-library" hidden>
     <div class="lib-mode" role="group" aria-label="Library view"><button type="button" data-mode="books" aria-pressed="true">Books</button><button type="button" data-mode="authors" aria-pressed="false">Authors</button><button type="button" data-mode="series" aria-pressed="false">Series</button><button type="button" data-mode="lists" aria-pressed="false">Reading lists</button></div>
     <div id="toolsMountLib"><div id="libTools">
-      <div class="lib-tools pop-wrap" id="libBar">
+      <div class="lib-tools pop-wrap has-seg" id="libBar">
         <input type="search" id="libSearch" placeholder="Search title, author, series or theme" aria-label="Search books">
         <button class="btn" id="filterBtn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="filterPop">Filter <span class="badge" id="filterN" hidden>0</span></button>
+        <div class="seg" id="libViewSeg" role="group" aria-label="Books view"><button type="button" data-v="shelves" aria-pressed="true">Shelves</button><button type="button" data-v="list" aria-pressed="false">List</button></div>
         <div class="pop" id="filterPop" hidden>
           <div class="fgrid">
             <div class="field"><label for="libType">Type</label><select id="libType" aria-label="Type"><option value="">All types</option></select></div>
@@ -964,6 +1006,7 @@ body[data-bg="plain"] .ground{display:none}
       <div class="se-chips" id="seChips" role="group" aria-label="Series filter"></div>
       <section class="panel se-panel"><div class="se-legend" id="seLegend"></div><div id="seList"></div></section>
     </div>
+    <div id="libShelves" hidden></div>
     <div id="libSecs"></div>
     <div class="lib-foot"><span><span id="libCount"></span> <button class="btn" id="libSheetOrder" type="button" hidden>Back to sheet order</button></span></div>
   </div>
@@ -1411,13 +1454,14 @@ function buildGround() {
 buildGround();
 
 /* ---------- state ---------- */
+function libViewPref() { try { return localStorage.getItem('mbl_libview') === 'list' ? 'list' : 'shelves'; } catch (e) { return 'shelves'; } }
 const state = {
   entries: SNAPSHOT.pages.map((p, i) => ({ date: addDays(SNAPSHOT.start, i), pages: p, bookId: '', title: '', pageReached: null, source: 'import' })),
   books: SNAPSHOT.books.map(b => ({ ...b })),
   settings: { ...SNAPSHOT.settings },
   mcp: null, live: false, busy: false, range: 'ytd', logDate: null, editing: null,
   allBooks: [], header: [], libLoaded: false,
-  lib: { sec: {}, lim: {}, q: '', status: 'All', type: '', format: '', genre: '', publisher: '', tier: '', owned: '', sort: 'sheet', dir: 1, limit: 100, open: null }
+  lib: { sec: {}, lim: {}, q: '', status: 'All', type: '', format: '', genre: '', publisher: '', tier: '', owned: '', sort: 'sheet', dir: 1, limit: 100, open: null, view: libViewPref(), shelf: null }
 };
 
 function dailyTotals() {
@@ -2343,7 +2387,7 @@ function libFiltered() {
   return state.allBooks.filter(b =>
     (!L.type || b.type === L.type) && (!L.format || b.format === L.format) && (!L.genre || b.genre === L.genre) &&
     (!L.tier || (L.tier === 'none' ? !b.tier : b.tier === L.tier)) &&
-    hasCopy(b, L.owned) && (!L.publisher || b.publisher === L.publisher) &&
+    hasCopy(b, L.owned) && (!L.publisher || b.publisher === L.publisher) && (!L.shelf || L.shelf.ids.has(b.id)) &&
     (!q || [b.title, b.author, b.series, b.theme1, b.theme2, b.theme3, b.genre].some(v => String(v || '').toLowerCase().includes(q))));
 }
 function fillSelect(id, field, label) {
@@ -2361,7 +2405,9 @@ function renderLibrary() {
   $('wishView').hidden = !wish;
   $('view-library').classList.toggle('wish-mode', wish || lists);
   $('listsView').hidden = !lists;
-  $('libSecs').hidden = mode !== 'books';
+  const shelvesOn = mode === 'books' && L.view === 'shelves';
+  $('libSecs').hidden = mode !== 'books' || shelvesOn; $('libShelves').hidden = !shelvesOn;
+  document.querySelectorAll('#libViewSeg button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === L.view)));
   $('authorsView').hidden = !authors; $('seriesView').hidden = !series;
   if (mode !== 'books' && !authors && !series) hideCard();
   $('libTier').parentElement.hidden = mode !== 'books';
@@ -2374,7 +2420,8 @@ function renderLibrary() {
   if ($('libGenre').options.length <= 1) { fillSelect('libType', 'type', 'All types'); fillSelect('libFormat', 'format', 'All formats'); fillSelect('libGenre', 'genre', 'All genres'); fillSelect('libPublisher', 'publisher', 'All publishers'); }
   // One box per status, in a fixed order. A box opens on click, or by itself when a search or filter finds books in it.
   const rows = libFiltered();
-  const filtering = !!(L.q || L.type || L.format || L.genre || L.publisher || L.tier || L.owned);
+  const filtering = !!(L.q || L.type || L.format || L.genre || L.publisher || L.tier || L.owned || L.shelf);
+  if (shelvesOn) { renderShelves(rows, filtering); $('libCount').textContent = `${fmt(rows.length)} book${rows.length === 1 ? '' : 's'}${filtering ? ' match' : ''}`; $('libSheetOrder').hidden = true; return; }
   const groups = new Map(LIB_SECS.map(n => [n, []]));
   for (const b of rows) { const k = LIB_SECS.includes(b.status) ? b.status : (b.status || 'No status'); if (!groups.has(k)) groups.set(k, []); groups.get(k).push(b); }
   const box = $('libSecs'); box.textContent = '';
@@ -2427,6 +2474,130 @@ function libSecSort(name, list) {
   const key = (b, k) => k === 'sheet' ? (name === 'Finished' ? -(Date.parse(b.finishDate) || 0) * 1 : sortKey(b, 'sheet')) : sortKey(b, k);
   return list.slice().sort((a, b) => { const x = key(a, L.sort), y = key(b, L.sort); return (x < y ? -1 : x > y ? 1 : 0) * L.dir; });
 }
+
+/* ---------- Library > Books > Shelves ---------- */
+let shelfDefs = [];
+const SPINE_RANK = { Reading: 0, Paused: 1, TBR: 2, 'Re-read': 3, Finished: 4, DNF: 5 };
+function dedupeReads(list) {   // one row per book (title + first author): the one still to read wins, else the newest read
+  const best = new Map();
+  for (const b of list) { const k = readKey(b), c = best.get(k); if (!c || (SPINE_RANK[b.status] ?? 9) < (SPINE_RANK[c.status] ?? 9)) best.set(k, b); }
+  return list.filter(b => best.get(readKey(b)) === b);
+}
+// Recommended for you: the Best match ranking from Next > What to read next, TBR only, top n
+function recTop(set, n) {
+  const P = buildProfile(), saved = recState.mode; recState.mode = 'best';
+  try {
+    const normT = t => String(t || '').toLowerCase().replace(/^(the|a|an) /, '').replace(/[^a-z0-9]/g, '');
+    const done = new Set(state.allBooks.filter(b => b.status === 'Finished' || b.status === 'DNF').map(b => normT(b.title)));
+    return state.allBooks.filter(b => b.status === 'TBR' && set.has(b) && !done.has(normT(b.title))).map(b => scoreBook(b, P, null)).sort((a, b) => b.s - a.s).slice(0, n).map(x => x.b);
+  } finally { recState.mode = saved; }
+}
+function renderShelves(rows, filtering) {
+  const box = $('libShelves'), set = new Set(rows), defs = [];
+  const add = (grp, label, books) => { if (books.length) defs.push({ grp, label, books }); };
+  const byFin = (a, b) => (b.finishDate || '').localeCompare(a.finishDate || '');
+  add('top', 'Reading now', rows.filter(b => b.status === 'Reading'));
+  add('top', 'Last 10 finished', rows.filter(b => b.status === 'Finished').sort(byFin).slice(0, 10));
+  add('top', 'Favourites', dedupeReads(rows.filter(isFav)));
+  add('top', 'Recommended for you', recTop(set, 10));
+  for (const name of listNames()) {
+    const seen = new Set(), books = [];
+    for (const it of listItems(name)) { const b = listBook(it); if (b && set.has(b) && !seen.has(b.id)) { seen.add(b.id); books.push(b); } }
+    add('lists', name, books);
+  }
+  const bySer = new Map();
+  for (const b of state.allBooks) if (b.series) { const k = normQ(b.series); if (!bySer.has(k)) bySer.set(k, []); bySer.get(k).push(b); }
+  const prog = [];
+  for (const [k, x] of seriesRoster(1)) {
+    const g = bySer.get(k); if (!g) continue;
+    const sn = seriesNext(g);
+    if (!g.some(b => b.status === 'Finished') || !(sn.tbr.length || sn.reading || g.some(b => b.status === 'Paused'))) continue;
+    const books = dedupeReads(g.filter(b => set.has(b))).sort((a, b) => (toNum(a.seriesNum) || 999) - (toNum(b.seriesNum) || 999) || a.title.localeCompare(b.title));
+    if (books.length) prog.push({ label: g[0].series, books, last: sn.last || '' });
+  }
+  prog.sort((a, b) => b.last.localeCompare(a.last)).slice(0, 12).forEach(p => add('series', p.label, p.books));
+  shelfDefs = defs;
+  const groups = [['top', ''], ['lists', 'Your shelves'], ['series', 'Series in progress']];
+  box.innerHTML = defs.length ? groups.map(([g, h]) => {
+    const ds = defs.filter(d => d.grp === g); if (!ds.length) return '';
+    return (h ? `<div class="shelf-sec">${h}</div>` : '') + `<div class="sgrid${g === 'series' ? ' s3' : ''}">` + ds.map(d => { const i = defs.indexOf(d);
+      return `<section class="panel shelf" aria-label="${escapeText(d.label)}"><div class="panel-head"><h2>${escapeText(d.label)}<span class="cnt tnum">${fmt(d.books.length)}</span></h2><button type="button" class="linkbtn" data-seeall="${i}">See all</button></div><div class="shelf-row" data-i="${i}" role="group" aria-label="${escapeText(d.label)} books"></div></section>`; }).join('') + '</div>';
+  }).join('') : '<div class="panel empty" style="padding:18px;text-align:center">No books match these filters.</div>';
+  layoutShelves();
+}
+/* Spine geometry and title fitting. Title text is measured on one offscreen canvas. One line from 12px down to 7px, then two lines
+   (9px down to 6px), then cut after the last whole word that fits on two lines at 6px (never an ellipsis). */
+const spineW = b => { const p = toNum(b.pages); return !p ? 34 : p < 250 ? 28 : p < 350 ? 34 : p < 450 ? 40 : 46; };
+const spineH = b => { const p = toNum(b.pages); return p ? Math.round(92 + Math.max(0, Math.min(1, (p - 200) / 450)) * 48) : 112; };
+const fitCtx = document.createElement('canvas').getContext('2d'), fitMemo = new Map();
+let fitFam = '';
+function fitTitle(title, avail) {
+  const key = avail + '|' + title, hit = fitMemo.get(key); if (hit) return hit;
+  if (!fitFam) fitFam = getComputedStyle(document.body).fontFamily;
+  const m = (t, px) => { fitCtx.font = `500 ${px}px ${fitFam}`; return fitCtx.measureText(t).width; };
+  let out = null;
+  for (let px = 12; px >= 7 && !out; px -= 0.5) if (m(title, px) <= avail) out = { text: title, px };   // one line, 12px down to 7px
+  const words = title.split(/\s+/), clean = t => t.replace(/[\s,:;&\-–—]+$/, '');
+  const best2 = px => {   // two lines: the word split with the shortest longer line
+    let bs = null;
+    for (let i = 1; i < words.length; i++) {
+      const a = words.slice(0, i).join(' '), b = words.slice(i).join(' '), w = Math.max(m(a, px), m(b, px));
+      if (!bs || w < bs.w) bs = { w, text: a + '\n' + b };
+    }
+    return bs;
+  };
+  for (let px = 9; px >= 6 && !out; px -= 0.5) { const r = best2(px); if (r && r.w <= avail) out = { text: r.text, px }; }
+  if (!out) {   // last resort at 6px: two lines, cut after the last whole word that fits
+    const lines = []; let i = 0;
+    for (let ln = 0; ln < 2 && i < words.length; ln++) {
+      let t = '';
+      while (i < words.length) { const c = t ? t + ' ' + words[i] : words[i]; if (m(c, 6) <= avail) { t = c; i++; } else break; }
+      if (!t) { for (const ch of words[i]) { if (m(t + ch, 6) > avail) break; t += ch; } i = words.length; }   // one very long word: cut by letters
+      lines.push(t);
+    }
+    if (i < words.length) lines[lines.length - 1] = clean(lines[lines.length - 1]);
+    out = { text: lines.join('\n'), px: 6 };
+  }
+  fitMemo.set(key, out); return out;
+}
+function spineHtml(b, pal, inReading) {
+  let h = 0; for (const c of b.title) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  const col = pal[h % pal.length], lum = hexRgb(col).reduce((a, v, i) => a + v * [.3, .59, .11][i], 0);
+  const H = spineH(b), f = fitTitle(b.title, H - 28);
+  return `<button type="button" class="spine${isFav(b) ? ' sfav' : ''}${!inReading && b.status === 'Reading' ? ' rd' : ''}" data-spine="${escapeText(b.id)}" style="width:${spineW(b)}px;height:${H}px;background:${col};color:${lum > 140 ? '#14121c' : '#f1effa'}" title="${escapeText(b.title + (b.author ? ' · ' + b.author : ''))}" aria-label="${escapeText(b.title)}"><span style="font-size:${f.px}px">${escapeText(f.text)}</span></button>`;
+}
+function layoutShelves() {
+  const box = $('libShelves'); if (!box || box.hidden || !box.offsetWidth) return;
+  const pal = spinePalette(look.spines, today());
+  box.querySelectorAll('.shelf-row').forEach(row => {
+    const d = shelfDefs[+row.dataset.i]; if (!d) return;
+    const W = row.clientWidth - 8, list = d.books;
+    let used = 0, n = 0;
+    for (const b of list) { const need = spineW(b) + 4; if (used + need > W) break; used += need; n++; }
+    if (n < list.length) while (n > 0 && used + 44 > W) { n--; used -= spineW(list[n]) + 4; }
+    const shown = list.slice(0, n);
+    row.innerHTML = shown.map(b => spineHtml(b, pal, d.label === 'Reading now')).join('') + (n < list.length ? `<button type="button" class="shelf-more" data-seeall="${row.dataset.i}" title="${list.length - n} more" aria-label="${list.length - n} more books. See all">+${list.length - n}</button>` : '');
+    row.style.height = (Math.max(52, ...shown.map(spineH)) + 16) + 'px';
+  });
+}
+{
+  let w = 0, t;
+  new ResizeObserver(() => { const nw = $('libShelves').offsetWidth; if (nw === w) return; w = nw; clearTimeout(t); t = setTimeout(layoutShelves, 120); }).observe($('libShelves'));
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { fitMemo.clear(); fitFam = ''; layoutShelves(); });
+}
+$('libShelves').addEventListener('click', e => {
+  const sp = e.target.closest('[data-spine]'); if (sp) { showCard(sp.dataset.spine); return; }
+  const sa = e.target.closest('[data-seeall]'); if (!sa) return;
+  const d = shelfDefs[+sa.dataset.seeall]; if (!d) return;
+  Object.assign(state.lib, { view: 'list', shelf: { label: d.label, ids: new Set(d.books.map(b => b.id)) }, sec: {}, lim: {}, open: null });
+  renderLibrary(); window.scrollTo(0, 0);
+});
+$('libViewSeg').addEventListener('click', e => {
+  const b = e.target.closest('button[data-v]'); if (!b) return;
+  state.lib.view = b.dataset.v; if (b.dataset.v === 'shelves') state.lib.shelf = null;
+  try { localStorage.setItem('mbl_libview', b.dataset.v); } catch (err) {}
+  renderLibrary();
+});
 // Status straight from the Library list. Finished fills the finish date and last page; Reading fills the start date.
 async function quickStatus(id, status, sel) {
   const b = state.allBooks.find(x => x.id === id); if (!b || b.status === status) return;
@@ -2800,7 +2971,7 @@ function openDrill(title, books) {
   $('drillDlg').showModal();
 }
 function openInLibrary(id) {
-  Object.assign(state.lib, { mode: 'books', q: '', status: 'All', type: '', format: '', genre: '', publisher: '', tier: '', owned: '', sort: 'sheet', dir: 1, open: id });
+  Object.assign(state.lib, { mode: 'books', view: 'list', shelf: null, q: '', status: 'All', type: '', format: '', genre: '', publisher: '', tier: '', owned: '', sort: 'sheet', dir: 1, open: id });
   $('libSearch').value = ''; for (const s of ['libType', 'libFormat', 'libGenre', 'libPublisher', 'libTier', 'libOwned']) $(s).value = '';
   const bk = state.allBooks.find(b => b.id === id);
   if (bk) {
@@ -5493,19 +5664,24 @@ function renderFilterChips() {
   const L = state.lib, plan = L.mode === 'plan';
   const act = FILTERS.filter(([k]) => L[k] && !(plan && k === 'tier'));
   $('filterN').hidden = !act.length; $('filterN').textContent = act.length;
-  $('fchips').innerHTML = act.map(([k, , label]) => `<span class="fchip"><b>${label}:</b> ${escapeText(filterText(k, L[k]))}<button type="button" data-fx="${k}" aria-label="Remove ${label} filter">×</button></span>`).join('');
+  $('fchips').innerHTML = act.map(([k, , label]) => `<span class="fchip"><b>${label}:</b> ${escapeText(filterText(k, L[k]))}<button type="button" data-fx="${k}" aria-label="Remove ${label} filter">×</button></span>`).join('')
+    + (L.shelf && !plan ? `<span class="fchip"><b>Shelf:</b> ${escapeText(L.shelf.label)}<button type="button" data-fxs aria-label="Remove shelf filter">×</button></span>` : '');
 }
 function setFilter(k, v) {
   const f = FILTERS.find(x => x[0] === k); state.lib[k] = v; $(f[1]).value = v;
   state.lib.lim = {}; state.lib.sec = {}; renderLibrary();
 }
-$('fchips').addEventListener('click', e => { const x = e.target.closest('[data-fx]'); if (x) setFilter(x.dataset.fx, ''); });
-$('fClear').addEventListener('click', () => { for (const [k, id] of FILTERS) { state.lib[k] = ''; $(id).value = ''; } state.lib.lim = {}; state.lib.sec = {}; renderLibrary(); });
+$('fchips').addEventListener('click', e => {
+  if (e.target.closest('[data-fxs]')) { state.lib.shelf = null; state.lib.lim = {}; state.lib.sec = {}; renderLibrary(); return; }
+  const x = e.target.closest('[data-fx]'); if (x) setFilter(x.dataset.fx, '');
+});
+$('fClear').addEventListener('click', () => { state.lib.shelf = null; for (const [k, id] of FILTERS) { state.lib[k] = ''; $(id).value = ''; } state.lib.lim = {}; state.lib.sec = {}; renderLibrary(); });
 // One search-and-filter toolbar serves Library > Books and Next > Plan; it moves to whichever is showing
 function placeLibTools(mode) {
   const host = $(mode === 'plan' ? 'toolsMountNext' : 'toolsMountLib');
   if ($('libTools').parentNode !== host) host.appendChild($('libTools'));
   $('libTools').hidden = !(mode === 'books' || mode === 'plan');
+  $('libViewSeg').hidden = mode !== 'books'; $('libBar').classList.toggle('has-seg', mode === 'books');
   if ($('libTools').hidden) closePops('toolboxPop');
 }
 
@@ -5552,7 +5728,7 @@ $('lentBody').addEventListener('click', async e => {
 $('toolboxPop').addEventListener('click', e => {
   const t = e.target.closest('button[data-tool]'); if (t) { if (t.dataset.tool === 'fill' && !fd.busy) fd.cur = null; showTab('toolbox', t.dataset.tool); window.scrollTo({ top: 0 }); return; }
   const bg = e.target.closest('button[data-bg]'); if (bg) { look.bg = bg.dataset.bg; saveLook(); applyLook(); return; }
-  const cm = e.target.closest('button[data-cm]'); if (cm) { look.spines = cm.dataset.cm; saveLook(); applyTheme(); }
+  const cm = e.target.closest('button[data-cm]'); if (cm) { look.spines = cm.dataset.cm; saveLook(); applyTheme(); layoutShelves(); }
 });
 $('toolBack').addEventListener('click', () => showTab(nav.last || 'now'));
 

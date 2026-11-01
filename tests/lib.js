@@ -70,13 +70,13 @@ async function openApp(browser, appFile, opts = {}) {
   page.on('console', m => { if (m.type() === 'error' && !/Failed to load resource/.test(m.text())) errors.push(width + ': ' + m.text()); });
   page.on('pageerror', e => errors.push(width + ': PAGEERR ' + e.message));
   await page.exposeFunction('__call', (tool, input) => call(tool, input));
-  await page.addInitScript(() => {
+  await page.addInitScript(view => {
     window.claude = { use: async () => ({ callTool: async (server, tool, input) => ({ payload: await window.__call(tool, input) }) }) };
-    try { localStorage.clear(); } catch (e) {}
+    try { localStorage.clear(); if (view) localStorage.setItem('mbl_libview', view); } catch (e) {}
     { let x = 12345; Math.random = () => { x = (x * 1664525 + 1013904223) % 4294967296; return x / 4294967296; }; }
     const st = document.createElement('style');
     document.addEventListener('DOMContentLoaded', () => { st.textContent = '*,*::before,*::after{animation:none!important;transition:none!important;caret-color:transparent!important}'; document.head.appendChild(st); });
-  });
+  }, opts.libView === 'default' ? '' : 'list');
   await page.goto('file://' + path.resolve(appFile));
   await page.waitForFunction(() => typeof state !== 'undefined' && state.live && state.libLoaded && typeof disc !== 'undefined' && disc.loaded, null, { timeout: 15000 }).catch(() => errors.push('not live'));
   await page.waitForTimeout(700);

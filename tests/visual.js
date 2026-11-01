@@ -9,12 +9,13 @@ fs.mkdirSync(outDir, { recursive: true });
   const ev = (page, f, ...a) => page.evaluate(f, ...a).catch(e => { errors.push('eval: ' + e.message.slice(0, 150)); });
   const closeAll = page => ev(page, () => { document.querySelectorAll('dialog[open]').forEach(d => d.close()); hideCard(); });
   for (const width of [390, 1280]) {
-    const app = await openApp(browser, appFile, { width });
+    const app = await openApp(browser, appFile, { width, libView: 'default' });
     const { page } = app;
     const shot = async name => { await page.waitForTimeout(150); await page.screenshot({ path: path.join(outDir, `${width}-${name}.png`), fullPage: true }); };
     await shot('log');
     for(const t of ['dashboard','tools','discover']){await ev(page,t=>showTab(t),t);await page.waitForTimeout(900);await shot('tab-'+t);}
     await ev(page,()=>showTab('library')); await shot('lib-books');
+    await ev(page,()=>{const b=document.querySelector('#libViewSeg [data-v="list"]');b&&b.click()});
     await ev(page,()=>{document.querySelectorAll('#libSecs .lib-sec-head[aria-expanded="false"]').forEach(b=>b.click())}); await shot('lib-expanded');
     await ev(page,()=>{const t=document.querySelector('#libSecs .book-title');t&&t.click()}); await shot('book-card');
     await ev(page,()=>{const e=document.querySelector('#bookCard [data-a="edit"]');e&&e.click()}); await shot('edit-dialog');
@@ -45,6 +46,17 @@ fs.mkdirSync(outDir, { recursive: true });
     await closeAll(page);
     await ev(page,()=>{document.querySelector('.lib-mode [data-mode="series"]').click()}); await shot('lib-series');
     await closeAll(page);
+    // Library Shelves (the new default view; on the old app these show the list)
+    await ev(page,()=>{document.querySelector('.lib-mode [data-mode="books"]').click()});
+    await ev(page,()=>{const b=document.querySelector('#libViewSeg [data-v="shelves"]');b&&b.click()}); await shot('lib-shelves');
+    // a very long title proves the shrink / whole-word cut rule (injected here so the shared test data is unchanged)
+    await ev(page,()=>{ if(!document.getElementById('libViewSeg')) return;
+      const t=state.allBooks.find(b=>b.status==='Reading'); const mk=(title,pages)=>Object.assign({},t,{id:'L'+title.length,title,pages,author:'Long Author',_row:900+title.length});
+      state.allBooks.push(mk('The Extraordinarily Long and Winding Chronicle of an Unlikely Lighthouse Keeper and Her Seventeen Cats','180'),mk('Pneumonoultramicroscopicsilicovolcanoconiosis','180'),mk('A Moderately Long Title for Testing','300'));
+      renderLibrary(); });
+    await shot('lib-shelves-longtitle');
+    const row=await page.$('#libShelves .shelf-row'); if(row){ await row.screenshot({path:path.join(outDir,`${width}-lib-shelves-spines.png`)}); }
+    await ev(page,()=>{const b=document.querySelector('#libShelves [data-seeall]');b&&b.click()}); await shot('lib-shelves-seeall');
     errors.push(...app.errors);
     await app.close();
   }
