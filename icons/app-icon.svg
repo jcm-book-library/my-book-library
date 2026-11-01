@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="The Library: a shelf of books">
+  <rect width="512" height="512" fill="#16141f"/>
+  <g transform="translate(66 50) scale(3.8)">
+    <rect x="12" y="26" width="14" height="60" rx="1.6" fill="#43ad8f"/>
+    <rect x="12" y="32" width="14" height="2.4" fill="#0d0b14" opacity=".35"/><rect x="12" y="76" width="14" height="2.4" fill="#0d0b14" opacity=".35"/>
+    <rect x="28" y="15" width="11" height="71" rx="1.6" fill="#d6a345"/>
+    <rect x="31" y="24" width="5" height="22" rx="1" fill="#0d0b14" opacity=".28"/>
+    <rect x="41" y="31" width="16" height="55" rx="1.6" fill="#6a7ff0"/>
+    <rect x="41" y="38" width="16" height="2" fill="#0d0b14" opacity=".3"/><rect x="41" y="77" width="16" height="2" fill="#0d0b14" opacity=".3"/>
+    <g transform="rotate(16 59 86)"><rect x="59" y="21" width="12.5" height="65" rx="1.6" fill="#e07a7a"/><rect x="62" y="30" width="6.5" height="18" rx="1" fill="#0d0b14" opacity=".28"/></g>
+    <rect x="5" y="86" width="90" height="6" rx="1.4" fill="#ebe4d3"/>
+  </g>
+</svg>
