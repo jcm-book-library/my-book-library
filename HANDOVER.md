@@ -54,12 +54,21 @@ Read this after `CLAUDE.md` and the house rules. It records how the app and its 
 - Library: Reading, Finished (newest first), Re-read, TBR, Paused, DNF as expandable boxes. Rows open a floating card on the left (status, favourite, edit, cover).
 - Log: Reading now (big page number), then Read next / Last five finished / Favourites, then Pages per day (Year by default). "2026 so far" is the pages of books finished this year; the daily log (inflated by Kobo page counts) still drives streaks and the daily chart.
 - `confirm()` does nothing inside claude.ai, so the page uses its own confirmation dialog (`askOk`).
-- **Covers only work on the GitHub Pages site.** claude.ai blocks outside images and lookups. The Open Library search and cover code was written to the documented API and tested against a stand-in; it has not yet been run against the real service (the build environment's network blocks `openlibrary.org`). The first real search is the real test.
+- **Covers only work on the GitHub Pages site** (claude.ai blocks outside images). Open Library search and covers were confirmed working on the live site on 1 Nov, but its range of covers is limited. The build environment's network blocks `openlibrary.org`, so tests use a stand-in.
 - Tests were headless Playwright scripts with a stubbed `window.claude` at 390px and 1280px, run before every publish. They used copies of the real sheet data, so they are not in this public repo.
 
 ## Known gaps (from the 31 Oct audit)
 - The three find-row-by-id helpers (Books, Wishlist, Reading Lists) and the per-field write loops are near-duplicates. They could be merged into one helper, but they guard every write, so do it with full write-path tests.
 - The Library filter chain is written twice (the Library list and the plan's "rest" pool). It could share one function; keep the tier difference.
+
+## Agreed plan (1 Nov 2026)
+Order: 1 Foundations (screenshot and write-flow tests in `tests/`, one find-row / write-cells / add-row helper) → 2 Simplify (new layout from the approved mock, shelf logo and background, quick add with paste, Lent out button) → 3 Fill details queue (Google Books + Open Library; barcode scanning later, iPhone so it needs a scanning library) → 4 Authors and Series pages → 5 Shelves with a Shelves / List toggle → 6 Charts redesign (owner brings data-storytelling ideas).
+- **Logo:** shelf of spines, with a shelf of spines along the bottom of the screen as the background (a Plain option too).
+- **Layout:** tabs Now · Library · Next · Insights, a Toolbox menu, header buttons "+ Add book" and "Lent out". The owner wants symmetry and condensed rows.
+- **Colour:** the theme keeps the slow monthly drift; spines (logo, background, shelves) rotate faster or use a contrast colour. The mock offers Month / Daily mix / Contrast.
+- **Kept manual on purpose:** logging pages read. Don't automate it (no Kobo sync).
+- **Not wanted for now:** spending stats, loan reminders (a Lent out popup instead), imports (done), family sharing (a future version; then consider Wishlist items as Books rows).
+- **Later:** once Open Library has filled what it can, add the remaining covers from Google Drive, as other projects do.
 
 ## Open ideas
 - Fill the ~220 blank page counts (Open Library, or Calibre page counts); `added` dates from a Calibre timestamp export.
