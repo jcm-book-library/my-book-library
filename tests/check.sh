@@ -9,13 +9,16 @@ BASE_DIR=$(mktemp -d)
 git show HEAD:app.html > "$BASE_DIR/app.html" || { echo "FAIL: cannot read HEAD:app.html"; exit 2; }
 fail=0
 
-run() { # label appfile outdir
+# The baseline runs the committed flows against the committed app, so flows that drive a changed entry
+# point (or were added since) still compare like for like.
+git show HEAD:tests/flows.js > tests/.flows-base.js 2>/dev/null || cp tests/flows.js tests/.flows-base.js
+run() { # label appfile outdir flowsfile
   echo "-- $1: screenshots"; node tests/visual.js "$2" "$3/screens" || fail=1
-  echo "-- $1: flows"; node tests/flows.js "$2" "$3/flows" || fail=1
+  echo "-- $1: flows"; node "$4" "$2" "$3/flows" || fail=1
 }
-run baseline "$BASE_DIR/app.html" "$OUT/base"
-run working app.html "$OUT/new"
-rm -rf "$BASE_DIR"
+run baseline "$BASE_DIR/app.html" "$OUT/base" tests/.flows-base.js
+run working app.html "$OUT/new" tests/flows.js
+rm -rf "$BASE_DIR" tests/.flows-base.js
 
 echo; echo "== Screens"
 python3 tests/cmp.py "$OUT/base/screens" "$OUT/new/screens" || fail=1
@@ -27,6 +30,7 @@ for f in "$OUT"/base/flows/*.json; do
   if ! cmp -s "$f" "$OUT/new/flows/$n"; then echo "  DIFF $n"; nbad=$((nbad+1)); fi
 done
 echo "flow files: $nflow compared, $nbad different"
+for f in "$OUT"/new/flows/*.json; do n=$(basename "$f"); case "$n" in *.sheets.json|*.errors.json) continue;; esac; [ -e "$OUT/base/flows/$n" ] || echo "  new flow: $n"; done
 [ "$nbad" -gt 0 ] && fail=1
 # flows must have actually run (no failures, and some writes recorded)
 if grep -l '"failure": "[^"]' "$OUT"/new/flows/*.errors.json "$OUT"/base/flows/*.errors.json 2>/dev/null; then echo "  some flows failed to run"; fail=1; fi

@@ -89,9 +89,10 @@ flow('g-wish-add', async ({ page }) => {
   await page.evaluate(() => { document.getElementById('wd-gift').checked = true; });
   await submit(page, '#wishDlg form');
   await settle(page, 800);
+  // the Wishlist "Paste a list" button opens the quick add dialog on its paste tab, destination Wishlist
   await page.evaluate(() => document.getElementById('wlPasteBtn').click());
-  await fill(page, '#%', { pdText: '1. Paste One by Pat A\nPaste Two – Pat B\nPaste Three', pdSeen: 'Test list' });
-  await submit(page, '#pasteDlg form');
+  await fill(page, '#%', { pasteTa: '1. Paste One by Pat A\nPaste Two – Pat B\nPaste Three', pSeen: 'Test list' });
+  await page.click('#pAll');
   await settle(page, 800);
 });
 // (h) "Got it": one new title and one already in Books (link only); plus a second move after the first
@@ -184,6 +185,37 @@ flow('q-plan', async ({ page }) => {
   await page.evaluate(() => setTier(state.allBooks.find(x => x.id === '17'), 'Up next'));
   await settle(page, 800);
   await page.evaluate(() => setTier(state.allBooks.find(x => x.id === '13'), 'Soon'));
+  await settle(page, 800);
+});
+
+// (q) Quick add dialog (header "+ Add book"): one book, "Add and next" twice, paste to Books, paste to Wishlist with columns
+flow('q1-quick-add-one', async ({ page }) => {
+  await page.evaluate(() => { showTab('library'); document.getElementById('addBookBtn').click(); });
+  await page.fill('#qTitle', 'Quick Book One'); await page.fill('#qAuthor', 'Quinn Quick');
+  await page.fill('#qSeries', 'Quick Saga'); await page.fill('#qNum', '1.5'); await page.fill('#qIsbn', '9780000000001');
+  await page.click('#qCopies [data-v="Kobo"]'); await page.click('#qCopies [data-v="PDF"]'); await page.click('#qStatus [data-v="Finished"]');
+  await page.click('#qaAdd');
+  await settle(page, 800);
+});
+flow('q2-add-and-next', async ({ page }) => {
+  await page.evaluate(() => { showTab('library'); document.getElementById('addBookBtn').click(); });
+  await page.click('#qCopies [data-v="Physical"]'); await page.click('#qStatus [data-v="Reading"]');
+  await page.fill('#qTitle', 'Next Book A'); await page.fill('#qAuthor', 'Ann Next');
+  await page.click('#qaNext'); await settle(page, 800);
+  await page.fill('#qTitle', 'Next Book B'); await page.fill('#qSeries', 'Nexts'); await page.fill('#qNum', '2');
+  await page.press('#qTitle', 'Enter'); await settle(page, 800);
+});
+flow('q3-paste-books', async ({ page }) => {
+  await page.evaluate(() => { showTab('library'); document.getElementById('addBookBtn').click(); });
+  await page.click('#qSeg [data-q="paste"]');
+  await page.fill('#pasteTa', 'Hollow Water – Idris Vane (Tidewrack #4)\nThe Winter Archive by Odile Marchetti\nLetters from Lisbon\tLucía Ferrer\tLisbon Letters\t2');
+  await page.click('#pAll');
+  await settle(page, 800);
+});
+flow('q4-paste-wish-columns', async ({ page }) => {
+  await page.evaluate(() => { document.querySelector('.lib-mode [data-mode="wish"]').click(); document.getElementById('wlPasteBtn').click(); });
+  await page.fill('#pasteTa', 'Column One\tCol Author\tCol Series\t3\nColumn Two - Cy Col (Pairs, #1)');
+  await page.click('#pAll');
   await settle(page, 800);
 });
 
