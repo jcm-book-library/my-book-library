@@ -9,7 +9,8 @@ Read this after `CLAUDE.md` and the house rules. It records how the app and its 
 - Look: Proton Seasons month colours, dark, Roboto everywhere with tabular figures on every element.
 
 ## Working rules the owner has set
-- **Direct pushes to `main` are fine for this repo** (the pull-request rule in the house rules is for other repos). Routine for each change: publish the artifact from the source file, copy it to `app.html`, `python3 tools/build-pages.py`, commit and push `main`, then copy it to `v3/reading-log.html` on branch `claude/keen-sagan-yf9rqf`, commit and push.
+- **Direct pushes to `main` are fine for this repo** (the pull-request rule in the house rules is for other repos). Routine for each change: edit `app.html`, `python3 tools/build-pages.py`, run the screenshot tests, commit and push `main`, then copy it to `v3/reading-log.html` on branch `claude/keen-sagan-yf9rqf`, commit and push.
+- **The owner uses only the live GitHub Pages site**, not the claude.ai artifact. Don't spend effort on the artifact; claude.ai-only limits (no outside images, `confirm()`) matter less, though the connector code still works there.
 - **Never read anything from the `Brain tester` sheet beyond its Date and Pages columns.** It holds mood, meds and fitness data. The diary is sensitive.
 - Never touch other apps' tabs (those starting with an emoji, plus their Log, Settings and backup tabs).
 - Back up a tab (duplicate it, name it with the date) before any column or bulk change. Ask the owner before deleting a backup; they like to keep it a few days.
