@@ -276,6 +276,16 @@ flow('r3-fill-nothing-ticked', async ({ page }) => {
   await page.click('#fd-pages-gb'); await page.click('#fdSave'); await settle(page, 800);
 }, { mutate: setBook('9', { pages: '280', synopsis: 'Has one', year: '2015', publisher: 'Mine', isbn: '9780000000002', genre: 'Mystery', theme1: 'a', theme2: 'b', theme3: 'c' }) });
 
+// (r) Series view: a missing slot opens the existing Add to Wishlist dialog, prefilled; saving uses the normal Wishlist add path
+flow('r-series-missing-to-wishlist', async ({ page }) => {
+  await page.evaluate(() => { document.querySelector('.lib-mode [data-mode="series"]').click(); });
+  await page.waitForSelector('#seList .se-row');
+  await page.evaluate(() => { const row = [...document.querySelectorAll('#seList .se-row')].find(r => /Spawn/.test(r.textContent)); [...row.querySelectorAll('.slot.missing')].find(b => b.textContent === '#3').click(); });
+  await page.waitForSelector('#wishDlg[open]');
+  await submit(page, '#wishDlg form');
+  await settle(page, 800);
+});
+
 (async () => {
   const browser = await launch();
   const only = process.argv[4] ? new Set(process.argv[4].split(',')) : null;

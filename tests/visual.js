@@ -39,6 +39,12 @@ fs.mkdirSync(outDir, { recursive: true });
     await ev(page,()=>{openContents(state.allBooks[0])}); await shot('contents-dialog');
     await closeAll(page);
 
+    await ev(page,()=>{document.querySelector('.lib-mode [data-mode="authors"]').click()}); await shot('lib-authors');
+    await ev(page,()=>{const c=[...document.querySelectorAll('.au-card')].find(x=>/Ben Okafor/.test(x.textContent))||document.querySelector('.au-card');c.click()}); await shot('author-page');
+    await ev(page,()=>{document.querySelector('#auPage [data-book]').click()}); await shot('author-book-card');
+    await closeAll(page);
+    await ev(page,()=>{document.querySelector('.lib-mode [data-mode="series"]').click()}); await shot('lib-series');
+    await closeAll(page);
     errors.push(...app.errors);
     await app.close();
   }

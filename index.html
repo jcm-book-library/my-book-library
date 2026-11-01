@@ -736,6 +736,84 @@ body[data-bg="plain"] .ground{display:none}
 .quote-panel #discQuote{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:12px}
 .quote-panel .quote{margin:0}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+/* Library: authors and series */
+.se-tools{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center}
+.se-tools input[type="search"],.se-tools select{font:inherit;font-size:14px;background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:7px 10px;min-width:0;min-height:36px}
+.se-tools input[type="search"]:focus,.se-tools select:focus{border-color:var(--accent);outline:none}
+#authorsView,#seriesView{display:flex;flex-direction:column;gap:14px}
+#authorsView[hidden],#seriesView[hidden],#auList[hidden],#auPage[hidden]{display:none}
+#view-library:has(#authorsView:not([hidden])) #toolsMountLib,#view-library:has(#seriesView:not([hidden])) #toolsMountLib{display:none}
+#auList,#auPage{display:flex;flex-direction:column;gap:14px;min-width:0}
+.lnk{border:0;background:none;padding:0;margin:0;color:inherit;font:inherit;text-align:left;cursor:pointer}
+.lnk:hover{color:var(--accent);text-decoration:underline}
+.bcard .lnk{color:color-mix(in srgb,var(--accent) 65%,#fff);text-decoration:underline dotted;text-underline-offset:3px}
+.au-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.au-card{display:flex;align-items:center;gap:10px;padding:10px;height:56px;background:var(--surface);border:1px solid var(--line);border-radius:12px;color:var(--fg);text-align:left;min-width:0;font:inherit}
+.au-card:hover,.au-card:focus-visible{border-color:var(--accent)}
+.au-av{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:13px;background:color-mix(in srgb,var(--accent) 32%,var(--raise));color:var(--fg);flex:none}
+.au-tx{display:flex;flex-direction:column;min-width:0;flex:1}
+.au-name{font-weight:500;font-size:13px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.au-sub{font-size:12px;color:var(--muted);line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ap-head{display:flex;align-items:center;gap:14px}
+.ap-head .au-av{width:56px;height:56px;font-size:19px}
+.ap-head h2{font-size:22px;overflow-wrap:anywhere}
+.ap-tiles{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+.ap-tile{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px;min-width:0}
+.ap-tile b{display:block;font-size:20px;font-weight:700;line-height:1.25}
+.ap-tile span{font-size:11px;color:var(--muted)}
+.ap-back{align-self:flex-start}
+.ap-grp+.ap-grp{margin-top:18px}
+.ap-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin:0 0 4px;font-size:16px;font-weight:700}
+.ap-list{list-style:none;margin:0;padding:0}
+.ap-row{display:grid;grid-template-columns:2.8em minmax(0,1fr) 92px 56px 100px minmax(60px,auto);gap:4px 10px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}
+.ap-row .n{color:var(--muted);font-size:13px}
+.ap-row .t{display:flex;flex-direction:column;min-width:0}
+.ap-row .bt{font-weight:500;overflow-wrap:anywhere}
+.ap-row .w{font-size:12px;color:var(--muted)}
+.ap-row .st{text-align:center}
+.ap-row .meta{display:contents}
+.ap-row .rt{color:color-mix(in srgb,var(--accent) 60%,#fff);font-size:13px;text-align:right}
+.ap-row .dt,.ap-row .cp{font-size:12px;color:var(--muted)}
+.ap-row .fv{color:#f2c46d}
+.ap-row.wish{opacity:.6}
+.pill[data-s="wish"]{border-style:dashed}
+.se-chips{display:flex;gap:8px;flex-wrap:wrap}
+.se-panel{padding:14px 16px}
+.se-legend{display:flex;gap:6px 14px;flex-wrap:wrap;font-size:11px;color:var(--muted);padding-bottom:10px}
+.se-legend span{display:inline-flex;align-items:center;gap:5px}
+.se-legend .slot{min-width:0;width:13px;height:13px;padding:0;border-radius:3px;cursor:default}
+.se-row{display:grid;grid-template-columns:minmax(130px,210px) minmax(0,1fr) auto;gap:6px 16px;align-items:center;padding:10px 6px;border-top:1px solid var(--line);border-radius:8px}
+.se-row.hl{background:color-mix(in srgb,var(--accent) 14%,var(--surface))}
+.se-id{min-width:0}
+.se-id .nm{font-weight:500;overflow-wrap:anywhere}
+.se-id .au{font-size:12px;color:var(--muted)}
+.se-slots{display:flex;flex-wrap:wrap;gap:5px;align-items:center}
+.slot{min-width:34px;height:26px;padding:0 6px;border-radius:6px;font:inherit;font-size:11px;font-weight:700;border:1px solid transparent;display:inline-grid;place-items:center;color:var(--fg);background:var(--raise);cursor:pointer}
+.slot.read{background:var(--accent);color:var(--bg)}
+.slot.reading{background:color-mix(in srgb,var(--accent) 28%,var(--raise));border:2px solid var(--accent)}
+.slot.owned{background:color-mix(in srgb,var(--accent) 35%,var(--raise))}
+.slot.want{background:transparent;border-color:#c2a8f0;color:#d9c9f7}
+.slot.missing{background:transparent;border:1px dashed var(--line);color:var(--muted)}
+.slot.dnf{background:color-mix(in srgb,var(--danger) 32%,var(--raise))}
+.slot.next,.slot.nx{outline:2px solid var(--accent-2);outline-offset:1px}
+.slot.nx{background:transparent}
+.se-meta{text-align:right;font-size:13px;color:var(--muted);white-space:nowrap}
+.se-meta b{color:var(--fg)}
+.se-act{display:flex;gap:8px;align-items:center;justify-content:flex-end;margin-top:3px}
+.pill.se-st[data-t="Complete"]{color:var(--fg);border-color:var(--accent)}
+@media (max-width:1279px){.au-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:860px){.au-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:519px){.au-grid{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:640px){.se-chips{flex-wrap:nowrap;gap:5px}.se-chips .chip{padding:4px 8px;font-size:12px;white-space:nowrap;flex:1 1 auto;text-align:center}.se-chips .chip .n{margin-left:3px}}
+@media (max-width:640px){
+  .ap-tiles{gap:6px}.ap-tile{padding:8px 4px;text-align:center}.ap-tile b{font-size:16px}.ap-tile span{font-size:10px}
+  .ap-row{grid-template-columns:2.4em minmax(0,1fr) auto}
+  .ap-row .meta{display:flex;grid-column:2/-1;gap:12px}
+  .ap-row .rt{text-align:left}
+  .se-row{grid-template-columns:minmax(0,1fr) auto}
+  .se-slots{grid-column:1/-1;order:3}
+  #view-library>.lib-mode button{padding:5px 8px;font-size:12.5px;white-space:nowrap}
+}
 </style>
 
 <div class="ground" aria-hidden="true"><div class="row" id="gRow"></div><div class="plank"></div></div>
@@ -850,7 +928,7 @@ body[data-bg="plain"] .ground{display:none}
   </div>
 
   <div id="view-library" class="vstack" role="tabpanel" aria-labelledby="tab-library" hidden>
-    <div class="lib-mode" role="group" aria-label="Library view"><button type="button" data-mode="books" aria-pressed="true">Books</button><button type="button" data-mode="lists" aria-pressed="false">Reading lists</button></div>
+    <div class="lib-mode" role="group" aria-label="Library view"><button type="button" data-mode="books" aria-pressed="true">Books</button><button type="button" data-mode="authors" aria-pressed="false">Authors</button><button type="button" data-mode="series" aria-pressed="false">Series</button><button type="button" data-mode="lists" aria-pressed="false">Reading lists</button></div>
     <div id="toolsMountLib"><div id="libTools">
       <div class="lib-tools pop-wrap" id="libBar">
         <input type="search" id="libSearch" placeholder="Search title, author, series or theme" aria-label="Search books">
@@ -872,6 +950,19 @@ body[data-bg="plain"] .ground{display:none}
     <div id="listsView" hidden>
       <div class="rl-bar"><button class="btn btn-primary" type="button" id="rlNew">New list</button><span class="muted small" id="rlNote"></span></div>
       <div id="rlBoxes"></div>
+    </div>
+    <div id="authorsView" hidden>
+      <div id="auList">
+        <div class="se-tools"><input type="search" id="auSearch" placeholder="Search author, title or series" aria-label="Search authors"><select id="auSort" aria-label="Sort authors"><option value="read">Most read</option><option value="az">A–Z</option><option value="rated">Highest rated</option><option value="toread">Most to read</option></select></div>
+        <div class="au-grid" id="auGrid"></div>
+        <p class="muted small" id="auCount" style="margin:12px 0 0"></p>
+      </div>
+      <div id="auPage" hidden></div>
+    </div>
+    <div id="seriesView" hidden>
+      <div class="se-tools"><input type="search" id="seSearch" placeholder="Search series or author" aria-label="Search series"><select id="seSort" aria-label="Sort series"><option value="recent">Recently read</option><option value="az">A–Z</option><option value="missing">Most missing</option></select></div>
+      <div class="se-chips" id="seChips" role="group" aria-label="Series filter"></div>
+      <section class="panel se-panel"><div class="se-legend" id="seLegend"></div><div id="seList"></div></section>
     </div>
     <div id="libSecs"></div>
     <div class="lib-foot"><span><span id="libCount"></span> <button class="btn" id="libSheetOrder" type="button" hidden>Back to sheet order</button></span></div>
@@ -1850,13 +1941,17 @@ function showCard(id) {
     <div class="bc-acts"><button class="btn btn-primary" type="button" data-a="edit">Edit book</button><button class="btn" type="button" data-a="cover"></button></div>`;
   const ph = el.querySelector('div.bc-cov'); if (ph) ph.textContent = 'No cover yet';
   el.querySelector('h3').textContent = b.title;
-  el.querySelector('.bc-by').textContent = b.author || '';
+  setAuthorLinks(el.querySelector('.bc-by'), b.author);
   el.querySelector('.stars').textContent = starStr(b.rating);
   const sel = el.querySelector('select');
   sel.innerHTML = [...new Set([...(b.status ? [] : ['']), ...STATUSES, ...(STATUSES.includes(b.status) || !b.status ? [] : [b.status])])].map(x => `<option${x === b.status ? ' selected' : ''} value="${escapeText(x)}">${escapeText(x || '–')}</option>`).join('');
   sel.addEventListener('change', () => quickStatus(b.id, sel.value, sel));
   const dl = el.querySelector('dl');
-  for (const [k, v] of kv) { const dt = document.createElement('dt'), dd = document.createElement('dd'); dt.textContent = k; dd.textContent = v; dl.append(dt, dd); }
+  for (const [k, v] of kv) {
+    const dt = document.createElement('dt'), dd = document.createElement('dd'); dt.textContent = k; dd.textContent = v;
+    if (k === 'Series') { dd.textContent = ''; const a = document.createElement('button'); a.type = 'button'; a.className = 'lnk'; a.dataset.series = b.series; a.textContent = v; dd.appendChild(a); }
+    dl.append(dt, dd);
+  }
   el.querySelector('.bc-syn').textContent = b.synopsis || '';
   el.querySelector('.bc-x').addEventListener('click', () => { hideCard(); state.lib.open = null; if (!$('view-library').hidden) renderLibrary(); });
   el.querySelector('[data-a="edit"]').addEventListener('click', () => openBookDialog(b));
@@ -2177,10 +2272,44 @@ const LIB_COLS = [
 // What copies you hold, from the copies column: Physical, and Digital (Kobo or PDF)
 const hasCopy = (b, k) => !k || (k === 'Physical' ? /physical/i.test(b.copies || '') : /kobo|pdf/i.test(b.copies || ''));
 const ownedOf = b => /physical/i.test(b.copies || '') ? 'Physical' : /kobo|pdf/i.test(b.copies || '') ? 'Digital' : '';
+/* ---------- Author identity ----------
+   One person, many spellings: "Last, First", "Ursula K. Le Guin" vs "Ursula K Le Guin", accents, case, extra spaces.
+   Only the FIRST author of a cell is used for grouping; the rest are co-authors ("with X"). */
+const AUTH_PARTICLES = /^(?:de|del|della|di|da|du|dos|la|le|van|von|der|den|ter|ten|el|al|bin|ibn|st)$/i;
+const AUTH_SUFFIX = /^(?:jr|sr|ii|iii|iv)$/i;
+function authorSplit(cell) {   // a cell -> names in "First Last" order, first author first
+  const s = String(cell || '').replace(/\s+/g, ' ').trim(), out = [];
+  if (!s) return out;
+  for (const seg of s.split(/\s*[;\/&]\s*|\s+and\s+/i)) {
+    const parts = seg.split(',').map(x => x.trim()).filter(Boolean);
+    if (parts.length === 2) {
+      const [a, b] = parts, aw = a.split(' '), bw = b.split(' ');
+      if (AUTH_SUFFIX.test(b.replace(/\./g, ''))) { out.push(a + ' ' + b); continue; }                  // "King, Jr."
+      const inits = bw.every(w => /^[A-Za-z]\.?$/.test(w));
+      if (aw.length <= 3 && bw.length <= 3 && (aw.length === 1 || inits || AUTH_PARTICLES.test(aw[0]))) { out.push(b + ' ' + a); continue; }   // "Last, First"
+    }
+    out.push(...parts);
+  }
+  return out;
+}
+function authorKeyOf(name) {   // matching key: no accents, case, dots or spaces differences; runs of initials joined
+  const w = String(name || '').normalize('NFKD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/\([^)]*\)/g, ' ').replace(/['’`]/g, '').replace(/[^a-z0-9 ]/g, ' ').split(/\s+/).filter(Boolean);
+  while (w.length > 1 && AUTH_SUFFIX.test(w[w.length - 1])) w.pop();
+  const out = [];
+  for (const x of w) { const last = out[out.length - 1]; if (x.length === 1 && last && last.init) last.s += x; else out.push({ s: x, init: x.length === 1 }); }
+  return out.map(o => o.s).join(' ');
+}
+const authKeyMemo = new Map();
+function authorFirstKey(cell) {   // key of the first author in a cell
+  cell = String(cell || '');
+  let k = authKeyMemo.get(cell);
+  if (k === undefined) { const n = authorSplit(cell)[0]; k = n ? authorKeyOf(n) : ''; authKeyMemo.set(cell, k); }
+  return k;
+}
 // Re-reads: each read has its own row. Rows for the same book (title + first author) are grouped,
 // finished reads in date order first, then any still to come.
 const readCache = { map: null };
-const readKey = b => normQ(b.title).replace(/^(the|a|an) /, '') + '|' + normQ(String(b.author || '').split(/,|&| and /)[0]);
+const readKey = b => normQ(b.title).replace(/^(the|a|an) /, '') + '|' + authorFirstKey(b.author);
 function readsOf(b) {
   if (!readCache.map) {
     readCache.map = new Map();
@@ -2225,7 +2354,7 @@ function fillSelect(id, field, label) {
 }
 function renderLibrary() {
   const L = state.lib;
-  const mode = L.mode || 'books', plan = mode === 'plan', wish = mode === 'wish', lists = mode === 'lists';
+  const mode = L.mode || 'books', plan = mode === 'plan', wish = mode === 'wish', lists = mode === 'lists', authors = mode === 'authors', series = mode === 'series';
   document.querySelectorAll('.lib-mode button[data-mode]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.mode === mode)));
   placeLibTools(mode); renderFilterChips();
   $('planView').hidden = !plan;
@@ -2233,11 +2362,14 @@ function renderLibrary() {
   $('view-library').classList.toggle('wish-mode', wish || lists);
   $('listsView').hidden = !lists;
   $('libSecs').hidden = mode !== 'books';
-  if (mode !== 'books') hideCard();
+  $('authorsView').hidden = !authors; $('seriesView').hidden = !series;
+  if (mode !== 'books' && !authors && !series) hideCard();
   $('libTier').parentElement.hidden = mode !== 'books';
   document.querySelector('#view-library .lib-foot').hidden = mode !== 'books';
   if (wish) { renderWish(); return; }
   if (lists) { renderLists(); return; }
+  if (authors) { renderAuthors(); return; }
+  if (series) { renderSeries(); return; }
   if (plan) { if ($('libGenre').options.length <= 1) { fillSelect('libType', 'type', 'All types'); fillSelect('libFormat', 'format', 'All formats'); fillSelect('libGenre', 'genre', 'All genres'); fillSelect('libPublisher', 'publisher', 'All publishers'); } renderPlan(); return; }
   if ($('libGenre').options.length <= 1) { fillSelect('libType', 'type', 'All types'); fillSelect('libFormat', 'format', 'All formats'); fillSelect('libGenre', 'genre', 'All genres'); fillSelect('libPublisher', 'publisher', 'All publishers'); }
   // One box per status, in a fixed order. A box opens on click, or by itself when a search or filter finds books in it.
@@ -4057,10 +4189,10 @@ async function qaAddAll() {
 }
 // One dialog for adding with details and for editing
 const WD_FIELDS = ['title', 'author', 'series', 'number', 'publisher', 'type', 'format', 'stage', 'waiting', 'wantAs', 'checked', 'release', 'price', 'interest', 'link', 'seenIn', 'notes'];
-function openWishDlg(w) {
+function openWishDlg(w, prefill) {
   wl.editing = w || null;
   $('wd-stage').innerHTML = WL_STAGES.map(s => `<option>${s}</option>`).join('');
-  for (const k of WD_FIELDS) $('wd-' + k).value = w ? w[k] || '' : k === 'stage' ? 'Inbox' : '';
+  for (const k of WD_FIELDS) $('wd-' + k).value = w ? w[k] || '' : prefill && prefill[k] ? prefill[k] : k === 'stage' ? 'Inbox' : '';
   $('wd-gift').checked = !!w && w.gift === 'TRUE';
   $('wdTitle').textContent = w ? 'Edit Wishlist book' : 'Add to Wishlist';
   $('wdSave').textContent = w ? 'Save' : 'Add';
@@ -4200,16 +4332,21 @@ async function pruneSeries() {
   } catch (err) { notice("Couldn't tidy the Series Tracker: " + (err.message || explain(err)), 'error'); }
   finally { pruning = false; renderSeriesView(); }
 }
-function renderSeriesView() {
-  const box = $('wlSerList');
+// Every series to show: tracked ones with books, ones with `minBooks` or more books (library plus Wishlist), and any on the Wishlist
+function seriesRoster(minBooks) {
   const counts = seriesCounts(), names = new Map();
   // Followed series (with books), every series with two or more books, and any series on the Wishlist
   for (const s of disc.series || []) if (counts.get(normQ(s.series))) names.set(normQ(s.series), s);
   const seen = new Map();
   for (const b of state.allBooks) if (b.series && !seen.has(normQ(b.series))) seen.set(normQ(b.series), { series: b.series, author: b.author, _new: true });
   for (const w of disc.wish || []) if (w.series && !seen.has(normQ(w.series))) seen.set(normQ(w.series), { series: w.series, author: w.author, _new: true });
-  for (const [k, x] of seen) if (!names.has(k) && counts.get(k) >= 2) names.set(k, x);
+  for (const [k, x] of seen) if (!names.has(k) && counts.get(k) >= minBooks) names.set(k, x);
   for (const w of disc.wish || []) if (w.series && !names.has(normQ(w.series))) names.set(normQ(w.series), seen.get(normQ(w.series)));
+  return names;
+}
+function renderSeriesView() {
+  const box = $('wlSerList');
+  const names = seriesRoster(2);
   if (!names.size) { box.innerHTML = '<p class="empty">No series yet. Add one to see where you\'re up to.</p>'; pruneSeries(); return; }
   box.innerHTML = '<div class="ser-legend"><span><i style="background:var(--accent)"></i>Finished</span><span><i style="background:color-mix(in srgb,var(--accent) 35%,var(--raise))"></i>Own</span><span><i style="border:1px solid var(--accent)"></i>Wishlist</span><span><i style="border:1px dashed var(--line)"></i>Not added</span></div>';
   const q = normQ(state.lib.q);
@@ -4537,20 +4674,25 @@ function renderStalled() {
 
 /* ---------- Next in series ---------- */
 const nisState = { all: false };
+// The next book to read in a series: the first TBR after the highest finished number (shared with the Series view)
+function seriesNext(books) {
+  const done = books.filter(b => DONE_STATUSES.includes(b.status));
+  const reading = books.find(b => b.status === 'Reading');
+  const maxDone = Math.max(0, ...done.map(b => toNum(b.seriesNum)));
+  const tbr = books.filter(b => b.status === 'TBR').sort((a, b) => (toNum(a.seriesNum) || 999) - (toNum(b.seriesNum) || 999));
+  const next = tbr.find(b => toNum(b.seriesNum) > maxDone) || tbr[0];
+  const last = done.map(b => b.finishDate || '').sort().pop();
+  return { done, reading, maxDone, tbr, next, last };
+}
 function renderNextInSeries() {
   const box = $('nisList'); box.textContent = '';
   const ser = new Map();
   for (const b of state.allBooks) if (b.series) { if (!ser.has(b.series)) ser.set(b.series, []); ser.get(b.series).push(b); }
   const rows = [];
   for (const [name, books] of ser) {
-    const done = books.filter(b => DONE_STATUSES.includes(b.status));
+    const { done, reading, tbr, next, last } = seriesNext(books);
     if (!done.length) continue;
-    const reading = books.find(b => b.status === 'Reading');
-    const maxDone = Math.max(0, ...done.map(b => toNum(b.seriesNum)));
-    const tbr = books.filter(b => b.status === 'TBR').sort((a, b) => (toNum(a.seriesNum) || 999) - (toNum(b.seriesNum) || 999));
-    const next = tbr.find(b => toNum(b.seriesNum) > maxDone) || tbr[0];
     if (!next) continue;
-    const last = done.map(b => b.finishDate || '').sort().pop();
     rows.push({ name, next, last, reading, left: tbr.length });
   }
   rows.sort((a, b) => (b.last || '').localeCompare(a.last || ''));
@@ -4569,6 +4711,236 @@ function renderNextInSeries() {
   $('nisMore').hidden = rows.length <= 5;
   $('nisMore').textContent = nisState.all ? 'Show fewer' : `Show all ${rows.length}`;
 }
+
+/* ---------- Library: Authors and Series (read-only views; every action reuses an existing card or dialog) ---------- */
+const AU = { q: '', sort: 'read', sel: null, quotesAll: false };
+const SE = { q: '', filter: 'all', sort: 'recent', focus: null };
+const dateShort = d => d ? fromIso(d).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
+const copiesOf = b => String(b.copies || '').split('|').map(x => x.trim()).filter(Boolean).join(' · ');
+const bareTitle = t => normQ(t).replace(/^(the|a|an) /, '');
+const initialsOf = name => { const w = String(name).split(/\s+/).filter(x => /[A-Za-zÀ-ɏ]/.test(x)); if (!w.length) return '?'; return (w[0][0] + (w.length > 1 ? w[w.length - 1][0] : w[0][1] || '')).toUpperCase(); };
+// The Wishlist and Quotes load a moment after the library; draw again once they have
+function afterDiscover() {
+  if (disc.loaded || !state.mcp || !isLive()) return;
+  loadDiscover().then(() => { if (disc.loaded && !$('view-library').hidden && (state.lib.mode === 'authors' || state.lib.mode === 'series')) renderLibrary(); }).catch(() => {});
+}
+// Writes the first author as a link to their page, co-authors as plain text
+function setAuthorLinks(el, cell) {
+  el.textContent = '';
+  const names = authorSplit(cell);
+  if (!names.length) { el.textContent = cell || ''; return; }
+  const a = document.createElement('button'); a.type = 'button'; a.className = 'lnk'; a.dataset.author = authorKeyOf(names[0]); a.textContent = names[0];
+  el.appendChild(a);
+  if (names.length > 1) el.append(' & ' + names.slice(1).join(' & '));
+}
+function openAuthorPage(key) {
+  AU.sel = key; AU.q = ''; $('auSearch').value = ''; hideCard();
+  setLibMode('authors'); window.scrollTo(0, 0);
+}
+function openSeriesPage(name) {
+  SE.focus = normQ(name); SE.q = ''; SE.filter = 'all'; $('seSearch').value = ''; hideCard();
+  setLibMode('series');
+}
+
+/* Authors */
+function titleInfo(rows) {   // one title (all its reads) -> what the lists need
+  const doneRows = rows.filter(r => DONE_STATUSES.includes(r.status)).sort((x, y) => (x.finishDate || '').localeCompare(y.finishDate || '') || toNum(x.id) - toNum(y.id));
+  const rep = rows.find(r => r.status === 'Reading') || doneRows[doneRows.length - 1] || rows.find(r => r.status !== 'DNF') || rows[0];
+  const rated = rows.filter(r => toNum(r.rating) > 0).pop();
+  const years = doneRows.map(r => (r.finishDate || r.startDate || '').slice(0, 4)).filter(y => /^\d{4}$/.test(y));
+  return { rows, rep, done: doneRows.length > 0, reads: doneRows.length, rating: rated ? toNum(rated.rating) : 0, pages: doneRows.reduce((n, r) => n + toNum(r.pages), 0), years, lastFinish: doneRows.map(r => r.finishDate || '').sort().pop() || '' };
+}
+function buildAuthors() {
+  const map = new Map();
+  const slot = name => { const k = authorKeyOf(name); if (!k) return null; let a = map.get(k); if (!a) map.set(k, a = { key: k, spell: new Map(), books: [], wish: [], co: new Map() }); a.spell.set(name, (a.spell.get(name) || 0) + 1); return a; };
+  for (const b of state.allBooks) { const n = authorSplit(b.author), a = n.length && slot(n[0]); if (!a) continue; a.books.push(b); if (n.length > 1) a.co.set('b' + b.id, n.slice(1)); }
+  for (const w of disc.wish || []) { const n = authorSplit(w.author), a = n.length && slot(n[0]); if (!a) continue; a.wish.push(w); if (n.length > 1) a.co.set('w' + (w.id || w._row), n.slice(1)); }
+  for (const a of map.values()) {
+    a.name = [...a.spell].sort((x, y) => y[1] - x[1] || y[0].length - x[0].length || (x[0] < y[0] ? -1 : 1))[0][0];   // the most common spelling
+    const seen = new Set(); a.titles = [];
+    for (const b of a.books) { const k = readKey(b); if (seen.has(k)) continue; seen.add(k); a.titles.push(titleInfo(readsOf(b))); }
+    const have = new Set(a.titles.map(t => bareTitle(t.rep.title)));
+    a.wishItems = a.wish.filter(w => !have.has(bareTitle(w.title)));
+    a.nBooks = a.titles.length; a.nRead = a.titles.filter(t => t.done).length;
+    a.toRead = a.titles.filter(t => !t.done && t.rep.status !== 'DNF').length;
+    a.pages = a.titles.reduce((n, t) => n + t.pages, 0);
+    const rated = a.titles.filter(t => t.rating); a.avg = rated.length ? rated.reduce((n, t) => n + t.rating, 0) / rated.length : 0;
+    a.first = a.titles.flatMap(t => t.years).sort()[0] || '';
+    a.wishOnly = !a.nBooks;
+  }
+  return [...map.values()];
+}
+const AU_SORTS = {
+  read: (x, y) => y.nRead - x.nRead || y.nBooks - x.nBooks,
+  az: () => 0,
+  rated: (x, y) => (y.avg || -1) - (x.avg || -1) || y.nRead - x.nRead,
+  toread: (x, y) => y.toRead - x.toRead || y.nBooks - x.nBooks
+};
+function renderAuthors() {
+  if (!state.libLoaded) { $('auGrid').innerHTML = '<p class="muted">Loading your library…</p>'; return; }
+  afterDiscover();
+  const list = buildAuthors();
+  if (AU.sel) {
+    const a = list.find(x => x.key === AU.sel);
+    if (a) { $('auList').hidden = true; $('auPage').hidden = false; renderAuthorPage(a); return; }
+    AU.sel = null;
+  }
+  $('auList').hidden = false; $('auPage').hidden = true;
+  const q = normQ(AU.q);
+  const shown = list.filter(a => !q || normQ(a.name).includes(q) || a.titles.some(t => normQ(t.rep.title + ' ' + t.rep.series).includes(q)) || a.wishItems.some(w => normQ(w.title + ' ' + w.series).includes(q)))
+    .sort((x, y) => (AU_SORTS[AU.sort] || AU_SORTS.read)(x, y) || x.name.localeCompare(y.name, undefined, { sensitivity: 'base' }));
+  $('auSort').value = AU.sort;
+  $('auGrid').innerHTML = shown.map(a => `<button type="button" class="au-card" data-k="${escapeText(a.key)}"><span class="au-av" aria-hidden="true">${escapeText(initialsOf(a.name))}</span><span class="au-tx"><span class="au-name">${escapeText(a.name)}</span><span class="au-sub">${a.wishOnly ? `Wishlist only · ${a.wishItems.length}` : `${a.nBooks} book${a.nBooks === 1 ? '' : 's'} · ${a.nRead} read${a.avg ? ' · ★' + a.avg.toFixed(1) : ''}`}</span></span></button>`).join('');
+  $('auCount').textContent = shown.length ? `${fmt(shown.length)} author${shown.length === 1 ? '' : 's'}${q ? ' match' : ''}` : '';
+  if (!shown.length) $('auGrid').innerHTML = `<p class="empty" style="grid-column:1/-1">${list.length ? 'No authors match that search.' : 'No authors yet.'}</p>`;
+}
+function renderAuthorPage(a) {
+  const modeOf = arr => { const m = new Map(); for (const x of arr.filter(Boolean)) m.set(x, (m.get(x) || 0) + 1); return [...m].sort((x, y) => y[1] - x[1])[0]; };
+  const topGenre = modeOf(a.titles.map(t => t.rep.genre)), topPub = modeOf(a.titles.map(t => t.rep.publisher));
+  const sub = a.wishOnly ? 'On your Wishlist only' : [topGenre && topGenre[0], topPub && topPub[0]].filter(Boolean).join(' · ');
+  const groups = new Map(), solo = [];
+  const bySeries = (name, item) => { const k = normQ(name); if (!groups.has(k)) groups.set(k, { name, items: [] }); groups.get(k).items.push(item); };
+  for (const t of a.titles) { const item = { kind: 'book', t, b: t.rep, n: toNum(t.rep.seriesNum), year: toNum(t.rep.year) }; if (t.rep.series) bySeries(t.rep.series, item); else solo.push(item); }
+  for (const w of a.wishItems) { const item = { kind: 'wish', w, n: toNum(w.number), year: 9999 }; if (w.series) bySeries(w.series, item); else solo.push(item); }
+  const title = it => it.kind === 'book' ? it.b.title : it.w.title;
+  const num = x => x || 1e6;
+  const byTitle = (x, y) => title(x).localeCompare(title(y), undefined, { numeric: true });
+  const row = it => {
+    const nTxt = it.n ? '#' + it.n : '';
+    if (it.kind === 'wish') {
+      const w = it.w, co = a.co.get('w' + (w.id || w._row));
+      return `<li class="ap-row wish"><span class="n">${nTxt}</span><span class="t"><button type="button" class="lnk bt" data-wish="${escapeText(w.id || '')}" data-row="${w._row}">${escapeText(w.title)}</button><span class="w">On your Wishlist${co ? ' · with ' + escapeText(co.join(', ')) : ''}</span></span><span class="st"><span class="pill" data-s="wish">${escapeText(w.stage || 'Inbox')}</span></span><span class="meta"><span class="rt">–</span><span class="dt"></span><span class="cp">${escapeText(w.wantAs || '')}</span></span></li>`;
+    }
+    const t = it.t, b = it.b, co = t.rows.map(r => a.co.get('b' + r.id)).find(Boolean);
+    const notes = [co ? 'with ' + co.join(', ') : '', t.reads > 1 ? `read ${t.reads} times` : ''].filter(Boolean).join(' · ');
+    return `<li class="ap-row"><span class="n">${nTxt}</span><span class="t"><button type="button" class="lnk bt" data-book="${escapeText(b.id)}">${isFav(b) ? '<span class="fv" aria-label="Favourite">★</span> ' : ''}${escapeText(b.title)}</button>${notes ? `<span class="w">${escapeText(notes)}</span>` : ''}</span><span class="st"><span class="pill" data-s="${escapeText(b.status)}">${escapeText(b.status || '–')}</span></span><span class="meta"><span class="rt">${t.rating ? '★ ' + t.rating : '–'}</span><span class="dt">${escapeText(dateShort(b.finishDate))}</span><span class="cp">${escapeText(copiesOf(b))}</span></span></li>`;
+  };
+  const grp = [...groups.values()].sort((x, y) => x.name.localeCompare(y.name, undefined, { numeric: true }));
+  const parts = [];
+  for (const g of grp) {
+    g.items.sort((x, y) => num(x.n) - num(y.n) || byTitle(x, y));
+    const info = seriesSlots(seriesEntry(g.name, a));
+    parts.push(`<section class="ap-grp"><h3 class="ap-h"><button type="button" class="lnk" data-series="${escapeText(g.name)}">${escapeText(g.name)}</button><span class="muted small">${info.read} of ${info.total} read</span></h3><ul class="ap-list">${g.items.map(row).join('')}</ul></section>`);
+  }
+  if (solo.length) {
+    solo.sort((x, y) => (x.year || 9998) - (y.year || 9998) || byTitle(x, y));
+    parts.push(`<section class="ap-grp"><h3 class="ap-h"><span>${grp.length ? 'Standalones' : 'Books'}</span><span class="muted small">${solo.length}</span></h3><ul class="ap-list">${solo.map(row).join('')}</ul></section>`);
+  }
+  // Dog-ear quotes from this author's books
+  const ids = new Set(a.books.map(b => b.id));
+  const quotes = (disc.quotes || []).filter(q => (q.bookId && ids.has(q.bookId)) || (q.by && authorFirstKey(q.by) === a.key));
+  quotes.sort((x, y) => x.added !== y.added ? (x.added < y.added ? 1 : -1) : y._row - x._row);
+  const qShow = AU.quotesAll ? quotes : quotes.slice(0, 3);
+  const quoteHtml = quotes.length ? `<section class="panel"><div class="panel-head"><h2>Dog-ear quotes</h2><span class="muted small">${quotes.length} from ${escapeText(a.name)}</span></div><ul class="dog-list">${qShow.map(q => `<li class="dog"><p>${escapeText(q.text)}</p><footer>${escapeText([q.who ? '— ' + q.who : '', q.from, q.page ? 'p. ' + q.page : ''].filter(Boolean).join(' · '))}</footer></li>`).join('')}</ul>${quotes.length > 3 ? `<p style="margin:10px 0 0"><button type="button" class="linkbtn" data-quotes>${AU.quotesAll ? 'Show fewer' : 'Show all ' + quotes.length}</button></p>` : ''}</section>` : '';
+  const tile = (v, l) => `<div class="ap-tile"><b>${v}</b><span>${l}</span></div>`;
+  $('auPage').innerHTML = `<button type="button" class="linkbtn ap-back" data-back>← All authors</button>
+    <div class="ap-head"><span class="au-av" aria-hidden="true">${escapeText(initialsOf(a.name))}</span><div style="min-width:0"><h2>${escapeText(a.name)}</h2>${sub ? `<div class="muted small">${escapeText(sub)}</div>` : ''}</div></div>
+    <div class="ap-tiles">${tile(a.nBooks, 'Books')}${tile(a.nRead, 'Read')}${tile(fmt(a.pages), 'Pages read')}${tile(a.avg ? a.avg.toFixed(1) : '–', 'Avg rating')}${tile(a.first || '–', 'First read')}</div>
+    ${parts.length ? `<section class="panel ap-panel">${parts.join('')}</section>` : '<p class="empty">Nothing here yet.</p>'}${quoteHtml}`;
+}
+
+/* Series */
+const SLOT_RANK = { reading: 5, read: 4, owned: 3, dnf: 2, want: 1 };
+const SLOT_CAP = 120;
+const bookSlotState = b => DONE_STATUSES.includes(b.status) ? 'read' : b.status === 'Reading' ? 'reading' : b.status === 'DNF' ? 'dnf' : 'owned';
+function seriesEntry(name, a) {   // tracker row if there is one, else just the name
+  const k = normQ(name), t = (disc.series || []).find(x => normQ(x.series) === k);
+  return t || { series: name, author: a ? a.name : '', _new: true };
+}
+// Slots #1..#N for one series (N = highest number known or the tracker's `released`), each in one state
+function seriesSlots(s) {
+  const books = seriesBooks(s.series), wants = (disc.wish || []).filter(w => normQ(w.series) === normQ(s.series));
+  const by = new Map(), un = new Map();
+  const put = (m, key, st, b, w) => {
+    const cur = m.get(key);
+    if (!cur || SLOT_RANK[st] > SLOT_RANK[cur.st] || (SLOT_RANK[st] === SLOT_RANK[cur.st] && b && cur.b && (b.finishDate || '') > (cur.b.finishDate || ''))) m.set(key, { st, b, w });
+  };
+  const haveTitles = new Set(books.map(b => bareTitle(b.title)));
+  for (const b of books) { const n = toNum(b.seriesNum); if (n) put(by, n, bookSlotState(b), b); else put(un, 'b' + readKey(b), bookSlotState(b), b); }
+  for (const w of wants) { const n = toNum(w.number); if (n) put(by, n, 'want', null, w); else if (!haveTitles.has(bareTitle(w.title))) put(un, 'w' + w.id + w._row, 'want', null, w); }
+  const top = Math.max(0, Math.floor(toNum(s.released)), ...[...by.keys()].map(Math.floor));
+  const nums = [...new Set([...Array.from({ length: top }, (_, i) => i + 1), ...by.keys()])].sort((x, y) => x - y);
+  const slots = nums.map(n => ({ n, ...(by.get(n) || { st: 'missing' }) }));
+  for (const v of un.values()) slots.push({ n: 0, ...v });
+  const sn = seriesNext(books);
+  if (sn.next) { const sl = slots.find(x => x.b && x.b.id === sn.next.id) || slots.find(x => x.n && x.n === toNum(sn.next.seriesNum) && x.st === 'owned'); if (sl) sl.next = true; }
+  const read = slots.filter(x => x.st === 'read').length;
+  return { slots, read, total: slots.length, missing: slots.filter(x => x.st === 'missing').length, reading: !!sn.reading, last: sn.last || '' };
+}
+const SLOT_LABEL = { read: 'Read', reading: 'Reading', owned: 'Owned, unread', want: 'On Wishlist', missing: 'Missing', dnf: "Didn't finish" };
+function seriesRows() {
+  const names = seriesRoster(1);
+  for (const s of disc.series || []) if (s.series && !names.has(normQ(s.series))) names.set(normQ(s.series), s);   // tracked, no books yet
+  return [...names.values()].map(s => {
+    const info = seriesSlots(s);
+    return { k: normQ(s.series), s, author: authorSplit(s.author)[0] || '', info, group: info.total && info.read === info.total ? 'complete' : info.read || info.reading ? 'progress' : 'new' };
+  });
+}
+function renderSeries() {
+  if (!state.libLoaded) { $('seList').innerHTML = '<p class="muted">Loading your library…</p>'; return; }
+  afterDiscover();
+  const all = seriesRows(), authors = new Set(buildAuthors().map(a => a.key));
+  const q = normQ(SE.q);
+  const FILTERS = [['all', 'All'], ['progress', 'In progress'], ['complete', 'Complete'], ['new', 'Not started']];
+  $('seChips').innerHTML = FILTERS.map(([k, l]) => `<button type="button" class="chip" data-f="${k}" aria-pressed="${SE.filter === k}">${l}<span class="n">${k === 'all' ? all.length : all.filter(r => r.group === k).length}</span></button>`).join('');
+  $('seSort').value = SE.sort;
+  const rows = all.filter(r => (SE.filter === 'all' || r.group === SE.filter) && (!q || normQ(r.s.series + ' ' + r.author).includes(q)))
+    .sort((x, y) => (SE.sort === 'az' ? 0 : SE.sort === 'missing' ? y.info.missing - x.info.missing : (y.info.last || '').localeCompare(x.info.last || '')) || x.s.series.localeCompare(y.s.series, undefined, { numeric: true }));
+  const used = new Set(rows.flatMap(r => r.info.slots.map(x => x.st)));
+  $('seLegend').innerHTML = ['read', 'reading', 'owned', 'want', 'missing', ...(used.has('dnf') ? ['dnf'] : [])].map(k => `<span><i class="slot ${k}"></i>${SLOT_LABEL[k]}</span>`).join('') + '<span><i class="slot nx"></i>Next to read</span>';
+  const box = $('seList');
+  if (!rows.length) { box.innerHTML = `<p class="empty" style="margin:6px 0">${all.length ? 'No series match.' : 'No series yet.'}</p>`; return; }
+  box.innerHTML = rows.map(r => {
+    const { s, info } = r, shown = info.slots.slice(0, SLOT_CAP);
+    const slots = shown.map((x, i) => `<button type="button" class="slot ${x.st}${x.next ? ' next' : ''}" data-i="${i}" title="${escapeText(slotTip(s, x))}" aria-label="${escapeText(slotTip(s, x))}">${x.n ? '#' + x.n : '?'}</button>`).join('') + (info.slots.length > SLOT_CAP ? `<span class="muted small">+${info.slots.length - SLOT_CAP} more</span>` : '');
+    const au = r.author ? (authors.has(authorKeyOf(r.author)) ? `<button type="button" class="lnk" data-author="${escapeText(authorKeyOf(r.author))}">${escapeText(r.author)}</button>` : escapeText(r.author)) : '';
+    return `<div class="se-row" data-k="${escapeText(r.k)}"><div class="se-id"><div class="nm">${escapeText(s.series)}</div><div class="au">${au || '&nbsp;'}</div></div><div class="se-slots">${slots || '<span class="muted small">No books yet</span>'}</div><div class="se-meta"><div><b>${info.read}</b> of ${info.total} read</div><div class="se-act">${s.status ? `<span class="pill se-st" data-t="${escapeText(s.status)}">${escapeText(s.status)}</span>` : ''}<button type="button" class="linkbtn" data-edit>${s._new ? 'Track' : 'Edit'}</button></div></div></div>`;
+  }).join('');
+  SE.rows = rows;
+  if (SE.focus) {
+    const el = [...box.querySelectorAll('.se-row')].find(e => e.dataset.k === SE.focus); SE.focus = null;
+    if (el) { el.classList.add('hl'); el.scrollIntoView({ block: 'center' }); }
+  }
+}
+function slotTip(s, x) {
+  const n = x.n ? '#' + x.n : 'No number';
+  if (x.st === 'missing') return `${s.series} ${n}: not added yet. Tap to add it to your Wishlist`;
+  return `${s.series} ${n}: ${SLOT_LABEL[x.st]}${x.b ? ' · ' + x.b.title : x.w ? ' · ' + x.w.title + (x.w.stage ? ' (' + x.w.stage + ')' : '') : ''}`;
+}
+function slotClick(row, x) {
+  const s = row.s;
+  if (x.b) { showCard(x.b.id); return; }
+  if (x.w) { openWishDlg(x.w); return; }
+  openWishDlg(null, { title: `${s.series} #${x.n}`, author: row.author, series: s.series, number: String(x.n), publisher: s.publisher || '', format: s.soldAs || '' });
+}
+
+let auT; $('auSearch').addEventListener('input', e => { clearTimeout(auT); auT = setTimeout(() => { AU.q = e.target.value; renderAuthors(); }, 120); });
+$('auSort').addEventListener('change', e => { AU.sort = e.target.value; renderAuthors(); });
+$('authorsView').addEventListener('click', e => {
+  const t = e.target;
+  let el;
+  if ((el = t.closest('.au-card'))) { AU.sel = el.dataset.k; AU.quotesAll = false; renderAuthors(); window.scrollTo(0, 0); }
+  else if (t.closest('[data-back]')) { AU.sel = null; hideCard(); renderAuthors(); }
+  else if ((el = t.closest('[data-book]'))) showCard(el.dataset.book);
+  else if ((el = t.closest('[data-wish]'))) { const w = (disc.wish || []).find(x => String(x._row) === el.dataset.row && x.id === el.dataset.wish); if (w) openWishDlg(w); }
+  else if ((el = t.closest('[data-series]'))) openSeriesPage(el.dataset.series);
+  else if (t.closest('[data-quotes]')) { AU.quotesAll = !AU.quotesAll; renderAuthors(); }
+});
+let seT; $('seSearch').addEventListener('input', e => { clearTimeout(seT); seT = setTimeout(() => { SE.q = e.target.value; renderSeries(); }, 120); });
+$('seSort').addEventListener('change', e => { SE.sort = e.target.value; renderSeries(); });
+$('seChips').addEventListener('click', e => { const c = e.target.closest('[data-f]'); if (c) { SE.filter = c.dataset.f; renderSeries(); } });
+$('seriesView').addEventListener('click', e => {
+  const t = e.target, rowEl = t.closest('.se-row'); let el;
+  if ((el = t.closest('[data-author]'))) { openAuthorPage(el.dataset.author); return; }
+  if (!rowEl) return;
+  const row = (SE.rows || []).find(r => r.k === rowEl.dataset.k); if (!row) return;
+  if (t.closest('[data-edit]')) { openSeriesDlg(row.s._new ? { series: row.s.series, author: row.author } : row.s); return; }
+  if ((el = t.closest('.slot'))) slotClick(row, row.info.slots[Number(el.dataset.i)]);
+});
+$('bookCard').addEventListener('click', e => {
+  const a = e.target.closest('[data-author]'); if (a) { openAuthorPage(a.dataset.author); return; }
+  const s = e.target.closest('[data-series]'); if (s) openSeriesPage(s.dataset.series);
+});
 
 /* ---------- Goal planner ---------- */
 function renderGoal() {
@@ -4898,6 +5270,7 @@ function showTab(name, tool) {
 // Switch the Library / Next sub-view (Books, Reading lists | Plan, Wishlist); it moves to the tab it belongs to
 function setLibMode(mode) {
   const L = state.lib, tab = isPlanMode(mode) ? 'next' : 'library';
+  if (mode === 'authors' || mode === 'series' || L.mode === 'authors' || L.mode === 'series') hideCard();
   L.mode = mode; L[tab === 'next' ? 'nextMode' : 'libMode'] = mode;
   if (nav.tab !== tab) showTab(tab); else renderLibrary();
 }
