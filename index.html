@@ -1514,9 +1514,12 @@ function renderStats(totals) {
   $('sYearLabel').textContent = y + ' so far';
   if (state.libLoaded) {
     const fin = state.allBooks.filter(b => b.status === 'Finished' && (b.finishDate || '').startsWith(y));
-    const fp = fin.reduce((a, b) => a + toNum(b.pages), 0), doy = daysBetween(y + '-01-01', t) + 1;
+    // Finished books count their full length; books being read count the page reached, so the total moves as you log
+    const reading = state.allBooks.filter(b => b.status === 'Reading' && toNum(b.currentPage) > 0);
+    const rp = reading.reduce((a, b) => a + (toNum(b.pages) ? Math.min(toNum(b.currentPage), toNum(b.pages)) : toNum(b.currentPage)), 0);
+    const fp = fin.reduce((a, b) => a + toNum(b.pages), 0) + rp, doy = daysBetween(y + '-01-01', t) + 1;
     $('sYear').textContent = fmt(fp);
-    $('sYearSub').textContent = `pages in ${fmt(fin.length)} finished books · ${fmt(Math.round(fp / doy))} a day`;
+    $('sYearSub').textContent = `pages in ${fmt(fin.length)} finished books${reading.length ? ` + ${fmt(reading.length)} in progress` : ''} · ${fmt(Math.round(fp / doy))} a day`;
   } else {
     $('sYear').textContent = fmt(yTot);
     $('sYearSub').textContent = yDays ? `${fmt(Math.round(yTot / yDays))} a day on average` : '';
