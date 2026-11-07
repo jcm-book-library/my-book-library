@@ -52,7 +52,7 @@ Read this after `CLAUDE.md` and the house rules. It records how the app and its 
 
 ## Behaviour worth knowing
 - Library: Reading, Finished (newest first), Re-read, TBR, Paused, DNF as expandable boxes. Rows open a floating card on the left (status, favourite, edit, cover).
-- Log: Reading now (big page number), then Read next / Last five finished / Favourites, then Pages per day (Year by default). "2026 so far" is the pages of books finished this year; the daily log (inflated by Kobo page counts) still drives streaks and the daily chart.
+- Log: Reading now (big page number), then Read next / Last five finished / Favourites, then Pages per day (Year by default). "2026 so far" is the pages of books finished this year plus the current page of each book being read (owner's choice, 7 Nov), so it moves as you log; the daily log (inflated by Kobo page counts) still drives streaks and the daily chart.
 - `confirm()` does nothing inside claude.ai, so the page uses its own confirmation dialog (`askOk`).
 - **Covers only work on the GitHub Pages site** (claude.ai blocks outside images). Open Library search and covers were confirmed working on the live site on 1 Nov, but its range of covers is limited. The build environment's network blocks `openlibrary.org`, so tests use a stand-in.
 - Tests were headless Playwright scripts with a stubbed `window.claude` at 390px and 1280px, run before every publish. They used copies of the real sheet data, so they are not in this public repo.
