@@ -71,6 +71,7 @@ async function openApp(browser, appFile, opts = {}) {
   page.on('pageerror', e => errors.push(width + ': PAGEERR ' + e.message));
   await page.exposeFunction('__call', (tool, input) => call(tool, input));
   await page.addInitScript(view => {
+    window.__TEST_WRITES__ = true;   // the app is read-only inside claude.ai unless this is set
     window.claude = { use: async () => ({ callTool: async (server, tool, input) => ({ payload: await window.__call(tool, input) }) }) };
     try { localStorage.clear(); if (view) localStorage.setItem('mbl_libview', view); } catch (e) {}
     { let x = 12345; Math.random = () => { x = (x * 1664525 + 1013904223) % 4294967296; return x / 4294967296; }; }
@@ -90,4 +91,4 @@ async function settle(page, ms = 500) {
   await page.waitForTimeout(ms);
 }
 
-module.exports = { launch, openApp, settle, FIXED };
+module.exports = { launch, openApp, settle, FIXED, makeStore };

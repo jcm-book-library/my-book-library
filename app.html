@@ -36,6 +36,16 @@ header{margin-bottom:16px}
 .status[data-state="live"] .dot{background:var(--accent)}
 .status[data-state="error"] .dot{background:var(--danger)}
 .status[data-state="loading"] .dot{background:var(--accent);animation:pulse 1s infinite alternate}
+.status[data-state="live"] .dot[data-sync]{box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 30%,transparent),0 0 8px var(--accent)}
+.sb-box{display:grid;gap:10px;min-width:0}
+.sb-acts{display:flex;gap:8px;flex-wrap:wrap;align-items:center;min-width:0}
+.sb-acts input{flex:1 1 150px;min-width:0;font:inherit;font-size:14px;background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:7px 10px}
+.sb-acts input:focus{border-color:var(--accent);outline:none}
+#sbMsg,#toolMsg{white-space:pre-line;overflow-wrap:anywhere}
+#sbTools{display:grid;gap:10px;min-width:0}
+#sbTools .btn{white-space:normal;text-align:left;max-width:100%}
+#toolMsg{margin:0;font-size:13px;min-width:0}
+#toolMsg:empty{display:none}
 @keyframes pulse{to{opacity:.3}}
 button{font:inherit;cursor:pointer}
 .btn{border:1px solid var(--line);background:var(--raise);color:var(--fg);border-radius:8px;padding:7px 12px;font-weight:500;font-size:13px}
@@ -881,6 +891,7 @@ body[data-bg="plain"] .ground{display:none}
         <div class="look-row"><span>Background</span><div class="seg"><button type="button" data-bg="shelf" aria-pressed="true">Shelf</button><button type="button" data-bg="plain" aria-pressed="false">Plain</button></div></div>
         <div class="look-row"><span>Spine colours</span><div class="seg"><button type="button" data-cm="month" aria-pressed="false">Month</button><button type="button" data-cm="daily" aria-pressed="true">Daily mix</button><button type="button" data-cm="contrast" aria-pressed="false">Contrast</button></div></div>
       </div>
+      <div class="pg" id="dataPg" hidden><p class="pg-label">Data</p><div class="tgrid"><button class="btn" type="button" id="dataBtn">Data &amp; sign-in</button></div></div>
       <div class="pg"><p class="pg-label">Links</p><div class="links" id="discLinks"></div></div>
     </div>
   </div>
@@ -1191,6 +1202,25 @@ body[data-bg="plain"] .ground{display:none}
   </form>
 </dialog>
 
+<dialog id="dataDlg" aria-labelledby="dataTitle" style="width:min(520px,calc(100vw - 32px))">
+  <form id="dataForm" method="dialog">
+    <div class="dlg-head"><h2 id="dataTitle">Data &amp; sign-in</h2><button class="btn" type="button" id="dataClose">Close</button></div>
+    <div style="padding:16px 20px;display:grid;gap:12px;min-width:0">
+      <div class="field"><label for="dSource">Where your data lives</label><select id="dSource"><option value="sheets">Google Sheet</option><option value="supabase">Supabase</option></select></div>
+      <div class="sb-box">
+        <p class="muted" id="sbState" style="margin:0;font-size:13px"></p>
+        <div class="sb-acts" id="sbEmailRow"><input id="sbEmail" type="email" autocomplete="username" placeholder="Your email" aria-label="Email for Supabase sign-in"><button class="btn" type="button" id="sbMail">Email me a sign-in link</button></div>
+        <div class="sb-acts" id="sbPwRow"><input id="sbPw" type="password" autocomplete="current-password" placeholder="Password" aria-label="Supabase password"><button class="btn" type="button" id="sbPwIn">Sign in with password</button></div>
+        <div class="sb-acts" id="sbSetRow"><input id="sbNewPw" type="password" autocomplete="new-password" placeholder="New password (12+ characters)" aria-label="New Supabase password"><button class="btn" type="button" id="sbSetPw">Set password</button></div>
+        <div class="sb-acts" id="sbOutRow"><button class="btn btn-ghost" type="button" id="sbOut">Sign out of Supabase</button><span class="muted" style="font-size:12px;flex:1 1 180px">This signs you out of every jcm-book-library app on this device.</span></div>
+        <div id="sbTools"></div>
+        <p class="muted" id="sbMsg" style="margin:0;font-size:13px"></p>
+      </div>
+    </div>
+    <div class="dlg-foot"><span class="muted" id="dataMsg" style="font-size:13px;align-self:center"></span><button class="btn btn-primary" type="submit" id="dataSave">Save &amp; connect</button></div>
+  </form>
+</dialog>
+
 <dialog id="wishDlg" aria-labelledby="wdTitle" style="width:min(640px,calc(100vw - 32px))">
   <form id="wishForm" method="dialog">
     <div class="dlg-head"><h2 id="wdTitle">Add to Wishlist</h2><button class="btn" type="button" id="wdClose">Close</button></div>
@@ -1325,6 +1355,8 @@ body[data-bg="plain"] .ground{display:none}
 <script>
 const SHEET_ID = '1558jWeUc8gCzQuph6wOVyOocvTBhQf22UuCSXza8klc';
 const SERVER = 'Google Sheets';
+const RO_MSG = 'This copy is read-only. Use the live site: https://jcm-book-library.github.io/my-book-library/';
+const SB_EMPTY = "Supabase returned no books. If you've copied your Sheet already, sign out of Supabase and sign in again.";
 
 // Snapshot taken 9 Oct 2026 so the page is useful before (or without) the live connection.
 const SNAPSHOT = {
@@ -1689,15 +1721,11 @@ async function editEntry(e, change, btn) {
   if (!isLive()) { notice('Editing needs the live connection. ' + connectHint(), 'error'); return; }
   state.busy = true; btn.disabled = true; const old = btn.textContent; btn.textContent = 'Saving…';
   try {
-    const r = e._row;
-    const cur = (await readRange(`'Reading Log'!A${r}:G${r}`))[0] || [];
-    if (toDate(cur[0]) !== e.date || toNum(cur[1]) !== e.pages || String(cur[2] ?? '').trim() !== e.bookId) {
+    if (!(await DB().logEdit(e, change))) {
       notice('That entry changed in the sheet since the app loaded it. Reloading so you can try again.', 'error');
       state.editing = null; await refresh(); return;
     }
-    const put = (col, v) => state.mcp.callTool(SERVER, 'update_values', { spreadsheetId: SHEET_ID, range: `'Reading Log'!${col}${r}`, values: [[v]] }, { cache: false });
     if (change.del) {
-      await put('B', 0); await put('G', 'deleted');
       state.entries = state.entries.filter(x => x !== e);
       // Roll the book back if this entry is what moved it to its current page
       const b = state.books.find(x => x.id === e.bookId);
@@ -1707,8 +1735,6 @@ async function editEntry(e, change, btn) {
       }
       setStatus('live', 'Entry deleted');
     } else {
-      if (change.date !== e.date) await put('A', change.date);
-      if (change.pages !== e.pages) await put('B', change.pages);
       e.date = change.date; e.pages = change.pages;
       setStatus('live', 'Entry updated');
     }
@@ -2062,10 +2088,10 @@ function syncReadingBooks() {
 }
 
 /* ---------- connection ---------- */
-const isLive = () => !!state.mcp && !(state.google && !google_.valid());
-const connectHint = () => state.google ? 'Press Connect at the top to sign in to Google.' : 'Open this page in Claude to connect it.';
+const isLive = () => !!state.mcp && (state.sb ? sb.signedIn() : !(state.google && !google_.valid()));
+const connectHint = () => state.sb ? 'Press Connect at the top to sign in to Supabase.' : state.google ? 'Press Connect at the top to sign in to Google.' : 'Open this page in Claude to connect it.';
 function setStatus(kind, text) { $('status').dataset.state = kind; $('statusText').textContent = text; }
-function notice(text, kind) { const n = $('notice'); if (!text) { n.hidden = true; return; } n.textContent = text; n.dataset.kind = kind || ''; n.hidden = false; }
+function notice(text, kind) { const n = $('notice'); if (!text && state.readOnly) { text = RO_MSG; kind = ''; } if (!text) { n.hidden = true; return; } n.textContent = text; n.dataset.kind = kind || ''; n.hidden = false; }
 
 function explain(err) {
   switch (err && err.code) {
@@ -2076,28 +2102,26 @@ function explain(err) {
     case 'not_in_manifest': case 'consent_required': return 'This page isn\'t allowed to use Google Sheets yet. Allow it from the page\'s permissions, then press Refresh.';
     case 'blocked_by_policy': return 'Your organisation blocks Google Sheets for this page.';
     case 'server_unavailable': return 'Google Sheets didn\'t answer in time. Press Refresh to try again.';
-    case 'tool_error': return 'Google Sheets reported a problem: ' + (err.message || 'unknown error') + '.';
+    case 'tool_error': if (err.message === RO_MSG) return RO_MSG; return (state.sb ? 'Supabase' : 'Google Sheets') + ' reported a problem: ' + (err.message || 'unknown error') + '.';
+    case 'sb_signin': return 'Your Supabase sign-in has expired. Press Connect to sign in again.';
+    case 'api': return 'Supabase reported a problem: ' + (err.message || 'unknown error') + '. Press Refresh to try again.';
     case 'not_granted': case 'capability_disabled': case 'capability_removed': return 'This view can\'t reach your connectors. Open the page in Claude to connect your sheet.';
     default: return 'Couldn\'t reach your sheet' + (err && err.message ? ': ' + err.message : '') + '. Press Refresh to try again.';
   }
 }
 
-async function readRange(range) {
-  const res = await state.mcp.callTool(SERVER, 'get_values', { spreadsheetId: SHEET_ID, range }, { cache: false });
+async function readRange(range, spreadsheetId = SHEET_ID) {
+  const res = await state.mcp.callTool(SERVER, 'get_values', { spreadsheetId, range }, { cache: false });
   const p = res.payload;
   return (p && Array.isArray(p.values)) ? p.values : [];
 }
 
 async function refresh() {
   if (!state.mcp) return;
-  setStatus('loading', 'Loading from your sheet…');
+  setStatus('loading', state.sb ? 'Loading from Supabase…' : 'Loading from your sheet…');
   $('refreshBtn').disabled = true;
   try {
-    const [log, books, settings] = await Promise.all([
-      readRange("'Reading Log'!A1:H20000"),
-      readRange('Books!A1:AZ5000'),
-      readRange("'App Settings'!A1:B50")
-    ]);
+    const { log, books, settings } = await DB().loadCore();
     // Reading Log: header row, then one row per entry
     const lh = (log[0] || []).map(h => String(h).trim());
     const li = k => lh.indexOf(k);
@@ -2129,11 +2153,15 @@ async function refresh() {
     }
     state.live = true;
     notice('');
-    setStatus('live', 'Live from your sheet · ' + new Date().toLocaleTimeString('en-AU', { hour: 'numeric', minute: '2-digit' }));
+    if (state.sb && books.length <= 1) notice(SB_EMPTY, 'error');
+    setStatus('live', (state.sb ? 'Supabase' : 'Live from your sheet') + ' · ' + new Date().toLocaleTimeString('en-AU', { hour: 'numeric', minute: '2-digit' }));
+    if (state.sb) { rt.lastLoad = Date.now(); rt.start(); drawSb(); } else rt.stop();
+    $('refreshBtn').textContent = 'Refresh';
     disc.loaded = false; wl.snap = null;
     renderAll();
     loadDiscover().then(autoMoveWish).then(() => { if (state.lib.mode === 'wish' && !$('view-next').hidden) renderWish(); });
   } catch (err) {
+    if (state.sb && err && err.code === 'sb_signin') { sbSignedOut(); return; }
     setStatus('error', state.live ? 'Showing the last data loaded' : 'Showing the 9 Oct snapshot');
     notice(explain(err), 'error');
   } finally {
@@ -2144,18 +2172,7 @@ async function refresh() {
 // Update the book's currentPage in the Books tab: find its row by id right before writing,
 // and only ever move the page forward. Touches exactly one cell.
 async function updateBookPage(bookId, pageReached) {
-  const header = (await readRange('Books!A1:AZ1'))[0] || [];
-  const col = name => header.findIndex(h => String(h).trim() === name);
-  const idCol = col('id'), pageCol = col('currentPage');
-  if (idCol < 0 || pageCol < 0) throw { code: 'tool_error', message: 'Books tab is missing an id or currentPage column' };
-  const letter = i => { let s = ''; i++; while (i) { const r = (i - 1) % 26; s = String.fromCharCode(65 + r) + s; i = Math.floor((i - 1) / 26); } return s; };
-  const ids = await readRange(`Books!${letter(idCol)}1:${letter(idCol)}5000`);
-  const hits = ids.map((r, i) => String(r[0] ?? '').trim() === bookId ? i + 1 : 0).filter(Boolean);
-  if (hits.length !== 1) throw { code: 'tool_error', message: hits.length ? `ID ${bookId} appears ${hits.length} times in Books` : `ID ${bookId} not found in Books` };
-  const cell = `Books!${letter(pageCol)}${hits[0]}`;
-  const cur = toNum(((await readRange(cell))[0] || [])[0]);
-  if (pageReached <= cur) return;
-  await state.mcp.callTool(SERVER, 'update_values', { spreadsheetId: SHEET_ID, range: cell, values: [[pageReached]] }, { cache: false });
+  if (!(await DB().bookPage(bookId, pageReached))) return;
   const b = state.books.find(x => x.id === bookId); if (b) b.currentPage = pageReached;
   const ab = state.allBooks.find(x => x.id === bookId); if (ab) ab.currentPage = String(pageReached);
 }
@@ -2197,10 +2214,8 @@ async function appendLogRow({ pages, bookId = '', title = '', pageReached = '', 
   const now = new Date();
   const loggedAt = `${iso(now)} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
   const row = [logDay(), pages, bookId ? "'" + bookId : '', title ? "'" + title : '', pageReached || '', loggedAt, 'app', minutes || ''];
-  const res = await state.mcp.callTool(SERVER, 'append_values', { spreadsheetId: SHEET_ID, range: "'Reading Log'!A1", values: [row] }, { cache: false });
-  const p = (res && res.payload) || {};
-  const m = String((p.updates && p.updates.updatedRange) || p.updatedRange || '').match(/![A-Z]+(\d+)/);
-  state.entries.push({ date: row[0], pages, bookId, title, pageReached: pageReached || null, source: 'app', loggedAt, minutes: minutes || 0, _row: m ? Number(m[1]) : null });
+  const logRow = await DB().logAdd(row);
+  state.entries.push({ date: row[0], pages, bookId, title, pageReached: pageReached || null, source: 'app', loggedAt, minutes: minutes || 0, _row: logRow });
 }
 
 /* ---------- Books sheet writes (changed cells only, row found by id just before writing) ---------- */
@@ -2236,7 +2251,7 @@ async function findRowById(tab, id, o) {
 async function writeCells(tab, header, row, fields, cellFn, skip = []) {
   for (const [k, v] of Object.entries(fields)) {
     const c = header.indexOf(k); if (c < 0 || k === 'id' || skip.includes(k)) continue;
-    await state.mcp.callTool(SERVER, 'update_values', { spreadsheetId: SHEET_ID, range: `${tabRef(tab)}!${colLetter(c)}${row}`, values: [[cellFn(k, v)]] }, { cache: false });
+    await sheetPut(`${tabRef(tab)}!${colLetter(c)}${row}`, [[cellFn(k, v)]]);
   }
 }
 // Add rows below the last used row with an explicit range (not append_values, which fills rows a clear left behind).
@@ -2244,18 +2259,612 @@ async function writeCells(tab, header, row, fields, cellFn, skip = []) {
 async function addRowsBelowLast(tab, header, values, used) {
   let last = used.length; while (last && !used[last - 1].some(v => String(v ?? '').trim())) last--;
   const r0 = last + 2;
-  await state.mcp.callTool(SERVER, 'update_values', { spreadsheetId: SHEET_ID, range: `${tabRef(tab)}!A${r0}:${colLetter(header.length - 1)}${r0 + values.length - 1}`, values }, { cache: false });
+  await sheetPut(`${tabRef(tab)}!A${r0}:${colLetter(header.length - 1)}${r0 + values.length - 1}`, values);
   return r0;
 }
-const findBookRow = id => findRowById('Books', id, { header: () => readHeader('Books!A1:AZ1'), last: 5000, noCol: 'Books tab has no id column',
-  dup: (id, n) => `ID ${id} appears ${n} times in Books`, gone: id => `ID ${id} isn't in Books any more` });
+/* ---------- data layer ---------- */
+// Every Google Sheets call lives in sheetDb, as named operations on records and keys. The rest of the app
+// reaches it through DB(), so another backend with the same method names can be swapped in later.
+// Reads return raw 2-D arrays (header row first); the sheet details (ranges, rows, formulas) stay in here.
+const wishRows = new Map(), rlRows = new Map();
+const rowFromResult = res => {
+  const p = (res && res.payload) || {};
+  const m = String((p.updates && p.updates.updatedRange) || p.updatedRange || '').match(/![A-Z]+(\d+)/);
+  return m ? Number(m[1]) : null;
+};
+const wishCell = (k, v) => !v ? (k === 'gift' ? 'FALSE' : '') : k === 'gift' ? (v === 'TRUE' ? 'TRUE' : 'FALSE') : (k === 'release' || k === 'checkedOn') && /^\d{4}-\d\d-\d\d$/.test(v) ? v : "'" + v;
+const listCell = (k, v) => !String(v ?? '').trim() ? '' : k === 'order' ? toNum(v) : "'" + String(v).trim();
+const sheetPut = (range, values) => state.mcp.callTool(SERVER, 'update_values', { spreadsheetId: SHEET_ID, range, values }, { cache: false });
+const sheetAppend = (range, values, spreadsheetId = SHEET_ID) => state.mcp.callTool(SERVER, 'append_values', { spreadsheetId, range, values }, { cache: false });
+const TAB_RANGES = {
+  'Wishlist': 'Wishlist!A1:Z3000',
+  'Series Tracker': "'Series Tracker'!A1:I500",
+  'Reading Lists': "'Reading Lists'!A1:G2000",
+  'Contents': "'Contents'!A1:D5000",
+  'Wishlist archive header': "'Wishlist archive'!A1:Z1",
+  'Books header': 'Books!A1:AZ1'
+};
+const sheetDb = {
+  // ----- reads -----
+  async loadCore() {
+    const [log, books, settings] = await Promise.all([
+      readRange("'Reading Log'!A1:H20000"),
+      readRange('Books!A1:AZ5000'),
+      readRange("'App Settings'!A1:B50")
+    ]);
+    return { log, books, settings };
+  },
+  readTab(name) {
+    if (name === 'Quotes') return readRange('QUOTES!A1:G3000', QUOTES_ID);
+    if (!TAB_RANGES[name]) throw { code: 'tool_error', message: 'Unknown tab ' + name };
+    return readRange(TAB_RANGES[name]);
+  },
+  // ----- Reading Log -----
+  // Returns the new row number (or null if the sheet didn't say).
+  async logAdd(row) {
+    return rowFromResult(await sheetAppend("'Reading Log'!A1", [row]));
+  },
+  // The row number is checked against the sheet right before writing. Returns false (and writes nothing) if the row has changed.
+  async logEdit(e, change) {
+    const r = e._row;
+    const cur = (await readRange(`'Reading Log'!A${r}:G${r}`))[0] || [];
+    if (toDate(cur[0]) !== e.date || toNum(cur[1]) !== e.pages || String(cur[2] ?? '').trim() !== e.bookId) return false;
+    const put = (col, v) => sheetPut(`'Reading Log'!${col}${r}`, [[v]]);
+    if (change.del) { await put('B', 0); await put('G', 'deleted'); }
+    else {
+      if (change.date !== e.date) await put('A', change.date);
+      if (change.pages !== e.pages) await put('B', change.pages);
+    }
+    return true;
+  },
+  // ----- Books -----
+  // Changed cells only; the row is found by id just before writing.
+  async bookUpdate(id, fields) {
+    const { header, row } = await findRowById('Books', id, { header: () => readHeader('Books!A1:AZ1'), last: 5000, noCol: 'Books tab has no id column',
+      dup: (id, n) => `ID ${id} appears ${n} times in Books`, gone: id => `ID ${id} isn't in Books any more` });
+    await writeCells('Books', header, row, fields, cellValue, FORMULA_FIELDS);
+  },
+  // Move a book's currentPage forward only. Returns true if a cell was written.
+  async bookPage(bookId, pageReached) {
+    const header = (await readRange('Books!A1:AZ1'))[0] || [];
+    const col = name => header.findIndex(h => String(h).trim() === name);
+    const idCol = col('id'), pageCol = col('currentPage');
+    if (idCol < 0 || pageCol < 0) throw { code: 'tool_error', message: 'Books tab is missing an id or currentPage column' };
+    const ids = await readRange(`Books!${colLetter(idCol)}1:${colLetter(idCol)}5000`);
+    const hits = ids.map((r, i) => String(r[0] ?? '').trim() === bookId ? i + 1 : 0).filter(Boolean);
+    if (hits.length !== 1) throw { code: 'tool_error', message: hits.length ? `ID ${bookId} appears ${hits.length} times in Books` : `ID ${bookId} not found in Books` };
+    const cell = `Books!${colLetter(pageCol)}${hits[0]}`;
+    const cur = toNum(((await readRange(cell))[0] || [])[0]);
+    if (pageReached <= cur) return false;
+    await sheetPut(cell, [[pageReached]]);
+    return true;
+  },
+  // One new book with the next id (highest + 4) and the remain / % formulas. Returns { id, header }.
+  async bookAdd(fields) {
+    const header = ((await readRange('Books!A1:AZ1'))[0] || []).map(h => String(h).trim());
+    const ids = (await readRange(`Books!${colLetter(header.indexOf('id'))}2:${colLetter(header.indexOf('id'))}5000`)).map(r => toNum(r[0]));
+    const id = String(Math.max(0, ...ids) + 4);
+    const row = header.map(h => h === 'id' ? "'" + id : FORMULA_FIELDS.includes(h) ? '' : cellValue(h, fields[h]));
+    const m = rowFromResult(await sheetAppend('Books!A1', [row]));
+    // Put the remain / % formulas on the new row, matching the rest of the sheet
+    const ci = k => header.indexOf(k);
+    if (m && ci('remain') >= 0 && ci('%') >= 0 && ci('pages') >= 0 && ci('currentPage') >= 0) {
+      const r = m, P = colLetter(ci('pages')), C = colLetter(ci('currentPage'));
+      await sheetPut(`Books!${colLetter(ci('remain'))}${r}`, [[`=IF(N(${P}${r})>0,${P}${r}-${C}${r},"")`]]);
+      await sheetPut(`Books!${colLetter(ci('%'))}${r}`, [[`=IF(N(${P}${r})>0,${C}${r}/${P}${r}*100,"")`]]);
+    }
+    return { id, header };
+  },
+  // Several new books in one append. Returns { header, ids, r0 } (r0 = first new row, or null).
+  async booksAddMany(list) {
+    const header = ((await readRange('Books!A1:AZ1'))[0] || []).map(h => String(h).trim());
+    const ic = header.indexOf('id');
+    const used = (await readRange(`Books!${colLetter(ic)}2:${colLetter(ic)}5000`)).map(r => toNum(r[0]));
+    let next = Math.max(0, ...used);
+    const books = list.map(f => ({ ...f, id: String(next += 4) }));
+    const values = books.map(f => header.map(h => h === 'id' ? "'" + f.id : FORMULA_FIELDS.includes(h) ? '' : cellValue(h, f[h])));
+    const r0 = rowFromResult(await sheetAppend('Books!A1', values)), ci = k => header.indexOf(k);
+    if (r0 && ci('remain') >= 0 && ci('%') >= 0) {
+      const P = colLetter(ci('pages')), C = colLetter(ci('currentPage'));
+      for (const [k, f] of [['remain', r => `=IF(N(${P}${r})>0,${P}${r}-${C}${r},"")`], ['%', r => `=IF(N(${P}${r})>0,${C}${r}/${P}${r}*100,"")`]]) {
+        const L = colLetter(ci(k));
+        await sheetPut(`Books!${L}${r0}:${L}${r0 + books.length - 1}`, books.map((_, i) => [f(r0 + i)]));
+      }
+    }
+    return { header, ids: books.map(b => b.id), r0 };
+  },
+  // ----- Ratings, Contents, Quotes, App Settings -----
+  async ratingAdd(row) { await sheetAppend("'Ratings'!A1", [row]); },
+  async contentsAdd(bookId, list, stamp) {
+    await sheetAppend("'Contents'!A1", list.map(x => ["'" + bookId, stamp, "'" + x.story, x.start]));
+  },
+  // Into the separate Quotes spreadsheet. Returns the new row number (or null).
+  async quoteAdd(row) { return rowFromResult(await sheetAppend('QUOTES!A1', [row], QUOTES_ID)); },
+  // App Settings is key | value: update the key's row, or add it
+  async settingSave(key, value) {
+    const rows = await readRange("'App Settings'!A1:B50");
+    const i = rows.findIndex(r => String(r[0] ?? '').trim() === key);
+    if (i >= 0) await sheetPut(`'App Settings'!B${i + 1}`, [[value]]);
+    else await sheetAppend("'App Settings'!A1", [[key, value]]);
+  },
+  // ----- Wishlist (knownHeader: the header the caller already holds, saves a read) -----
+  async wishUpdate(id, fields, knownHeader) {
+    if (!id) throw { code: 'tool_error', message: 'this Wishlist row has no id yet' };
+    const { header, row } = await sheetDb._wishRow(id, knownHeader);
+    await writeCells('Wishlist', header, row, fields, wishCell);
+  },
+  // Blank every cell (the sheet keeps an empty row, the app ignores it)
+  async wishClear(id, knownHeader) {
+    const { header, row } = await sheetDb._wishRow(id, knownHeader);
+    await sheetPut(`Wishlist!A${row}:${colLetter(header.length - 1)}${row}`, [header.map(() => '')]);
+    wishRows.delete(id);
+  },
+  _wishRow: (id, knownHeader) => findRowById('Wishlist', id, { cache: wishRows, cacheAll: true, last: 3000, noCol: 'Wishlist has no id column',
+    header: async () => knownHeader && knownHeader.includes('id') ? knownHeader : readHeader('Wishlist!A1:Z1'),
+    dup: (id, n) => `Wishlist id ${id} appears ${n} times`, gone: id => `Wishlist id ${id} isn't there any more` }),
+  // New rows below the table with the next WL id (otherIds: ids the caller already holds). Returns { header, rows }.
+  async wishAdd(items, otherIds = []) {
+    const header = ((await readRange('Wishlist!A1:Z1'))[0] || []).map(h => String(h).trim());
+    const c = header.indexOf('id');
+    const used = await readRange(`Wishlist!A2:${colLetter(Math.max(c, header.indexOf('title')))}3000`);
+    const ids = used.map(r => Number(String(r[c] || '').replace(/\D/g, '')) || 0);
+    let next = Math.max(0, ...ids, ...otherIds.map(id => Number(String(id).replace(/\D/g, '')) || 0));
+    const rows = items.map(f => ({ stage: 'Inbox', gift: 'FALSE', ...f, id: 'WL' + String(++next).padStart(4, '0'), added: today() }));
+    const values = rows.map(f => header.map(h => h === 'id' ? f.id : h === 'added' ? f.added : wishCell(h, f[h] || '')));
+    await addRowsBelowLast('Wishlist', header, values, used);
+    return { header, rows };
+  },
+  async archiveAdd(rows) { await sheetAppend("'Wishlist archive'!A1", rows); },
+  // ----- Series Tracker -----
+  // Update the series matching matchName (the old name when editing), or add it below the last used row.
+  // Returns { row, isNew }.
+  async seriesSave(f, matchName) {
+    const v = await readRange("'Series Tracker'!A1:I500");
+    const header = (v[0] || []).map(h => String(h).trim());
+    const cell = (k, x) => !x ? '' : k === 'released' ? x : "'" + x;
+    const key = normQ(matchName);
+    const hits = v.map((r, i) => i && normQ(r[header.indexOf('series')]) === key ? i + 1 : 0).filter(Boolean);
+    if (hits.length > 1) throw { code: 'tool_error', message: `“${f.series}” is in the Series Tracker ${hits.length} times` };
+    if (hits.length) {
+      const row = hits[0], cur = v[row - 1];
+      const changed = Object.fromEntries(SD_FIELDS.filter(k => { const c = header.indexOf(k); return c >= 0 && String(cur[c] ?? '').trim() !== f[k]; }).map(k => [k, f[k]]));
+      await writeCells('Series Tracker', header, row, changed, (k, x) => cell(k, x));
+      return { row, isNew: false };
+    }
+    // New series go below the last used row (not append_values, which can fill a row the prune cleared)
+    const row = await addRowsBelowLast('Series Tracker', header, [header.map(h => cell(h, f[h]))], v.slice(1));
+    return { row, isNew: true };
+  },
+  // Blank the row for a series name. Returns false (and writes nothing) unless exactly one row matches.
+  async seriesClear(name) {
+    const v = await readRange("'Series Tracker'!A1:I500"), header = (v[0] || []).map(h => String(h).trim()), c = header.indexOf('series');
+    const hits = v.map((r, i) => i && normQ(r[c]) === normQ(name) ? i + 1 : 0).filter(Boolean);
+    if (hits.length !== 1) return false;
+    await sheetPut(`'Series Tracker'!A${hits[0]}:${colLetter(header.length - 1)}${hits[0]}`, [header.map(() => '')]);
+    return true;
+  },
+  // ----- Reading Lists (every item has an id, RL0001…) -----
+  _listRow: id => findRowById('Reading Lists', id, { cache: rlRows, last: 2000, noCol: 'Reading Lists has no id column', header: () => readHeader("'Reading Lists'!A1:Z1"),
+    dup: (id, n) => `Reading list id ${id} appears ${n} times`, gone: id => `Reading list id ${id} isn't there any more` }),
+  async listUpdate(id, fields) {
+    const { header, row } = await sheetDb._listRow(id);
+    await writeCells('Reading Lists', header, row, fields, listCell);
+  },
+  // otherIds: ids the caller already holds. Returns { header, id, row }.
+  async listAdd(f, otherIds = []) {
+    const header = await readHeader("'Reading Lists'!A1:Z1"), c = header.indexOf('id');
+    if (c < 0) throw { code: 'tool_error', message: 'Reading Lists has no id column' };
+    const used = await readRange(`'Reading Lists'!A2:${colLetter(header.length - 1)}2000`);
+    const ids = used.map(r => Number(String(r[c] || '').replace(/\D/g, '')) || 0);
+    const id = 'RL' + String(Math.max(0, ...ids, ...otherIds.map(x => Number(String(x).replace(/\D/g, '')) || 0)) + 1).padStart(4, '0');
+    const row = header.map(h => h === 'id' ? id : listCell(h, f[h]));
+    const r0 = await addRowsBelowLast('Reading Lists', header, [row], used);
+    rlRows.set(id, r0);
+    return { header, id, row: r0 };
+  },
+  async listClear(id) {
+    const { header, row } = await sheetDb._listRow(id);
+    await sheetPut(`'Reading Lists'!A${row}:${colLetter(header.length - 1)}${row}`, [header.map(() => '')]);
+    rlRows.delete(id);
+  }
+};
+/* Read-only copy for the claude.ai artifact: reads pass through, every write throws. The test harness (which drives the
+   app through a stubbed window.claude) sets window.__TEST_WRITES__ so it still gets its writes. */
+const ARTIFACT_READ_ONLY = true;
+const roDb = Object.fromEntries(Object.keys(sheetDb).filter(k => k[0] !== '_').map(k => [k, ['loadCore', 'readTab'].includes(k)
+  ? (...a) => sheetDb[k](...a)
+  : async () => { throw { code: 'tool_error', message: RO_MSG }; }]));
+const DB = () => state.readOnly ? roDb : state.sb ? sbDb : sheetDb;
+
+/* ---------- Supabase sign-in (shared by every jcm-book-library app) ----------
+   The publishable key is meant to be public: Row Level Security only lets the signed-in owner see their own rows.
+   All the apps live on jcm-book-library.github.io, so they share browser storage: one session under one key
+   (jcm-sb-session) signs in every app on this device. Supabase replaces the refresh token on each refresh, so
+   two apps refreshing at once could sign each other out: refreshes are serialised across tabs and apps with a
+   Web Lock, and the stored session is re-read inside the lock (another app may already have refreshed it).
+   Signing out here signs out every app on this device. */
+const SB = { url: 'https://apeflgdzclpxiktaxyfk.supabase.co', key: 'sb_publishable_AHVRXW-Zi3lLaHilBab1Sg_fPzPvWcg', schema: 'books', sesKey: 'jcm-sb-session', lock: 'jcm-sb-refresh' };
+const useSb = () => google_.cfg().backend === 'supabase';
+const jwtClaims = t => { try { return JSON.parse(atob(String(t).split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))); } catch (e) { return {}; } };
+const withLock = fn => (typeof navigator !== 'undefined' && navigator.locks && navigator.locks.request) ? navigator.locks.request(SB.lock, fn) : fn();
+const sb = {
+  ses() { try { return JSON.parse(localStorage.getItem(SB.sesKey) || 'null'); } catch (e) { return null; } },
+  keep(b) { const s = { at: b.access_token, rt: b.refresh_token, exp: Date.now() + (Number(b.expires_in || 3600) - 60) * 1000, email: jwtClaims(b.access_token).email || '' };
+    try { localStorage.setItem(SB.sesKey, JSON.stringify(s)); } catch (e) {} return s; },
+  forget() { try { localStorage.removeItem(SB.sesKey); } catch (e) {} },
+  signedIn() { const s = this.ses(); return !!(s && s.rt); },
+  email() { const s = this.ses(); return (s && s.email) || ''; },
+  async post(path, body, token) {
+    const h = { apikey: SB.key, 'Content-Type': 'application/json' }; if (token) h.Authorization = 'Bearer ' + token;
+    const r = await fetch(`${SB.url}/auth/v1/${path}`, { method: 'POST', headers: h, body: JSON.stringify(body) });
+    return { r, b: await r.json().catch(() => ({})) };
+  },
+  /* Email link: for a laptop browser. Phone home-screen apps keep separate storage, so they use the password. */
+  async emailLink(email) {
+    const { r, b } = await this.post(`otp?redirect_to=${encodeURIComponent(location.origin + location.pathname)}`, { email, create_user: false });
+    if (r.ok) return;
+    throw { message: r.status === 429 ? 'too many emails for now. Wait an hour, or use the last link you were sent.' : (b.msg || b.message || b.error_description || 'HTTP ' + r.status) };
+  },
+  async signInPassword(email, password) {
+    const { r, b } = await this.post('token?grant_type=password', { email, password });
+    if (!r.ok || !b.access_token) throw { message: r.status === 429 ? 'too many tries. Wait a few minutes and try again.' : r.status >= 500 ? 'Supabase had a problem (HTTP ' + r.status + '). Try again shortly.' : 'that email and password didn\'t match. If you haven\'t set a password yet, sign in with the email link on your laptop and set one first.' };
+    return this.keep(b);
+  },
+  async setPassword(password) {
+    const t = await this.token();
+    const r = await fetch(`${SB.url}/auth/v1/user`, { method: 'PUT', headers: { apikey: SB.key, Authorization: 'Bearer ' + t, 'Content-Type': 'application/json' }, body: JSON.stringify({ password }) });
+    const b = await r.json().catch(() => ({}));
+    if (!r.ok) throw { message: b.msg || b.message || b.error_description || 'HTTP ' + r.status };
+  },
+  async signOut() { const s = this.ses(); this.forget();
+    if (s) try { await fetch(`${SB.url}/auth/v1/logout?scope=local`, { method: 'POST', headers: { apikey: SB.key, Authorization: 'Bearer ' + s.at } }); } catch (e) {} },
+  /* Back from an emailed link: Supabase puts the session (or an error) in the address after #. */
+  fromRedirect() {
+    const h = new URLSearchParams(location.hash.slice(1));
+    if (!h.has('access_token') && !h.has('error_description')) return null;
+    history.replaceState(null, '', location.pathname + location.search);
+    if (h.get('access_token')) { const s = this.keep(Object.fromEntries(h)); return { ok: true, email: s.email }; }
+    return { ok: false, message: h.get('error_description').replace(/\+/g, ' ') };
+  },
+  /* Access tokens last an hour; the refresh token keeps you signed in. One refresh at a time, across every app. */
+  async token(force) {
+    const s0 = this.ses();
+    if (!s0 || !s0.rt) throw { code: 'sb_signin' };
+    if (!force && s0.exp > Date.now()) return s0.at;
+    if (!this._ref) this._ref = withLock(async () => {
+      const s = this.ses();                                  // re-read: another app may have refreshed while we waited
+      if (!s || !s.rt) throw { code: 'sb_signin' };
+      if (s.at !== s0.at && s.exp > Date.now()) return s.at;
+      const { r, b } = await this.post('token?grant_type=refresh_token', { refresh_token: s.rt });
+      if (r.ok && b.access_token) return this.keep(b).at;
+      if (r.status === 400 || r.status === 401 || r.status === 403) {
+        const now = this.ses();                              // refreshed elsewhere in the meantime: keep that one
+        if (now && now.rt && now.rt !== s.rt && now.exp > Date.now()) return now.at;
+        this.forget(); throw { code: 'sb_signin' };
+      }
+      throw { code: 'api', message: b.msg || b.error_description || 'Supabase sign-in HTTP ' + r.status };
+    }).finally(() => { this._ref = null; });
+    return this._ref;
+  },
+  /* PostgREST call in the books schema. opts: method, body, prefer, schema. */
+  async api(path, opts = {}, retried) {
+    const t = await this.token(), sc = opts.schema || SB.schema;
+    const o = { method: opts.method || 'GET', headers: { apikey: SB.key, Authorization: 'Bearer ' + t, 'Accept-Profile': sc, 'Content-Profile': sc } };
+    if (opts.prefer) o.headers.Prefer = opts.prefer;
+    if (opts.body) { o.headers['Content-Type'] = 'application/json'; o.body = JSON.stringify(opts.body); }
+    const res = await fetch(`${SB.url}/rest/v1/${path}`, o);
+    if (res.status === 401 && !retried) { await this.token(true); return this.api(path, opts, true); }
+    const txt = await res.text(), body = txt ? (() => { try { return JSON.parse(txt); } catch (e) { return txt; } })() : null;
+    if (!res.ok) throw { code: 'api', status: res.status, message: (body && (body.message || body.msg)) || 'Supabase HTTP ' + res.status };
+    return body;
+  }
+};
+/* ---------- Supabase tables ----------
+   SBT: Sheet tab -> [table, [[sheetHeader, column, type], ...]] in the Sheet's header order.
+   Types: text, num, int, date; bool is the Books spelling ('Yes' / ''); tf is the Wishlist spelling ('TRUE' / 'FALSE');
+   calc columns (Books remain and %) are not stored: they are worked out when a row is read. */
+const sbCols = s => s.trim().split(/\s+/).map(x => x.split(':'));
+const SBT = {
+  'Books': ['books', sbCols(`title:title:text author:author:text status:status:text rating:rating:num favourite:favourite:bool cover:cover:text
+    currentPage:current_page:num pages:pages:num remain::calc %::calc startDate:start_date:date finishDate:finish_date:date series:series:text
+    seriesNum:series_num:num type:type:text format:format:text publisher:publisher:text genre:genre:text theme1:theme1:text theme2:theme2:text
+    theme3:theme3:text setting:setting:text year:year:int awards:awards:text tier:tier:text upNextOrder:up_next_order:num why:why:text
+    triaged:triaged:date added:added:date copies:copies:text isbn:isbn:text loaned:loaned:text loanee:loanee:text synopsis:synopsis:text
+    notes:notes:text id:id:int`)],
+  'Reading Log': ['reading_log', sbCols('date:date:date pages:pages:num bookId:book_id:int title:title:text pageReached:page_reached:num loggedAt:logged_at:text source:source:text minutes:minutes:num')],
+  'App Settings': ['settings', sbCols('setting:key:text value:value:text note:note:text')],
+  'Ratings': ['ratings', sbCols('date:date:date bookId:book_id:int title:title:text category:category:text gut:gut:num criteria:criteria:text standout:standout:text fatalFlaw:fatal_flaw:text suggested:suggested:num final:final:num')],
+  'Contents': ['contents', sbCols('bookId:book_id:int savedAt:saved_at:text story:story:text startPage:start_page:num')],
+  'Wishlist': ['wishlist', sbCols('id:id:text added:added:date title:title:text author:author:text series:series:text number:number:text type:type:text format:format:text publisher:publisher:text stage:stage:text waiting:waiting:text wantAs:want_as:text checked:checked:text checkedOn:checked_on:date release:release:text price:price:text link:link:text seenIn:seen_in:text interest:interest:text gift:gift:tf notes:notes:text bookId:book_id:int')],
+  'Series Tracker': ['series_tracker', sbCols('series:series:text author:author:text publisher:publisher:text kind:kind:text status:status:text released:released:num soldAs:sold_as:text link:link:text notes:notes:text')],
+  'Reading Lists': ['reading_lists', sbCols('list:list:text order:sort_order:num title:title:text author:author:text notes:notes:text id:id:text bookId:book_id:int')],
+  'Wishlist archive': ['wishlist_archive', sbCols('Title:title:text Author:author:text Available:available:text Status:status:text Type:type:text Format:format:text ETA:eta:text Cost:cost:text Pages:pages:num Source:source:text Reading_List:reading_list:text Notes:notes:text id:id:text Series:series:text Link:link:text bookId:book_id:int')],
+  'Quotes': ['quotes', sbCols('quote:quote:text from:from_title:text character:character:text by:author:text bookId:book_id:int page:page:num added:added:date')]
+};
+SBT['Wishlist archive'][1].forEach(c => { c[0] = c[0].replace('_', ' '); });
+/* Database value -> the string the Sheet would show. Numbers have no thousands separators; dates are yyyy-mm-dd; null is ''. */
+function sbToCell(type, v) {
+  if (v == null) return type === 'tf' ? 'FALSE' : '';
+  switch (type) {
+    case 'num': case 'int': { const n = Number(v); return Number.isFinite(n) ? String(n) : ''; }
+    case 'date': return String(v).slice(0, 10);
+    case 'bool': return v ? 'Yes' : '';
+    case 'tf': return v ? 'TRUE' : 'FALSE';
+    default: return String(v);
+  }
+}
+/* A value as the app writes it to the Sheet -> database value. Strips the leading ' that keeps text as text;
+   numbers may carry commas (1,116); '' is null for num, int and date; booleans follow the column's Sheet spelling. */
+function cellToSb(type, v) {
+  let s = v == null ? '' : String(v);
+  if (s[0] === "'") s = s.slice(1);
+  switch (type) {
+    case 'num': case 'int': {
+      s = s.replace(/[,\s$£€]/g, ''); if (s === '') return null;
+      const n = Number(s); if (!Number.isFinite(n)) return null;
+      return type === 'int' ? Math.trunc(n) : n;
+    }
+    case 'date': { const m = s.trim().match(/^\d{4}-\d{2}-\d{2}/); return m ? m[0] : null; }
+    case 'bool': case 'tf': { const t = s.trim(); return t !== '' && !/^(no|false|0|n)$/i.test(t); }
+    default: return s;
+  }
+}
+
+/* ---------- sbDb: the same operations as sheetDb, done the database way ---------- */
+const sbDef = (tab, header) => SBT[tab][1].find(c => c[0] === header);
+const sbHeader = tab => SBT[tab][1].map(c => c[0]);
+const sbTable = tab => SBT[tab][0];
+const sbEnc = encodeURIComponent;
+// A database row -> the Sheet-style array (header order); Books gets remain and % worked out
+function sbRecToRow(tab, r) {
+  return SBT[tab][1].map(([h, c, t]) => {
+    if (t !== 'calc') return sbToCell(t, r[c]);
+    const pages = Number(r.pages) || 0, cur = Number(r.current_page) || 0;
+    return pages > 0 ? (h === 'remain' ? String(pages - cur) : String(Math.round(cur / pages * 100))) : '';
+  });
+}
+// A Sheet-style array (header order, as the app writes it) -> a database object
+function sbRowToObj(tab, row) {
+  const o = {}; SBT[tab][1].forEach(([, c, t], i) => { if (t !== 'calc') o[c] = cellToSb(t, row[i]); }); return o;
+}
+// Fields by Sheet header name (only those given, never calc) -> a database object. cellFn is the Sheet version's cell formatter.
+function sbFieldsToObj(tab, fields, cellFn, skip = []) {
+  const o = {};
+  for (const [k, v] of Object.entries(fields)) {
+    const d = sbDef(tab, k); if (!d || d[2] === 'calc' || skip.includes(k)) continue;
+    o[d[1]] = cellToSb(d[2], cellFn ? cellFn(k, v) : v);
+  }
+  return o;
+}
+// Every stored column, so a bulk insert never sends NULL where the table has a default
+function sbFullObj(tab, fields, cellFn) {
+  const o = {};
+  for (const [h, c, t] of SBT[tab][1]) if (t !== 'calc') o[c] = cellToSb(t, cellFn ? cellFn(h, fields[h] ?? '') : (fields[h] ?? ''));
+  return o;
+}
+async function sbReadRecs(tab, extra = '') {
+  const recs = [], page = 1000;
+  for (let from = 0; ; from += page) {
+    const got = await sb.api(`${sbTable(tab)}?select=*${extra}&order=row_id&limit=${page}&offset=${from}`);
+    recs.push(...got);
+    if (got.length < page) break;
+  }
+  return recs;
+}
+async function sbAllIds(table) {
+  const out = [], page = 1000;
+  for (let from = 0; ; from += page) { const got = await sb.api(`${table}?select=id&order=row_id&limit=${page}&offset=${from}`); out.push(...got); if (got.length < page) break; }
+  return out;
+}
+const sbWrite = async (path, opts) => { rt.lastSave = Date.now(); try { return await sb.api(path, opts); } finally { rt.lastSave = Date.now(); } };
+const sbNum = id => Number(String(id || '').replace(/\D/g, '')) || 0;
+const sbDb = {
+  _ids: {},                       // tab -> row_ids in Sheet row order (row n is _ids[tab][n - 2]); deleted rows leave a gap, like a cleared Sheet row
+  _no(tab, rid) { const a = this._ids[tab] || (this._ids[tab] = []); let i = a.indexOf(rid); if (i < 0) { a.push(rid); i = a.length - 1; } return i + 2; },
+  _rid(tab, n) { return (this._ids[tab] || [])[n - 2] || null; },
+  _drop(tab, rid) { const a = this._ids[tab] || [], i = a.indexOf(rid); if (i >= 0) a[i] = null; },
+  async _read(tab) {
+    const recs = await sbReadRecs(tab);
+    this._ids[tab] = recs.map(r => r.row_id);
+    return [sbHeader(tab), ...recs.map(r => sbRecToRow(tab, r))];
+  },
+  // ----- reads -----
+  async loadCore() {
+    const [log, books, settings] = await Promise.all([this._read('Reading Log'), this._read('Books'), this._read('App Settings')]);
+    return { log, books, settings };
+  },
+  async readTab(name) {
+    const m = String(name).match(/^(.*) header$/);
+    if (m && SBT[m[1]]) return [sbHeader(m[1])];
+    if (!SBT[name]) throw { code: 'tool_error', message: 'Unknown tab ' + name };
+    return this._read(name);
+  },
+  // ----- Reading Log -----
+  async logAdd(row) {
+    const got = await sbWrite(sbTable('Reading Log'), { method: 'POST', body: sbRowToObj('Reading Log', row), prefer: 'return=representation' });
+    return this._no('Reading Log', got[0].row_id);
+  },
+  // The row is re-read by row_id right before writing. Returns false (and writes nothing) if the entry has changed.
+  async logEdit(e, change) {
+    const rid = this._rid('Reading Log', e._row); if (!rid) return false;
+    const cur = (await sb.api(`reading_log?row_id=eq.${rid}&select=*`))[0]; if (!cur) return false;
+    if (toDate(cur.date) !== e.date || toNum(cur.pages) !== e.pages || String(cur.book_id ?? '').trim() !== e.bookId) return false;
+    let body;
+    if (change.del) body = { pages: 0, source: 'deleted' };
+    else { body = {}; if (change.date !== e.date) body.date = change.date; if (change.pages !== e.pages) body.pages = change.pages; }
+    if (!Object.keys(body).length) return true;
+    return (await sbWrite(`reading_log?row_id=eq.${rid}`, { method: 'PATCH', body, prefer: 'return=representation' })).length === 1;
+  },
+  // ----- Books -----
+  async bookUpdate(id, fields) {
+    const body = sbFieldsToObj('Books', fields, cellValue, ['id']);
+    if (!Object.keys(body).length) return;
+    const got = await sbWrite(`books?id=eq.${sbEnc(id)}`, { method: 'PATCH', body, prefer: 'return=representation' });
+    if (got.length !== 1) throw { code: 'tool_error', message: got.length ? `ID ${id} appears ${got.length} times in Books` : `ID ${id} isn't in Books any more` };
+  },
+  // Move a book's currentPage forward only. Returns true if it was written.
+  async bookPage(bookId, pageReached) {
+    const got = await sb.api(`books?id=eq.${sbEnc(bookId)}&select=row_id,current_page`);
+    if (got.length !== 1) throw { code: 'tool_error', message: got.length ? `ID ${bookId} appears ${got.length} times in Books` : `ID ${bookId} not found in Books` };
+    if (pageReached <= toNum(got[0].current_page)) return false;
+    await sbWrite(`books?row_id=eq.${got[0].row_id}`, { method: 'PATCH', body: { current_page: pageReached }, prefer: 'return=minimal' });
+    return true;
+  },
+  // New ids are the highest id + 4, read just before inserting; one retry if another device took the id first.
+  async _insertBooks(list) {
+    for (let attempt = 0; ; attempt++) {
+      const top = await sb.api('books?select=id&order=id.desc&limit=1'), max = top && top[0] ? Number(top[0].id) || 0 : 0;
+      const ids = list.map((_, i) => max + 4 * (i + 1));
+      try { await sbWrite('books', { method: 'POST', body: list.map((f, i) => ({ ...sbFullObj('Books', f, cellValue), id: ids[i] })), prefer: 'return=minimal' }); return ids; }
+      catch (err) { if (!(err && err.status === 409 && attempt === 0)) throw err; }
+    }
+  },
+  async bookAdd(fields) {
+    const [id] = await this._insertBooks([fields]);
+    return { id: String(id), header: sbHeader('Books') };
+  },
+  async booksAddMany(list) {
+    const ids = await this._insertBooks(list);
+    return { header: sbHeader('Books'), ids: ids.map(String), r0: null };
+  },
+  // ----- Ratings, Contents, Quotes, App Settings -----
+  async ratingAdd(row) { await sbWrite('ratings', { method: 'POST', body: sbRowToObj('Ratings', row), prefer: 'return=minimal' }); },
+  async contentsAdd(bookId, list, stamp) {
+    await sbWrite('contents', { method: 'POST', body: list.map(x => sbRowToObj('Contents', ["'" + bookId, stamp, "'" + x.story, x.start])), prefer: 'return=minimal' });
+  },
+  async quoteAdd(row) {
+    const got = await sbWrite('quotes', { method: 'POST', body: sbRowToObj('Quotes', row), prefer: 'return=representation' });
+    return this._no('Quotes', got[0].row_id);
+  },
+  async settingSave(key, value) {
+    const v = String(value ?? '');
+    const got = await sb.api(`settings?key=eq.${sbEnc(key)}&select=row_id`);
+    if (got.length) await sbWrite(`settings?row_id=eq.${got[0].row_id}`, { method: 'PATCH', body: { value: v }, prefer: 'return=minimal' });
+    else await sbWrite('settings', { method: 'POST', body: { key, value: v }, prefer: 'return=minimal' });
+  },
+  // ----- Wishlist -----
+  async wishUpdate(id, fields) {
+    if (!id) throw { code: 'tool_error', message: 'this Wishlist row has no id yet' };
+    const body = sbFieldsToObj('Wishlist', fields, wishCell, ['id']);
+    if (!Object.keys(body).length) return;
+    const got = await sbWrite(`wishlist?id=eq.${sbEnc(id)}`, { method: 'PATCH', body, prefer: 'return=representation' });
+    if (got.length !== 1) throw { code: 'tool_error', message: got.length ? `Wishlist id ${id} appears ${got.length} times` : `Wishlist id ${id} isn't there any more` };
+  },
+  // In the Sheet the row is blanked; here it is deleted (the copy back clears the Sheet row)
+  async wishClear(id) {
+    const got = await sbWrite(`wishlist?id=eq.${sbEnc(id)}`, { method: 'DELETE', prefer: 'return=representation' });
+    if (!got.length) throw { code: 'tool_error', message: `Wishlist id ${id} isn't there any more` };
+    got.forEach(r => this._drop('Wishlist', r.row_id));
+  },
+  async wishAdd(items, otherIds = []) {
+    const header = sbHeader('Wishlist');
+    for (let attempt = 0; ; attempt++) {
+      const used = await sbAllIds('wishlist');
+      let next = Math.max(0, ...used.map(r => sbNum(r.id)), ...otherIds.map(sbNum));
+      const rows = items.map(f => ({ stage: 'Inbox', gift: 'FALSE', ...f, id: 'WL' + String(++next).padStart(4, '0'), added: today() }));
+      try { await sbWrite('wishlist', { method: 'POST', body: rows.map(f => sbFullObj('Wishlist', f, (h, v) => h === 'id' || h === 'added' ? v : wishCell(h, v || ''))), prefer: 'return=minimal' }); return { header, rows }; }
+      catch (err) { if (!(err && err.status === 409 && attempt === 0)) throw err; }
+    }
+  },
+  async archiveAdd(rows) { await sbWrite('wishlist_archive', { method: 'POST', body: rows.map(r => sbRowToObj('Wishlist archive', r)), prefer: 'return=minimal' }); },
+  // ----- Series Tracker (matched by name in JS, like the Sheet version) -----
+  async seriesSave(f, matchName) {
+    const recs = await sbReadRecs('Series Tracker'), key = normQ(matchName);
+    const hits = recs.filter(r => normQ(r.series) === key);
+    if (hits.length > 1) throw { code: 'tool_error', message: `“${f.series}” is in the Series Tracker ${hits.length} times` };
+    const cell = (k, x) => !x ? '' : k === 'released' ? x : "'" + x;
+    if (hits.length) {
+      const cur = hits[0];
+      const changed = Object.fromEntries(SD_FIELDS.filter(k => { const d = sbDef('Series Tracker', k); return d && String(sbToCell(d[2], cur[d[1]])).trim() !== f[k]; }).map(k => [k, f[k]]));
+      const body = sbFieldsToObj('Series Tracker', changed, cell);
+      if (Object.keys(body).length) await sbWrite(`series_tracker?row_id=eq.${cur.row_id}`, { method: 'PATCH', body, prefer: 'return=minimal' });
+      return { row: this._no('Series Tracker', cur.row_id), isNew: false };
+    }
+    const got = await sbWrite('series_tracker', { method: 'POST', body: sbFullObj('Series Tracker', f, cell), prefer: 'return=representation' });
+    return { row: this._no('Series Tracker', got[0].row_id), isNew: true };
+  },
+  // Delete the row for a series name. Returns false (and writes nothing) unless exactly one row matches.
+  async seriesClear(name) {
+    const hits = (await sbReadRecs('Series Tracker')).filter(r => normQ(r.series) === normQ(name));
+    if (hits.length !== 1) return false;
+    await sbWrite(`series_tracker?row_id=eq.${hits[0].row_id}`, { method: 'DELETE', prefer: 'return=minimal' });
+    this._drop('Series Tracker', hits[0].row_id);
+    return true;
+  },
+  // ----- Reading Lists -----
+  async listUpdate(id, fields) {
+    const body = sbFieldsToObj('Reading Lists', fields, listCell, ['id']);
+    if (!Object.keys(body).length) return;
+    const got = await sbWrite(`reading_lists?id=eq.${sbEnc(id)}`, { method: 'PATCH', body, prefer: 'return=representation' });
+    if (got.length !== 1) throw { code: 'tool_error', message: got.length ? `Reading list id ${id} appears ${got.length} times` : `Reading list id ${id} isn't there any more` };
+  },
+  async listAdd(f, otherIds = []) {
+    const header = sbHeader('Reading Lists');
+    for (let attempt = 0; ; attempt++) {
+      const used = await sbAllIds('reading_lists');
+      const id = 'RL' + String(Math.max(0, ...used.map(r => sbNum(r.id)), ...otherIds.map(sbNum)) + 1).padStart(4, '0');
+      try {
+        const got = await sbWrite('reading_lists', { method: 'POST', body: sbFullObj('Reading Lists', { ...f, id }, (h, v) => h === 'id' ? v : listCell(h, v)), prefer: 'return=representation' });
+        return { header, id, row: this._no('Reading Lists', got[0].row_id) };
+      } catch (err) { if (!(err && err.status === 409 && attempt === 0)) throw err; }
+    }
+  },
+  async listClear(id) {
+    const got = await sbWrite(`reading_lists?id=eq.${sbEnc(id)}`, { method: 'DELETE', prefer: 'return=representation' });
+    if (!got.length) throw { code: 'tool_error', message: `Reading list id ${id} isn't there any more` };
+    got.forEach(r => this._drop('Reading Lists', r.row_id));
+  }
+};
+
+/* ---------- live sync: Supabase Realtime ----------
+   One websocket listens for any change to the library tables (RLS still applies: you only hear about your own rows).
+   A change from another device triggers a quiet reload a moment later; our own saves are ignored because
+   they reload anyway. If the socket drops it retries with growing gaps; coming back to the tab also reloads
+   when the data is over a minute old, so a missed message never leaves a device stale for long. */
+const rt = {
+  ws: null, ref: 0, hb: null, retry: 0, timer: null, want: false, joined: false, pend: null, lastSave: 0, lastLoad: 0,
+  url() { return SB.url.replace(/^http/, 'ws') + '/realtime/v1/websocket?apikey=' + encodeURIComponent(SB.key) + '&vsn=1.0.0'; },
+  send(topic, event, payload) { if (this.ws && this.ws.readyState === 1) this.ws.send(JSON.stringify({ topic, event, payload, ref: String(++this.ref) })); },
+  async start() {
+    this.want = true; if (this.ws || typeof WebSocket === 'undefined') return;
+    let at; try { at = await sb.token(); } catch (e) { return; }
+    if (!this.want || this.ws) return;
+    this._at = at;
+    const ws = this.ws = new WebSocket(this.url());
+    ws.onopen = () => {
+      this.send('realtime:books', 'phx_join', { config: { broadcast: { self: false }, presence: { key: '' }, postgres_changes: [{ event: '*', schema: SB.schema }] }, access_token: at });
+      clearInterval(this.hb); this.hb = setInterval(() => { this.send('phoenix', 'heartbeat', {}); this.keepToken(); }, 25000);
+    };
+    ws.onmessage = e => { let m; try { m = JSON.parse(e.data); } catch (x) { return; }
+      if (m.event === 'phx_reply' && m.topic === 'realtime:books' && m.payload) {
+        if (m.payload.status === 'ok') { if (!this.joined) { this.joined = true; this.retry = 0; this.show(); } }
+        else if (m.payload.status === 'error') { this.joined = false; this.show(); }
+      }
+      if (m.event === 'system' && m.payload && m.payload.status === 'error') { this.joined = false; this.show(); }
+      if (m.event === 'postgres_changes') this.changed();
+    };
+    ws.onclose = () => { this.ws = null; this.joined = false; clearInterval(this.hb); this.show();
+      if (this.want) { clearTimeout(this.timer); this.timer = setTimeout(() => this.start(), Math.min(60000, 2000 * Math.pow(2, this.retry++))); } };
+    ws.onerror = () => { try { ws.close(); } catch (e) {} };
+  },
+  stop() { this.want = false; clearTimeout(this.timer); clearTimeout(this.pend); clearInterval(this.hb); if (this.ws) { const w = this.ws; this.ws = null; try { w.close(); } catch (e) {} } this.joined = false; this.show(); },
+  /* hand the socket a fresh token before the old one runs out */
+  async keepToken() { try { const at = await sb.token(); if (at !== this._at) { this._at = at; this.send('realtime:books', 'access_token', { access_token: at }); } } catch (e) {} },
+  changed() {
+    if (Date.now() - this.lastSave < 2500) return;
+    clearTimeout(this.pend); this.pend = setTimeout(() => this.pull(), 800);
+  },
+  pull() { if (state.busy) { this.pend = setTimeout(() => this.pull(), 800); return; } refresh(); },
+  show() { const d = document.querySelector('#status .dot'); if (d) { d.toggleAttribute('data-sync', this.joined); d.title = this.joined ? 'Live sync on: changes from your other devices show here straight away' : ''; } }
+};
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && state.sb && state.live && !state.busy && Date.now() - rt.lastLoad > 60000) refresh(); });
+
 async function writeBookFields(id, fields) {
   // A book that starts being read leaves the plan: no tier, no Up next number
   const cur = state.allBooks.find(x => x.id === id);
   const leaving = fields.status === 'Reading' && cur && (cur.tier || cur.upNextOrder);
   if (leaving) fields = { ...fields, tier: '', upNextOrder: '' };
-  const { header, row } = await findBookRow(id);
-  await writeCells('Books', header, row, fields, cellValue, FORMULA_FIELDS);
+  await DB().bookUpdate(id, fields);
   const b = state.allBooks.find(x => x.id === id);
   if (b) Object.assign(b, Object.fromEntries(Object.entries(fields).map(([k, v]) => [k, String(v ?? '').trim()])));
   syncReadingBooks();
@@ -2269,22 +2878,8 @@ function tidyPlan() {
   if (stuck.length) renumberUpNext();
 }
 async function addBook(fields) {
-  const header = ((await readRange('Books!A1:AZ1'))[0] || []).map(h => String(h).trim());
-  const ids = (await readRange(`Books!${colLetter(header.indexOf('id'))}2:${colLetter(header.indexOf('id'))}5000`)).map(r => toNum(r[0]));
-  const id = String(Math.max(0, ...ids) + 4);
   fields = { added: today(), ...fields };
-  const row = header.map(h => h === 'id' ? "'" + id : FORMULA_FIELDS.includes(h) ? '' : cellValue(h, fields[h]));
-  const res = await state.mcp.callTool(SERVER, 'append_values', { spreadsheetId: SHEET_ID, range: 'Books!A1', values: [row] }, { cache: false });
-  // Put the remain / % formulas on the new row, matching the rest of the sheet
-  const p = res.payload || {};
-  const rng = (p.updates && p.updates.updatedRange) || p.updatedRange || '';
-  const m = String(rng).match(/![A-Z]+(\d+)/);
-  const ci = k => header.indexOf(k);
-  if (m && ci('remain') >= 0 && ci('%') >= 0 && ci('pages') >= 0 && ci('currentPage') >= 0) {
-    const r = m[1], P = colLetter(ci('pages')), C = colLetter(ci('currentPage'));
-    await state.mcp.callTool(SERVER, 'update_values', { spreadsheetId: SHEET_ID, range: `Books!${colLetter(ci('remain'))}${r}`, values: [[`=IF(N(${P}${r})>0,${P}${r}-${C}${r},"")`]] }, { cache: false });
-    await state.mcp.callTool(SERVER, 'update_values', { spreadsheetId: SHEET_ID, range: `Books!${colLetter(ci('%'))}${r}`, values: [[`=IF(N(${P}${r})>0,${C}${r}/${P}${r}*100,"")`]] }, { cache: false });
-  }
+  const { id, header } = await DB().bookAdd(fields);
   const book = { ...Object.fromEntries(header.map(h => [h, ''])), ...Object.fromEntries(Object.entries(fields).map(([k, v]) => [k, String(v ?? '').trim()])), id };
   book._row = state.allBooks.length;
   state.allBooks.push(book);
@@ -3518,7 +4113,7 @@ async function saveRating(book, final, sug) {
     await writeBookFields(book.id, f);
     const now = new Date();
     const crit = Object.entries(rate.scores).map(([k, v]) => `${(RATE_SETS[rate.cat].find(c => c[0] === k) || [k, k])[1]} ${v}`).join('; ');
-    await state.mcp.callTool(SERVER, 'append_values', { spreadsheetId: SHEET_ID, range: "'Ratings'!A1", values: [[iso(now), book.id, book.title, rate.cat, rate.gut || '', crit, rate.standout.trim(), rate.flaw.trim(), sug ?? '', final]] }, { cache: false });
+    await DB().ratingAdd([iso(now), book.id, book.title, rate.cat, rate.gut || '', crit, rate.standout.trim(), rate.flaw.trim(), sug ?? '', final]);
     setStatus('live', `Rated “${book.title}” ${final}★`);
     renderAll(); renderRate();
     $('rateMsg').textContent = `Saved ${final}★. The breakdown is in the Ratings tab.`;
@@ -4107,24 +4702,10 @@ function setWishFields(w, fields) {
   }).finally(() => { wishQ.pending--; setStatus('live', wishQ.pending ? `Saving Wishlist… (${wishQ.pending})` : 'Wishlist saved'); });
 }
 
-// Writes: find the row by its id right before writing, change only the given cells.
-const wishRows = new Map();
-const findWishRow = id => findRowById('Wishlist', id, { cache: wishRows, cacheAll: true, last: 3000, noCol: 'Wishlist has no id column',
-  header: async () => disc.wishHeader && disc.wishHeader.includes('id') ? disc.wishHeader : readHeader('Wishlist!A1:Z1'),
-  dup: (id, n) => `Wishlist id ${id} appears ${n} times`, gone: id => `Wishlist id ${id} isn't there any more` });
-// Gift is a checkbox and release a date, so those go in as typed; everything else as plain text
-const wishCell = (k, v) => !v ? (k === 'gift' ? 'FALSE' : '') : k === 'gift' ? (v === 'TRUE' ? 'TRUE' : 'FALSE') : (k === 'release' || k === 'checkedOn') && /^\d{4}-\d\d-\d\d$/.test(v) ? v : "'" + v;
-async function writeWishFields(id, fields) {
-  if (!id) throw { code: 'tool_error', message: 'this Wishlist row has no id yet' };
-  const { header, row } = await findWishRow(id);
-  await writeCells('Wishlist', header, row, fields, wishCell);
-}
+// Writes go through DB(): the row is found by its id right before writing, and only the given cells change.
+async function writeWishFields(id, fields) { await DB().wishUpdate(id, fields, disc.wishHeader); }
 // Removing a row: blank every cell (the sheet keeps an empty row, the app ignores it)
-async function clearWishRow(id) {
-  const { header, row } = await findWishRow(id);
-  await state.mcp.callTool(SERVER, 'update_values', { spreadsheetId: SHEET_ID, range: `Wishlist!A${row}:${colLetter(header.length - 1)}${row}`, values: [header.map(() => '')] }, { cache: false });
-  wishRows.delete(id);
-}
+async function clearWishRow(id) { await DB().wishClear(id, disc.wishHeader); }
 async function dropWish(w) {
   if (!(await askOk(`Drop “${w.title}” from your Wishlist? It's deleted, not archived.`, 'Drop it'))) return;
   if (!isLive()) { notice('Dropping needs the live connection. ' + connectHint(), 'error'); return; }
@@ -4136,14 +4717,7 @@ async function dropWish(w) {
 
 // New rows: next WL id, today's date, appended under the table
 async function appendWishRows(items) {
-  const header = ((await readRange('Wishlist!A1:Z1'))[0] || []).map(h => String(h).trim());
-  const c = header.indexOf('id');
-  const used = await readRange(`Wishlist!A2:${colLetter(Math.max(c, header.indexOf('title')))}3000`);
-  const ids = used.map(r => Number(String(r[c] || '').replace(/\D/g, '')) || 0);
-  let next = Math.max(0, ...ids, ...(disc.wish || []).map(w => Number(String(w.id).replace(/\D/g, '')) || 0));
-  const rows = items.map(f => ({ stage: 'Inbox', gift: 'FALSE', ...f, id: 'WL' + String(++next).padStart(4, '0'), added: today() }));
-  const values = rows.map(f => header.map(h => h === 'id' ? f.id : h === 'added' ? f.added : wishCell(h, f[h] || '')));
-  await addRowsBelowLast('Wishlist', header, values, used);
+  const { header, rows } = await DB().wishAdd(items, (disc.wish || []).map(w => w.id));
   disc.wishHeader = header;
   for (const f of rows) disc.wish.push({ ...Object.fromEntries(header.map(h => [h, f[h] || ''])), _row: 1e9 });
   return rows;
@@ -4420,27 +4994,14 @@ async function moveWishToBooks(rows, quiet) {
     const link = [], add = [];
     for (const w of rows) { const b = byTitle.get(wishKey(w.title)); if (b) link.push([w, b.id]); else add.push(w); }
     if (add.length) {
-      const header = ((await readRange('Books!A1:AZ1'))[0] || []).map(h => String(h).trim());
-      const ic = header.indexOf('id');
-      const ids = (await readRange(`Books!${colLetter(ic)}2:${colLetter(ic)}5000`)).map(r => toNum(r[0]));
-      let next = Math.max(0, ...ids);
-      const books = add.map(w => ({ ...wishToBook(w), id: String(next += 4) }));
-      const values = books.map(f => header.map(h => h === 'id' ? "'" + f.id : FORMULA_FIELDS.includes(h) ? '' : cellValue(h, f[h])));
-      const res = await state.mcp.callTool(SERVER, 'append_values', { spreadsheetId: SHEET_ID, range: 'Books!A1', values }, { cache: false });
-      const p = res.payload || {}, m = String((p.updates && p.updates.updatedRange) || p.updatedRange || '').match(/![A-Z]+(\d+)/);
-      const r0 = m ? Number(m[1]) : null, ci = k => header.indexOf(k);
-      if (r0 && ci('remain') >= 0 && ci('%') >= 0) {
-        const P = colLetter(ci('pages')), C = colLetter(ci('currentPage'));
-        for (const [k, f] of [['remain', r => `=IF(N(${P}${r})>0,${P}${r}-${C}${r},"")`], ['%', r => `=IF(N(${P}${r})>0,${C}${r}/${P}${r}*100,"")`]]) {
-          const L = colLetter(ci(k));
-          await state.mcp.callTool(SERVER, 'update_values', { spreadsheetId: SHEET_ID, range: `Books!${L}${r0}:${L}${r0 + books.length - 1}`, values: books.map((_, i) => [f(r0 + i)]) }, { cache: false });
-        }
-      }
+      const newBooks = add.map(wishToBook);
+      const { header, ids, r0 } = await DB().booksAddMany(newBooks);
+      const books = newBooks.map((f, i) => ({ ...f, id: ids[i] }));
       books.forEach((f, i) => { state.allBooks.push({ ...Object.fromEntries(header.map(h => [h, String(f[h] ?? '')])), _row: r0 ? r0 - 2 + i : state.allBooks.length }); link.push([add[i], f.id]); });
     }
     // History first, then clear the Wishlist rows
-    const ah = ((await readRange("'Wishlist archive'!A1:Z1"))[0] || []).map(h => String(h).trim());
-    if (ah.length) await state.mcp.callTool(SERVER, 'append_values', { spreadsheetId: SHEET_ID, range: "'Wishlist archive'!A1", values: link.map(([w, id]) => wishArchiveRow(w, id, ah)) }, { cache: false });
+    const ah = ((await DB().readTab('Wishlist archive header'))[0] || []).map(h => String(h).trim());
+    if (ah.length) await DB().archiveAdd(link.map(([w, id]) => wishArchiveRow(w, id, ah)));
     const failed = [];
     for (const [w] of link) {
       try { await clearWishRow(w.id); disc.wish.splice(disc.wish.indexOf(w), 1); }
@@ -4483,10 +5044,7 @@ async function pruneSeries() {
   pruning = true;
   try {
     for (const s of empty) {
-      const v = await readRange("'Series Tracker'!A1:I500"), header = (v[0] || []).map(h => String(h).trim()), c = header.indexOf('series');
-      const hits = v.map((r, i) => i && normQ(r[c]) === normQ(s.series) ? i + 1 : 0).filter(Boolean);
-      if (hits.length !== 1) continue;
-      await state.mcp.callTool(SERVER, 'update_values', { spreadsheetId: SHEET_ID, range: `'Series Tracker'!A${hits[0]}:${colLetter(header.length - 1)}${hits[0]}`, values: [header.map(() => '')] }, { cache: false });
+      if (!(await DB().seriesClear(s.series))) continue;
       disc.series.splice(disc.series.indexOf(s), 1);
     }
     notice(`Removed ${empty.length} empty series from the tracker: ${empty.map(x => x.series).join(', ')}.`);
@@ -4565,23 +5123,12 @@ async function saveSeries(e) {
   if (!f.series) { $('sdMsg').textContent = 'A series name is needed.'; return; }
   $('sdSave').disabled = true; $('sdMsg').textContent = 'Saving…';
   try {
-    const v = await readRange("'Series Tracker'!A1:I500");
-    const header = (v[0] || []).map(h => String(h).trim());
-    const cell = (k, x) => !x ? '' : k === 'released' ? x : "'" + x;
     // Find the row by the series name (the old name when editing)
-    const key = normQ(sdEditing ? sdEditing.series : f.series);
-    const hits = v.map((r, i) => i && normQ(r[header.indexOf('series')]) === key ? i + 1 : 0).filter(Boolean);
-    if (hits.length > 1) throw { code: 'tool_error', message: `“${f.series}” is in the Series Tracker ${hits.length} times` };
-    if (hits.length) {
-      const row = hits[0], cur = v[row - 1];
-      const changed = Object.fromEntries(SD_FIELDS.filter(k => { const c = header.indexOf(k); return c >= 0 && String(cur[c] ?? '').trim() !== f[k]; }).map(k => [k, f[k]]));
-      await writeCells('Series Tracker', header, row, changed, (k, x) => cell(k, x));
+    const { row, isNew } = await DB().seriesSave(f, sdEditing ? sdEditing.series : f.series);
+    if (isNew) disc.series.push({ ...f, _row: row });
+    else {
       const s = disc.series.find(x => x._row === row);
       if (s) Object.assign(s, f); else disc.series.push({ ...f, _row: row });
-    } else {
-      // New series go below the last used row (not append_values, which can fill a row the prune cleared)
-      const row = await addRowsBelowLast('Series Tracker', header, [header.map(h => cell(h, f[h]))], v.slice(1));
-      disc.series.push({ ...f, _row: row });
     }
     $('seriesDlg').close();
     setStatus('live', `Saved ${f.series}`);
@@ -4658,32 +5205,14 @@ $('rlBoxes').addEventListener('click', e => { const h = e.target.closest('[data-
 $('rlNew').addEventListener('click', () => openListDlg(null, ''));
 
 // Writes. Every item has an id (RL0001…); the row is found by it just before each write and only changed cells are written.
-const rlRows = new Map();
-const listHeader = () => readHeader("'Reading Lists'!A1:Z1");
-const findListRow = id => findRowById('Reading Lists', id, { cache: rlRows, last: 2000, noCol: 'Reading Lists has no id column', header: listHeader,
-  dup: (id, n) => `Reading list id ${id} appears ${n} times`, gone: id => `Reading list id ${id} isn't there any more` });
-const listCell = (k, v) => !String(v ?? '').trim() ? '' : k === 'order' ? toNum(v) : "'" + String(v).trim();
-async function writeListFields(id, fields) {
-  const { header, row } = await findListRow(id);
-  await writeCells('Reading Lists', header, row, fields, listCell);
-}
+async function writeListFields(id, fields) { await DB().listUpdate(id, fields); }
 async function appendListItem(f) {
-  const header = await listHeader(), c = header.indexOf('id');
-  if (c < 0) throw { code: 'tool_error', message: 'Reading Lists has no id column' };
-  const used = await readRange(`'Reading Lists'!A2:${colLetter(header.length - 1)}2000`);
-  const ids = used.map(r => Number(String(r[c] || '').replace(/\D/g, '')) || 0);
-  const id = 'RL' + String(Math.max(0, ...ids, ...(disc.lists || []).map(x => Number(String(x.id).replace(/\D/g, '')) || 0)) + 1).padStart(4, '0');
-  const row = header.map(h => h === 'id' ? id : listCell(h, f[h]));
-  const r0 = await addRowsBelowLast('Reading Lists', header, [row], used);
+  const { header, id, row: r0 } = await DB().listAdd(f, (disc.lists || []).map(x => x.id));
   const item = { ...Object.fromEntries(header.map(h => [h, String(f[h] ?? '').trim()])), id, _row: r0 };
-  disc.lists.push(item); rlRows.set(id, r0);
+  disc.lists.push(item);
   return item;
 }
-async function clearListItem(id) {
-  const { header, row } = await findListRow(id);
-  await state.mcp.callTool(SERVER, 'update_values', { spreadsheetId: SHEET_ID, range: `'Reading Lists'!A${row}:${colLetter(header.length - 1)}${row}`, values: [header.map(() => '')] }, { cache: false });
-  rlRows.delete(id);
-}
+async function clearListItem(id) { await DB().listClear(id); }
 function bookLabel(b) { return `${b.title}${b.author ? ' — ' + b.author : ''}${b.status ? ' (' + b.status + ')' : ''}`; }
 function openListDlg(it, listName) {
   rl.editing = it || null;
@@ -5123,12 +5652,7 @@ function renderGoal() {
     <p class="muted small" style="margin:0">On your current pace you'll finish about <b>${proj}</b> (${proj >= goal ? `${proj - goal} ahead` : `${goal - proj} short`}). You're reading ${fmt(Math.round(cur))} pages a day over the last 30 days.</p>`;
 }
 // App Settings is key | value: update the key's row, or add it
-async function saveSetting(key, value) {
-  const rows = await readRange("'App Settings'!A1:B50");
-  const i = rows.findIndex(r => String(r[0] ?? '').trim() === key);
-  if (i >= 0) await state.mcp.callTool(SERVER, 'update_values', { spreadsheetId: SHEET_ID, range: `'App Settings'!B${i + 1}`, values: [[value]] }, { cache: false });
-  else await state.mcp.callTool(SERVER, 'append_values', { spreadsheetId: SHEET_ID, range: "'App Settings'!A1", values: [[key, value]] }, { cache: false });
-}
+async function saveSetting(key, value) { await DB().settingSave(key, value); }
 
 /* ---------- Year in review ---------- */
 function renderYear() {
@@ -5208,7 +5732,7 @@ async function saveContents() {
   const stamp = new Date().toISOString().slice(0, 19).replace('T', ' ');
   try {
     $('ctSave').disabled = true;
-    await state.mcp.callTool(SERVER, 'append_values', { spreadsheetId: SHEET_ID, range: "'Contents'!A1", values: list.map(x => ["'" + contentsBook.id, stamp, "'" + x.story, x.start]) }, { cache: false });
+    await DB().contentsAdd(contentsBook.id, list, stamp);
     state.contents.set(contentsBook.id, list);
     $('contentsDlg').close(); renderBooks();
     setStatus('live', `Saved ${list.length} stories for “${contentsBook.title}”`);
@@ -5217,7 +5741,7 @@ async function saveContents() {
 }
 async function loadContents() {
   try {
-    const rows = await readRange("'Contents'!A1:D5000");
+    const rows = await DB().readTab('Contents');
     const latest = new Map();
     for (const r of rows.slice(1)) { const id = String(r[0] || '').trim(), at = String(r[1] || ''); if (!id) continue; if (!latest.has(id) || at > latest.get(id)) latest.set(id, at); }
     const m = new Map();
@@ -5252,14 +5776,14 @@ function loadDiscover() {
 }
 async function fetchDiscover() {
   const [q, w, sr, rl] = await Promise.allSettled([
-    state.mcp.callTool(SERVER, 'get_values', { spreadsheetId: QUOTES_ID, range: 'QUOTES!A1:G3000' }, { cache: false }),
-    readRange('Wishlist!A1:Z3000'), readRange("'Series Tracker'!A1:I500"), readRange("'Reading Lists'!A1:G2000")
+    DB().readTab('Quotes'),
+    DB().readTab('Wishlist'), DB().readTab('Series Tracker'), DB().readTab('Reading Lists')
   ]);
   const rows = (v, key) => { const h = (v[0] || []).map(x => String(x).trim()); return { h, list: v.slice(1).map((r, i) => ({ ...Object.fromEntries(h.map((k, j) => [k, String(r[j] ?? '').trim()])), _row: i + 2 })).filter(x => x[key]) }; };
   if (sr.status === 'fulfilled') disc.series = rows(sr.value, 'series').list; else disc.series = [];
   if (rl.status === 'fulfilled') disc.lists = rows(rl.value, 'title').list; else disc.lists = [];
   if (q.status === 'fulfilled') {
-    const v = (q.value.payload && q.value.payload.values) || [];
+    const v = q.value;
     // QUOTES columns: quote | from | character | by | bookId | page | added (row 1 is the header)
     disc.quotes = v.slice(1).map((r, i) => ({ text: String(r[0] || '').trim(), from: String(r[1] || '').trim(), who: String(r[2] || '').trim(), by: String(r[3] || '').trim(),
       bookId: String(r[4] || '').trim(), page: toNum(r[5]) || null, added: toDate(r[6]) || '', _row: i + 2 })).filter(x => x.text);
@@ -5345,10 +5869,8 @@ async function saveQuote(e) {
   $('qdSave').disabled = true; $('qdMsg').textContent = 'Saving…';
   try {
     await loadDiscover();
-    const res = await state.mcp.callTool(SERVER, 'append_values', { spreadsheetId: QUOTES_ID, range: 'QUOTES!A1', values: [row] }, { cache: false });
-    const p = (res && res.payload) || {};
-    const m = String((p.updates && p.updates.updatedRange) || p.updatedRange || '').match(/![A-Z]+(\d+)/);
-    const q = { text, from: title, who, by: book ? book.author : '', bookId: book ? book.id : '', page: page || null, added: today(), _row: m ? Number(m[1]) : 1e9 };
+    const qRow = await DB().quoteAdd(row);
+    const q = { text, from: title, who, by: book ? book.author : '', bookId: book ? book.id : '', page: page || null, added: today(), _row: qRow || 1e9 };
     disc.quotes.push(q); dogState.fresh = q;
     $('quoteDlg').close();
     setStatus('live', `Dog-eared a quote from ${title}`);
@@ -5477,7 +5999,7 @@ $('bookForm').addEventListener('change', updateDlgLog);
 $('dlgClose').addEventListener('click', () => $('bookDlg').close());
 $('drillClose').addEventListener('click', () => $('drillDlg').close());
 
-$('refreshBtn').addEventListener('click', () => state.google && !google_.valid() ? googleConnect() : refresh());
+$('refreshBtn').addEventListener('click', () => state.sb ? (sb.signedIn() ? refresh() : openDataDlg('Sign in to Supabase below.')) : state.google && !google_.valid() ? googleConnect() : refresh());
 document.querySelectorAll('.logday button').forEach(b => b.addEventListener('click', () => setLogDay(addDays(today(), Number(b.dataset.day)))));
 $('logDate').addEventListener('change', e => setLogDay(toDate(e.target.value)));
 setLogDay(null);
@@ -5583,6 +6105,18 @@ const google_ = {
     const body = await res.json().catch(() => ({}));
     if (!res.ok) throw { code: 'tool_error', message: (body.error && body.error.message) || 'HTTP ' + res.status };
     return { payload: body };
+  },
+  // A raw Sheets API call for the data tools. path is what follows /spreadsheets/<id> (e.g. '/values:batchUpdate' or ':batchUpdate');
+  // opts: { method, body }. Same token and 401 handling as callTool, but it leaves the page's status line alone in Supabase mode.
+  async api(spreadsheetId, path, opts = {}) {
+    if (!this.valid()) { if (!state.sb) googleSignedOut(); throw { code: 'google_signin' }; }
+    const o = { method: opts.method || 'GET', headers: { Authorization: 'Bearer ' + this.tok().t } };
+    if (opts.body !== undefined) { o.headers['Content-Type'] = 'application/json'; o.body = JSON.stringify(opts.body); }
+    const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}${path}`, o);
+    if (res.status === 401) { try { localStorage.removeItem(this.tokKey); } catch (e) {} if (!state.sb) googleSignedOut(); throw { code: 'google_signin' }; }
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) throw { code: 'tool_error', message: (body.error && body.error.message) || 'HTTP ' + res.status };
+    return body;
   }
 };
 
@@ -5629,12 +6163,427 @@ function googleBoot() {
   notice(google_.cfg().clientId ? 'Press Connect to sign in to Google and load your sheet.' : 'Press Connect to link your Google Sheet. You\'ll need the OAuth Client ID from your Google Cloud project.');
 }
 
+/* ---------- Supabase on GitHub Pages: boot, sign-in dialog, switching ---------- */
+function sbSignedOut(msg) {
+  rt.stop(); state.live = false;
+  setStatus('error', 'Signed out of Supabase');
+  $('refreshBtn').textContent = 'Connect'; $('refreshBtn').disabled = false;
+  notice(msg || explain({ code: 'sb_signin' }), 'error');
+  drawSb();
+}
+function openDataDlg(msg) {
+  $('dSource').value = useSb() ? 'supabase' : 'sheets';
+  $('dataMsg').textContent = msg || ''; $('sbMsg').textContent = '';
+  toolsReset();
+  drawSb();
+  if (!$('dataDlg').open) $('dataDlg').showModal();
+}
+function drawSb() {
+  const s = sb.ses(), on = !!(s && s.rt);
+  $('sbState').textContent = on ? 'Supabase: signed in' + (s.email ? ' as ' + s.email : '') + '. You stay signed in on this device until you sign out.' : 'Supabase: not signed in on this device.';
+  $('sbEmailRow').hidden = $('sbPwRow').hidden = on; $('sbSetRow').hidden = !on; $('sbOutRow').hidden = !on;
+  if (!$('sbEmail').value) $('sbEmail').value = google_.cfg().sbEmail || '';
+  drawTools();
+}
+// Start (or restart) loading in whichever mode the config now says
+function startPages() {
+  state.live = false;
+  if (useSb()) {
+    state.sb = true; state.google = false; state.mcp = sb;
+    if (sb.signedIn()) { refresh(); return; }
+    sbSignedOut('Press Connect to sign in to Supabase and load your library.'); openDataDlg('Sign in to Supabase below.');
+  } else {
+    rt.stop(); state.sb = false; googleBoot();
+  }
+}
+function pagesBoot() {
+  $('dataPg').hidden = false;
+  const back = sb.fromRedirect();
+  if (back && !back.ok) { startPages(); openDataDlg('Couldn\'t sign in: ' + back.message); return; }
+  startPages();
+  if (back && back.ok) { drawSb(); if (!useSb()) openDataDlg('Signed in to Supabase as ' + back.email + '. To use it on this device, pick Supabase in "Where your data lives" and press Save & connect.'); }
+}
+$('dataBtn').addEventListener('click', () => { closePops(); openDataDlg(''); });
+$('dataClose').addEventListener('click', () => $('dataDlg').close());
+$('dataForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const src = $('dSource').value;
+  if (src === 'supabase' && !sb.signedIn()) { $('dataMsg').textContent = 'Sign in to Supabase first (above), then press Save & connect.'; return; }
+  google_.saveCfg({ backend: src });
+  $('dataDlg').close(); notice(''); startPages();
+});
+const okEmail = em => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em);
+$('sbMail').addEventListener('click', async () => {
+  const em = $('sbEmail').value.trim();
+  if (!okEmail(em)) { $('sbMsg').textContent = 'Type your email address first.'; return; }
+  google_.saveCfg({ sbEmail: em }); $('sbMail').disabled = true; $('sbMsg').textContent = 'Sending…';
+  try { await sb.emailLink(em); $('sbMsg').textContent = 'Check your email and click the sign-in link. Open it on this device, in this browser: it brings you back here signed in.'; }
+  catch (err) { $('sbMsg').textContent = 'Couldn\'t send the link: ' + (err.message || err); }
+  $('sbMail').disabled = false;
+});
+$('sbPwIn').addEventListener('click', async () => {
+  const em = $('sbEmail').value.trim(), pw = $('sbPw').value;
+  if (!okEmail(em)) { $('sbMsg').textContent = 'Type your email address first.'; return; }
+  if (!pw) { $('sbMsg').textContent = 'Type your password.'; return; }
+  google_.saveCfg({ sbEmail: em }); $('sbPwIn').disabled = true; $('sbMsg').textContent = 'Signing in…';
+  try {
+    const ses = await sb.signInPassword(em, pw); $('sbPw').value = ''; drawSb();
+    $('sbMsg').textContent = 'Signed in to Supabase as ' + (ses.email || em) + '.' + (state.sb ? '' : ' To use it on this device, pick Supabase in "Where your data lives" and press Save & connect.');
+    if (state.sb) { notice(''); state.live = false; refresh(); }
+  } catch (err) { $('sbMsg').textContent = 'Couldn\'t sign in: ' + (err.message || err); }
+  $('sbPwIn').disabled = false;
+});
+$('sbSetPw').addEventListener('click', async () => {
+  const pw = $('sbNewPw').value;
+  if (pw.length < 12) { $('sbMsg').textContent = 'Use at least 12 characters. A few random words strung together is easy to remember and hard to guess.'; return; }
+  $('sbSetPw').disabled = true; $('sbMsg').textContent = 'Saving…';
+  try { await sb.setPassword(pw); $('sbNewPw').value = ''; $('sbMsg').textContent = 'Password set. On your phone, type your email and this password under "Sign in with password". Keep it in a password manager.'; }
+  catch (err) { $('sbMsg').textContent = 'Couldn\'t set the password: ' + (err.code === 'sb_signin' ? 'please sign in again.' : (err.message || err)); }
+  $('sbSetPw').disabled = false;
+});
+$('sbOut').addEventListener('click', async () => {
+  await sb.signOut(); drawSb(); $('sbMsg').textContent = 'Signed out of Supabase on this device.'; if (state.sb) sbSignedOut();
+});
+/* Enter inside these boxes does that box's job, not "Save & connect". */
+[['sbPw', 'sbPwIn'], ['sbNewPw', 'sbSetPw']].forEach(([i, b]) => $(i).addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); $(b).click(); } }));
+$('sbEmail').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); $($('sbPw').value ? 'sbPwIn' : 'sbMail').click(); } });
+
 $('gClose').addEventListener('click', () => $('gDlg').close());
 $('gForm').addEventListener('submit', e => {
   const v = $('gClient').value.trim();
   if (!/\.apps\.googleusercontent\.com$/.test(v)) { e.preventDefault(); $('gMsg').textContent = 'That doesn\'t look like a Client ID.'; return; }
   google_.saveCfg({ clientId: v }); google_.client = null;
   googleConnect();
+});
+
+/* ---------- Data tools (in Data & sign-in): copy Sheet -> Supabase, check, copy Supabase -> Sheet ----------
+   All three need a Google sign-in as well as Supabase. Copy Sheet -> Supabase and Check only ever read the Sheet.
+   Sheet columns are matched to SBT by header name, and values are compared only after cellToSb on both sides
+   (so 1,116 and 1116, or 'Yes and Yes, are not differences). calc columns are never compared, stored or written. */
+const TOOL_RANGE = { 'Books': 'A1:AZ5000', 'Reading Log': 'A1:H20000', 'App Settings': 'A1:C50', 'Ratings': 'A1:J5000', 'Contents': 'A1:D5000',
+  'Wishlist': 'A1:Z3000', 'Series Tracker': 'A1:I500', 'Reading Lists': 'A1:G2000', 'Wishlist archive': 'A1:P5000', 'Quotes': 'A1:G5000' };
+// Tabs with a key pair rows by it; the others (Reading Log, Ratings, Contents, Quotes) pair the i-th Sheet row with the i-th Supabase row.
+const TOOL_KEY = { 'Books': 'id', 'Wishlist': 'id', 'Reading Lists': 'id', 'Wishlist archive': 'id', 'Series Tracker': 'series', 'App Settings': 'setting' };
+// Header spellings the Sheet uses for some columns (the app reads these tabs by position, so the names were never fixed)
+const TOOL_ALIAS = { 'App Settings': { key: 'setting' }, 'Contents': { stamp: 'savedAt', start: 'startPage' }, 'Ratings': { flaw: 'fatalFlaw' } };
+const toolSheet = tab => tab === 'Quotes' ? { id: QUOTES_ID, title: 'QUOTES' } : { id: SHEET_ID, title: tab };
+const toolKeyIdx = tab => TOOL_KEY[tab] ? SBT[tab][1].findIndex(c => c[0] === TOOL_KEY[tab]) : -1;
+const toolStop = message => ({ code: 'tool_stop', message });
+const toolShow = (t, v) => { const s = sbToCell(t, v); return s === '' ? '(blank)' : '“' + s + '”'; };
+const toolPlural = (n, one, many) => n + ' ' + (n === 1 ? one : many || one + 's');
+// A Sheet cell (or a Supabase value written out as a cell) -> the stored value. Reading Log loggedAt is stored as yyyy-mm-dd hh:mm.
+function toolVal(tab, h, t, cell) {
+  let s = cell == null ? '' : String(cell);
+  if (tab === 'Reading Log' && h === 'loggedAt') { const m = s.trim().match(/^(\d{4}-\d{2}-\d{2})[ T](\d{2}:\d{2})(?::\d{2}(?:\.\d+)?)?$/); if (m) s = m[1] + ' ' + m[2]; }
+  return cellToSb(t, s);
+}
+// One tab's values from the API (header row first) -> records { row: Sheet row number, cells: strings, n: stored values }; blank rows are skipped.
+function toolParse(tab, values) {
+  const cols = SBT[tab][1], alias = TOOL_ALIAS[tab] || {}, at = {};
+  const hdr = (values[0] || []).map(h => String(h ?? '').trim());
+  hdr.forEach((h, i) => {
+    if (!h) return;
+    const name = sbDef(tab, h) ? h : alias[h];
+    if (!name) throw toolStop(`The Sheet has a column ${h} in ${tab} that Supabase doesn't have yet. Nothing was changed.`);
+    if (name in at) throw toolStop(`The Sheet has the column ${h} twice in ${tab}. Nothing was changed.`);
+    at[name] = i;
+  });
+  for (const [h] of cols) if (!(h in at)) throw toolStop(`The Sheet's ${tab} tab has no ${h} column, which Supabase expects. Nothing was changed.`);
+  const recs = []; let last = 1;
+  values.slice(1).forEach((r, i) => {
+    if (!r.some(v => String(v ?? '').trim())) return;
+    last = i + 2;
+    const cells = cols.map(([h]) => String(r[at[h]] ?? ''));
+    recs.push({ row: i + 2, cells, n: cols.map(([h, , t], j) => t === 'calc' ? null : toolVal(tab, h, t, cells[j])) });
+  });
+  return { tab, at, width: hdr.reduce((w, h, i) => h ? i + 1 : w, 0), recs, last };
+}
+async function toolReadSheet(say, tabs = Object.keys(SBT)) {
+  const out = {};
+  for (const tab of tabs) {
+    say(`Reading ${tab} from the Sheet…`);
+    const s = toolSheet(tab);
+    out[tab] = toolParse(tab, (await google_.api(s.id, '/values/' + encodeURIComponent(`${tabRef(s.title)}!${TOOL_RANGE[tab]}`))).values || []);
+  }
+  return out;
+}
+async function toolReadDb(say) {
+  const out = {};
+  for (const tab of Object.keys(SBT)) {
+    say(`Reading ${tab} from Supabase…`);
+    const cols = SBT[tab][1];
+    out[tab] = (await sbReadRecs(tab)).map((r, i) => ({ idx: i + 1, rid: r.row_id, r, n: cols.map(([h, c, t]) => t === 'calc' ? null : toolVal(tab, h, t, sbToCell(t, r[c]))) }));
+  }
+  return out;
+}
+async function toolCountDb() {
+  let n = 0;
+  for (const tab of Object.keys(SBT)) for (let from = 0; ; from += 1000) {
+    const got = await sb.api(`${sbTable(tab)}?select=row_id&order=row_id&limit=1000&offset=${from}`);
+    n += got.length; if (got.length < 1000) break;
+  }
+  return n;
+}
+// Everything that would make the copy fail or lose something. Up to 20 are shown by the caller.
+function toolProblems(sheet) {
+  const bad = [];
+  for (const [tab, p] of Object.entries(sheet)) {
+    const cols = SBT[tab][1], ki = toolKeyIdx(tab), seen = new Map();
+    for (const s of p.recs) {
+      const add = (h, why, shown) => bad.push(`${tab}, row ${s.row}, ${h}: ${why}${shown === undefined ? '' : ' ' + shown}`);
+      if (ki >= 0) {
+        const kh = cols[ki][0], raw = s.cells[ki];
+        if (!raw.trim()) add(kh, 'is blank, but every row in this tab needs one');
+        else { const k = JSON.stringify(s.n[ki]); if (seen.has(k)) add(kh, `appears twice (also in row ${seen.get(k)})`, toolShow(cols[ki][2], s.n[ki])); else seen.set(k, s.row); }
+      }
+      if (tab === 'Books' && s.cells[ki].trim() && !Number.isInteger(Number(s.cells[ki].replace(/^'/, '').replace(/[,\s]/g, '')))) add('id', "isn't a whole number", '“' + s.cells[ki] + '”');
+      cols.forEach(([h, , t], j) => {
+        const raw = s.cells[j];
+        if (tab === 'Reading Log' && h === 'date' && s.n[j] === null) return add(h, "isn't a valid date (needs yyyy-mm-dd)", raw.trim() ? '“' + raw + '”' : '(blank)');
+        if (tab === 'Reading Log' && h === 'pages' && s.n[j] === null && !raw.trim()) return add(h, 'is blank, but every entry needs a number');
+        if (tab === 'Contents' && h === 'bookId' && !raw.trim()) return add(h, 'is blank, but every row in this tab needs one');
+        if (tab === 'Reading Log' && h === 'loggedAt' && s.n[j] && !/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/.test(s.n[j])) return add(h, "isn't a date and time (needs yyyy-mm-dd hh:mm)", '“' + raw + '”');
+        if ((t === 'num' || t === 'int' || t === 'date') && raw.trim() && s.n[j] === null)
+          add(h, `isn't a valid ${t === 'date' ? 'date (needs yyyy-mm-dd)' : t === 'int' ? 'whole number' : 'number'}`, '“' + raw + '”');
+      });
+    }
+  }
+  return bad;
+}
+// Pair one tab's Sheet records with its Supabase records: { onlyS, onlyD, cells: [{ s, d, j }] }
+function toolDiff(tab, srecs, drecs) {
+  const cols = SBT[tab][1], ki = toolKeyIdx(tab), pairs = [], out = { onlyS: [], onlyD: [], cells: [] };
+  if (ki >= 0) {
+    const pool = new Map(), used = new Set();
+    srecs.forEach(s => { const k = JSON.stringify(s.n[ki]); if (!pool.has(k)) pool.set(k, []); pool.get(k).push(s); });
+    drecs.forEach(d => { const q = pool.get(JSON.stringify(d.n[ki])), s = q && q.shift(); if (s) { pairs.push([s, d]); used.add(s); } else out.onlyD.push(d); });
+    out.onlyS = srecs.filter(s => !used.has(s));
+  } else {
+    const m = Math.min(srecs.length, drecs.length);
+    for (let i = 0; i < m; i++) pairs.push([srecs[i], drecs[i]]);
+    out.onlyS = srecs.slice(m); out.onlyD = drecs.slice(m);
+  }
+  for (const [s, d] of pairs) cols.forEach(([, , t], j) => { if (t !== 'calc' && JSON.stringify(s.n[j]) !== JSON.stringify(d.n[j])) out.cells.push({ s, d, j }); });
+  return out;
+}
+const toolWho = (tab, rec, onSheet) => {
+  const ki = toolKeyIdx(tab), k = ki >= 0 ? `${SBT[tab][1][ki][0]} ${sbToCell(SBT[tab][1][ki][2], rec.n[ki])}` : '';
+  return onSheet ? `row ${rec.row}${k ? ' (' + k + ')' : ''}` : k || `entry ${rec.idx}`;
+};
+const toolMore = (list, n = 5) => list.slice(0, n).join('\n') + (list.length > n ? `\n• …and ${list.length - n} more` : '');
+// Plain-words lines for one tab's differences (used by Check and by the read-back after a copy)
+function toolTabLines(tab, d, ns, nd) {
+  const cols = SBT[tab][1], ki = toolKeyIdx(tab);
+  const bits = [d.onlyS.length && `${d.onlyS.length} only in the Sheet`, d.onlyD.length && `${d.onlyD.length} only in Supabase`, d.cells.length && toolPlural(d.cells.length, 'cell') + (d.cells.length === 1 ? ' differs' : ' differ')].filter(Boolean);
+  const lines = [`${tab}: ${toolPlural(ns, 'row')} in the Sheet, ${toolPlural(nd, 'row')} in Supabase: ${bits.length ? bits.join(', ') : 'matches'}`];
+  if (d.onlyS.length) lines.push('• Only in the Sheet: ' + d.onlyS.slice(0, 5).map(s => toolWho(tab, s, true)).join('; ') + (d.onlyS.length > 5 ? `; …and ${d.onlyS.length - 5} more` : ''));
+  if (d.onlyD.length) lines.push('• Only in Supabase: ' + d.onlyD.slice(0, 5).map(x => toolWho(tab, x, false)).join('; ') + (d.onlyD.length > 5 ? `; …and ${d.onlyD.length - 5} more` : ''));
+  if (d.cells.length) lines.push(toolMore(d.cells.map(({ s, d: x, j }) => `• ${ki >= 0 ? toolWho(tab, s, true) : 'row ' + s.row}, ${cols[j][0]}: Sheet ${toolShow(cols[j][2], s.n[j])}, Supabase ${toolShow(cols[j][2], x.n[j])}`)));
+  return { lines, differs: bits.length > 0 };
+}
+function toolReport(sheet, db) {
+  const all = Object.keys(SBT).map(tab => toolTabLines(tab, toolDiff(tab, sheet[tab].recs, db[tab]), sheet[tab].recs.length, db[tab].length));
+  const differs = all.some(x => x.differs);
+  const empty = Object.keys(SBT).every(tab => !db[tab].length);
+  return (differs ? 'They differ:\n' : 'Supabase and your Sheet match on every tab.\n') + all.flatMap(x => x.lines).join('\n')
+    + `\nYou're using ${useSb() ? 'Supabase' : 'the Sheet'} on this device. If that's the up-to-date one, copy from it to the other.`
+    + (empty ? "\nSupabase shows no rows at all. If you've copied already, sign out of Supabase and sign in again." : '');
+}
+/* A Supabase value -> the cell the Sheet path would write (leading ' for text, numbers as numbers, dates yyyy-mm-dd, a few columns plain) */
+const toolQ = s => s ? "'" + s : '';
+const toolN = s => s === '' ? '' : Number(s);
+const toolPlain = s => /^[=+\-@]/.test(s) ? "'" + s : s;
+function toolOut(tab, h, t, s) {
+  switch (tab) {
+    case 'Books': return cellValue(h, s);
+    case 'Wishlist': return h === 'id' || h === 'added' ? s : wishCell(h, s);
+    case 'Reading Lists': return h === 'id' ? s : listCell(h, s);
+    case 'Series Tracker': return !s ? '' : h === 'released' ? toolN(s) : "'" + s;
+    case 'Reading Log': return h === 'bookId' || h === 'title' ? toolQ(s) : t === 'num' ? toolN(s) : toolPlain(s);
+    case 'App Settings': return toolPlain(s);
+    case 'Ratings': return t === 'num' ? toolN(s) : toolPlain(s);
+    case 'Contents': return h === 'savedAt' ? s : t === 'num' ? toolN(s) : toolQ(s);
+    case 'Quotes': return h === 'added' ? s : t === 'num' ? toolN(s) : toolQ(s);
+    default: return t === 'num' ? toolN(s) : toolQ(s);          // Wishlist archive: text with a leading '
+  }
+}
+// Worked out from the Sheet (as read) and Supabase: what the copy back would change, and what makes it refuse.
+function toolPlan(sheet, db) {
+  const refuse = [], tabs = [];
+  for (const tab of Object.keys(SBT)) {
+    const p = sheet[tab], cols = SBT[tab][1], ki = toolKeyIdx(tab), seen = new Set();
+    if (ki >= 0) p.recs.forEach(s => {
+      const k = JSON.stringify(s.n[ki]);
+      if (!s.cells[ki].trim()) refuse.push(`${tab}: row ${s.row} has no ${cols[ki][0]}. Give it one in the Sheet first.`);
+      else if (seen.has(k)) refuse.push(`${tab}: ${cols[ki][0]} ${sbToCell(cols[ki][2], s.n[ki])} is in the Sheet twice (row ${s.row}). Fix that in the Sheet first.`);
+      seen.add(k);
+    });
+    const d = toolDiff(tab, p.recs, db[tab]);
+    if (tab === 'Books' && d.onlyS.length) refuse.push(`Books: ${toolPlural(d.onlyS.length, 'book')} in the Sheet ${d.onlyS.length === 1 ? 'is' : 'are'} missing from Supabase (${d.onlyS.slice(0, 5).map(s => toolWho(tab, s, true)).join('; ')}${d.onlyS.length > 5 ? '; …' : ''}). The app never removes books, so nothing was written. Work out which side is right first.`);
+    if (ki < 0 && d.onlyS.length) refuse.push(`${tab}: Supabase has ${toolPlural(db[tab].length, 'row')} but the Sheet has ${toolPlural(p.recs.length, 'row')}. This tab only ever grows, so nothing was written. Work out which side is right first.`);
+    if (d.cells.length || d.onlyD.length || d.onlyS.length) tabs.push({ tab, ...d });
+  }
+  return { refuse, tabs, snap: Object.fromEntries(tabs.map(t => [t.tab, toolSnap(sheet[t.tab])])) };
+}
+const toolSnap = p => JSON.stringify(p.recs.map(r => [r.row, r.n]));
+function toolPreview(plan) {
+  return 'This will change your Sheet:\n' + plan.tabs.map(t => `${t.tab}: ` + [t.cells.length && toolPlural(t.cells.length, 'cell') + ' changed', t.onlyD.length && toolPlural(t.onlyD.length, 'row') + ' added', t.onlyS.length && toolPlural(t.onlyS.length, 'row') + ' cleared'].filter(Boolean).join(', ')).join('\n')
+    + '\nEach of these tabs is backed up first (a hidden tab with today\'s date; backups are never deleted). Press the button again to write.';
+}
+async function toolWriteSheet(plan, say) {
+  say('Checking the Sheet hasn\'t changed…');
+  const now = await toolReadSheet(say, plan.tabs.map(t => t.tab));
+  if (!plan.tabs.every(t => toolSnap(now[t.tab]) === plan.snap[t.tab])) throw toolStop('Nothing was written: the Sheet changed since the check, press Copy again.');
+  // Where each tab is, and room for the new rows
+  const meta = {}, ids = [...new Set(plan.tabs.map(t => toolSheet(t.tab).id))];
+  for (const id of ids) meta[id] = ((await google_.api(id, '?fields=' + encodeURIComponent('sheets.properties(sheetId,title,hidden,gridProperties.rowCount)'))).sheets || []).map(x => x.properties);
+  const grid = {};
+  for (const t of plan.tabs) {
+    const s = toolSheet(t.tab), g = meta[s.id].find(x => x.title === s.title);
+    if (!g) throw toolStop(`Nothing was written: the Sheet has no tab called ${s.title}.`);
+    const end = now[t.tab].last + t.onlyD.length;
+    if (end > Number(TOOL_RANGE[t.tab].match(/\d+$/)[0])) throw toolStop(`Nothing was written: ${t.tab} would grow past row ${TOOL_RANGE[t.tab].match(/\d+$/)[0]}, which is as far as the app reads.`);
+    grid[t.tab] = { sheetId: g.sheetId, rows: g.gridProperties && g.gridProperties.rowCount, end };
+  }
+  // Backups first: a hidden copy of each tab that will change. Existing backups are never touched.
+  say('Backing up the tabs that will change…');
+  const day = today(), made = [];
+  for (const id of ids) {
+    const mine = plan.tabs.filter(t => toolSheet(t.tab).id === id), taken = new Set(meta[id].map(x => x.title));
+    const reqs = mine.map((t, i) => {
+      const title = toolSheet(t.tab).title; let name = `${title} backup ${day}`;
+      for (let k = 2; taken.has(name); k++) name = `${title} backup ${day} (${k})`;
+      taken.add(name); made.push(name);
+      return { duplicateSheet: { sourceSheetId: grid[t.tab].sheetId, insertSheetIndex: meta[id].length + i, newSheetName: name } };
+    });
+    const r = await google_.api(id, ':batchUpdate', { method: 'POST', body: { requests: reqs } });
+    await google_.api(id, ':batchUpdate', { method: 'POST', body: { requests: r.replies.map(x => ({ updateSheetProperties: { properties: { sheetId: x.duplicateSheet.properties.sheetId, hidden: true }, fields: 'hidden' } })) } });
+  }
+  // Changed cells (one range each) and cleared rows, then new rows below the last used row (explicit range, not append)
+  say('Writing to the Sheet…');
+  const edits = {}, adds = {}, push = (o, id, x) => (o[id] || (o[id] = [])).push(x);
+  const grow = [];
+  for (const t of plan.tabs) {
+    const s = toolSheet(t.tab), ref = tabRef(s.title), p = now[t.tab], cols = SBT[t.tab][1], L = h => colLetter(p.at[h]);
+    for (const { s: sr, d, j } of t.cells) { const [h, c, ty] = cols[j]; push(edits, s.id, { range: `${ref}!${L(h)}${sr.row}`, values: [[toolOut(t.tab, h, ty, sbToCell(ty, d.r[c]))]] }); }
+    for (const sr of t.onlyS) push(edits, s.id, { range: `${ref}!A${sr.row}:${colLetter(p.width - 1)}${sr.row}`, values: [Array(p.width).fill('')] });
+    if (!t.onlyD.length) continue;
+    const r0 = p.last + 1, r1 = p.last + t.onlyD.length;
+    if (grid[t.tab].rows != null && r1 > grid[t.tab].rows) grow.push([s.id, { appendDimension: { sheetId: grid[t.tab].sheetId, dimension: 'ROWS', length: r1 - grid[t.tab].rows } }]);
+    push(adds, s.id, { range: `${ref}!A${r0}:${colLetter(p.width - 1)}${r1}`, values: t.onlyD.map(d => { const row = Array(p.width).fill(''); cols.forEach(([h, c, ty]) => { if (ty !== 'calc') row[p.at[h]] = toolOut(t.tab, h, ty, sbToCell(ty, d.r[c])); }); return row; }) });
+    if (t.tab === 'Books') {   // the remain and % formulas, exactly as a newly added book gets them
+      const P = L('pages'), C = L('currentPage');
+      t.onlyD.forEach((_, i) => { const r = r0 + i;
+        push(adds, s.id, { range: `${ref}!${L('remain')}${r}`, values: [[`=IF(N(${P}${r})>0,${P}${r}-${C}${r},"")`]] });
+        push(adds, s.id, { range: `${ref}!${L('%')}${r}`, values: [[`=IF(N(${P}${r})>0,${C}${r}/${P}${r}*100,"")`]] }); });
+    }
+  }
+  const send = async (id, data) => { for (let i = 0; i < data.length; i += 500) await google_.api(id, '/values:batchUpdate', { method: 'POST', body: { valueInputOption: 'USER_ENTERED', data: data.slice(i, i + 500) } }); };
+  for (const id of ids) if (edits[id]) await send(id, edits[id]);
+  for (const id of ids) { const reqs = grow.filter(g => g[0] === id).map(g => g[1]); if (reqs.length) await google_.api(id, ':batchUpdate', { method: 'POST', body: { requests: reqs } }); }
+  for (const id of ids) if (adds[id]) await send(id, adds[id]);
+  // Read it all back and compare with Supabase
+  say('Checking the Sheet…');
+  const back = await toolReadSheet(say), db = await toolReadDb(say);
+  const res = Object.keys(SBT).map(tab => toolTabLines(tab, toolDiff(tab, back[tab].recs, db[tab]), back[tab].recs.length, db[tab].length));
+  const n = plan.tabs.reduce((t, x) => t + x.cells.length + x.onlyD.length + x.onlyS.length, 0);
+  const backups = `Backed up first (hidden tabs, kept for you to delete): ${made.join(', ')}.`;
+  if (res.some(x => x.differs)) throw toolStop(`Written (${toolPlural(n, 'change')}), but the check found differences:\n` + res.filter(x => x.differs).flatMap(x => x.lines).join('\n') + '\n' + backups);
+  return `The Sheet now matches Supabase (${toolPlural(n, 'change')} written and checked).\n${backups}`;
+}
+async function toolCopyToSb(say) {
+  const sheet = await toolReadSheet(say), tabs = Object.keys(SBT), bad = toolProblems(sheet);
+  if (bad.length) throw toolStop(`Nothing was copied. Fix ${bad.length === 1 ? 'this' : 'these'} in the Sheet, then try again:\n` + bad.slice(0, 20).join('\n') + (bad.length > 20 ? `\n…and ${bad.length - 20} more` : ''));
+  for (const tab of tabs) {
+    say(`Copying ${tab}…`);
+    const cols = SBT[tab][1];
+    const objs = sheet[tab].recs.map(r => { const o = {}; cols.forEach(([, c, t], j) => { if (t !== 'calc') o[c] = r.n[j]; }); return o; });
+    try {
+      await sbWrite(`${sbTable(tab)}?row_id=gt.0`, { method: 'DELETE', prefer: 'return=minimal' });
+      for (let i = 0; i < objs.length; i += 500) await sbWrite(sbTable(tab), { method: 'POST', body: objs.slice(i, i + 500), prefer: 'return=minimal' });
+    } catch (err) {
+      if (err && err.code === 'sb_signin') throw err;
+      throw toolStop(`Copy stopped while copying ${tab}: ${(err && err.message) || err}. Supabase may now hold only part of your Sheet, and this device was not switched. Your Sheet is unchanged: press Copy again to start over.`);
+    }
+  }
+  say('Checking the copy…');
+  const back = await toolReadDb(say), diffs = [];
+  for (const tab of tabs) {
+    const s = sheet[tab].recs, d = back[tab], cols = SBT[tab][1];
+    if (s.length !== d.length) { diffs.push(`${tab}: Sheet ${toolPlural(s.length, 'row')}, Supabase ${toolPlural(d.length, 'row')}`); continue; }
+    for (let i = 0; i < s.length; i++) cols.forEach(([h, , t], j) => { if (t !== 'calc' && JSON.stringify(s[i].n[j]) !== JSON.stringify(d[i].n[j])) diffs.push(`${tab}, Sheet row ${s[i].row}, ${h}: Sheet ${toolShow(t, s[i].n[j])}, Supabase ${toolShow(t, d[i].n[j])}`); });
+  }
+  if (diffs.length) throw toolStop('Copied, but the check found differences, so this device was not switched:\n' + diffs.slice(0, 20).join('\n') + (diffs.length > 20 ? `\n…and ${diffs.length - 20} more` : ''));
+  const total = tabs.reduce((t, tab) => t + sheet[tab].recs.length, 0);
+  google_.saveCfg({ backend: 'supabase' });                 // the same state Save & connect sets, then load from Supabase
+  $('dSource').value = 'supabase'; notice('');
+  startPages();
+  return `Copied ${toolPlural(total, 'row')} and checked them: Supabase matches your Sheet. This device now uses Supabase.\n` + tabs.map(tab => `${tab} ${sheet[tab].recs.length}`).join(' · ');
+}
+
+const tl = { busy: false, armed: null, plan: null, timer: null, msg: '' };
+const toolSay = m => { tl.msg = m; const e = $('toolMsg'); if (e) e.textContent = m; };
+const toolErr = err => err && err.code === 'tool_stop' ? err.message
+  : err && err.code === 'google_signin' ? 'Your Google sign-in has expired. Press the button again to sign in.'
+  : err && err.code === 'sb_signin' ? 'Your Supabase sign-in has expired. Sign out of Supabase and sign in again.'
+  : 'Stopped: ' + ((err && err.message) || err);
+function toolDisarm() { clearTimeout(tl.timer); tl.armed = null; tl.plan = null; }
+function toolsReset() { toolDisarm(); if (!tl.busy) tl.msg = ''; }
+function drawTools() {
+  const box = $('sbTools');
+  if (!sb.signedIn()) { box.replaceChildren(); delete box.dataset.mode; return; }
+  const mode = useSb() ? 'sb' : 'sheet';
+  if (!(window.google && google.accounts && google.accounts.oauth2)) loadGis().catch(() => {});   // so the Google sign-in popup can open straight from a button press
+  if (box.dataset.mode !== mode || !box.children.length) {
+    toolDisarm(); box.dataset.mode = mode;
+    box.innerHTML = '<div class="sb-acts"><button class="btn" type="button" id="sbCopy"></button><button class="btn" type="button" id="sbCheck"></button></div><p class="muted" id="toolMsg" role="status" aria-live="polite"></p>';
+  }
+  $('sbCopy').textContent = tl.armed === 'toSb' ? 'Replace Supabase copy?' : tl.armed === 'toSheet' ? 'Write these to the Sheet' : mode === 'sb' ? 'Copy Supabase → Sheet (weekly backup)' : 'Copy Sheet → Supabase';
+  $('sbCheck').textContent = mode === 'sb' ? 'Check' : 'Check Sheet and Supabase match';
+  $('sbCopy').disabled = $('sbCheck').disabled = tl.busy;
+  $('toolMsg').textContent = tl.msg;
+}
+async function toolRun(fn) {
+  tl.busy = true; drawTools();
+  try { await fn(); } catch (err) { toolSay(toolErr(err)); }
+  tl.busy = false; drawTools();
+}
+const toolNeedGoogle = (what) => {
+  if (google_.valid()) return false;
+  toolSay(`Connect to Google first (this ${what} your Sheet). A Google window will open; then press the button again.`);
+  googleConnect(); return true;
+};
+function toolCheck() {
+  toolDisarm();
+  if (toolNeedGoogle('reads')) return drawTools();
+  return toolRun(async () => { const sheet = await toolReadSheet(toolSay), db = await toolReadDb(toolSay); toolSay(toolReport(sheet, db)); });
+}
+function toolCopy() {
+  const toSheet = useSb();
+  if (toolNeedGoogle(toSheet ? 'writes to' : 'reads')) return drawTools();
+  if (!tl.armed) {            // first press: look, say what would happen, and wait for a second press
+    return toolRun(async () => {
+      if (toSheet) {
+        toolSay('Comparing Supabase with your Sheet…');
+        const plan = toolPlan(await toolReadSheet(toolSay), await toolReadDb(toolSay));
+        if (plan.refuse.length) return toolSay('Nothing was written. The copy back stopped because:\n' + plan.refuse.slice(0, 20).join('\n'));
+        if (!plan.tabs.length) return toolSay('Your Sheet already matches Supabase. Nothing to copy.');
+        tl.plan = plan; toolSay(toolPreview(plan));
+      } else {
+        toolSay('Counting what Supabase holds now…');
+        const n = await toolCountDb();
+        toolSay('Replace Supabase copy?' + (n ? `\nSupabase has ${toolPlural(n, 'row')} now; they will all be replaced.` : '') + '\nThis reads your Sheet and copies it into Supabase. Your Sheet is not changed. Press the button again to go.');
+      }
+      tl.armed = toSheet ? 'toSheet' : 'toSb';
+      tl.timer = setTimeout(() => { toolDisarm(); toolSay('That timed out. Press the button again to start over.'); drawTools(); }, toSheet ? 60000 : 20000);
+    });
+  }
+  const plan = tl.plan, mode = tl.armed; toolDisarm();
+  return toolRun(async () => { toolSay(mode === 'toSheet' ? await toolWriteSheet(plan, toolSay) : await toolCopyToSb(toolSay)); });
+}
+$('sbTools').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b || tl.busy) return;
+  if (b.id === 'sbCheck') toolCheck(); else if (b.id === 'sbCopy') toolCopy();
 });
 
 /* ---------- popovers (Toolbox, Filter): close on outside click or Escape ---------- */
@@ -5727,7 +6676,8 @@ try { const t = TAB_ALIAS[localStorage.getItem('mbl-tab')] || localStorage.getIt
 renderLinks();
 setStatus('loading', 'Connecting to your sheet…');
 (async () => {
-  if (!(window.claude && window.claude.use)) { googleBoot(); return; }
+  if (!(window.claude && window.claude.use)) { pagesBoot(); return; }
+  state.readOnly = ARTIFACT_READ_ONLY && !window.__TEST_WRITES__;   // claude.ai copy: reads only
   const mcp = await window.claude.use('mcp');
   if (!mcp) {
     setStatus('error', 'Showing the 9 Oct snapshot');
@@ -5735,6 +6685,7 @@ setStatus('loading', 'Connecting to your sheet…');
     return;
   }
   state.mcp = mcp;
-  refresh();
+  await refresh();
+  if (state.readOnly) notice('');   // shows the read-only notice
 })();
 </script>

@@ -5,6 +5,7 @@
 ## This repo
 - `app.html` is the app source; the same file is published as the claude.ai artifact.
 - `python3 tools/build-pages.py` rebuilds `index.html` from `app.html` for GitHub Pages.
-- Data lives in the Entertainment Tracker Google Sheet.
+- Data lives in the Entertainment Tracker Google Sheet, moving to Supabase (schema `books` in project `jcm-apps`); each device chooses in Toolbox > Data & sign-in. See HANDOVER's Supabase section.
+- Branch and pull request into `main` for every change; the owner merges. Run `bash tests/run-all.sh` before every push.
 - `old.html` is kept for reference only: "Don't use its Save, because it rewrites the whole sheet."
-- **Start with `HANDOVER.md`**: the current sheet layout, the owner's working rules (direct pushes to `main` are fine here; never read the `Brain tester` sheet beyond Date and Pages), conventions, known limits and open ideas. `v3/README.md` on branch `claude/keen-sagan-yf9rqf` is the older data-model note.
+- **Start with `HANDOVER.md`**: the current sheet layout, the owner's working rules (never read the `Brain tester` sheet beyond Date and Pages), conventions, known limits and open ideas. `v3/README.md` on branch `claude/keen-sagan-yf9rqf` is the older data-model note.
