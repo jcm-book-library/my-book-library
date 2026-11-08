@@ -49,6 +49,12 @@ header{margin-bottom:16px}
 .status[data-state="live"] .dot{background:var(--accent)}
 .status[data-state="error"] .dot{background:var(--danger)}
 .status[data-state="loading"] .dot{background:var(--accent);animation:pulse 1s infinite alternate}
+.status[data-state="live"] .dot[data-sync]{box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 30%,transparent),0 0 8px var(--accent)}
+.sb-box{display:grid;gap:10px;min-width:0}
+.sb-acts{display:flex;gap:8px;flex-wrap:wrap;align-items:center;min-width:0}
+.sb-acts input{flex:1 1 150px;min-width:0;font:inherit;font-size:14px;background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:7px 10px}
+.sb-acts input:focus{border-color:var(--accent);outline:none}
+#sbMsg{white-space:pre-line;overflow-wrap:anywhere}
 @keyframes pulse{to{opacity:.3}}
 button{font:inherit;cursor:pointer}
 .btn{border:1px solid var(--line);background:var(--raise);color:var(--fg);border-radius:8px;padding:7px 12px;font-weight:500;font-size:13px}
@@ -894,6 +900,7 @@ body[data-bg="plain"] .ground{display:none}
         <div class="look-row"><span>Background</span><div class="seg"><button type="button" data-bg="shelf" aria-pressed="true">Shelf</button><button type="button" data-bg="plain" aria-pressed="false">Plain</button></div></div>
         <div class="look-row"><span>Spine colours</span><div class="seg"><button type="button" data-cm="month" aria-pressed="false">Month</button><button type="button" data-cm="daily" aria-pressed="true">Daily mix</button><button type="button" data-cm="contrast" aria-pressed="false">Contrast</button></div></div>
       </div>
+      <div class="pg" id="dataPg" hidden><p class="pg-label">Data</p><div class="tgrid"><button class="btn" type="button" id="dataBtn">Data &amp; sign-in</button></div></div>
       <div class="pg"><p class="pg-label">Links</p><div class="links" id="discLinks"></div></div>
     </div>
   </div>
@@ -1204,6 +1211,26 @@ body[data-bg="plain"] .ground{display:none}
   </form>
 </dialog>
 
+<dialog id="dataDlg" aria-labelledby="dataTitle" style="width:min(520px,calc(100vw - 32px))">
+  <form id="dataForm" method="dialog">
+    <div class="dlg-head"><h2 id="dataTitle">Data &amp; sign-in</h2><button class="btn" type="button" id="dataClose">Close</button></div>
+    <div style="padding:16px 20px;display:grid;gap:12px;min-width:0">
+      <div class="field"><label for="dSource">Where your data lives</label><select id="dSource"><option value="sheets">Google Sheet</option><option value="supabase">Supabase</option></select></div>
+      <div class="sb-box">
+        <p class="muted" id="sbState" style="margin:0;font-size:13px"></p>
+        <div class="sb-acts" id="sbEmailRow"><input id="sbEmail" type="email" autocomplete="username" placeholder="Your email" aria-label="Email for Supabase sign-in"><button class="btn" type="button" id="sbMail">Email me a sign-in link</button></div>
+        <div class="sb-acts" id="sbPwRow"><input id="sbPw" type="password" autocomplete="current-password" placeholder="Password" aria-label="Supabase password"><button class="btn" type="button" id="sbPwIn">Sign in with password</button></div>
+        <div class="sb-acts" id="sbSetRow"><input id="sbNewPw" type="password" autocomplete="new-password" placeholder="New password (12+ characters)" aria-label="New Supabase password"><button class="btn" type="button" id="sbSetPw">Set password</button></div>
+        <div class="sb-acts" id="sbOutRow"><button class="btn btn-ghost" type="button" id="sbOut">Sign out of Supabase</button><span class="muted" style="font-size:12px;flex:1 1 180px">This signs you out of every jcm-book-library app on this device.</span></div>
+        <!-- sbTools: the copy and check buttons are added here in a later stage -->
+        <div id="sbTools"></div>
+        <p class="muted" id="sbMsg" style="margin:0;font-size:13px"></p>
+      </div>
+    </div>
+    <div class="dlg-foot"><span class="muted" id="dataMsg" style="font-size:13px;align-self:center"></span><button class="btn btn-primary" type="submit" id="dataSave">Save &amp; connect</button></div>
+  </form>
+</dialog>
+
 <dialog id="wishDlg" aria-labelledby="wdTitle" style="width:min(640px,calc(100vw - 32px))">
   <form id="wishForm" method="dialog">
     <div class="dlg-head"><h2 id="wdTitle">Add to Wishlist</h2><button class="btn" type="button" id="wdClose">Close</button></div>
@@ -1338,6 +1365,8 @@ body[data-bg="plain"] .ground{display:none}
 <script>
 const SHEET_ID = '1558jWeUc8gCzQuph6wOVyOocvTBhQf22UuCSXza8klc';
 const SERVER = 'Google Sheets';
+const RO_MSG = 'This copy is read-only. Use the live site: https://jcm-book-library.github.io/my-book-library/';
+const SB_EMPTY = "Supabase returned no books. If you've copied your Sheet already, sign out of Supabase and sign in again.";
 
 // Snapshot taken 9 Oct 2026 so the page is useful before (or without) the live connection.
 const SNAPSHOT = {
@@ -2069,10 +2098,10 @@ function syncReadingBooks() {
 }
 
 /* ---------- connection ---------- */
-const isLive = () => !!state.mcp && !(state.google && !google_.valid());
-const connectHint = () => state.google ? 'Press Connect at the top to sign in to Google.' : 'Open this page in Claude to connect it.';
+const isLive = () => !!state.mcp && (state.sb ? sb.signedIn() : !(state.google && !google_.valid()));
+const connectHint = () => state.sb ? 'Press Connect at the top to sign in to Supabase.' : state.google ? 'Press Connect at the top to sign in to Google.' : 'Open this page in Claude to connect it.';
 function setStatus(kind, text) { $('status').dataset.state = kind; $('statusText').textContent = text; }
-function notice(text, kind) { const n = $('notice'); if (!text) { n.hidden = true; return; } n.textContent = text; n.dataset.kind = kind || ''; n.hidden = false; }
+function notice(text, kind) { const n = $('notice'); if (!text && state.readOnly) { text = RO_MSG; kind = ''; } if (!text) { n.hidden = true; return; } n.textContent = text; n.dataset.kind = kind || ''; n.hidden = false; }
 
 function explain(err) {
   switch (err && err.code) {
@@ -2083,7 +2112,9 @@ function explain(err) {
     case 'not_in_manifest': case 'consent_required': return 'This page isn\'t allowed to use Google Sheets yet. Allow it from the page\'s permissions, then press Refresh.';
     case 'blocked_by_policy': return 'Your organisation blocks Google Sheets for this page.';
     case 'server_unavailable': return 'Google Sheets didn\'t answer in time. Press Refresh to try again.';
-    case 'tool_error': return 'Google Sheets reported a problem: ' + (err.message || 'unknown error') + '.';
+    case 'tool_error': if (err.message === RO_MSG) return RO_MSG; return (state.sb ? 'Supabase' : 'Google Sheets') + ' reported a problem: ' + (err.message || 'unknown error') + '.';
+    case 'sb_signin': return 'Your Supabase sign-in has expired. Press Connect to sign in again.';
+    case 'api': return 'Supabase reported a problem: ' + (err.message || 'unknown error') + '. Press Refresh to try again.';
     case 'not_granted': case 'capability_disabled': case 'capability_removed': return 'This view can\'t reach your connectors. Open the page in Claude to connect your sheet.';
     default: return 'Couldn\'t reach your sheet' + (err && err.message ? ': ' + err.message : '') + '. Press Refresh to try again.';
   }
@@ -2097,7 +2128,7 @@ async function readRange(range, spreadsheetId = SHEET_ID) {
 
 async function refresh() {
   if (!state.mcp) return;
-  setStatus('loading', 'Loading from your sheet…');
+  setStatus('loading', state.sb ? 'Loading from Supabase…' : 'Loading from your sheet…');
   $('refreshBtn').disabled = true;
   try {
     const { log, books, settings } = await DB().loadCore();
@@ -2132,11 +2163,15 @@ async function refresh() {
     }
     state.live = true;
     notice('');
-    setStatus('live', 'Live from your sheet · ' + new Date().toLocaleTimeString('en-AU', { hour: 'numeric', minute: '2-digit' }));
+    if (state.sb && books.length <= 1) notice(SB_EMPTY, 'error');
+    setStatus('live', (state.sb ? 'Supabase' : 'Live from your sheet') + ' · ' + new Date().toLocaleTimeString('en-AU', { hour: 'numeric', minute: '2-digit' }));
+    if (state.sb) { rt.lastLoad = Date.now(); rt.start(); drawSb(); } else rt.stop();
+    $('refreshBtn').textContent = 'Refresh';
     disc.loaded = false; wl.snap = null;
     renderAll();
     loadDiscover().then(autoMoveWish).then(() => { if (state.lib.mode === 'wish' && !$('view-next').hidden) renderWish(); });
   } catch (err) {
+    if (state.sb && err && err.code === 'sb_signin') { sbSignedOut(); return; }
     setStatus('error', state.live ? 'Showing the last data loaded' : 'Showing the 9 Oct snapshot');
     notice(explain(err), 'error');
   } finally {
@@ -2443,7 +2478,397 @@ const sheetDb = {
     rlRows.delete(id);
   }
 };
-const DB = () => sheetDb;
+/* Read-only copy for the claude.ai artifact: reads pass through, every write throws. The test harness (which drives the
+   app through a stubbed window.claude) sets window.__TEST_WRITES__ so it still gets its writes. */
+const ARTIFACT_READ_ONLY = true;
+const roDb = Object.fromEntries(Object.keys(sheetDb).filter(k => k[0] !== '_').map(k => [k, ['loadCore', 'readTab'].includes(k)
+  ? (...a) => sheetDb[k](...a)
+  : async () => { throw { code: 'tool_error', message: RO_MSG }; }]));
+const DB = () => state.readOnly ? roDb : state.sb ? sbDb : sheetDb;
+
+/* ---------- Supabase sign-in (shared by every jcm-book-library app) ----------
+   The publishable key is meant to be public: Row Level Security only lets the signed-in owner see their own rows.
+   All the apps live on jcm-book-library.github.io, so they share browser storage: one session under one key
+   (jcm-sb-session) signs in every app on this device. Supabase replaces the refresh token on each refresh, so
+   two apps refreshing at once could sign each other out: refreshes are serialised across tabs and apps with a
+   Web Lock, and the stored session is re-read inside the lock (another app may already have refreshed it).
+   Signing out here signs out every app on this device. */
+const SB = { url: 'https://apeflgdzclpxiktaxyfk.supabase.co', key: 'sb_publishable_AHVRXW-Zi3lLaHilBab1Sg_fPzPvWcg', schema: 'books', sesKey: 'jcm-sb-session', lock: 'jcm-sb-refresh' };
+const useSb = () => google_.cfg().backend === 'supabase';
+const jwtClaims = t => { try { return JSON.parse(atob(String(t).split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))); } catch (e) { return {}; } };
+const withLock = fn => (typeof navigator !== 'undefined' && navigator.locks && navigator.locks.request) ? navigator.locks.request(SB.lock, fn) : fn();
+const sb = {
+  ses() { try { return JSON.parse(localStorage.getItem(SB.sesKey) || 'null'); } catch (e) { return null; } },
+  keep(b) { const s = { at: b.access_token, rt: b.refresh_token, exp: Date.now() + (Number(b.expires_in || 3600) - 60) * 1000, email: jwtClaims(b.access_token).email || '' };
+    try { localStorage.setItem(SB.sesKey, JSON.stringify(s)); } catch (e) {} return s; },
+  forget() { try { localStorage.removeItem(SB.sesKey); } catch (e) {} },
+  signedIn() { const s = this.ses(); return !!(s && s.rt); },
+  email() { const s = this.ses(); return (s && s.email) || ''; },
+  async post(path, body, token) {
+    const h = { apikey: SB.key, 'Content-Type': 'application/json' }; if (token) h.Authorization = 'Bearer ' + token;
+    const r = await fetch(`${SB.url}/auth/v1/${path}`, { method: 'POST', headers: h, body: JSON.stringify(body) });
+    return { r, b: await r.json().catch(() => ({})) };
+  },
+  /* Email link: for a laptop browser. Phone home-screen apps keep separate storage, so they use the password. */
+  async emailLink(email) {
+    const { r, b } = await this.post(`otp?redirect_to=${encodeURIComponent(location.origin + location.pathname)}`, { email, create_user: false });
+    if (r.ok) return;
+    throw { message: r.status === 429 ? 'too many emails for now. Wait an hour, or use the last link you were sent.' : (b.msg || b.message || b.error_description || 'HTTP ' + r.status) };
+  },
+  async signInPassword(email, password) {
+    const { r, b } = await this.post('token?grant_type=password', { email, password });
+    if (!r.ok || !b.access_token) throw { message: r.status === 429 ? 'too many tries. Wait a few minutes and try again.' : r.status >= 500 ? 'Supabase had a problem (HTTP ' + r.status + '). Try again shortly.' : 'that email and password didn\'t match. If you haven\'t set a password yet, sign in with the email link on your laptop and set one first.' };
+    return this.keep(b);
+  },
+  async setPassword(password) {
+    const t = await this.token();
+    const r = await fetch(`${SB.url}/auth/v1/user`, { method: 'PUT', headers: { apikey: SB.key, Authorization: 'Bearer ' + t, 'Content-Type': 'application/json' }, body: JSON.stringify({ password }) });
+    const b = await r.json().catch(() => ({}));
+    if (!r.ok) throw { message: b.msg || b.message || b.error_description || 'HTTP ' + r.status };
+  },
+  async signOut() { const s = this.ses(); this.forget();
+    if (s) try { await fetch(`${SB.url}/auth/v1/logout?scope=local`, { method: 'POST', headers: { apikey: SB.key, Authorization: 'Bearer ' + s.at } }); } catch (e) {} },
+  /* Back from an emailed link: Supabase puts the session (or an error) in the address after #. */
+  fromRedirect() {
+    const h = new URLSearchParams(location.hash.slice(1));
+    if (!h.has('access_token') && !h.has('error_description')) return null;
+    history.replaceState(null, '', location.pathname + location.search);
+    if (h.get('access_token')) { const s = this.keep(Object.fromEntries(h)); return { ok: true, email: s.email }; }
+    return { ok: false, message: h.get('error_description').replace(/\+/g, ' ') };
+  },
+  /* Access tokens last an hour; the refresh token keeps you signed in. One refresh at a time, across every app. */
+  async token(force) {
+    const s0 = this.ses();
+    if (!s0 || !s0.rt) throw { code: 'sb_signin' };
+    if (!force && s0.exp > Date.now()) return s0.at;
+    if (!this._ref) this._ref = withLock(async () => {
+      const s = this.ses();                                  // re-read: another app may have refreshed while we waited
+      if (!s || !s.rt) throw { code: 'sb_signin' };
+      if (s.at !== s0.at && s.exp > Date.now()) return s.at;
+      const { r, b } = await this.post('token?grant_type=refresh_token', { refresh_token: s.rt });
+      if (r.ok && b.access_token) return this.keep(b).at;
+      if (r.status === 400 || r.status === 401 || r.status === 403) {
+        const now = this.ses();                              // refreshed elsewhere in the meantime: keep that one
+        if (now && now.rt && now.rt !== s.rt && now.exp > Date.now()) return now.at;
+        this.forget(); throw { code: 'sb_signin' };
+      }
+      throw { code: 'api', message: b.msg || b.error_description || 'Supabase sign-in HTTP ' + r.status };
+    }).finally(() => { this._ref = null; });
+    return this._ref;
+  },
+  /* PostgREST call in the books schema. opts: method, body, prefer, schema. */
+  async api(path, opts = {}, retried) {
+    const t = await this.token(), sc = opts.schema || SB.schema;
+    const o = { method: opts.method || 'GET', headers: { apikey: SB.key, Authorization: 'Bearer ' + t, 'Accept-Profile': sc, 'Content-Profile': sc } };
+    if (opts.prefer) o.headers.Prefer = opts.prefer;
+    if (opts.body) { o.headers['Content-Type'] = 'application/json'; o.body = JSON.stringify(opts.body); }
+    const res = await fetch(`${SB.url}/rest/v1/${path}`, o);
+    if (res.status === 401 && !retried) { await this.token(true); return this.api(path, opts, true); }
+    const txt = await res.text(), body = txt ? (() => { try { return JSON.parse(txt); } catch (e) { return txt; } })() : null;
+    if (!res.ok) throw { code: 'api', status: res.status, message: (body && (body.message || body.msg)) || 'Supabase HTTP ' + res.status };
+    return body;
+  }
+};
+/* ---------- Supabase tables ----------
+   SBT: Sheet tab -> [table, [[sheetHeader, column, type], ...]] in the Sheet's header order.
+   Types: text, num, int, date; bool is the Books spelling ('Yes' / ''); tf is the Wishlist spelling ('TRUE' / 'FALSE');
+   calc columns (Books remain and %) are not stored: they are worked out when a row is read. */
+const sbCols = s => s.trim().split(/\s+/).map(x => x.split(':'));
+const SBT = {
+  'Books': ['books', sbCols(`title:title:text author:author:text status:status:text rating:rating:num favourite:favourite:bool cover:cover:text
+    currentPage:current_page:num pages:pages:num remain::calc %::calc startDate:start_date:date finishDate:finish_date:date series:series:text
+    seriesNum:series_num:num type:type:text format:format:text publisher:publisher:text genre:genre:text theme1:theme1:text theme2:theme2:text
+    theme3:theme3:text setting:setting:text year:year:int awards:awards:text tier:tier:text upNextOrder:up_next_order:num why:why:text
+    triaged:triaged:date added:added:date copies:copies:text isbn:isbn:text loaned:loaned:text loanee:loanee:text synopsis:synopsis:text
+    notes:notes:text id:id:int`)],
+  'Reading Log': ['reading_log', sbCols('date:date:date pages:pages:num bookId:book_id:int title:title:text pageReached:page_reached:num loggedAt:logged_at:text source:source:text minutes:minutes:num')],
+  'App Settings': ['settings', sbCols('setting:key:text value:value:text note:note:text')],
+  'Ratings': ['ratings', sbCols('date:date:date bookId:book_id:int title:title:text category:category:text gut:gut:num criteria:criteria:text standout:standout:text fatalFlaw:fatal_flaw:text suggested:suggested:num final:final:num')],
+  'Contents': ['contents', sbCols('bookId:book_id:int savedAt:saved_at:text story:story:text startPage:start_page:num')],
+  'Wishlist': ['wishlist', sbCols('id:id:text added:added:date title:title:text author:author:text series:series:text number:number:num type:type:text format:format:text publisher:publisher:text stage:stage:text waiting:waiting:text wantAs:want_as:text checked:checked:text checkedOn:checked_on:date release:release:text price:price:num link:link:text seenIn:seen_in:text interest:interest:text gift:gift:tf notes:notes:text bookId:book_id:int')],
+  'Series Tracker': ['series_tracker', sbCols('series:series:text author:author:text publisher:publisher:text kind:kind:text status:status:text released:released:num soldAs:sold_as:text link:link:text notes:notes:text')],
+  'Reading Lists': ['reading_lists', sbCols('list:list:text order:sort_order:num title:title:text author:author:text notes:notes:text id:id:text bookId:book_id:int')],
+  'Wishlist archive': ['wishlist_archive', sbCols('Title:title:text Author:author:text Available:available:text Status:status:text Type:type:text Format:format:text ETA:eta:text Cost:cost:text Pages:pages:num Source:source:text Reading_List:reading_list:text Notes:notes:text id:id:text Series:series:text Link:link:text bookId:book_id:int')],
+  'Quotes': ['quotes', sbCols('quote:quote:text from:from_title:text character:character:text by:author:text bookId:book_id:int page:page:num added:added:date')]
+};
+SBT['Wishlist archive'][1].forEach(c => { c[0] = c[0].replace('_', ' '); });
+/* Database value -> the string the Sheet would show. Numbers have no thousands separators; dates are yyyy-mm-dd; null is ''. */
+function sbToCell(type, v) {
+  if (v == null) return type === 'tf' ? 'FALSE' : '';
+  switch (type) {
+    case 'num': case 'int': { const n = Number(v); return Number.isFinite(n) ? String(n) : ''; }
+    case 'date': return String(v).slice(0, 10);
+    case 'bool': return v ? 'Yes' : '';
+    case 'tf': return v ? 'TRUE' : 'FALSE';
+    default: return String(v);
+  }
+}
+/* A value as the app writes it to the Sheet -> database value. Strips the leading ' that keeps text as text;
+   numbers may carry commas (1,116); '' is null for num, int and date; booleans follow the column's Sheet spelling. */
+function cellToSb(type, v) {
+  let s = v == null ? '' : String(v);
+  if (s[0] === "'") s = s.slice(1);
+  switch (type) {
+    case 'num': case 'int': {
+      s = s.replace(/[,\s$£€]/g, ''); if (s === '') return null;
+      const n = Number(s); if (!Number.isFinite(n)) return null;
+      return type === 'int' ? Math.trunc(n) : n;
+    }
+    case 'date': { const m = s.trim().match(/^\d{4}-\d{2}-\d{2}/); return m ? m[0] : null; }
+    case 'bool': case 'tf': { const t = s.trim(); return t !== '' && !/^(no|false|0|n)$/i.test(t); }
+    default: return s;
+  }
+}
+
+/* ---------- sbDb: the same operations as sheetDb, done the database way ---------- */
+const sbDef = (tab, header) => SBT[tab][1].find(c => c[0] === header);
+const sbHeader = tab => SBT[tab][1].map(c => c[0]);
+const sbTable = tab => SBT[tab][0];
+const sbEnc = encodeURIComponent;
+// A database row -> the Sheet-style array (header order); Books gets remain and % worked out
+function sbRecToRow(tab, r) {
+  return SBT[tab][1].map(([h, c, t]) => {
+    if (t !== 'calc') return sbToCell(t, r[c]);
+    const pages = Number(r.pages) || 0, cur = Number(r.current_page) || 0;
+    return pages > 0 ? (h === 'remain' ? String(pages - cur) : String(Math.round(cur / pages * 100))) : '';
+  });
+}
+// A Sheet-style array (header order, as the app writes it) -> a database object
+function sbRowToObj(tab, row) {
+  const o = {}; SBT[tab][1].forEach(([, c, t], i) => { if (t !== 'calc') o[c] = cellToSb(t, row[i]); }); return o;
+}
+// Fields by Sheet header name (only those given, never calc) -> a database object. cellFn is the Sheet version's cell formatter.
+function sbFieldsToObj(tab, fields, cellFn, skip = []) {
+  const o = {};
+  for (const [k, v] of Object.entries(fields)) {
+    const d = sbDef(tab, k); if (!d || d[2] === 'calc' || skip.includes(k)) continue;
+    o[d[1]] = cellToSb(d[2], cellFn ? cellFn(k, v) : v);
+  }
+  return o;
+}
+// Every stored column, so a bulk insert never sends NULL where the table has a default
+function sbFullObj(tab, fields, cellFn) {
+  const o = {};
+  for (const [h, c, t] of SBT[tab][1]) if (t !== 'calc') o[c] = cellToSb(t, cellFn ? cellFn(h, fields[h] ?? '') : (fields[h] ?? ''));
+  return o;
+}
+async function sbReadRecs(tab, extra = '') {
+  const recs = [], page = 1000;
+  for (let from = 0; ; from += page) {
+    const got = await sb.api(`${sbTable(tab)}?select=*${extra}&order=row_id&limit=${page}&offset=${from}`);
+    recs.push(...got);
+    if (got.length < page) break;
+  }
+  return recs;
+}
+async function sbAllIds(table) {
+  const out = [], page = 1000;
+  for (let from = 0; ; from += page) { const got = await sb.api(`${table}?select=id&order=row_id&limit=${page}&offset=${from}`); out.push(...got); if (got.length < page) break; }
+  return out;
+}
+const sbWrite = async (path, opts) => { rt.lastSave = Date.now(); try { return await sb.api(path, opts); } finally { rt.lastSave = Date.now(); } };
+const sbNum = id => Number(String(id || '').replace(/\D/g, '')) || 0;
+const sbDb = {
+  _ids: {},                       // tab -> row_ids in Sheet row order (row n is _ids[tab][n - 2]); deleted rows leave a gap, like a cleared Sheet row
+  _no(tab, rid) { const a = this._ids[tab] || (this._ids[tab] = []); let i = a.indexOf(rid); if (i < 0) { a.push(rid); i = a.length - 1; } return i + 2; },
+  _rid(tab, n) { return (this._ids[tab] || [])[n - 2] || null; },
+  _drop(tab, rid) { const a = this._ids[tab] || [], i = a.indexOf(rid); if (i >= 0) a[i] = null; },
+  async _read(tab) {
+    const recs = await sbReadRecs(tab);
+    this._ids[tab] = recs.map(r => r.row_id);
+    return [sbHeader(tab), ...recs.map(r => sbRecToRow(tab, r))];
+  },
+  // ----- reads -----
+  async loadCore() {
+    const [log, books, settings] = await Promise.all([this._read('Reading Log'), this._read('Books'), this._read('App Settings')]);
+    return { log, books, settings };
+  },
+  async readTab(name) {
+    const m = String(name).match(/^(.*) header$/);
+    if (m && SBT[m[1]]) return [sbHeader(m[1])];
+    if (!SBT[name]) throw { code: 'tool_error', message: 'Unknown tab ' + name };
+    return this._read(name);
+  },
+  // ----- Reading Log -----
+  async logAdd(row) {
+    const got = await sbWrite(sbTable('Reading Log'), { method: 'POST', body: sbRowToObj('Reading Log', row), prefer: 'return=representation' });
+    return this._no('Reading Log', got[0].row_id);
+  },
+  // The row is re-read by row_id right before writing. Returns false (and writes nothing) if the entry has changed.
+  async logEdit(e, change) {
+    const rid = this._rid('Reading Log', e._row); if (!rid) return false;
+    const cur = (await sb.api(`reading_log?row_id=eq.${rid}&select=*`))[0]; if (!cur) return false;
+    if (toDate(cur.date) !== e.date || toNum(cur.pages) !== e.pages || String(cur.book_id ?? '').trim() !== e.bookId) return false;
+    let body;
+    if (change.del) body = { pages: 0, source: 'deleted' };
+    else { body = {}; if (change.date !== e.date) body.date = change.date; if (change.pages !== e.pages) body.pages = change.pages; }
+    if (!Object.keys(body).length) return true;
+    return (await sbWrite(`reading_log?row_id=eq.${rid}`, { method: 'PATCH', body, prefer: 'return=representation' })).length === 1;
+  },
+  // ----- Books -----
+  async bookUpdate(id, fields) {
+    const body = sbFieldsToObj('Books', fields, cellValue, ['id']);
+    if (!Object.keys(body).length) return;
+    const got = await sbWrite(`books?id=eq.${sbEnc(id)}`, { method: 'PATCH', body, prefer: 'return=representation' });
+    if (got.length !== 1) throw { code: 'tool_error', message: got.length ? `ID ${id} appears ${got.length} times in Books` : `ID ${id} isn't in Books any more` };
+  },
+  // Move a book's currentPage forward only. Returns true if it was written.
+  async bookPage(bookId, pageReached) {
+    const got = await sb.api(`books?id=eq.${sbEnc(bookId)}&select=row_id,current_page`);
+    if (got.length !== 1) throw { code: 'tool_error', message: got.length ? `ID ${bookId} appears ${got.length} times in Books` : `ID ${bookId} not found in Books` };
+    if (pageReached <= toNum(got[0].current_page)) return false;
+    await sbWrite(`books?row_id=eq.${got[0].row_id}`, { method: 'PATCH', body: { current_page: pageReached }, prefer: 'return=minimal' });
+    return true;
+  },
+  // New ids are the highest id + 4, read just before inserting; one retry if another device took the id first.
+  async _insertBooks(list) {
+    for (let attempt = 0; ; attempt++) {
+      const top = await sb.api('books?select=id&order=id.desc&limit=1'), max = top && top[0] ? Number(top[0].id) || 0 : 0;
+      const ids = list.map((_, i) => max + 4 * (i + 1));
+      try { await sbWrite('books', { method: 'POST', body: list.map((f, i) => ({ ...sbFullObj('Books', f, cellValue), id: ids[i] })), prefer: 'return=minimal' }); return ids; }
+      catch (err) { if (!(err && err.status === 409 && attempt === 0)) throw err; }
+    }
+  },
+  async bookAdd(fields) {
+    const [id] = await this._insertBooks([fields]);
+    return { id: String(id), header: sbHeader('Books') };
+  },
+  async booksAddMany(list) {
+    const ids = await this._insertBooks(list);
+    return { header: sbHeader('Books'), ids: ids.map(String), r0: null };
+  },
+  // ----- Ratings, Contents, Quotes, App Settings -----
+  async ratingAdd(row) { await sbWrite('ratings', { method: 'POST', body: sbRowToObj('Ratings', row), prefer: 'return=minimal' }); },
+  async contentsAdd(bookId, list, stamp) {
+    await sbWrite('contents', { method: 'POST', body: list.map(x => sbRowToObj('Contents', ["'" + bookId, stamp, "'" + x.story, x.start])), prefer: 'return=minimal' });
+  },
+  async quoteAdd(row) {
+    const got = await sbWrite('quotes', { method: 'POST', body: sbRowToObj('Quotes', row), prefer: 'return=representation' });
+    return this._no('Quotes', got[0].row_id);
+  },
+  async settingSave(key, value) {
+    const v = String(value ?? '');
+    const got = await sb.api(`settings?key=eq.${sbEnc(key)}&select=row_id`);
+    if (got.length) await sbWrite(`settings?row_id=eq.${got[0].row_id}`, { method: 'PATCH', body: { value: v }, prefer: 'return=minimal' });
+    else await sbWrite('settings', { method: 'POST', body: { key, value: v }, prefer: 'return=minimal' });
+  },
+  // ----- Wishlist -----
+  async wishUpdate(id, fields) {
+    if (!id) throw { code: 'tool_error', message: 'this Wishlist row has no id yet' };
+    const body = sbFieldsToObj('Wishlist', fields, wishCell, ['id']);
+    if (!Object.keys(body).length) return;
+    const got = await sbWrite(`wishlist?id=eq.${sbEnc(id)}`, { method: 'PATCH', body, prefer: 'return=representation' });
+    if (got.length !== 1) throw { code: 'tool_error', message: got.length ? `Wishlist id ${id} appears ${got.length} times` : `Wishlist id ${id} isn't there any more` };
+  },
+  // In the Sheet the row is blanked; here it is deleted (the copy back clears the Sheet row)
+  async wishClear(id) {
+    const got = await sbWrite(`wishlist?id=eq.${sbEnc(id)}`, { method: 'DELETE', prefer: 'return=representation' });
+    if (!got.length) throw { code: 'tool_error', message: `Wishlist id ${id} isn't there any more` };
+    got.forEach(r => this._drop('Wishlist', r.row_id));
+  },
+  async wishAdd(items, otherIds = []) {
+    const header = sbHeader('Wishlist');
+    for (let attempt = 0; ; attempt++) {
+      const used = await sbAllIds('wishlist');
+      let next = Math.max(0, ...used.map(r => sbNum(r.id)), ...otherIds.map(sbNum));
+      const rows = items.map(f => ({ stage: 'Inbox', gift: 'FALSE', ...f, id: 'WL' + String(++next).padStart(4, '0'), added: today() }));
+      try { await sbWrite('wishlist', { method: 'POST', body: rows.map(f => sbFullObj('Wishlist', f, (h, v) => h === 'id' || h === 'added' ? v : wishCell(h, v || ''))), prefer: 'return=minimal' }); return { header, rows }; }
+      catch (err) { if (!(err && err.status === 409 && attempt === 0)) throw err; }
+    }
+  },
+  async archiveAdd(rows) { await sbWrite('wishlist_archive', { method: 'POST', body: rows.map(r => sbRowToObj('Wishlist archive', r)), prefer: 'return=minimal' }); },
+  // ----- Series Tracker (matched by name in JS, like the Sheet version) -----
+  async seriesSave(f, matchName) {
+    const recs = await sbReadRecs('Series Tracker'), key = normQ(matchName);
+    const hits = recs.filter(r => normQ(r.series) === key);
+    if (hits.length > 1) throw { code: 'tool_error', message: `“${f.series}” is in the Series Tracker ${hits.length} times` };
+    const cell = (k, x) => !x ? '' : k === 'released' ? x : "'" + x;
+    if (hits.length) {
+      const cur = hits[0];
+      const changed = Object.fromEntries(SD_FIELDS.filter(k => { const d = sbDef('Series Tracker', k); return d && String(sbToCell(d[2], cur[d[1]])).trim() !== f[k]; }).map(k => [k, f[k]]));
+      const body = sbFieldsToObj('Series Tracker', changed, cell);
+      if (Object.keys(body).length) await sbWrite(`series_tracker?row_id=eq.${cur.row_id}`, { method: 'PATCH', body, prefer: 'return=minimal' });
+      return { row: this._no('Series Tracker', cur.row_id), isNew: false };
+    }
+    const got = await sbWrite('series_tracker', { method: 'POST', body: sbFullObj('Series Tracker', f, cell), prefer: 'return=representation' });
+    return { row: this._no('Series Tracker', got[0].row_id), isNew: true };
+  },
+  // Delete the row for a series name. Returns false (and writes nothing) unless exactly one row matches.
+  async seriesClear(name) {
+    const hits = (await sbReadRecs('Series Tracker')).filter(r => normQ(r.series) === normQ(name));
+    if (hits.length !== 1) return false;
+    await sbWrite(`series_tracker?row_id=eq.${hits[0].row_id}`, { method: 'DELETE', prefer: 'return=minimal' });
+    this._drop('Series Tracker', hits[0].row_id);
+    return true;
+  },
+  // ----- Reading Lists -----
+  async listUpdate(id, fields) {
+    const body = sbFieldsToObj('Reading Lists', fields, listCell, ['id']);
+    if (!Object.keys(body).length) return;
+    const got = await sbWrite(`reading_lists?id=eq.${sbEnc(id)}`, { method: 'PATCH', body, prefer: 'return=representation' });
+    if (got.length !== 1) throw { code: 'tool_error', message: got.length ? `Reading list id ${id} appears ${got.length} times` : `Reading list id ${id} isn't there any more` };
+  },
+  async listAdd(f, otherIds = []) {
+    const header = sbHeader('Reading Lists');
+    for (let attempt = 0; ; attempt++) {
+      const used = await sbAllIds('reading_lists');
+      const id = 'RL' + String(Math.max(0, ...used.map(r => sbNum(r.id)), ...otherIds.map(sbNum)) + 1).padStart(4, '0');
+      try {
+        const got = await sbWrite('reading_lists', { method: 'POST', body: sbFullObj('Reading Lists', { ...f, id }, (h, v) => h === 'id' ? v : listCell(h, v)), prefer: 'return=representation' });
+        return { header, id, row: this._no('Reading Lists', got[0].row_id) };
+      } catch (err) { if (!(err && err.status === 409 && attempt === 0)) throw err; }
+    }
+  },
+  async listClear(id) {
+    const got = await sbWrite(`reading_lists?id=eq.${sbEnc(id)}`, { method: 'DELETE', prefer: 'return=representation' });
+    if (!got.length) throw { code: 'tool_error', message: `Reading list id ${id} isn't there any more` };
+    got.forEach(r => this._drop('Reading Lists', r.row_id));
+  }
+};
+
+/* ---------- live sync: Supabase Realtime ----------
+   One websocket listens for any change to the library tables (RLS still applies: you only hear about your own rows).
+   A change from another device triggers a quiet reload a moment later; our own saves are ignored because
+   they reload anyway. If the socket drops it retries with growing gaps; coming back to the tab also reloads
+   when the data is over a minute old, so a missed message never leaves a device stale for long. */
+const rt = {
+  ws: null, ref: 0, hb: null, retry: 0, timer: null, want: false, joined: false, pend: null, lastSave: 0, lastLoad: 0,
+  url() { return SB.url.replace(/^http/, 'ws') + '/realtime/v1/websocket?apikey=' + encodeURIComponent(SB.key) + '&vsn=1.0.0'; },
+  send(topic, event, payload) { if (this.ws && this.ws.readyState === 1) this.ws.send(JSON.stringify({ topic, event, payload, ref: String(++this.ref) })); },
+  async start() {
+    this.want = true; if (this.ws || typeof WebSocket === 'undefined') return;
+    let at; try { at = await sb.token(); } catch (e) { return; }
+    if (!this.want || this.ws) return;
+    this._at = at;
+    const ws = this.ws = new WebSocket(this.url());
+    ws.onopen = () => {
+      this.send('realtime:books', 'phx_join', { config: { broadcast: { self: false }, presence: { key: '' }, postgres_changes: [{ event: '*', schema: SB.schema }] }, access_token: at });
+      clearInterval(this.hb); this.hb = setInterval(() => { this.send('phoenix', 'heartbeat', {}); this.keepToken(); }, 25000);
+    };
+    ws.onmessage = e => { let m; try { m = JSON.parse(e.data); } catch (x) { return; }
+      if (m.event === 'phx_reply' && m.topic === 'realtime:books' && m.payload) {
+        if (m.payload.status === 'ok') { if (!this.joined) { this.joined = true; this.retry = 0; this.show(); } }
+        else if (m.payload.status === 'error') { this.joined = false; this.show(); }
+      }
+      if (m.event === 'system' && m.payload && m.payload.status === 'error') { this.joined = false; this.show(); }
+      if (m.event === 'postgres_changes') this.changed();
+    };
+    ws.onclose = () => { this.ws = null; this.joined = false; clearInterval(this.hb); this.show();
+      if (this.want) { clearTimeout(this.timer); this.timer = setTimeout(() => this.start(), Math.min(60000, 2000 * Math.pow(2, this.retry++))); } };
+    ws.onerror = () => { try { ws.close(); } catch (e) {} };
+  },
+  stop() { this.want = false; clearTimeout(this.timer); clearTimeout(this.pend); clearInterval(this.hb); if (this.ws) { const w = this.ws; this.ws = null; try { w.close(); } catch (e) {} } this.joined = false; this.show(); },
+  /* hand the socket a fresh token before the old one runs out */
+  async keepToken() { try { const at = await sb.token(); if (at !== this._at) { this._at = at; this.send('realtime:books', 'access_token', { access_token: at }); } } catch (e) {} },
+  changed() {
+    if (Date.now() - this.lastSave < 2500) return;
+    clearTimeout(this.pend); this.pend = setTimeout(() => this.pull(), 800);
+  },
+  pull() { if (state.busy) { this.pend = setTimeout(() => this.pull(), 800); return; } refresh(); },
+  show() { const d = document.querySelector('#status .dot'); if (d) { d.toggleAttribute('data-sync', this.joined); d.title = this.joined ? 'Live sync on: changes from your other devices show here straight away' : ''; } }
+};
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && state.sb && state.live && !state.busy && Date.now() - rt.lastLoad > 60000) refresh(); });
+
 async function writeBookFields(id, fields) {
   // A book that starts being read leaves the plan: no tier, no Up next number
   const cur = state.allBooks.find(x => x.id === id);
@@ -5584,7 +6009,7 @@ $('bookForm').addEventListener('change', updateDlgLog);
 $('dlgClose').addEventListener('click', () => $('bookDlg').close());
 $('drillClose').addEventListener('click', () => $('drillDlg').close());
 
-$('refreshBtn').addEventListener('click', () => state.google && !google_.valid() ? googleConnect() : refresh());
+$('refreshBtn').addEventListener('click', () => state.sb ? (sb.signedIn() ? refresh() : openDataDlg('Sign in to Supabase below.')) : state.google && !google_.valid() ? googleConnect() : refresh());
 document.querySelectorAll('.logday button').forEach(b => b.addEventListener('click', () => setLogDay(addDays(today(), Number(b.dataset.day)))));
 $('logDate').addEventListener('change', e => setLogDay(toDate(e.target.value)));
 setLogDay(null);
@@ -5736,6 +6161,89 @@ function googleBoot() {
   notice(google_.cfg().clientId ? 'Press Connect to sign in to Google and load your sheet.' : 'Press Connect to link your Google Sheet. You\'ll need the OAuth Client ID from your Google Cloud project.');
 }
 
+/* ---------- Supabase on GitHub Pages: boot, sign-in dialog, switching ---------- */
+function sbSignedOut(msg) {
+  rt.stop(); state.live = false;
+  setStatus('error', 'Signed out of Supabase');
+  $('refreshBtn').textContent = 'Connect'; $('refreshBtn').disabled = false;
+  notice(msg || explain({ code: 'sb_signin' }), 'error');
+  drawSb();
+}
+function openDataDlg(msg) {
+  $('dSource').value = useSb() ? 'supabase' : 'sheets';
+  $('dataMsg').textContent = msg || ''; $('sbMsg').textContent = '';
+  drawSb();
+  if (!$('dataDlg').open) $('dataDlg').showModal();
+}
+function drawSb() {
+  const s = sb.ses(), on = !!(s && s.rt);
+  $('sbState').textContent = on ? 'Supabase: signed in' + (s.email ? ' as ' + s.email : '') + '. You stay signed in on this device until you sign out.' : 'Supabase: not signed in on this device.';
+  $('sbEmailRow').hidden = $('sbPwRow').hidden = on; $('sbSetRow').hidden = !on; $('sbOutRow').hidden = !on;
+  if (!$('sbEmail').value) $('sbEmail').value = google_.cfg().sbEmail || '';
+}
+// Start (or restart) loading in whichever mode the config now says
+function startPages() {
+  state.live = false;
+  if (useSb()) {
+    state.sb = true; state.google = false; state.mcp = sb;
+    if (sb.signedIn()) { refresh(); return; }
+    sbSignedOut('Press Connect to sign in to Supabase and load your library.'); openDataDlg('Sign in to Supabase below.');
+  } else {
+    rt.stop(); state.sb = false; googleBoot();
+  }
+}
+function pagesBoot() {
+  $('dataPg').hidden = false;
+  const back = sb.fromRedirect();
+  if (back && !back.ok) { startPages(); openDataDlg('Couldn\'t sign in: ' + back.message); return; }
+  startPages();
+  if (back && back.ok) { drawSb(); if (!useSb()) openDataDlg('Signed in to Supabase as ' + back.email + '. To use it on this device, pick Supabase in "Where your data lives" and press Save & connect.'); }
+}
+$('dataBtn').addEventListener('click', () => { closePops(); openDataDlg(''); });
+$('dataClose').addEventListener('click', () => $('dataDlg').close());
+$('dataForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const src = $('dSource').value;
+  if (src === 'supabase' && !sb.signedIn()) { $('dataMsg').textContent = 'Sign in to Supabase first (above), then press Save & connect.'; return; }
+  google_.saveCfg({ backend: src });
+  $('dataDlg').close(); notice(''); startPages();
+});
+const okEmail = em => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em);
+$('sbMail').addEventListener('click', async () => {
+  const em = $('sbEmail').value.trim();
+  if (!okEmail(em)) { $('sbMsg').textContent = 'Type your email address first.'; return; }
+  google_.saveCfg({ sbEmail: em }); $('sbMail').disabled = true; $('sbMsg').textContent = 'Sending…';
+  try { await sb.emailLink(em); $('sbMsg').textContent = 'Check your email and click the sign-in link. Open it on this device, in this browser: it brings you back here signed in.'; }
+  catch (err) { $('sbMsg').textContent = 'Couldn\'t send the link: ' + (err.message || err); }
+  $('sbMail').disabled = false;
+});
+$('sbPwIn').addEventListener('click', async () => {
+  const em = $('sbEmail').value.trim(), pw = $('sbPw').value;
+  if (!okEmail(em)) { $('sbMsg').textContent = 'Type your email address first.'; return; }
+  if (!pw) { $('sbMsg').textContent = 'Type your password.'; return; }
+  google_.saveCfg({ sbEmail: em }); $('sbPwIn').disabled = true; $('sbMsg').textContent = 'Signing in…';
+  try {
+    const ses = await sb.signInPassword(em, pw); $('sbPw').value = ''; drawSb();
+    $('sbMsg').textContent = 'Signed in to Supabase as ' + (ses.email || em) + '.' + (state.sb ? '' : ' To use it on this device, pick Supabase in "Where your data lives" and press Save & connect.');
+    if (state.sb) { notice(''); state.live = false; refresh(); }
+  } catch (err) { $('sbMsg').textContent = 'Couldn\'t sign in: ' + (err.message || err); }
+  $('sbPwIn').disabled = false;
+});
+$('sbSetPw').addEventListener('click', async () => {
+  const pw = $('sbNewPw').value;
+  if (pw.length < 12) { $('sbMsg').textContent = 'Use at least 12 characters. A few random words strung together is easy to remember and hard to guess.'; return; }
+  $('sbSetPw').disabled = true; $('sbMsg').textContent = 'Saving…';
+  try { await sb.setPassword(pw); $('sbNewPw').value = ''; $('sbMsg').textContent = 'Password set. On your phone, type your email and this password under "Sign in with password". Keep it in a password manager.'; }
+  catch (err) { $('sbMsg').textContent = 'Couldn\'t set the password: ' + (err.code === 'sb_signin' ? 'please sign in again.' : (err.message || err)); }
+  $('sbSetPw').disabled = false;
+});
+$('sbOut').addEventListener('click', async () => {
+  await sb.signOut(); drawSb(); $('sbMsg').textContent = 'Signed out of Supabase on this device.'; if (state.sb) sbSignedOut();
+});
+/* Enter inside these boxes does that box's job, not "Save & connect". */
+[['sbPw', 'sbPwIn'], ['sbNewPw', 'sbSetPw']].forEach(([i, b]) => $(i).addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); $(b).click(); } }));
+$('sbEmail').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); $($('sbPw').value ? 'sbPwIn' : 'sbMail').click(); } });
+
 $('gClose').addEventListener('click', () => $('gDlg').close());
 $('gForm').addEventListener('submit', e => {
   const v = $('gClient').value.trim();
@@ -5834,7 +6342,8 @@ try { const t = TAB_ALIAS[localStorage.getItem('mbl-tab')] || localStorage.getIt
 renderLinks();
 setStatus('loading', 'Connecting to your sheet…');
 (async () => {
-  if (!(window.claude && window.claude.use)) { googleBoot(); return; }
+  if (!(window.claude && window.claude.use)) { pagesBoot(); return; }
+  state.readOnly = ARTIFACT_READ_ONLY && !window.__TEST_WRITES__;   // claude.ai copy: reads only
   const mcp = await window.claude.use('mcp');
   if (!mcp) {
     setStatus('error', 'Showing the 9 Oct snapshot');
@@ -5842,6 +6351,7 @@ setStatus('loading', 'Connecting to your sheet…');
     return;
   }
   state.mcp = mcp;
-  refresh();
+  await refresh();
+  if (state.readOnly) notice('');   // shows the read-only notice
 })();
 </script>

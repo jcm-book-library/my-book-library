@@ -43,7 +43,7 @@ create table if not exists books.books (
   added         date,
   copies        text,
   isbn          text,
-  loaned        boolean not null default false,
+  loaned        text,
   loanee        text,
   synopsis      text,
   notes         text,
@@ -206,6 +206,15 @@ create table if not exists books.quotes (
   added      date,
   updated_at timestamptz not null default now()
 );
+
+-- 8 Nov fix: loaned holds 'Yes' or a lend date, so it is text (it was boolean in the first version).
+do $$ begin
+  if (select data_type from information_schema.columns
+      where table_schema = 'books' and table_name = 'books' and column_name = 'loaned') = 'boolean' then
+    alter table books.books alter column loaned drop default, alter column loaned drop not null;
+    alter table books.books alter column loaned type text using case when loaned then 'Yes' end;
+  end if;
+end $$;
 
 -- Keep updated_at current on every change.
 create or replace function books.touch() returns trigger
