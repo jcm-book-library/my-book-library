@@ -1689,15 +1689,11 @@ async function editEntry(e, change, btn) {
   if (!isLive()) { notice('Editing needs the live connection. ' + connectHint(), 'error'); return; }
   state.busy = true; btn.disabled = true; const old = btn.textContent; btn.textContent = 'Saving…';
   try {
-    const r = e._row;
-    const cur = (await readRange(`'Reading Log'!A${r}:G${r}`))[0] || [];
-    if (toDate(cur[0]) !== e.date || toNum(cur[1]) !== e.pages || String(cur[2] ?? '').trim() !== e.bookId) {
+    if (!(await DB().logEdit(e, change))) {
       notice('That entry changed in the sheet since the app loaded it. Reloading so you can try again.', 'error');
       state.editing = null; await refresh(); return;
     }
-    const put = (col, v) => state.mcp.callTool(SERVER, 'update_values', { spreadsheetId: SHEET_ID, range: `'Reading Log'!${col}${r}`, values: [[v]] }, { cache: false });
     if (change.del) {
-      await put('B', 0); await put('G', 'deleted');
       state.entries = state.entries.filter(x => x !== e);
       // Roll the book back if this entry is what moved it to its current page
       const b = state.books.find(x => x.id === e.bookId);
@@ -1707,8 +1703,6 @@ async function editEntry(e, change, btn) {
       }
       setStatus('live', 'Entry deleted');
     } else {
-      if (change.date !== e.date) await put('A', change.date);
-      if (change.pages !== e.pages) await put('B', change.pages);
       e.date = change.date; e.pages = change.pages;
       setStatus('live', 'Entry updated');
     }
@@ -2082,8 +2076,8 @@ function explain(err) {
   }
 }
 
-async function readRange(range) {
-  const res = await state.mcp.callTool(SERVER, 'get_values', { spreadsheetId: SHEET_ID, range }, { cache: false });
+async function readRange(range, spreadsheetId = SHEET_ID) {
+  const res = await state.mcp.callTool(SERVER, 'get_values', { spreadsheetId, range }, { cache: false });
   const p = res.payload;
   return (p && Array.isArray(p.values)) ? p.values : [];
 }
@@ -2093,11 +2087,7 @@ async function refresh() {
   setStatus('loading', 'Loading from your sheet…');
   $('refreshBtn').disabled = true;
   try {
-    const [log, books, settings] = await Promise.all([
-      readRange("'Reading Log'!A1:H20000"),
-      readRange('Books!A1:AZ5000'),
-      readRange("'App Settings'!A1:B50")
-    ]);
+    const { log, books, settings } = await DB().loadCore();
     // Reading Log: header row, then one row per entry
     const lh = (log[0] || []).map(h => String(h).trim());
     const li = k => lh.indexOf(k);
@@ -2144,18 +2134,7 @@ async function refresh() {
 // Update the book's currentPage in the Books tab: find its row by id right before writing,
 // and only ever move the page forward. Touches exactly one cell.
 async function updateBookPage(bookId, pageReached) {
-  const header = (await readRange('Books!A1:AZ1'))[0] || [];
-  const col = name => header.findIndex(h => String(h).trim() === name);
-  const idCol = col('id'), pageCol = col('currentPage');
-  if (idCol < 0 || pageCol < 0) throw { code: 'tool_error', message: 'Books tab is missing an id or currentPage column' };
-  const letter = i => { let s = ''; i++; while (i) { const r = (i - 1) % 26; s = String.fromCharCode(65 + r) + s; i = Math.floor((i - 1) / 26); } return s; };
-  const ids = await readRange(`Books!${letter(idCol)}1:${letter(idCol)}5000`);
-  const hits = ids.map((r, i) => String(r[0] ?? '').trim() === bookId ? i + 1 : 0).filter(Boolean);
-  if (hits.length !== 1) throw { code: 'tool_error', message: hits.length ? `ID ${bookId} appears ${hits.length} times in Books` : `ID ${bookId} not found in Books` };
-  const cell = `Books!${letter(pageCol)}${hits[0]}`;
-  const cur = toNum(((await readRange(cell))[0] || [])[0]);
-  if (pageReached <= cur) return;
-  await state.mcp.callTool(SERVER, 'update_values', { spreadsheetId: SHEET_ID, range: cell, values: [[pageReached]] }, { cache: false });
+  if (!(await DB().bookPage(bookId, pageReached))) return;
   const b = state.books.find(x => x.id === bookId); if (b) b.currentPage = pageReached;
   const ab = state.allBooks.find(x => x.id === bookId); if (ab) ab.currentPage = String(pageReached);
 }
@@ -2197,10 +2176,8 @@ async function appendLogRow({ pages, bookId = '', title = '', pageReached = '', 
   const now = new Date();
   const loggedAt = `${iso(now)} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
   const row = [logDay(), pages, bookId ? "'" + bookId : '', title ? "'" + title : '', pageReached || '', loggedAt, 'app', minutes || ''];
-  const res = await state.mcp.callTool(SERVER, 'append_values', { spreadsheetId: SHEET_ID, range: "'Reading Log'!A1", values: [row] }, { cache: false });
-  const p = (res && res.payload) || {};
-  const m = String((p.updates && p.updates.updatedRange) || p.updatedRange || '').match(/![A-Z]+(\d+)/);
-  state.entries.push({ date: row[0], pages, bookId, title, pageReached: pageReached || null, source: 'app', loggedAt, minutes: minutes || 0, _row: m ? Number(m[1]) : null });
+  const logRow = await DB().logAdd(row);
+  state.entries.push({ date: row[0], pages, bookId, title, pageReached: pageReached || null, source: 'app', loggedAt, minutes: minutes || 0, _row: logRow });
 }
 
 /* ---------- Books sheet writes (changed cells only, row found by id just before writing) ---------- */
@@ -2236,7 +2213,7 @@ async function findRowById(tab, id, o) {
 async function writeCells(tab, header, row, fields, cellFn, skip = []) {
   for (const [k, v] of Object.entries(fields)) {
     const c = header.indexOf(k); if (c < 0 || k === 'id' || skip.includes(k)) continue;
-    await state.mcp.callTool(SERVER, 'update_values', { spreadsheetId: SHEET_ID, range: `${tabRef(tab)}!${colLetter(c)}${row}`, values: [[cellFn(k, v)]] }, { cache: false });
+    await sheetPut(`${tabRef(tab)}!${colLetter(c)}${row}`, [[cellFn(k, v)]]);
   }
 }
 // Add rows below the last used row with an explicit range (not append_values, which fills rows a clear left behind).
@@ -2244,18 +2221,222 @@ async function writeCells(tab, header, row, fields, cellFn, skip = []) {
 async function addRowsBelowLast(tab, header, values, used) {
   let last = used.length; while (last && !used[last - 1].some(v => String(v ?? '').trim())) last--;
   const r0 = last + 2;
-  await state.mcp.callTool(SERVER, 'update_values', { spreadsheetId: SHEET_ID, range: `${tabRef(tab)}!A${r0}:${colLetter(header.length - 1)}${r0 + values.length - 1}`, values }, { cache: false });
+  await sheetPut(`${tabRef(tab)}!A${r0}:${colLetter(header.length - 1)}${r0 + values.length - 1}`, values);
   return r0;
 }
-const findBookRow = id => findRowById('Books', id, { header: () => readHeader('Books!A1:AZ1'), last: 5000, noCol: 'Books tab has no id column',
-  dup: (id, n) => `ID ${id} appears ${n} times in Books`, gone: id => `ID ${id} isn't in Books any more` });
+/* ---------- data layer ---------- */
+// Every Google Sheets call lives in sheetDb, as named operations on records and keys. The rest of the app
+// reaches it through DB(), so another backend with the same method names can be swapped in later.
+// Reads return raw 2-D arrays (header row first); the sheet details (ranges, rows, formulas) stay in here.
+const wishRows = new Map(), rlRows = new Map();
+const rowFromResult = res => {
+  const p = (res && res.payload) || {};
+  const m = String((p.updates && p.updates.updatedRange) || p.updatedRange || '').match(/![A-Z]+(\d+)/);
+  return m ? Number(m[1]) : null;
+};
+const wishCell = (k, v) => !v ? (k === 'gift' ? 'FALSE' : '') : k === 'gift' ? (v === 'TRUE' ? 'TRUE' : 'FALSE') : (k === 'release' || k === 'checkedOn') && /^\d{4}-\d\d-\d\d$/.test(v) ? v : "'" + v;
+const listCell = (k, v) => !String(v ?? '').trim() ? '' : k === 'order' ? toNum(v) : "'" + String(v).trim();
+const sheetPut = (range, values) => state.mcp.callTool(SERVER, 'update_values', { spreadsheetId: SHEET_ID, range, values }, { cache: false });
+const sheetAppend = (range, values, spreadsheetId = SHEET_ID) => state.mcp.callTool(SERVER, 'append_values', { spreadsheetId, range, values }, { cache: false });
+const TAB_RANGES = {
+  'Wishlist': 'Wishlist!A1:Z3000',
+  'Series Tracker': "'Series Tracker'!A1:I500",
+  'Reading Lists': "'Reading Lists'!A1:G2000",
+  'Contents': "'Contents'!A1:D5000",
+  'Wishlist archive header': "'Wishlist archive'!A1:Z1",
+  'Books header': 'Books!A1:AZ1'
+};
+const sheetDb = {
+  // ----- reads -----
+  async loadCore() {
+    const [log, books, settings] = await Promise.all([
+      readRange("'Reading Log'!A1:H20000"),
+      readRange('Books!A1:AZ5000'),
+      readRange("'App Settings'!A1:B50")
+    ]);
+    return { log, books, settings };
+  },
+  readTab(name) {
+    if (name === 'Quotes') return readRange('QUOTES!A1:G3000', QUOTES_ID);
+    if (!TAB_RANGES[name]) throw { code: 'tool_error', message: 'Unknown tab ' + name };
+    return readRange(TAB_RANGES[name]);
+  },
+  // ----- Reading Log -----
+  // Returns the new row number (or null if the sheet didn't say).
+  async logAdd(row) {
+    return rowFromResult(await sheetAppend("'Reading Log'!A1", [row]));
+  },
+  // The row number is checked against the sheet right before writing. Returns false (and writes nothing) if the row has changed.
+  async logEdit(e, change) {
+    const r = e._row;
+    const cur = (await readRange(`'Reading Log'!A${r}:G${r}`))[0] || [];
+    if (toDate(cur[0]) !== e.date || toNum(cur[1]) !== e.pages || String(cur[2] ?? '').trim() !== e.bookId) return false;
+    const put = (col, v) => sheetPut(`'Reading Log'!${col}${r}`, [[v]]);
+    if (change.del) { await put('B', 0); await put('G', 'deleted'); }
+    else {
+      if (change.date !== e.date) await put('A', change.date);
+      if (change.pages !== e.pages) await put('B', change.pages);
+    }
+    return true;
+  },
+  // ----- Books -----
+  // Changed cells only; the row is found by id just before writing.
+  async bookUpdate(id, fields) {
+    const { header, row } = await findRowById('Books', id, { header: () => readHeader('Books!A1:AZ1'), last: 5000, noCol: 'Books tab has no id column',
+      dup: (id, n) => `ID ${id} appears ${n} times in Books`, gone: id => `ID ${id} isn't in Books any more` });
+    await writeCells('Books', header, row, fields, cellValue, FORMULA_FIELDS);
+  },
+  // Move a book's currentPage forward only. Returns true if a cell was written.
+  async bookPage(bookId, pageReached) {
+    const header = (await readRange('Books!A1:AZ1'))[0] || [];
+    const col = name => header.findIndex(h => String(h).trim() === name);
+    const idCol = col('id'), pageCol = col('currentPage');
+    if (idCol < 0 || pageCol < 0) throw { code: 'tool_error', message: 'Books tab is missing an id or currentPage column' };
+    const ids = await readRange(`Books!${colLetter(idCol)}1:${colLetter(idCol)}5000`);
+    const hits = ids.map((r, i) => String(r[0] ?? '').trim() === bookId ? i + 1 : 0).filter(Boolean);
+    if (hits.length !== 1) throw { code: 'tool_error', message: hits.length ? `ID ${bookId} appears ${hits.length} times in Books` : `ID ${bookId} not found in Books` };
+    const cell = `Books!${colLetter(pageCol)}${hits[0]}`;
+    const cur = toNum(((await readRange(cell))[0] || [])[0]);
+    if (pageReached <= cur) return false;
+    await sheetPut(cell, [[pageReached]]);
+    return true;
+  },
+  // One new book with the next id (highest + 4) and the remain / % formulas. Returns { id, header }.
+  async bookAdd(fields) {
+    const header = ((await readRange('Books!A1:AZ1'))[0] || []).map(h => String(h).trim());
+    const ids = (await readRange(`Books!${colLetter(header.indexOf('id'))}2:${colLetter(header.indexOf('id'))}5000`)).map(r => toNum(r[0]));
+    const id = String(Math.max(0, ...ids) + 4);
+    const row = header.map(h => h === 'id' ? "'" + id : FORMULA_FIELDS.includes(h) ? '' : cellValue(h, fields[h]));
+    const m = rowFromResult(await sheetAppend('Books!A1', [row]));
+    // Put the remain / % formulas on the new row, matching the rest of the sheet
+    const ci = k => header.indexOf(k);
+    if (m && ci('remain') >= 0 && ci('%') >= 0 && ci('pages') >= 0 && ci('currentPage') >= 0) {
+      const r = m, P = colLetter(ci('pages')), C = colLetter(ci('currentPage'));
+      await sheetPut(`Books!${colLetter(ci('remain'))}${r}`, [[`=IF(N(${P}${r})>0,${P}${r}-${C}${r},"")`]]);
+      await sheetPut(`Books!${colLetter(ci('%'))}${r}`, [[`=IF(N(${P}${r})>0,${C}${r}/${P}${r}*100,"")`]]);
+    }
+    return { id, header };
+  },
+  // Several new books in one append. Returns { header, ids, r0 } (r0 = first new row, or null).
+  async booksAddMany(list) {
+    const header = ((await readRange('Books!A1:AZ1'))[0] || []).map(h => String(h).trim());
+    const ic = header.indexOf('id');
+    const used = (await readRange(`Books!${colLetter(ic)}2:${colLetter(ic)}5000`)).map(r => toNum(r[0]));
+    let next = Math.max(0, ...used);
+    const books = list.map(f => ({ ...f, id: String(next += 4) }));
+    const values = books.map(f => header.map(h => h === 'id' ? "'" + f.id : FORMULA_FIELDS.includes(h) ? '' : cellValue(h, f[h])));
+    const r0 = rowFromResult(await sheetAppend('Books!A1', values)), ci = k => header.indexOf(k);
+    if (r0 && ci('remain') >= 0 && ci('%') >= 0) {
+      const P = colLetter(ci('pages')), C = colLetter(ci('currentPage'));
+      for (const [k, f] of [['remain', r => `=IF(N(${P}${r})>0,${P}${r}-${C}${r},"")`], ['%', r => `=IF(N(${P}${r})>0,${C}${r}/${P}${r}*100,"")`]]) {
+        const L = colLetter(ci(k));
+        await sheetPut(`Books!${L}${r0}:${L}${r0 + books.length - 1}`, books.map((_, i) => [f(r0 + i)]));
+      }
+    }
+    return { header, ids: books.map(b => b.id), r0 };
+  },
+  // ----- Ratings, Contents, Quotes, App Settings -----
+  async ratingAdd(row) { await sheetAppend("'Ratings'!A1", [row]); },
+  async contentsAdd(bookId, list, stamp) {
+    await sheetAppend("'Contents'!A1", list.map(x => ["'" + bookId, stamp, "'" + x.story, x.start]));
+  },
+  // Into the separate Quotes spreadsheet. Returns the new row number (or null).
+  async quoteAdd(row) { return rowFromResult(await sheetAppend('QUOTES!A1', [row], QUOTES_ID)); },
+  // App Settings is key | value: update the key's row, or add it
+  async settingSave(key, value) {
+    const rows = await readRange("'App Settings'!A1:B50");
+    const i = rows.findIndex(r => String(r[0] ?? '').trim() === key);
+    if (i >= 0) await sheetPut(`'App Settings'!B${i + 1}`, [[value]]);
+    else await sheetAppend("'App Settings'!A1", [[key, value]]);
+  },
+  // ----- Wishlist (knownHeader: the header the caller already holds, saves a read) -----
+  async wishUpdate(id, fields, knownHeader) {
+    if (!id) throw { code: 'tool_error', message: 'this Wishlist row has no id yet' };
+    const { header, row } = await sheetDb._wishRow(id, knownHeader);
+    await writeCells('Wishlist', header, row, fields, wishCell);
+  },
+  // Blank every cell (the sheet keeps an empty row, the app ignores it)
+  async wishClear(id, knownHeader) {
+    const { header, row } = await sheetDb._wishRow(id, knownHeader);
+    await sheetPut(`Wishlist!A${row}:${colLetter(header.length - 1)}${row}`, [header.map(() => '')]);
+    wishRows.delete(id);
+  },
+  _wishRow: (id, knownHeader) => findRowById('Wishlist', id, { cache: wishRows, cacheAll: true, last: 3000, noCol: 'Wishlist has no id column',
+    header: async () => knownHeader && knownHeader.includes('id') ? knownHeader : readHeader('Wishlist!A1:Z1'),
+    dup: (id, n) => `Wishlist id ${id} appears ${n} times`, gone: id => `Wishlist id ${id} isn't there any more` }),
+  // New rows below the table with the next WL id (otherIds: ids the caller already holds). Returns { header, rows }.
+  async wishAdd(items, otherIds = []) {
+    const header = ((await readRange('Wishlist!A1:Z1'))[0] || []).map(h => String(h).trim());
+    const c = header.indexOf('id');
+    const used = await readRange(`Wishlist!A2:${colLetter(Math.max(c, header.indexOf('title')))}3000`);
+    const ids = used.map(r => Number(String(r[c] || '').replace(/\D/g, '')) || 0);
+    let next = Math.max(0, ...ids, ...otherIds.map(id => Number(String(id).replace(/\D/g, '')) || 0));
+    const rows = items.map(f => ({ stage: 'Inbox', gift: 'FALSE', ...f, id: 'WL' + String(++next).padStart(4, '0'), added: today() }));
+    const values = rows.map(f => header.map(h => h === 'id' ? f.id : h === 'added' ? f.added : wishCell(h, f[h] || '')));
+    await addRowsBelowLast('Wishlist', header, values, used);
+    return { header, rows };
+  },
+  async archiveAdd(rows) { await sheetAppend("'Wishlist archive'!A1", rows); },
+  // ----- Series Tracker -----
+  // Update the series matching matchName (the old name when editing), or add it below the last used row.
+  // Returns { row, isNew }.
+  async seriesSave(f, matchName) {
+    const v = await readRange("'Series Tracker'!A1:I500");
+    const header = (v[0] || []).map(h => String(h).trim());
+    const cell = (k, x) => !x ? '' : k === 'released' ? x : "'" + x;
+    const key = normQ(matchName);
+    const hits = v.map((r, i) => i && normQ(r[header.indexOf('series')]) === key ? i + 1 : 0).filter(Boolean);
+    if (hits.length > 1) throw { code: 'tool_error', message: `“${f.series}” is in the Series Tracker ${hits.length} times` };
+    if (hits.length) {
+      const row = hits[0], cur = v[row - 1];
+      const changed = Object.fromEntries(SD_FIELDS.filter(k => { const c = header.indexOf(k); return c >= 0 && String(cur[c] ?? '').trim() !== f[k]; }).map(k => [k, f[k]]));
+      await writeCells('Series Tracker', header, row, changed, (k, x) => cell(k, x));
+      return { row, isNew: false };
+    }
+    // New series go below the last used row (not append_values, which can fill a row the prune cleared)
+    const row = await addRowsBelowLast('Series Tracker', header, [header.map(h => cell(h, f[h]))], v.slice(1));
+    return { row, isNew: true };
+  },
+  // Blank the row for a series name. Returns false (and writes nothing) unless exactly one row matches.
+  async seriesClear(name) {
+    const v = await readRange("'Series Tracker'!A1:I500"), header = (v[0] || []).map(h => String(h).trim()), c = header.indexOf('series');
+    const hits = v.map((r, i) => i && normQ(r[c]) === normQ(name) ? i + 1 : 0).filter(Boolean);
+    if (hits.length !== 1) return false;
+    await sheetPut(`'Series Tracker'!A${hits[0]}:${colLetter(header.length - 1)}${hits[0]}`, [header.map(() => '')]);
+    return true;
+  },
+  // ----- Reading Lists (every item has an id, RL0001…) -----
+  _listRow: id => findRowById('Reading Lists', id, { cache: rlRows, last: 2000, noCol: 'Reading Lists has no id column', header: () => readHeader("'Reading Lists'!A1:Z1"),
+    dup: (id, n) => `Reading list id ${id} appears ${n} times`, gone: id => `Reading list id ${id} isn't there any more` }),
+  async listUpdate(id, fields) {
+    const { header, row } = await sheetDb._listRow(id);
+    await writeCells('Reading Lists', header, row, fields, listCell);
+  },
+  // otherIds: ids the caller already holds. Returns { header, id, row }.
+  async listAdd(f, otherIds = []) {
+    const header = await readHeader("'Reading Lists'!A1:Z1"), c = header.indexOf('id');
+    if (c < 0) throw { code: 'tool_error', message: 'Reading Lists has no id column' };
+    const used = await readRange(`'Reading Lists'!A2:${colLetter(header.length - 1)}2000`);
+    const ids = used.map(r => Number(String(r[c] || '').replace(/\D/g, '')) || 0);
+    const id = 'RL' + String(Math.max(0, ...ids, ...otherIds.map(x => Number(String(x).replace(/\D/g, '')) || 0)) + 1).padStart(4, '0');
+    const row = header.map(h => h === 'id' ? id : listCell(h, f[h]));
+    const r0 = await addRowsBelowLast('Reading Lists', header, [row], used);
+    rlRows.set(id, r0);
+    return { header, id, row: r0 };
+  },
+  async listClear(id) {
+    const { header, row } = await sheetDb._listRow(id);
+    await sheetPut(`'Reading Lists'!A${row}:${colLetter(header.length - 1)}${row}`, [header.map(() => '')]);
+    rlRows.delete(id);
+  }
+};
+const DB = () => sheetDb;
 async function writeBookFields(id, fields) {
   // A book that starts being read leaves the plan: no tier, no Up next number
   const cur = state.allBooks.find(x => x.id === id);
   const leaving = fields.status === 'Reading' && cur && (cur.tier || cur.upNextOrder);
   if (leaving) fields = { ...fields, tier: '', upNextOrder: '' };
-  const { header, row } = await findBookRow(id);
-  await writeCells('Books', header, row, fields, cellValue, FORMULA_FIELDS);
+  await DB().bookUpdate(id, fields);
   const b = state.allBooks.find(x => x.id === id);
   if (b) Object.assign(b, Object.fromEntries(Object.entries(fields).map(([k, v]) => [k, String(v ?? '').trim()])));
   syncReadingBooks();
@@ -2269,22 +2450,8 @@ function tidyPlan() {
   if (stuck.length) renumberUpNext();
 }
 async function addBook(fields) {
-  const header = ((await readRange('Books!A1:AZ1'))[0] || []).map(h => String(h).trim());
-  const ids = (await readRange(`Books!${colLetter(header.indexOf('id'))}2:${colLetter(header.indexOf('id'))}5000`)).map(r => toNum(r[0]));
-  const id = String(Math.max(0, ...ids) + 4);
   fields = { added: today(), ...fields };
-  const row = header.map(h => h === 'id' ? "'" + id : FORMULA_FIELDS.includes(h) ? '' : cellValue(h, fields[h]));
-  const res = await state.mcp.callTool(SERVER, 'append_values', { spreadsheetId: SHEET_ID, range: 'Books!A1', values: [row] }, { cache: false });
-  // Put the remain / % formulas on the new row, matching the rest of the sheet
-  const p = res.payload || {};
-  const rng = (p.updates && p.updates.updatedRange) || p.updatedRange || '';
-  const m = String(rng).match(/![A-Z]+(\d+)/);
-  const ci = k => header.indexOf(k);
-  if (m && ci('remain') >= 0 && ci('%') >= 0 && ci('pages') >= 0 && ci('currentPage') >= 0) {
-    const r = m[1], P = colLetter(ci('pages')), C = colLetter(ci('currentPage'));
-    await state.mcp.callTool(SERVER, 'update_values', { spreadsheetId: SHEET_ID, range: `Books!${colLetter(ci('remain'))}${r}`, values: [[`=IF(N(${P}${r})>0,${P}${r}-${C}${r},"")`]] }, { cache: false });
-    await state.mcp.callTool(SERVER, 'update_values', { spreadsheetId: SHEET_ID, range: `Books!${colLetter(ci('%'))}${r}`, values: [[`=IF(N(${P}${r})>0,${C}${r}/${P}${r}*100,"")`]] }, { cache: false });
-  }
+  const { id, header } = await DB().bookAdd(fields);
   const book = { ...Object.fromEntries(header.map(h => [h, ''])), ...Object.fromEntries(Object.entries(fields).map(([k, v]) => [k, String(v ?? '').trim()])), id };
   book._row = state.allBooks.length;
   state.allBooks.push(book);
@@ -3518,7 +3685,7 @@ async function saveRating(book, final, sug) {
     await writeBookFields(book.id, f);
     const now = new Date();
     const crit = Object.entries(rate.scores).map(([k, v]) => `${(RATE_SETS[rate.cat].find(c => c[0] === k) || [k, k])[1]} ${v}`).join('; ');
-    await state.mcp.callTool(SERVER, 'append_values', { spreadsheetId: SHEET_ID, range: "'Ratings'!A1", values: [[iso(now), book.id, book.title, rate.cat, rate.gut || '', crit, rate.standout.trim(), rate.flaw.trim(), sug ?? '', final]] }, { cache: false });
+    await DB().ratingAdd([iso(now), book.id, book.title, rate.cat, rate.gut || '', crit, rate.standout.trim(), rate.flaw.trim(), sug ?? '', final]);
     setStatus('live', `Rated “${book.title}” ${final}★`);
     renderAll(); renderRate();
     $('rateMsg').textContent = `Saved ${final}★. The breakdown is in the Ratings tab.`;
@@ -4107,24 +4274,10 @@ function setWishFields(w, fields) {
   }).finally(() => { wishQ.pending--; setStatus('live', wishQ.pending ? `Saving Wishlist… (${wishQ.pending})` : 'Wishlist saved'); });
 }
 
-// Writes: find the row by its id right before writing, change only the given cells.
-const wishRows = new Map();
-const findWishRow = id => findRowById('Wishlist', id, { cache: wishRows, cacheAll: true, last: 3000, noCol: 'Wishlist has no id column',
-  header: async () => disc.wishHeader && disc.wishHeader.includes('id') ? disc.wishHeader : readHeader('Wishlist!A1:Z1'),
-  dup: (id, n) => `Wishlist id ${id} appears ${n} times`, gone: id => `Wishlist id ${id} isn't there any more` });
-// Gift is a checkbox and release a date, so those go in as typed; everything else as plain text
-const wishCell = (k, v) => !v ? (k === 'gift' ? 'FALSE' : '') : k === 'gift' ? (v === 'TRUE' ? 'TRUE' : 'FALSE') : (k === 'release' || k === 'checkedOn') && /^\d{4}-\d\d-\d\d$/.test(v) ? v : "'" + v;
-async function writeWishFields(id, fields) {
-  if (!id) throw { code: 'tool_error', message: 'this Wishlist row has no id yet' };
-  const { header, row } = await findWishRow(id);
-  await writeCells('Wishlist', header, row, fields, wishCell);
-}
+// Writes go through DB(): the row is found by its id right before writing, and only the given cells change.
+async function writeWishFields(id, fields) { await DB().wishUpdate(id, fields, disc.wishHeader); }
 // Removing a row: blank every cell (the sheet keeps an empty row, the app ignores it)
-async function clearWishRow(id) {
-  const { header, row } = await findWishRow(id);
-  await state.mcp.callTool(SERVER, 'update_values', { spreadsheetId: SHEET_ID, range: `Wishlist!A${row}:${colLetter(header.length - 1)}${row}`, values: [header.map(() => '')] }, { cache: false });
-  wishRows.delete(id);
-}
+async function clearWishRow(id) { await DB().wishClear(id, disc.wishHeader); }
 async function dropWish(w) {
   if (!(await askOk(`Drop “${w.title}” from your Wishlist? It's deleted, not archived.`, 'Drop it'))) return;
   if (!isLive()) { notice('Dropping needs the live connection. ' + connectHint(), 'error'); return; }
@@ -4136,14 +4289,7 @@ async function dropWish(w) {
 
 // New rows: next WL id, today's date, appended under the table
 async function appendWishRows(items) {
-  const header = ((await readRange('Wishlist!A1:Z1'))[0] || []).map(h => String(h).trim());
-  const c = header.indexOf('id');
-  const used = await readRange(`Wishlist!A2:${colLetter(Math.max(c, header.indexOf('title')))}3000`);
-  const ids = used.map(r => Number(String(r[c] || '').replace(/\D/g, '')) || 0);
-  let next = Math.max(0, ...ids, ...(disc.wish || []).map(w => Number(String(w.id).replace(/\D/g, '')) || 0));
-  const rows = items.map(f => ({ stage: 'Inbox', gift: 'FALSE', ...f, id: 'WL' + String(++next).padStart(4, '0'), added: today() }));
-  const values = rows.map(f => header.map(h => h === 'id' ? f.id : h === 'added' ? f.added : wishCell(h, f[h] || '')));
-  await addRowsBelowLast('Wishlist', header, values, used);
+  const { header, rows } = await DB().wishAdd(items, (disc.wish || []).map(w => w.id));
   disc.wishHeader = header;
   for (const f of rows) disc.wish.push({ ...Object.fromEntries(header.map(h => [h, f[h] || ''])), _row: 1e9 });
   return rows;
@@ -4420,27 +4566,14 @@ async function moveWishToBooks(rows, quiet) {
     const link = [], add = [];
     for (const w of rows) { const b = byTitle.get(wishKey(w.title)); if (b) link.push([w, b.id]); else add.push(w); }
     if (add.length) {
-      const header = ((await readRange('Books!A1:AZ1'))[0] || []).map(h => String(h).trim());
-      const ic = header.indexOf('id');
-      const ids = (await readRange(`Books!${colLetter(ic)}2:${colLetter(ic)}5000`)).map(r => toNum(r[0]));
-      let next = Math.max(0, ...ids);
-      const books = add.map(w => ({ ...wishToBook(w), id: String(next += 4) }));
-      const values = books.map(f => header.map(h => h === 'id' ? "'" + f.id : FORMULA_FIELDS.includes(h) ? '' : cellValue(h, f[h])));
-      const res = await state.mcp.callTool(SERVER, 'append_values', { spreadsheetId: SHEET_ID, range: 'Books!A1', values }, { cache: false });
-      const p = res.payload || {}, m = String((p.updates && p.updates.updatedRange) || p.updatedRange || '').match(/![A-Z]+(\d+)/);
-      const r0 = m ? Number(m[1]) : null, ci = k => header.indexOf(k);
-      if (r0 && ci('remain') >= 0 && ci('%') >= 0) {
-        const P = colLetter(ci('pages')), C = colLetter(ci('currentPage'));
-        for (const [k, f] of [['remain', r => `=IF(N(${P}${r})>0,${P}${r}-${C}${r},"")`], ['%', r => `=IF(N(${P}${r})>0,${C}${r}/${P}${r}*100,"")`]]) {
-          const L = colLetter(ci(k));
-          await state.mcp.callTool(SERVER, 'update_values', { spreadsheetId: SHEET_ID, range: `Books!${L}${r0}:${L}${r0 + books.length - 1}`, values: books.map((_, i) => [f(r0 + i)]) }, { cache: false });
-        }
-      }
+      const newBooks = add.map(wishToBook);
+      const { header, ids, r0 } = await DB().booksAddMany(newBooks);
+      const books = newBooks.map((f, i) => ({ ...f, id: ids[i] }));
       books.forEach((f, i) => { state.allBooks.push({ ...Object.fromEntries(header.map(h => [h, String(f[h] ?? '')])), _row: r0 ? r0 - 2 + i : state.allBooks.length }); link.push([add[i], f.id]); });
     }
     // History first, then clear the Wishlist rows
-    const ah = ((await readRange("'Wishlist archive'!A1:Z1"))[0] || []).map(h => String(h).trim());
-    if (ah.length) await state.mcp.callTool(SERVER, 'append_values', { spreadsheetId: SHEET_ID, range: "'Wishlist archive'!A1", values: link.map(([w, id]) => wishArchiveRow(w, id, ah)) }, { cache: false });
+    const ah = ((await DB().readTab('Wishlist archive header'))[0] || []).map(h => String(h).trim());
+    if (ah.length) await DB().archiveAdd(link.map(([w, id]) => wishArchiveRow(w, id, ah)));
     const failed = [];
     for (const [w] of link) {
       try { await clearWishRow(w.id); disc.wish.splice(disc.wish.indexOf(w), 1); }
@@ -4483,10 +4616,7 @@ async function pruneSeries() {
   pruning = true;
   try {
     for (const s of empty) {
-      const v = await readRange("'Series Tracker'!A1:I500"), header = (v[0] || []).map(h => String(h).trim()), c = header.indexOf('series');
-      const hits = v.map((r, i) => i && normQ(r[c]) === normQ(s.series) ? i + 1 : 0).filter(Boolean);
-      if (hits.length !== 1) continue;
-      await state.mcp.callTool(SERVER, 'update_values', { spreadsheetId: SHEET_ID, range: `'Series Tracker'!A${hits[0]}:${colLetter(header.length - 1)}${hits[0]}`, values: [header.map(() => '')] }, { cache: false });
+      if (!(await DB().seriesClear(s.series))) continue;
       disc.series.splice(disc.series.indexOf(s), 1);
     }
     notice(`Removed ${empty.length} empty series from the tracker: ${empty.map(x => x.series).join(', ')}.`);
@@ -4565,23 +4695,12 @@ async function saveSeries(e) {
   if (!f.series) { $('sdMsg').textContent = 'A series name is needed.'; return; }
   $('sdSave').disabled = true; $('sdMsg').textContent = 'Saving…';
   try {
-    const v = await readRange("'Series Tracker'!A1:I500");
-    const header = (v[0] || []).map(h => String(h).trim());
-    const cell = (k, x) => !x ? '' : k === 'released' ? x : "'" + x;
     // Find the row by the series name (the old name when editing)
-    const key = normQ(sdEditing ? sdEditing.series : f.series);
-    const hits = v.map((r, i) => i && normQ(r[header.indexOf('series')]) === key ? i + 1 : 0).filter(Boolean);
-    if (hits.length > 1) throw { code: 'tool_error', message: `“${f.series}” is in the Series Tracker ${hits.length} times` };
-    if (hits.length) {
-      const row = hits[0], cur = v[row - 1];
-      const changed = Object.fromEntries(SD_FIELDS.filter(k => { const c = header.indexOf(k); return c >= 0 && String(cur[c] ?? '').trim() !== f[k]; }).map(k => [k, f[k]]));
-      await writeCells('Series Tracker', header, row, changed, (k, x) => cell(k, x));
+    const { row, isNew } = await DB().seriesSave(f, sdEditing ? sdEditing.series : f.series);
+    if (isNew) disc.series.push({ ...f, _row: row });
+    else {
       const s = disc.series.find(x => x._row === row);
       if (s) Object.assign(s, f); else disc.series.push({ ...f, _row: row });
-    } else {
-      // New series go below the last used row (not append_values, which can fill a row the prune cleared)
-      const row = await addRowsBelowLast('Series Tracker', header, [header.map(h => cell(h, f[h]))], v.slice(1));
-      disc.series.push({ ...f, _row: row });
     }
     $('seriesDlg').close();
     setStatus('live', `Saved ${f.series}`);
@@ -4658,32 +4777,14 @@ $('rlBoxes').addEventListener('click', e => { const h = e.target.closest('[data-
 $('rlNew').addEventListener('click', () => openListDlg(null, ''));
 
 // Writes. Every item has an id (RL0001…); the row is found by it just before each write and only changed cells are written.
-const rlRows = new Map();
-const listHeader = () => readHeader("'Reading Lists'!A1:Z1");
-const findListRow = id => findRowById('Reading Lists', id, { cache: rlRows, last: 2000, noCol: 'Reading Lists has no id column', header: listHeader,
-  dup: (id, n) => `Reading list id ${id} appears ${n} times`, gone: id => `Reading list id ${id} isn't there any more` });
-const listCell = (k, v) => !String(v ?? '').trim() ? '' : k === 'order' ? toNum(v) : "'" + String(v).trim();
-async function writeListFields(id, fields) {
-  const { header, row } = await findListRow(id);
-  await writeCells('Reading Lists', header, row, fields, listCell);
-}
+async function writeListFields(id, fields) { await DB().listUpdate(id, fields); }
 async function appendListItem(f) {
-  const header = await listHeader(), c = header.indexOf('id');
-  if (c < 0) throw { code: 'tool_error', message: 'Reading Lists has no id column' };
-  const used = await readRange(`'Reading Lists'!A2:${colLetter(header.length - 1)}2000`);
-  const ids = used.map(r => Number(String(r[c] || '').replace(/\D/g, '')) || 0);
-  const id = 'RL' + String(Math.max(0, ...ids, ...(disc.lists || []).map(x => Number(String(x.id).replace(/\D/g, '')) || 0)) + 1).padStart(4, '0');
-  const row = header.map(h => h === 'id' ? id : listCell(h, f[h]));
-  const r0 = await addRowsBelowLast('Reading Lists', header, [row], used);
+  const { header, id, row: r0 } = await DB().listAdd(f, (disc.lists || []).map(x => x.id));
   const item = { ...Object.fromEntries(header.map(h => [h, String(f[h] ?? '').trim()])), id, _row: r0 };
-  disc.lists.push(item); rlRows.set(id, r0);
+  disc.lists.push(item);
   return item;
 }
-async function clearListItem(id) {
-  const { header, row } = await findListRow(id);
-  await state.mcp.callTool(SERVER, 'update_values', { spreadsheetId: SHEET_ID, range: `'Reading Lists'!A${row}:${colLetter(header.length - 1)}${row}`, values: [header.map(() => '')] }, { cache: false });
-  rlRows.delete(id);
-}
+async function clearListItem(id) { await DB().listClear(id); }
 function bookLabel(b) { return `${b.title}${b.author ? ' — ' + b.author : ''}${b.status ? ' (' + b.status + ')' : ''}`; }
 function openListDlg(it, listName) {
   rl.editing = it || null;
@@ -5123,12 +5224,7 @@ function renderGoal() {
     <p class="muted small" style="margin:0">On your current pace you'll finish about <b>${proj}</b> (${proj >= goal ? `${proj - goal} ahead` : `${goal - proj} short`}). You're reading ${fmt(Math.round(cur))} pages a day over the last 30 days.</p>`;
 }
 // App Settings is key | value: update the key's row, or add it
-async function saveSetting(key, value) {
-  const rows = await readRange("'App Settings'!A1:B50");
-  const i = rows.findIndex(r => String(r[0] ?? '').trim() === key);
-  if (i >= 0) await state.mcp.callTool(SERVER, 'update_values', { spreadsheetId: SHEET_ID, range: `'App Settings'!B${i + 1}`, values: [[value]] }, { cache: false });
-  else await state.mcp.callTool(SERVER, 'append_values', { spreadsheetId: SHEET_ID, range: "'App Settings'!A1", values: [[key, value]] }, { cache: false });
-}
+async function saveSetting(key, value) { await DB().settingSave(key, value); }
 
 /* ---------- Year in review ---------- */
 function renderYear() {
@@ -5208,7 +5304,7 @@ async function saveContents() {
   const stamp = new Date().toISOString().slice(0, 19).replace('T', ' ');
   try {
     $('ctSave').disabled = true;
-    await state.mcp.callTool(SERVER, 'append_values', { spreadsheetId: SHEET_ID, range: "'Contents'!A1", values: list.map(x => ["'" + contentsBook.id, stamp, "'" + x.story, x.start]) }, { cache: false });
+    await DB().contentsAdd(contentsBook.id, list, stamp);
     state.contents.set(contentsBook.id, list);
     $('contentsDlg').close(); renderBooks();
     setStatus('live', `Saved ${list.length} stories for “${contentsBook.title}”`);
@@ -5217,7 +5313,7 @@ async function saveContents() {
 }
 async function loadContents() {
   try {
-    const rows = await readRange("'Contents'!A1:D5000");
+    const rows = await DB().readTab('Contents');
     const latest = new Map();
     for (const r of rows.slice(1)) { const id = String(r[0] || '').trim(), at = String(r[1] || ''); if (!id) continue; if (!latest.has(id) || at > latest.get(id)) latest.set(id, at); }
     const m = new Map();
@@ -5252,14 +5348,14 @@ function loadDiscover() {
 }
 async function fetchDiscover() {
   const [q, w, sr, rl] = await Promise.allSettled([
-    state.mcp.callTool(SERVER, 'get_values', { spreadsheetId: QUOTES_ID, range: 'QUOTES!A1:G3000' }, { cache: false }),
-    readRange('Wishlist!A1:Z3000'), readRange("'Series Tracker'!A1:I500"), readRange("'Reading Lists'!A1:G2000")
+    DB().readTab('Quotes'),
+    DB().readTab('Wishlist'), DB().readTab('Series Tracker'), DB().readTab('Reading Lists')
   ]);
   const rows = (v, key) => { const h = (v[0] || []).map(x => String(x).trim()); return { h, list: v.slice(1).map((r, i) => ({ ...Object.fromEntries(h.map((k, j) => [k, String(r[j] ?? '').trim()])), _row: i + 2 })).filter(x => x[key]) }; };
   if (sr.status === 'fulfilled') disc.series = rows(sr.value, 'series').list; else disc.series = [];
   if (rl.status === 'fulfilled') disc.lists = rows(rl.value, 'title').list; else disc.lists = [];
   if (q.status === 'fulfilled') {
-    const v = (q.value.payload && q.value.payload.values) || [];
+    const v = q.value;
     // QUOTES columns: quote | from | character | by | bookId | page | added (row 1 is the header)
     disc.quotes = v.slice(1).map((r, i) => ({ text: String(r[0] || '').trim(), from: String(r[1] || '').trim(), who: String(r[2] || '').trim(), by: String(r[3] || '').trim(),
       bookId: String(r[4] || '').trim(), page: toNum(r[5]) || null, added: toDate(r[6]) || '', _row: i + 2 })).filter(x => x.text);
@@ -5345,10 +5441,8 @@ async function saveQuote(e) {
   $('qdSave').disabled = true; $('qdMsg').textContent = 'Saving…';
   try {
     await loadDiscover();
-    const res = await state.mcp.callTool(SERVER, 'append_values', { spreadsheetId: QUOTES_ID, range: 'QUOTES!A1', values: [row] }, { cache: false });
-    const p = (res && res.payload) || {};
-    const m = String((p.updates && p.updates.updatedRange) || p.updatedRange || '').match(/![A-Z]+(\d+)/);
-    const q = { text, from: title, who, by: book ? book.author : '', bookId: book ? book.id : '', page: page || null, added: today(), _row: m ? Number(m[1]) : 1e9 };
+    const qRow = await DB().quoteAdd(row);
+    const q = { text, from: title, who, by: book ? book.author : '', bookId: book ? book.id : '', page: page || null, added: today(), _row: qRow || 1e9 };
     disc.quotes.push(q); dogState.fresh = q;
     $('quoteDlg').close();
     setStatus('live', `Dog-eared a quote from ${title}`);
