@@ -146,21 +146,22 @@ async function install(page, w) {
   });
   await F.routeRealtime(page, w);
 }
-async function scenario(browser, name, { mode = 'sheet', vp = { width: 1280, height: 900 }, google = true, build = {}, run }) {
+async function scenario(browser, name, { mode = 'sheet', vp = { width: 1280, height: 900 }, google = true, build = {}, sheetCopy = true, noBackend = false, run }) {
   const w = makeWorld(build);
   const ctx = await browser.newContext({ viewport: vp, deviceScaleFactor: 1, reducedMotion: 'reduce' }), page = await ctx.newPage();
   page.on('pageerror', e => errors.push(name + ': ' + e.message));
   page.on('console', m => { if (m.type() === 'error' && !/Failed to load resource/.test(m.text())) errors.push(name + ': ' + m.text()); });
   await page.clock.install({ time: new Date(FIXED) });
   await install(page, w);
-  await page.addInitScript(([mode, google]) => {
+  await page.addInitScript(([mode, google, sheetCopy, noBackend]) => {
+    if (sheetCopy) window.__TEST_SHEET_COPY__ = true;   // the hidden Sheet -> Supabase copy, still tested
     if (sessionStorage.getItem('__seeded')) return; sessionStorage.setItem('__seeded', '1');
     try { localStorage.clear(); } catch (e) {}
-    localStorage.setItem('mbl_config', JSON.stringify({ backend: mode === 'sb' ? 'supabase' : 'sheets', clientId: 'abc.apps.googleusercontent.com' }));
+    localStorage.setItem('mbl_config', JSON.stringify(noBackend ? { clientId: 'abc.apps.googleusercontent.com' } : { backend: mode === 'sb' ? 'supabase' : 'sheets', clientId: 'abc.apps.googleusercontent.com' }));
     localStorage.setItem('jcm-sb-session', JSON.stringify({ at: 'x.' + btoa(JSON.stringify({ email: 'me@example.com', sub: 'u1' })).replace(/=+$/, '') + '.y', rt: 'rt1', exp: Date.now() + 3600e3, email: 'me@example.com' }));
     if (google) localStorage.setItem('jm-google-token', JSON.stringify({ t: 'x', exp: Date.now() + 3600e3 }));
     { let x = 12345; Math.random = () => { x = (x * 1664525 + 1013904223) % 4294967296; return x / 4294967296; }; }
-  }, [mode, google]);
+  }, [mode, google, sheetCopy, noBackend]);
   try {
     await page.goto(ORIGIN + '/');
     if (google || mode === 'sb') await page.waitForFunction(m => document.getElementById('status').dataset.state === 'live' && state.libLoaded && (m === 'sb' ? /^Supabase ·/ : /^Live from your sheet/).test(document.getElementById('statusText').textContent), mode, { timeout: 12000 });
@@ -254,6 +255,17 @@ const get = (w, tab, row, col) => (tabOf(w, tab).data[row - 1] || [])[col];
   } });
 
   // ===== (d) Check =====
+  // Switched over: no saved choice means Supabase; in Sheet mode the copy to Supabase is hidden and does nothing
+  await scenario(browser, 'switched-over-default', { mode: 'sb', noBackend: true, sheetCopy: false, run: async (page, w) => {
+    check('switch-over: a device with no saved choice loads from Supabase', (await page.evaluate(() => useSb() && state.sb)) === true && /^Supabase ·/.test(await page.locator('#statusText').innerText()));
+  } });
+  await scenario(browser, 'switched-over-sheet-mode', { mode: 'sheet', sheetCopy: false, run: async (page, w) => {
+    check('switch-over: Copy Sheet → Supabase is hidden in Sheet mode', await page.locator('#sbCopy').isHidden());
+    check('switch-over: Sheet mode says the Sheet is the archive', /the Sheet is the archive/.test(await page.locator('#toolMsg').innerText()));
+    await page.evaluate(() => toolCopy()); await page.waitForTimeout(300);
+    check('switch-over: calling the copy anyway writes nothing to Supabase', sbWrites(w).length === 0);
+    check('switch-over: Check is still there', await page.locator('#sbCheck').isVisible());
+  } });
   await scenario(browser, 'check', { mode: 'sheet', run: async (page, w) => {
     const api = w.sheetsApi, m1 = await press(page, '#sbCheck');
     check('(d) a match is reported tab by tab', /^Supabase and your Sheet match on every tab\./.test(m1) && /Books: 5 rows in the Sheet, 5 rows in Supabase: matches/.test(m1) && /Quotes: 2 rows in the Sheet, 2 rows in Supabase: matches/.test(m1) && /Reading Log: 6 rows in the Sheet, 6 rows in Supabase: matches/.test(m1), m1);

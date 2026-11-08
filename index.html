@@ -1219,7 +1219,7 @@ body[data-bg="plain"] .ground{display:none}
   <form id="dataForm" method="dialog">
     <div class="dlg-head"><h2 id="dataTitle">Data &amp; sign-in</h2><button class="btn" type="button" id="dataClose">Close</button></div>
     <div style="padding:16px 20px;display:grid;gap:12px;min-width:0">
-      <div class="field"><label for="dSource">Where your data lives</label><select id="dSource"><option value="sheets">Google Sheet</option><option value="supabase">Supabase</option></select></div>
+      <div class="field"><label for="dSource">Where your data lives</label><select id="dSource"><option value="sheets">Google Sheet (archive)</option><option value="supabase">Supabase</option></select></div>
       <div class="sb-box">
         <p class="muted" id="sbState" style="margin:0;font-size:13px"></p>
         <div class="sb-acts" id="sbEmailRow"><input id="sbEmail" type="email" autocomplete="username" placeholder="Your email" aria-label="Email for Supabase sign-in"><button class="btn" type="button" id="sbMail">Email me a sign-in link</button></div>
@@ -2497,7 +2497,12 @@ const DB = () => state.readOnly ? roDb : state.sb ? sbDb : sheetDb;
    Web Lock, and the stored session is re-read inside the lock (another app may already have refreshed it).
    Signing out here signs out every app on this device. */
 const SB = { url: 'https://apeflgdzclpxiktaxyfk.supabase.co', key: 'sb_publishable_AHVRXW-Zi3lLaHilBab1Sg_fPzPvWcg', schema: 'books', sesKey: 'jcm-sb-session', lock: 'jcm-sb-refresh' };
-const useSb = () => google_.cfg().backend === 'supabase';
+/* Switched over (8 Nov 2026): on the live site Supabase is where the data lives, unless this device has chosen the
+   Sheet. The claude.ai copy always reads the Sheet (read-only). The Sheet is the archive, kept up to date by the weekly
+   Copy Supabase → Sheet; copying the other way would overwrite live data, so it is hidden (tests can still reach it). */
+const ON_PAGES = !(window.claude && window.claude.use);
+const useSb = () => ON_PAGES && google_.cfg().backend !== 'sheets';
+const sheetCopyAllowed = () => !!window.__TEST_SHEET_COPY__;
 const jwtClaims = t => { try { return JSON.parse(atob(String(t).split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))); } catch (e) { return {}; } };
 const withLock = fn => (typeof navigator !== 'undefined' && navigator.locks && navigator.locks.request) ? navigator.locks.request(SB.lock, fn) : fn();
 const sb = {
@@ -6554,7 +6559,8 @@ function drawTools() {
   $('sbCopy').textContent = tl.armed === 'toSb' ? 'Replace Supabase copy?' : tl.armed === 'toSheet' ? 'Write these to the Sheet' : mode === 'sb' ? 'Copy Supabase → Sheet (weekly backup)' : 'Copy Sheet → Supabase';
   $('sbCheck').textContent = mode === 'sb' ? 'Check' : 'Check Sheet and Supabase match';
   $('sbCopy').disabled = $('sbCheck').disabled = tl.busy;
-  $('toolMsg').textContent = tl.msg;
+  $('sbCopy').hidden = mode === 'sheet' && !sheetCopyAllowed();
+  $('toolMsg').textContent = tl.msg || (mode === 'sheet' && !sheetCopyAllowed() ? 'Supabase is where your data lives now; the Sheet is the archive. Changes made in Sheet mode don\'t reach Supabase.' : '');
 }
 async function toolRun(fn) {
   tl.busy = true; drawTools();
@@ -6573,6 +6579,7 @@ function toolCheck() {
 }
 function toolCopy() {
   const toSheet = useSb();
+  if (!toSheet && !sheetCopyAllowed()) return drawTools();   // switched over: Supabase is never overwritten from the Sheet
   if (toolNeedGoogle(toSheet ? 'writes to' : 'reads')) return drawTools();
   if (!tl.armed) {            // first press: look, say what would happen, and wait for a second press
     return toolRun(async () => {
