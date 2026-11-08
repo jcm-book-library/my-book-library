@@ -9,12 +9,20 @@ Read this after `CLAUDE.md` and the house rules. It records how the app and its 
 - Look: Proton Seasons month colours, dark, Roboto everywhere with tabular figures on every element.
 
 ## Working rules the owner has set
-- **Direct pushes to `main` are fine for this repo** (the pull-request rule in the house rules is for other repos). Routine for each change: edit `app.html`, `python3 tools/build-pages.py`, run the screenshot tests, commit and push `main`, then copy it to `v3/reading-log.html` on branch `claude/keen-sagan-yf9rqf`, commit and push.
+- **Work on a branch and open a pull request into `main`; the owner merges** (owner's choice, 8 Nov 2026; direct pushes to `main` are no longer used here). Routine for each change: edit `app.html`, `python3 tools/build-pages.py`, run `bash tests/run-all.sh` (all three suites), commit and push the branch, open the PR. After it merges, copy `app.html` to `v3/reading-log.html` on branch `claude/keen-sagan-yf9rqf`, commit and push.
 - **The owner uses only the live GitHub Pages site**, not the claude.ai artifact. Don't spend effort on the artifact; claude.ai-only limits (no outside images, `confirm()`) matter less, though the connector code still works there.
 - **Never read anything from the `Brain tester` sheet beyond its Date and Pages columns.** It holds mood, meds and fitness data. The diary is sensitive.
 - Never touch other apps' tabs (those starting with an emoji, plus their Log, Settings and backup tabs).
 - Back up a tab (duplicate it, name it with the date) before any column or bulk change. Ask the owner before deleting a backup; they like to keep it a few days.
 - Show the plan before the first sheet write of a session. Check every bulk write by reading it back and comparing with a script. Never hand-type long arrays.
+
+## Supabase (from 8 Nov 2026)
+- The data is moving to Supabase project `jcm-apps`, schema `books` (10 tables, one per tab, plus the Quotes sheet). The plan is `plans/SUPABASE.md` in control-room. SQL lives in `supabase/` (`01-schema.sql` tables and RLS, `02-check.sql` row counts, `03-shared.sql` the `shared.activity` view The Brain reads). Schema changes go in a new numbered file the owner pastes into the SQL Editor; Claude can't reach the project from the sandbox.
+- Each device picks where its data lives (Toolbox > Data & sign-in). All Sheet and Supabase I/O goes through the data layer: `sheetDb` and `sbDb` have the same methods, and `DB()` picks one. Screens never call either backend directly. `sbDb` returns Sheet-shaped arrays, so screen code is the same in both modes. Books `remain` and `%` are worked out on load, never stored.
+- Sign-in is shared by every jcm-book-library app (`jcm-sb-session`, refresh guarded by a Web Lock). Phones use email and password; the laptop can use the emailed link. Never ask for or use the `service_role` key or the database password.
+- Data tools in the same dialog: Copy Sheet → Supabase (pre-checks, replaces Supabase, verifies, switches the device), Check (read-only), Copy Supabase → Sheet (the weekly backup: preview, hidden dated backup tab per changed tab, changed cells only, cleared rather than deleted rows, never the formula columns, read-back). These are the app's only bulk writes; change them with care and keep `tests/copyback.js` passing.
+- The claude.ai artifact is read-only (`ARTIFACT_READ_ONLY`): it shows the Sheet and points to the live site.
+- If the app shows no books but `02-check.sql` shows rows: stale sign-in. Sign out of Supabase and sign in again.
 
 ## Sheet safety conventions (the app follows these, except where noted)
 - Find the row by its `id` immediately before every write and write only the changed cells. Never rewrite whole tabs, never sort from code, never delete and re-add rows (removing an item clears its cells; the empty row stays). The app clears rows in Wishlist, Reading Lists and Series Tracker; it never clears Books rows. Deleting a Reading Log entry is a soft delete: `pages` set to 0 and `source` to `deleted`.
@@ -55,7 +63,7 @@ Read this after `CLAUDE.md` and the house rules. It records how the app and its 
 - Log: Reading now (big page number), then Read next / Last five finished / Favourites, then Pages per day (Year by default). "2026 so far" is the pages of books finished this year plus the current page of each book being read (owner's choice, 7 Nov), so it moves as you log; the daily log (inflated by Kobo page counts) still drives streaks and the daily chart.
 - `confirm()` does nothing inside claude.ai, so the page uses its own confirmation dialog (`askOk`).
 - **Covers only work on the GitHub Pages site** (claude.ai blocks outside images). Open Library search and covers were confirmed working on the live site on 1 Nov, but its range of covers is limited. The build environment's network blocks `openlibrary.org`, so tests use a stand-in.
-- Tests were headless Playwright scripts with a stubbed `window.claude` at 390px and 1280px, run before every publish. They used copies of the real sheet data, so they are not in this public repo.
+- Tests: `bash tests/run-all.sh` runs all three suites (Sheet-mode screens and write flows, Supabase mode against a fake Supabase, and the copy tools against fake Sheets and Supabase). Synthetic data only. Screenshots are slightly flaky in the cloud sandbox: 1–2 screens just over 100 px at a channel diff of 2–3, with every flow byte-identical, is noise; rerun once.
 
 ## Known gaps (from the 31 Oct audit)
 - The three find-row-by-id helpers (Books, Wishlist, Reading Lists) and the per-field write loops are near-duplicates. They could be merged into one helper, but they guard every write, so do it with full write-path tests.

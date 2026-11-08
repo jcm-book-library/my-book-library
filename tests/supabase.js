@@ -9,29 +9,21 @@ const OUT = process.argv[2] || path.join(__dirname, 'out', 'sb');
 fs.mkdirSync(OUT, { recursive: true });
 const APP = fs.readFileSync(path.join(__dirname, '..', 'app.html'), 'utf8');
 const HTML = '<!doctype html><html lang="en-AU"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>\n' + APP;
-const SBU = 'https://apeflgdzclpxiktaxyfk.supabase.co', ORIGIN = 'https://library.test';
+const F = require('./fakes.js');
+const { SBU, RT_TABLE, GOOD, EXPIRED, FRESH, sbRoute, sbWorld, routeRealtime } = F;
+const ORIGIN = 'https://library.test';
 const TODAY = FIXED.slice(0, 10);
 
 // ---- the converters and the table map come straight from app.html, so the seed uses the app's own types ----
-const src = APP.slice(APP.indexOf('const sbCols ='), APP.indexOf('/* ---------- sbDb:'));
-const { SBT, sbToCell, cellToSb } = new Function(src + '; return { SBT, sbToCell, cellToSb };')();
-const RT_TABLE = { 'Books': 'books', 'Reading Log': 'reading_log', 'App Settings': 'settings', 'Ratings': 'ratings', 'Contents': 'contents', 'Wishlist': 'wishlist',
-  'Series Tracker': 'series_tracker', 'Reading Lists': 'reading_lists', 'Wishlist archive': 'wishlist_archive', 'Quotes': 'quotes' };
-const UNIQUE = { books: ['id'], wishlist: ['id'], series_tracker: ['series'], reading_lists: ['id'], settings: ['key'], wishlist_archive: ['id'] };
-const DEFAULTS = { books: { favourite: false, loaned: false }, wishlist: { gift: false } };
 
-const b64u = o => Buffer.from(JSON.stringify(o)).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-const jwt = (email = 'me@example.com') => 'x.' + b64u({ email, sub: 'u1' }) + '.y';
-const GOOD = jwt(), EXPIRED = 'EXPIRED_TOKEN', FRESH = jwt() + 'f';
 const log = [], errors = [];
 const check = (name, ok, extra) => log.push((ok ? 'PASS ' : 'FAIL ') + name + (!ok && extra !== undefined ? ' -> ' + JSON.stringify(extra).slice(0, 400) : ''));
 let sheetsHits = 0;
 
-// ---- fake world ----
+// ---- fake world (the database, routes and Realtime stub are in tests/fakes.js) ----
+const { SBT, sbToCell, cellToSb } = F.appFns(APP);
 function world(opts = {}) {
-  const w = { db: {}, calls: [], nextId: 1, refreshes: 0, logouts: 0, forced401: 0, otp: [], pwTries: [], pwSet: null, refreshFail: 0, race: 0, rt: null };
-  Object.values(RT_TABLE).forEach(t => { w.db[t] = []; });
-  w.insert = (t, o) => { const row = { row_id: w.nextId++, user_id: 'u1', ...(DEFAULTS[t] || {}), ...o }; w.db[t].push(row); return row; };
+  const w = sbWorld();
   if (!opts.empty) {   // seed from the synthetic Sheet data, converted with the app's own column types
     const sheets = makeSheets();
     for (const [tab, [table, cols]] of Object.entries(SBT)) {
@@ -47,24 +39,6 @@ function world(opts = {}) {
   }
   return w;
 }
-const FILTER_SKIP = new Set(['select', 'order', 'limit', 'offset']);
-function applyFilters(rows, q) {
-  for (const [k, v] of q.entries()) {
-    if (FILTER_SKIP.has(k)) continue;
-    const dot = v.indexOf('.'), op = v.slice(0, dot), val = v.slice(dot + 1);
-    rows = rows.filter(r => {
-      const x = r[k]; if (x == null) return false;
-      const a = typeof x === 'number' ? x : String(x), b = typeof x === 'number' ? Number(val) : val;
-      return op === 'eq' ? a === b : op === 'gt' ? a > b : op === 'lt' ? a < b : op === 'gte' ? a >= b : op === 'lte' ? a <= b : true;
-    });
-  }
-  return rows;
-}
-function applyOrder(rows, q) {
-  const o = q.get('order'); if (!o) return rows;
-  const keys = o.split(',').map(s => { const [c, d] = s.split('.'); return [c, d === 'desc' ? -1 : 1]; });
-  return [...rows].sort((a, b) => { for (const [c, d] of keys) { if (a[c] < b[c]) return -d; if (a[c] > b[c]) return d; } return 0; });
-}
 
 async function install(page, w) {
   await page.route('**/*', async r => {
@@ -77,68 +51,7 @@ async function install(page, w) {
     if (url.startsWith('data:') || url.startsWith('about:')) return r.continue();
     return r.abort();
   });
-  w.rt = { socks: [], joins: [], tokens: [], push(rec) { this.socks.forEach(ws => ws.send(JSON.stringify({ topic: 'realtime:books', event: 'postgres_changes', payload: { data: rec }, ref: null }))); } };
-  await page.routeWebSocket(/\/realtime\/v1\/websocket/, ws => {
-    w.rt.socks.push(ws); w.rt.url = ws.url();
-    ws.onMessage(m => { let o; try { o = JSON.parse(m); } catch (e) { return; }
-      if (o.event === 'phx_join') { w.rt.joins.push(o.payload); ws.send(JSON.stringify({ topic: o.topic, event: 'phx_reply', payload: { status: 'ok', response: { postgres_changes: [] } }, ref: o.ref })); }
-      else if (o.event === 'access_token') w.rt.tokens.push(o.payload.access_token);
-      else if (o.event === 'heartbeat') ws.send(JSON.stringify({ topic: 'phoenix', event: 'phx_reply', payload: { status: 'ok', response: {} }, ref: o.ref })); });
-    ws.onClose(() => { w.rt.socks = w.rt.socks.filter(x => x !== ws); });
-  });
-}
-async function sbRoute(r, w) {
-  const req = r.request(), u = new URL(req.url()), method = req.method(), h = req.headers();
-  const json = (o, status = 200) => r.fulfill({ status, contentType: 'application/json', body: JSON.stringify(o) });
-  const body = () => { try { return JSON.parse(req.postData()); } catch (e) { return null; } };
-  if (u.pathname === '/auth/v1/token' && u.searchParams.get('grant_type') === 'password') {
-    const b = body(); w.pwTries.push(b);
-    return b.password === 'correct horse battery staple' && b.email === 'me@example.com' ? json({ access_token: GOOD, refresh_token: 'rtP', expires_in: 3600, token_type: 'bearer' }) : json({ error_code: 'invalid_credentials', msg: 'Invalid login credentials' }, 400);
-  }
-  if (u.pathname === '/auth/v1/user' && method === 'PUT') { w.pwSet = { auth: h.authorization, apikey: h.apikey, body: body() }; return json({ id: 'u1', email: 'me@example.com' }); }
-  if (u.pathname === '/auth/v1/token') {
-    w.refreshes++;
-    if (w.refreshDelay) await new Promise(ok => setTimeout(ok, w.refreshDelay));
-    if (w.refreshFail) return json({ error: 'invalid_grant', error_description: 'Invalid Refresh Token' }, w.refreshFail);
-    return json({ access_token: FRESH, refresh_token: 'rt2', expires_in: 3600 });
-  }
-  if (u.pathname === '/auth/v1/logout') { w.logouts++; return r.fulfill({ status: 204, body: '' }); }
-  if (u.pathname === '/auth/v1/otp') { w.otp.push({ url: req.url(), body: body() }); return json({}); }
-  const m = u.pathname.match(/^\/rest\/v1\/(\w+)$/);
-  if (!m || !w.db[m[1]]) return json({ message: 'no such table' }, 404);
-  const t = m[1], q = u.searchParams;
-  const call = { method, table: t, query: u.search, path: m[1] + u.search, body: body(), headers: h };
-  w.calls.push(call);
-  if (h.authorization === 'Bearer ' + EXPIRED) { w.forced401++; call.status = 401; return json({ message: 'JWT expired' }, 401); }
-  if (h['accept-profile'] !== 'books' && h['content-profile'] !== 'books') { call.status = 406; return json({ message: 'wrong schema' }, 406); }
-  const wantRep = (h.prefer || '').includes('return=representation');
-  const unique = (row, skip) => (UNIQUE[t] || []).some(c => w.db[t].some(x => x !== skip && x[c] === row[c]));
-  if (method === 'GET') {
-    let rows = applyOrder(applyFilters(w.db[t], q), q);
-    const off = Number(q.get('offset') || 0), lim = Math.min(Number(q.get('limit') || 1000), 1000);
-    rows = rows.slice(off, off + lim);
-    const sel = q.get('select');
-    if (sel && sel !== '*') { const cols = sel.split(','); rows = rows.map(x => Object.fromEntries(cols.map(c => [c, x[c]]))); }
-    call.status = 200; return json(rows);
-  }
-  if (method === 'POST') {
-    let items = body(); items = Array.isArray(items) ? items : [items];
-    if (w.race && t === 'books') { w.race--; const top = Math.max(0, ...w.db.books.map(x => x.id)); w.insert('books', { id: top + 4, title: 'Added on another device', author: 'Other Dev', status: 'TBR' }); }
-    for (const it of items) if (unique(it)) { call.status = 409; return json({ code: '23505', message: 'duplicate key value violates unique constraint' }, 409); }
-    const done = items.map(it => w.insert(t, it)); call.status = 201;
-    return wantRep ? json(done, 201) : r.fulfill({ status: 201, body: '' });
-  }
-  if (method === 'PATCH') {
-    const hit = applyFilters(w.db[t], q), b = body();
-    for (const x of hit) { const merged = { ...x, ...b }; if (unique(merged, x)) { call.status = 409; return json({ message: 'duplicate key' }, 409); } }
-    hit.forEach(x => Object.assign(x, b)); call.status = wantRep ? 200 : 204;
-    return wantRep ? json(hit) : r.fulfill({ status: 204, body: '' });
-  }
-  if (method === 'DELETE') {
-    const hit = applyFilters(w.db[t], q); w.db[t] = w.db[t].filter(x => !hit.includes(x)); call.status = wantRep ? 200 : 204;
-    return wantRep ? json(hit) : r.fulfill({ status: 204, body: '' });
-  }
-  return json({}, 405);
+  await routeRealtime(page, w);
 }
 
 // ---- scenario runner ----
@@ -279,14 +192,14 @@ const step = async (name, fn) => { try { await fn(); } catch (e) { check(name + 
       await fill(page, '#%', { wlQuick: 'Quick Title by Quinn Quick' });
       await page.evaluate(() => document.getElementById('wlQuickBtn').click()); await saved(page, 800);
       let p = writesSince(w, n).find(c => c.method === 'POST' && c.table === 'wishlist');
-      check('wishlist add: POST with next WL id (WL0011), Inbox, gift false', !!p && p.body.length === 1 && p.body[0].id === 'WL0011' && p.body[0].title === 'Quick Title' && p.body[0].author === 'Quinn Quick' && p.body[0].stage === 'Inbox' && p.body[0].gift === false && p.body[0].added === TODAY && p.body[0].price === null, p && p.body);
+      check('wishlist add: POST with next WL id (WL0011), Inbox, gift false', !!p && p.body.length === 1 && p.body[0].id === 'WL0011' && p.body[0].title === 'Quick Title' && p.body[0].author === 'Quinn Quick' && p.body[0].stage === 'Inbox' && p.body[0].gift === false && p.body[0].added === TODAY && p.body[0].price === '', p && p.body);
       const m = w.calls.length;
       await page.evaluate(() => openWishDlg(null));
       await fill(page, '#wd-%', { title: 'Dialog Title', author: 'Dee Dialog', series: 'Dialogs', number: '2', type: 'Comic', format: 'Issues', stage: 'To buy', price: '9.5', release: '2026-12-25', notes: 'n' });
       await page.evaluate(() => { document.getElementById('wd-gift').checked = true; });
       await submit(page, '#wishDlg form'); await saved(page, 800);
       p = writesSince(w, m).find(c => c.method === 'POST' && c.table === 'wishlist');
-      check('wishlist add dialog: numbers and gift typed (number 2, price 9.5, gift true, id WL0012)', !!p && p.body[0].id === 'WL0012' && p.body[0].number === 2 && p.body[0].price === 9.5 && p.body[0].gift === true && p.body[0].release === '2026-12-25' && p.body[0].stage === 'To buy', p && p.body);
+      check('wishlist add dialog: free-text number and price, gift typed (number "2", price "9.5", gift true, id WL0012)', !!p && p.body[0].id === 'WL0012' && p.body[0].number === '2' && p.body[0].price === '9.5' && p.body[0].gift === true && p.body[0].release === '2026-12-25' && p.body[0].stage === 'To buy', p && p.body);
       const e0 = w.calls.length;
       await page.evaluate(() => setWishFields(disc.wish.find(x => x.id === 'WL0005'), { checked: 'Available', checkedOn: '2026-10-31', wantAs: 'PDF' })); await saved(page, 600);
       const pe = writesSince(w, e0);
