@@ -4,7 +4,7 @@ Status: **planned, not started.** Written 9 Nov 2026. Target: launch about 20 De
 Replaces the October notes in `v3/FAMILY-PLAN.md` (branch `claude/keen-sagan-yf9rqf`) where they differ.
 
 ## Decided
-- **Name and domain:** "Our Library", on `ourlibrary.au`. Plain `.au` only needs an Australian citizen or resident; `.com.au` needs an ABN, so not that. Bought through VentraIP (owner to do).
+- **Name and domain:** "Our Library", on `ourlibrary.au`. Plain `.au` only needs an Australian citizen or resident; `.com.au` needs an ABN, so not that. Bought through VentraIP on 9 Nov 2026 (decline the free `ourlibrary.online` add-on).
 - **People:** 5 at launch, possibly 7 (the other two read less). Adults.
 - **Sign-in:** invite-only with a 6-digit email code. Sign-ups stay off; the owner invites from the Supabase dashboard. Google sign-in comes later, together with notifications, if everyone uses it regularly.
 - **Backend:** the existing Supabase project `jcm-apps`, schema `books`. Every table already has `user_id` and an "own rows" rule, so each new person starts with an empty library.
