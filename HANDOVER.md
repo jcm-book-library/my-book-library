@@ -82,10 +82,10 @@ Order: 1 Foundations (screenshot and write-flow tests in `tests/`, one find-row 
 - **Mock approved 1 Nov** (with changes: softer background spines; Pages per day toggles 30 days / 90 days / This year / Last 12 months, keeping the 7-day average worm).
 - **Spine titles (Shelves stage):** never "…". Shrink the font to fit the spine; if a title still won't fit at the smallest size, cut it after a whole word.
 - **Kept manual on purpose:** logging pages read. Don't automate it (no Kobo sync).
-- **Not wanted for now:** spending stats, loan reminders (a Lent out popup instead), imports (done), family sharing (a future version; then consider Wishlist items as Books rows).
+- **Not wanted for now:** spending stats, loan reminders (a Lent out popup instead), imports (done), family sharing was a future version, now planned for Christmas 2026 in `plans/FAMILY.md`.
 - **Later:** once Open Library has filled what it can, add the remaining covers from Google Drive, as other projects do.
 
 ## Open ideas
 - Fill the ~220 blank page counts (Open Library, or Calibre page counts); `added` dates from a Calibre timestamp export.
-- Family sharing and the real name and domain (see `v3/FAMILY-PLAN.md` on the branch): invite-only sign-in, a daily backup sheet keeping 7 days.
+- **Family sharing: see `plans/FAMILY.md`** ("Our Library" on `ourlibrary.au`, invite-only email-code sign-in, Family tab, launch about 20 Dec 2026). It replaces `v3/FAMILY-PLAN.md` where they differ.
 - The Music Collection app was sent the bookmark/favourites style; a matching version for books there is its own session's call.
