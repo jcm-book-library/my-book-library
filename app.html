@@ -1,6 +1,6 @@
 <title>The Library</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=EB+Garamond:wght@500&display=swap">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
 /* Layout: one column on phone, two on laptop — log panel left (the daily job), stats + charts right. */
@@ -12,6 +12,10 @@
   --danger:#ff7a7a;
   --display:"Roboto",ui-sans-serif,system-ui,sans-serif;
   --body:"Roboto",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --spine-font:"EB Garamond",Georgia,"Times New Roman",serif;
+  --gilt:#b39657; --gilt-hi:rgba(255,236,185,.38);
+  --grain:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='96'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .55 0 0 0 0 .5 0 0 0 0 .45 0 0 0 -1.6 1.25'/%3E%3C/filter%3E%3Crect width='96' height='96' filter='url(%23n)' opacity='.55'/%3E%3C/svg%3E");
+  --cyl:linear-gradient(90deg,rgba(0,0,0,.5) 0,rgba(0,0,0,.12) 14%,rgba(255,240,215,.17) 35%,rgba(0,0,0,.04) 58%,rgba(0,0,0,.34) 86%,rgba(0,0,0,.58) 100%);
   color-scheme:dark;
 }
 *{box-sizing:border-box}
@@ -81,28 +85,50 @@ button{font:inherit;cursor:pointer}
 .logday button[aria-pressed="true"]{background:color-mix(in srgb,var(--accent) 22%,transparent);border-color:var(--accent);color:var(--fg)}
 .logday input[type=date]{font:inherit;font-size:12px;background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:999px;padding:3px 10px;color-scheme:dark}
 .logday-banner{margin:-4px 0 12px;padding:8px 12px;border-radius:10px;font-size:13px;font-weight:500;background:color-mix(in srgb,var(--accent) 16%,transparent);border:1px solid color-mix(in srgb,var(--accent) 45%,transparent)}
-.nb{display:grid;grid-template-columns:minmax(0,1.25fr) 128px minmax(0,1fr) auto;gap:8px 26px;align-items:center;padding:16px 0;border-top:1px solid var(--line)}
-.nb .book-title{font-size:19px;line-height:1.25;cursor:pointer}
-.nb .book-meta{font-size:15px;margin-top:2px}
-.nb .nb-page{display:flex;align-items:baseline;gap:6px;white-space:nowrap;min-width:92px;justify-content:flex-end}
-.nb .pg-now{font-family:var(--display);font-size:38px;font-weight:700;line-height:1;color:var(--fg)}
-.nb .pg-of{font-size:17px;color:var(--muted)}
-.nb .pg-of::before{content:'/ ';opacity:.7}
-.nb:first-child{border-top:0;padding-top:4px}
-.nb .nb-prog{display:flex;flex-direction:column;gap:6px}
-.nb .nb-prog .row{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
-.nb .nb-sub{font-size:12px;color:var(--muted)}
-.nb .recent{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.nb{--bc:var(--accent);display:grid;grid-template-columns:minmax(0,1.15fr) 118px minmax(0,1.9fr) 190px;align-items:stretch;padding:12px 0;border-radius:12px;border:1px solid color-mix(in srgb,var(--bc) 24%,var(--line));border-left:4px solid var(--bc);background:color-mix(in srgb,var(--bc) 14%,var(--surface))}
+.nb + .nb{margin-top:12px}
+.nb-sec{display:flex;flex-direction:column;justify-content:center;min-width:0;padding:4px 18px}
+.nb-sec + .nb-sec{border-left:1px solid color-mix(in srgb,var(--bc) 22%,var(--line))}
+.nb .nb-info{flex-direction:row;align-items:center;gap:12px;justify-content:flex-start}
+.nb .nb-info > div{min-width:0}
+.nb .book-title{font-size:21px;font-weight:500;line-height:1.2;cursor:pointer;overflow-wrap:anywhere}
+.nb .book-meta{font-size:14px;margin-top:3px}
+.nb .book-series{font-size:12px;color:var(--muted);margin-top:2px}
+.nb .nb-page{display:flex;flex-direction:column;align-items:stretch;width:max-content;min-width:64px;margin:auto;padding:4px 0;white-space:nowrap}
+.nb .pg-now{font-family:var(--display);font-size:38px;font-weight:700;line-height:1;color:var(--fg);text-align:center;padding-bottom:7px}
+.nb .pg-now:not(:last-child){border-bottom:1px solid color-mix(in srgb,var(--fg) 45%,transparent);margin-bottom:7px}
+.nb .pg-of{font-size:17px;line-height:1;color:var(--muted);text-align:center}
+.nb .nb-prog{gap:12px}
+.nb .pr-top{display:flex;align-items:center;gap:14px}
+.nb .pr-top .prog{flex:1;min-width:0}
+.nb .pr-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px 18px;align-items:start}
+.nb .pr-wide{grid-column:1/-1}
+.nb .nb-sub{font-size:12.5px;color:var(--muted)}
+.nb .nb-sub b{color:var(--fg);font-weight:500}
+.nb .recent{display:flex;gap:6px;flex-wrap:wrap;margin:0}
 .nb .recent button{font:inherit;border:0;cursor:pointer}
 .nb .recent button[aria-expanded="true"]{outline:1px solid var(--accent)}
-.nb .recent span,.nb .recent button{font-size:11px;padding:2px 8px;border-radius:999px;background:var(--raise);color:var(--muted)}
+.nb .recent span,.nb .recent button{font-size:11px;padding:2px 8px;border-radius:999px;background:color-mix(in srgb,var(--bc) 16%,var(--raise));color:var(--muted)}
 .nb .recent b{color:var(--fg);font-weight:500}
-.nb .nb-log{display:flex;align-items:center;gap:8px}
-.nb .nb-log input{width:84px}
-.nb .nb-extra{grid-column:1/-1;display:flex;flex-direction:column;gap:6px}
+.nb .nb-log{display:flex;flex-direction:column;align-items:stretch;gap:8px}
+.nb .lr-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.nb .nb-log input{width:100%;box-sizing:border-box}
+.nb .lr-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.nb .lr-btns .btn{display:flex;align-items:center;justify-content:center;min-height:36px}
+.nb .nb-log .delta{min-width:0;font-size:12px}
+.nb .nb-extra{grid-column:1/-1;display:flex;flex-direction:column;gap:6px;padding:12px 18px 2px;margin-top:10px;border-top:1px dashed color-mix(in srgb,var(--bc) 25%,var(--line))}
 .nb .nb-extra:empty{display:none}
-@media (max-width:860px){.nb{grid-template-columns:minmax(0,1fr) auto}.nb .nb-prog{grid-column:1/-1;order:3}.nb .nb-log{grid-column:1/-1;order:4}.nb .nb-extra{order:5}}
-@media (max-width:560px){.nb .nb-log label{margin-right:auto}.nb .pg-now{font-size:32px}}
+@media (max-width:700px){
+  .nb{grid-template-columns:84px minmax(0,1fr);padding:4px 0}
+  .nb-sec{padding:12px 14px}
+  .nb .nb-info{grid-column:1/-1}
+  .nb-sec + .nb-sec{border-left:0;border-top:1px solid color-mix(in srgb,var(--bc) 22%,var(--line))}
+  .nb .nb-page{grid-column:1;padding:12px 8px}
+  .nb .nb-prog{grid-column:2;border-top:0;border-left:1px solid color-mix(in srgb,var(--bc) 22%,var(--line))}
+  .nb .nb-log{grid-column:1/-1}
+  .nb .pg-now{font-size:32px}
+  .nb .nb-extra{padding:12px 14px 6px;margin-top:0}
+}
 .today-list .edit{display:flex;gap:6px;flex-wrap:wrap;align-items:center;grid-column:1/-1}
 .today-list .edit input{font:inherit;font-size:13px;background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:4px 8px;color-scheme:dark}
 .today-list .edit input[type=number]{width:80px}
@@ -672,11 +698,11 @@ details.sec[open] summary::after{transform:rotate(-135deg);margin-top:3px}
 .note{margin:0;font-size:13px;color:var(--muted)}
 .ground{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
 .ground .row{position:absolute;left:0;right:0;bottom:0;height:40vh;display:flex;align-items:flex-end;gap:3px;padding:0 0 18px;opacity:.32}
-.ground .row i{display:block;flex:none;border-radius:3px 3px 1px 1px;position:relative}
-.ground .row i::before,.ground .row i::after{content:"";position:absolute;left:0;right:0;height:3px;background:#0d0b14;opacity:.3}
+.ground .row i{display:block;flex:none;border-radius:2px 2px 0 0;position:relative;background-image:var(--cyl),var(--grain);background-blend-mode:normal,multiply;box-shadow:2px 0 4px -1px rgba(0,0,0,.5)}
+.ground .row i::before,.ground .row i::after{content:"";position:absolute;left:0;right:0;height:4px;background:linear-gradient(to bottom,var(--gilt-hi) 0 1px,var(--gilt) 1px 2px,rgba(0,0,0,.5) 2px 3px,transparent 3px);opacity:.55}
 .ground .row i::before{top:12%}.ground .row i::after{bottom:9%}
 .ground .row i.lean{transform:rotate(9deg);transform-origin:bottom left;margin-right:16px}
-.ground .plank{position:absolute;left:0;right:0;bottom:0;height:18px;background:#ebe4d3;opacity:.32}
+.ground .plank{position:absolute;left:0;right:0;bottom:0;height:18px;background:linear-gradient(#6a5039,#3a2a1d);box-shadow:inset 0 1px 0 rgba(255,225,180,.35);opacity:.42}
 body[data-bg="plain"] .ground{display:none}
 @media (max-width:700px){.ground .row{height:34vh}}
 .hd-top{display:flex;justify-content:space-between;align-items:center;gap:6px 12px;flex-wrap:wrap}
@@ -837,15 +863,18 @@ body[data-bg="plain"] .ground{display:none}
  .sgrid.s3>.shelf:nth-last-child(2):nth-child(3n+1){grid-column:span 3}
 }
 .shelf-row{position:relative;display:flex;align-items:flex-end;gap:4px;height:120px;padding:0 4px 8px;overflow:hidden;margin-top:auto}
-.shelf-row::after{content:"";position:absolute;left:0;right:0;bottom:0;height:7px;background:#ebe4d3;opacity:.5;border-radius:2px}
-.spine{flex:none;border:0;padding:0;margin:0;font:inherit;border-radius:3px 3px 1px 1px;position:relative;display:flex;align-items:flex-start;justify-content:center;overflow:hidden;cursor:pointer;box-shadow:inset -3px 0 0 rgba(0,0,0,.18),inset 1px 0 0 rgba(255,255,255,.12);transition:transform .12s}
+.shelf-row::after{content:"";position:absolute;left:0;right:0;bottom:0;height:8px;background:linear-gradient(#5e4631,#33251a);box-shadow:inset 0 1px 0 rgba(255,225,180,.3),0 2px 4px rgba(0,0,0,.35);border-radius:2px}
+.spine{flex:none;border:0;padding:0;margin:0;font:inherit;border-radius:3px 3px 0 0;position:relative;display:flex;align-items:flex-start;justify-content:center;cursor:pointer;color:var(--gilt);background-image:var(--cyl),var(--grain);background-blend-mode:normal,multiply;box-shadow:2px 0 4px -1px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.07);transition:transform .12s}
 .spine:hover{transform:translateY(-5px)}
 .spine:focus-visible,.shelf-more:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
-.spine::before,.spine::after{content:"";position:absolute;left:0;right:0;height:3px;background:#0d0b14;opacity:.28}
+.spine::before,.spine::after{content:"";position:absolute;left:0;right:0;height:6px;background:linear-gradient(to bottom,var(--gilt-hi) 0 1px,var(--gilt) 1px 2px,rgba(0,0,0,.55) 2px 3px,transparent 3px 4px,var(--gilt) 4px 5px,rgba(0,0,0,.55) 5px 6px);opacity:.85;pointer-events:none}
 .spine::before{top:6px}.spine::after{bottom:6px}
-.spine span{writing-mode:vertical-rl;font-weight:500;line-height:1.1;white-space:pre;overflow:hidden;margin-top:14px;pointer-events:none}
-.spine.sfav::after{background:#f5c85a;height:5px;opacity:.95;border-radius:2px;left:25%;right:25%}
-.spine.rd::before{background:#fff;opacity:.8;left:25%;right:25%;border-radius:2px}
+.spine.tall{background-image:linear-gradient(to bottom,rgba(255,255,255,.14) 0 1px,rgba(0,0,0,.5) 3px 4px,transparent 4px),linear-gradient(to bottom,rgba(255,255,255,.14) 0 1px,rgba(0,0,0,.5) 3px 4px,transparent 4px),var(--cyl),var(--grain);background-size:100% 5px,100% 5px,auto,auto;background-repeat:no-repeat,no-repeat,repeat,repeat;background-position:0 18px,0 calc(100% - 22px),0 0,0 0;background-blend-mode:normal,normal,normal,multiply}
+.spine span{writing-mode:vertical-rl;font-family:var(--spine-font);font-weight:500;line-height:1.1;white-space:pre;overflow:hidden;margin-top:16px;pointer-events:none;text-shadow:0 1px 0 rgba(0,0,0,.7)}
+.spine.tall span{margin-top:24px}
+.spine .mk{position:absolute;top:-6px;pointer-events:none;filter:drop-shadow(0 1px 1px rgba(0,0,0,.5))}
+.spine .mk-fav{left:calc(50% + 1px);width:7px;height:24px;background:linear-gradient(90deg,#6e2229,#933942 55%,#6e2229);clip-path:polygon(0 0,100% 0,100% 100%,50% 82%,0 100%)}
+.spine .mk-rd{left:22%;width:9px;height:10px;border-radius:2px 2px 0 0;background:linear-gradient(90deg,#8b7440,#cdb26e 50%,#8b7440)}
 .shelf-more{flex:none;width:40px;align-self:stretch;display:grid;place-items:center;color:var(--muted);font:inherit;font-size:13px;font-weight:500;border:1px dashed var(--line);border-radius:6px;background:transparent;cursor:pointer}
 .shelf-more:hover{color:var(--fg);border-color:var(--accent)}
 @media (max-width:640px){
@@ -1418,6 +1447,11 @@ function hslRot(hex, deg) {
   const f = n => { const k = (n + h / 30) % 12, a = sat * Math.min(l, 1 - l); return l - a * Math.max(-1, Math.min(k - 3, 9 - k, 1)); };
   return rgbHex([f(0) * 255, f(8) * 255, f(4) * 255]);
 }
+// Leather: deepen and quieten a palette colour toward a dark brown-black (k = 1 for the shelves, less for the background shelf)
+function leather(hex, k = 1) {
+  const c = hexRgb(hex), y = c[0] * .3 + c[1] * .59 + c[2] * .11;
+  return mix(rgbHex(c.map(v => v + (y - v) * .3 * k)), '#1b130d', .35 * k);
+}
 function spinePalette(mode, isoDate) {
   const y = +isoDate.slice(0, 4), m = +isoDate.slice(5, 7) - 1, d = +isoDate.slice(8, 10), acc = dayColour(isoDate);
   if (mode === 'month') return [acc, mix(acc, '#ffffff', .45), mix(BASE.bg, acc, .42), mix(BASE.bg, acc, .7), mix(acc, '#ffffff', .2)];
@@ -1445,8 +1479,9 @@ function applyTheme() {
   if (u) u.style.background = underColour(c);
   const pal = spinePalette(look.spines, t);
   pal.slice(0, 4).forEach((p, i) => r.setProperty('--l' + (i + 1), p));
-  pal.forEach((p, i) => r.setProperty('--g' + i, mix(p, BASE.bg, .25)));   // the shelf background is a little softer than the logo
+  pal.forEach((p, i) => r.setProperty('--g' + i, mix(leather(p, .7), BASE.bg, .2)));   // the shelf background is a little softer than the logo
   applyLook();
+  recolourCards();
   setFavicon(pal);
 }
 
@@ -1465,7 +1500,7 @@ function buildGround() {
   for (let i = 0; i < 70; i++) {
     const e = document.createElement('i');
     e.style.width = (22 + Math.round(rnd() * 26)) + 'px'; e.style.height = (48 + rnd() * 48) + '%';
-    e.style.background = `var(--g${Math.floor(rnd() * 5)})`;
+    e.style.backgroundColor = `var(--g${Math.floor(rnd() * 5)})`;
     if (i % 17 === 9) e.className = 'lean';
     row.appendChild(e);
   }
@@ -1569,7 +1604,7 @@ function setLogDay(d) {
 }
 
 // Pace for one book: your recent daily pages, split by how much this book got in the last 14 days
-function bookPace(b) {
+function bookPaceParts(b) {
   const avg = recentDailyAverage(14), since = addDays(today(), -14);
   const per = new Map();
   for (const e of state.entries) if (e.bookId && e.date > since) per.set(e.bookId, (per.get(e.bookId) || 0) + e.pages);
@@ -1577,10 +1612,10 @@ function bookPace(b) {
   const share = logged ? (per.get(b.id) || 0) / logged : 1 / Math.max(1, state.books.length);
   const rate = avg * share, left = Math.max(0, (b.pages || 0) - lastPageFor(b));
   const days = rate > 0 && b.pages ? Math.ceil(left / rate) : null;
-  if (!b.pages) return 'Add a page count to estimate a finish date';
-  if (days == null) return `${fmt(left)} pages left · log some pages to estimate`;
+  if (!b.pages) return { none: 'Add a page count to estimate a finish date' };
+  if (days == null) return { left: fmt(left), none: 'log some pages to estimate' };
   const done = fromIso(addDays(today(), days));
-  return `${fmt(left)} left · about ${fmt(Math.round(rate))} a day · done ${days === 0 ? 'today' : 'around ' + done.toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' })}`;
+  return { left: fmt(left), rate: fmt(Math.round(rate)), fin: days === 0 ? 'today' : 'around ' + done.toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' }) };
 }
 
 // The last few days you read this book, newest first: [{date, pages}]
@@ -1590,6 +1625,12 @@ function recentDays(bookId, n = 3) {
   return [...m.entries()].sort((a, b) => a[0] < b[0] ? 1 : -1).slice(0, n).map(([date, pages]) => ({ date, pages }));
 }
 
+const spineCol = (pal, h) => pal[h % pal.length];
+function recolourCards() {
+  const box = document.getElementById('books'); if (!box) return;
+  const pal = spinePalette(look.spines, today());
+  box.querySelectorAll('.nb[data-sh]').forEach(el => el.style.setProperty('--bc', spineCol(pal, +el.dataset.sh)));
+}
 function renderBooks() {
   const box = $('books');
   box.textContent = '';
@@ -1598,6 +1639,7 @@ function renderBooks() {
     box.innerHTML = '<p class="muted">No books marked Reading in your sheet. Set a book\'s status to Reading and press Refresh.</p>';
     return;
   }
+  const pal0 = spinePalette(look.spines, today());
   for (const b of state.books) {
     const last = lastPageFor(b);
     const pct = b.pages ? Math.min(100, last / b.pages * 100) : 0;
@@ -1605,21 +1647,21 @@ function renderBooks() {
     el.className = 'nb';
     const inputId = 'pg-' + b.id;
     el.innerHTML = `
-      <div class="nb-info">${coverImg(b, 'cov-m', 'S')}<div><div class="book-title" tabindex="0" role="button"></div><div class="book-meta"></div></div></div>
-      <div class="nb-page tnum" id="meta-${b.id}" aria-label="Page ${last}${b.pages ? ' of ' + b.pages : ''}"><span class="pg-now">${fmt(last)}</span>${b.pages ? `<span class="pg-of">${fmt(b.pages)}</span>` : ''}</div>
-      <div class="nb-prog">
-        <div class="row"><span class="nb-sub tnum"></span>${b.pages ? `<span class="book-pct tnum">${Math.round(pct)}%</span>` : ''}</div>
-        <div class="prog" aria-hidden="true"><i style="width:${pct}%"></i></div>
-        <div class="recent tnum"></div>
+      <div class="nb-sec nb-info">${coverImg(b, 'cov-m', 'S')}<div><div class="book-title" tabindex="0" role="button"></div><div class="book-meta"></div><div class="book-series"></div></div></div>
+      <div class="nb-sec"><div class="nb-page tnum" id="meta-${b.id}" aria-label="Page ${last}${b.pages ? ' of ' + b.pages : ''}"><span class="pg-now">${fmt(last)}</span>${b.pages ? `<span class="pg-of">${fmt(b.pages)}</span>` : ''}</div></div>
+      <div class="nb-sec nb-prog">
+        <div class="pr-top">${b.pages ? `<span class="book-pct tnum">${Math.round(pct)}%</span>` : ''}<div class="prog" aria-hidden="true"><i style="width:${pct}%"></i></div></div>
+        <div class="pr-grid tnum"><span class="nb-sub nb-left"></span><span class="nb-sub nb-rate"></span><span class="nb-sub nb-fin"></span><div class="recent tnum"></div></div>
       </div>
-      <div class="nb-log logrow">
-        <label for="${inputId}">On page</label>
+      <div class="nb-sec nb-log">
+        <div class="lr-head"><label for="${inputId}">On page</label><span class="delta tnum" aria-live="polite"></span></div>
         <input type="number" id="${inputId}" min="1" ${b.pages ? `max="${b.pages}"` : ''} inputmode="numeric" aria-describedby="meta-${b.id}">
-        <button class="btn btn-primary" type="button">Log</button>
-        <button class="btn dog-btn" type="button" title="Dog-ear a quote"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 1.5h6.5L13 5v9.5H3z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M9.5 1.5V5H13" fill="currentColor" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg></button>
-        <span class="delta tnum" aria-live="polite"></span>
+        <div class="lr-btns"><button class="btn btn-primary" type="button">Log</button>
+        <button class="btn dog-btn" type="button" title="Dog-ear a quote"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 1.5h6.5L13 5v9.5H3z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M9.5 1.5V5H13" fill="currentColor" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg></button></div>
       </div>
       <div class="nb-extra"></div>`;
+    el.dataset.sh = titleHash(b.title);
+    el.style.setProperty('--bc', spineCol(pal0, el.dataset.sh));
     const extra = el.querySelector('.nb-extra');
     const rec = el.querySelector('.recent');
     const days = recentDays(b.id);
@@ -1639,7 +1681,14 @@ function renderBooks() {
         w.append(lab, entryEditor(e)); extra.appendChild(w);
       }
     }
-    el.querySelector('.nb-sub').textContent = bookPace(b);
+    { const pp = bookPaceParts(b), set = (c, h) => { const n = el.querySelector(c); n.innerHTML = h; return n; };
+      if (pp.left == null) { set('.nb-left', pp.none).classList.add('pr-wide'); el.querySelector('.nb-rate').remove(); el.querySelector('.nb-fin').remove(); }
+      else {
+        set('.nb-left', `Pages left · <b>${pp.left}</b>`);
+        if (pp.rate == null) { set('.nb-rate', pp.none); }
+        else { set('.nb-rate', `About <b>${pp.rate}</b> a day`); set('.nb-fin', `Finish ${pp.fin}`); }
+      } }
+    { const ab = state.allBooks.find(x => x.id === b.id) || {}; if (ab.series) el.querySelector('.book-series').textContent = ab.series + (ab.seriesNum ? ' #' + ab.seriesNum : ''); }
     if (b.pages && last >= b.pages) {
       const fin = document.createElement('div');
       fin.className = 'finish';
@@ -3019,13 +3068,13 @@ function renderLibrary() {
   for (const [name, all] of groups) {
     if (filtering && !all.length) continue;
     const list = libSecSort(name, all);
-    const open = L.sec[name] ?? (filtering && list.length > 0);
+    const open = L.sec[name] ?? list.length > 0;
     const sec = document.createElement('section');
     sec.className = 'lib-sec';
     const sub = { Finished: 'newest first', Reading: 'on your Log now', 'Re-read': 'saved to read again', TBR: 'still to read' }[name] || '';
     sec.innerHTML = `<button type="button" class="lib-sec-head" data-sec="${escapeText(name)}" aria-expanded="${open}"><span class="pill" data-s="${escapeText(name)}">${escapeText(name)}</span><span class="cnt tnum">${fmt(list.length)}</span><span class="sub">${filtering && list.length !== (state.allBooks.filter(b => (b.status || 'No status') === name).length) ? `of ${fmt(state.allBooks.filter(b => (b.status || 'No status') === name).length)}` : sub}</span><span class="chev" aria-hidden="true"></span></button>`;
     if (open) {
-      const lim = L.lim[name] || 100;
+      const lim = L.lim[name] || 10;
       const wrap = document.createElement('div'); wrap.className = 'table-wrap';
       wrap.innerHTML = `<table class="lib"><thead>${head}</thead><tbody></tbody></table>`;
       const body = wrap.querySelector('tbody');
@@ -3050,7 +3099,7 @@ function renderLibrary() {
         body.appendChild(tr);
       }
       sec.appendChild(wrap);
-      if (list.length > lim) { const m = document.createElement('button'); m.type = 'button'; m.className = 'btn more'; m.dataset.more = name; m.textContent = `Show 100 more (${fmt(list.length - lim)} left)`; sec.appendChild(m); }
+      if (list.length > 10) { const m = document.createElement('button'); m.type = 'button'; m.className = 'btn more'; m.dataset.more = name; m.textContent = list.length > lim ? `Show all ${fmt(list.length)}` : 'Show fewer'; sec.appendChild(m); }
     }
     box.appendChild(sec);
   }
@@ -3123,7 +3172,7 @@ const fitCtx = document.createElement('canvas').getContext('2d'), fitMemo = new 
 let fitFam = '';
 function fitTitle(title, avail) {
   const key = avail + '|' + title, hit = fitMemo.get(key); if (hit) return hit;
-  if (!fitFam) fitFam = getComputedStyle(document.body).fontFamily;
+  if (!fitFam) fitFam = getComputedStyle(document.documentElement).getPropertyValue('--spine-font') || 'Georgia, serif';
   const m = (t, px) => { fitCtx.font = `500 ${px}px ${fitFam}`; return fitCtx.measureText(t).width; };
   let out = null;
   for (let px = 12; px >= 7 && !out; px -= 0.5) if (m(title, px) <= avail) out = { text: title, px };   // one line, 12px down to 7px
@@ -3150,15 +3199,15 @@ function fitTitle(title, avail) {
   }
   fitMemo.set(key, out); return out;
 }
+const titleHash = t => { let h = 0; for (const c of t) h = (h * 31 + c.charCodeAt(0)) >>> 0; return h; };
 function spineHtml(b, pal, inReading) {
-  let h = 0; for (const c of b.title) h = (h * 31 + c.charCodeAt(0)) >>> 0;
-  const col = pal[h % pal.length], lum = hexRgb(col).reduce((a, v, i) => a + v * [.3, .59, .11][i], 0);
-  const H = spineH(b), f = fitTitle(b.title, H - 28);
-  return `<button type="button" class="spine${isFav(b) ? ' sfav' : ''}${!inReading && b.status === 'Reading' ? ' rd' : ''}" data-spine="${escapeText(b.id)}" style="width:${spineW(b)}px;height:${H}px;background:${col};color:${lum > 140 ? '#14121c' : '#f1effa'}" title="${escapeText(b.title + (b.author ? ' · ' + b.author : ''))}" aria-label="${escapeText(b.title)}"><span style="font-size:${f.px}px">${escapeText(f.text)}</span></button>`;
+  const col = pal[titleHash(b.title) % pal.length];
+  const H = spineH(b), tall = H >= 118, f = fitTitle(b.title, H - (tall ? 44 : 34)), fav = isFav(b), rd = !inReading && b.status === 'Reading';
+  return `<button type="button" class="spine${tall ? ' tall' : ''}${fav ? ' sfav' : ''}${rd ? ' rd' : ''}" data-spine="${escapeText(b.id)}" style="width:${spineW(b)}px;height:${H}px;background-color:${col}" title="${escapeText(b.title + (b.author ? ' · ' + b.author : ''))}" aria-label="${escapeText(b.title)}">${rd ? '<u class="mk mk-rd"></u>' : ''}${fav ? '<u class="mk mk-fav"></u>' : ''}<span style="font-size:${f.px}px">${escapeText(f.text)}</span></button>`;
 }
 function layoutShelves() {
   const box = $('libShelves'); if (!box || box.hidden || !box.offsetWidth) return;
-  const pal = spinePalette(look.spines, today());
+  const pal = spinePalette(look.spines, today()).map(c => leather(c));
   box.querySelectorAll('.shelf-row').forEach(row => {
     const d = shelfDefs[+row.dataset.i]; if (!d) return;
     const W = row.clientWidth - 8, list = d.books;
@@ -3173,6 +3222,7 @@ function layoutShelves() {
 {
   let w = 0, t;
   new ResizeObserver(() => { const nw = $('libShelves').offsetWidth; if (nw === w) return; w = nw; clearTimeout(t); t = setTimeout(layoutShelves, 120); }).observe($('libShelves'));
+  if (document.fonts && document.fonts.load) document.fonts.load('500 12px "EB Garamond"').then(() => { fitMemo.clear(); layoutShelves(); }, () => {});
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { fitMemo.clear(); fitFam = ''; layoutShelves(); });
 }
 $('libShelves').addEventListener('click', e => {
@@ -5989,7 +6039,7 @@ $('libSecs').addEventListener('click', e => {
   const sh = e.target.closest('[data-sec]');
   if (sh) { const n = sh.dataset.sec, was = sh.getAttribute('aria-expanded') === 'true'; state.lib.sec[n] = !was; renderLibrary(); return; }
   const mo = e.target.closest('[data-more]');
-  if (mo) { const n = mo.dataset.more; state.lib.lim[n] = (state.lib.lim[n] || 100) + 100; renderLibrary(); return; }
+  if (mo) { const n = mo.dataset.more; state.lib.lim[n] = (state.lib.lim[n] || 10) > 10 ? 10 : 1e9; renderLibrary(); return; }
   const fv = e.target.closest('[data-fav]'); if (fv) { e.stopPropagation(); toggleFav(fv.dataset.fav); return; }
   if (e.target.closest('[data-status]')) return;
   const tr = e.target.closest('tr.row'); if (!tr) return;
