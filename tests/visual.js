@@ -1,6 +1,7 @@
 // Screenshots of the main screens at 390px and 1280px. Usage: node tests/visual.js <app.html> <outDir>
 const fs = require('fs'), path = require('path'), crypto = require('crypto');
 const { launch, openApp } = require('./lib.js');
+const { seedInsights } = require('./insights-seed.js');
 const [, , appFile, outDir] = process.argv;
 fs.mkdirSync(outDir, { recursive: true });
 (async () => {
@@ -57,6 +58,12 @@ fs.mkdirSync(outDir, { recursive: true });
     await shot('lib-shelves-longtitle');
     const row=await page.$('#libShelves .shelf-row'); if(row){ await row.screenshot({path:path.join(outDir,`${width}-lib-shelves-spines.png`)}); }
     await ev(page,()=>{const b=document.querySelector('#libShelves [data-seeall]');b&&b.click()}); await shot('lib-shelves-seeall');
+    // Insights with enough synthetic books and log entries that every chart has something to draw (injected here only)
+    await seedInsights(page, 180);
+    await ev(page,()=>showTab('insights')); await page.waitForTimeout(500); await shot('insights-full');
+    for(const c of ['insC1','insC2','insC3','insC4','insC5']){ const e=await page.$('#'+c); if(e) await e.screenshot({path:path.join(outDir,`${width}-insights-${c}.png`)}); }
+    await ev(page,()=>{const b=document.querySelector('#dashPeriods [data-p="all"]');b&&b.click()}); await page.waitForTimeout(400); await shot('insights-alltime');
+    await ev(page,()=>{const b=[...document.querySelectorAll('#insG2b .ins-seg button')][1];b&&b.click()}); await shot('insights-themes');
     errors.push(...app.errors);
     await app.close();
   }

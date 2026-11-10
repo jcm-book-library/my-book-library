@@ -246,11 +246,6 @@ input[type="number"]:focus{border-color:var(--accent);outline:none}
 .range-tabs button{border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:6px;padding:3px 9px;font-size:12px;font-weight:500}
 .range-tabs button[aria-pressed="true"]{background:color-mix(in srgb,var(--accent) 28%,var(--surface));color:var(--fg);border-color:var(--accent)}
 
-.heat-scroll{overflow-x:auto;padding-bottom:4px}
-.heat{display:grid;grid-template-rows:14px;grid-auto-rows:auto;grid-auto-flow:column;grid-auto-columns:minmax(10px,1fr);gap:3px;min-width:640px}
-.heat .c{aspect-ratio:1;border-radius:2px;background:var(--raise)}
-.heat .c[data-future]{background:transparent;outline:1px dashed var(--line);outline-offset:-1px}
-.heat .m{font-size:10px;color:var(--muted);white-space:nowrap;grid-row:1}
 
 /* tabs */
 .bar{position:relative;margin-bottom:18px}
@@ -428,6 +423,72 @@ table.lib{width:100%;border-collapse:collapse;font-size:14px;table-layout:fixed;
 .dash-tiles .stat .num{font-size:clamp(24px,3vw,32px)}
 .dash-2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;margin-bottom:20px;align-items:stretch}
 .dash-2 .panel + .panel{margin-top:0}
+/* ---------- Insights (five chapters) ---------- */
+.ins-idx{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 4px}
+.ins-idx a{font-size:13px;font-weight:500;color:var(--fg);text-decoration:none;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 13px;cursor:pointer}
+.ins-idx a:hover{border-color:var(--accent)}
+.ins-idx a b{color:var(--accent);font-weight:700;margin-right:6px}
+.ins-chap{scroll-margin-top:12px}
+.ins-chap-h{display:flex;align-items:baseline;gap:10px;margin:14px 0 14px}
+.ins-chap-h span{font-size:13px;font-weight:700;color:var(--accent);letter-spacing:.06em}
+.ins-chap-h h2{font-size:22px;letter-spacing:-.02em}
+.ins-grid{display:grid;gap:20px;grid-template-columns:minmax(0,1fr);margin-bottom:20px}
+.ins-grid:empty{display:none}
+@media(min-width:900px){.ins-grid.g2{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.ins-panel{display:flex;flex-direction:column;min-width:0}
+.ins-panel + .ins-panel{margin-top:0}
+.ins-ph-head{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.ins-ph-head h3{font-size:17px;font-weight:700;margin:0;letter-spacing:-.01em;line-height:1.3}
+.ins-seg{margin:0;min-width:0}
+.ins-take{margin:4px 0 10px;font-size:14px;color:var(--fg);line-height:1.45;text-wrap:pretty}
+.ins-take b{font-weight:700}
+.ins-note{margin:0 0 8px;font-size:12px;color:var(--muted);line-height:1.45}
+.ins-legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12px;color:var(--muted);margin:0 0 8px}
+.ins-legend span{display:inline-flex;align-items:center;gap:6px}
+.ins-legend i{display:inline-block;flex:none}
+.ins-legend .dot{width:9px;height:9px;border-radius:50%}
+.ins-legend .ring{width:11px;height:11px;border-radius:50%;box-sizing:border-box;background:var(--surface);border:2px solid}
+.ins-legend .box{width:12px;height:8px;border-radius:2px}
+.ins-legend .line{width:14px;height:2px;border-radius:1px}
+.ins-cbox{position:relative;min-width:0;flex:1 0 auto}
+.ins-cbox svg{display:block;max-width:none;overflow:visible}
+.ins-cbox svg:focus-visible{outline:2px solid var(--accent);outline-offset:4px;border-radius:4px}
+.ins-scroll{overflow-x:auto;overflow-y:hidden;max-width:100%;padding-bottom:4px;-webkit-overflow-scrolling:touch}
+.ins-cbox .ins-more{margin-top:8px}
+.ins-tbox{display:none;max-height:300px;overflow:auto;border:1px solid var(--line);border-radius:8px;margin-top:4px}
+.ins-panel.show-table .ins-tbox{display:block}
+.ins-panel.show-table .ins-cbox,.ins-panel.show-table .ins-legend,.ins-panel.show-table .ins-note{display:none}
+.ins-tbox table{border-collapse:collapse;width:100%;font-size:12px}
+.ins-tbox th,.ins-tbox td{padding:5px 9px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
+.ins-tbox th{position:sticky;top:0;background:var(--raise);color:var(--muted);font-weight:500}
+.ins-foot{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-top:10px;padding-top:8px;border-top:1px solid var(--line)}
+.ins-why{font-size:12px;color:var(--muted);margin:0;line-height:1.45}
+.ins-why b{font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-size:10.5px;margin-right:6px}
+.ins-tbtn{flex:none;font:inherit;font-size:11px;font-weight:500;color:var(--muted);background:transparent;border:1px solid var(--line);border-radius:999px;padding:3px 10px;cursor:pointer}
+.ins-tbtn:hover{border-color:var(--muted)}
+.ins-tbtn[aria-pressed="true"]{color:var(--fg);border-color:var(--accent)}
+.ins-spark{margin-top:6px;min-width:0}
+.ins-spark svg{display:block;max-width:100%;overflow:visible}
+.dash-tiles .stat .ins-spark{margin-top:auto;padding-top:6px}
+.dash-tiles .stat .sub b{color:var(--accent);font-weight:500}
+.dash-tiles .stat .sub b.neg{color:var(--warm,#d95926)}
+.ins-mini{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:14px}
+.ins-mini div{background:var(--raise);border-radius:10px;padding:8px 10px;min-width:0}
+.ins-mini span{display:block;font-size:11px;color:var(--muted)}
+.ins-mini b{display:block;font-size:20px;line-height:1.2}
+.ins-ph{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:140px;border:1px dashed var(--line);border-radius:10px;background:repeating-linear-gradient(45deg,transparent 0 10px,rgba(255,255,255,.015) 10px 20px);text-align:center;padding:16px;font-size:13px;margin-top:8px}
+.ins-ph b{font-size:15px}
+.ins-wide .ins-awl{display:grid;grid-template-columns:minmax(0,1fr);gap:7px 28px}
+@media(min-width:900px){.ins-wide .ins-awl{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.ins-tip{position:fixed;z-index:60;pointer-events:none;background:var(--raise);border:1px solid var(--line);border-radius:10px;padding:8px 11px;font-size:12px;max-width:250px;box-shadow:0 6px 24px rgba(0,0,0,.45);opacity:0;transition:opacity .08s;left:0;top:0}
+.ins-tip.on{opacity:1}
+.ins-tip .th{font-size:15px;font-weight:700;color:var(--fg);line-height:1.25}
+.ins-tip .ts{color:var(--muted);margin-top:1px}
+.ins-tip .tr{display:flex;align-items:center;gap:8px;margin-top:4px;color:var(--muted)}
+.ins-tip .tr .k{flex:none;display:inline-block;width:12px;height:3px;border-radius:2px}
+.ins-tip .tr .k.dot{width:8px;height:8px;border-radius:50%}
+.ins-tip .tr b{color:var(--fg);font-weight:700;margin-left:auto;padding-left:10px}
+.ins-cbox text{font-family:var(--body)}
 .soon-more{display:block;margin:10px auto 0}
 .fd-top{display:flex;gap:8px;flex-wrap:wrap;justify-content:space-between;align-items:center;margin-bottom:10px}
 .fd-top .chips{display:flex;gap:6px;flex-wrap:wrap}
@@ -1080,6 +1141,10 @@ body[data-bg="plain"] .ground{display:none}
         <ol class="plan-list sheet-list" id="sheetList"></ol>
         <button class="btn" type="button" id="sheetMore" hidden>Show 50 more</button>
       </section>
+      <div class="dash-2">
+        <section class="panel" aria-labelledby="stallH"><div class="panel-head"><h2 id="stallH">Stalled books</h2><span class="muted small">Reading or Paused, nothing logged for 10+ days</span></div><ul class="plan-list" id="stallList"></ul></section>
+        <section class="panel" aria-labelledby="nisH"><div class="panel-head"><h2 id="nisH">Next in series</h2><span class="muted small">Series you've started, most recent first</span></div><ol class="plan-list" id="nisList"></ol><button class="btn" type="button" id="nisMore" hidden>Show all</button></section>
+      </div>
     </div>
     <div id="wishView" class="vstack" hidden>
       
@@ -1113,67 +1178,19 @@ body[data-bg="plain"] .ground{display:none}
   </div>
 
   <div id="view-insights" class="vstack" role="tabpanel" aria-labelledby="tab-insights" hidden>
-    <p class="note">Charts will be redesigned in a later stage.</p>
     <div class="periods" id="dashPeriods" role="group" aria-label="Period"></div>
-  <section class="dash-tiles" id="dashTiles" aria-label="Totals"></section>
-  <div class="dash-2">
-    <section class="panel" aria-labelledby="monthH">
-      <div class="panel-head"><h2 id="monthH">Pages read</h2><span class="muted" id="monthNote" style="font-size:13px"></span></div>
-      <div class="chart-box"><canvas id="monthChart" aria-label="Pages read per month"></canvas></div>
-    </section>
-    <section class="panel" aria-labelledby="finH"><div class="panel-head"><h2 id="finH">Books finished</h2><span class="muted" id="finNote" style="font-size:13px"></span></div><div class="chart-box"><canvas id="finChart" aria-label="Books finished over time"></canvas></div></section>
-  </div>
-  <section class="panel" style="margin-bottom:20px" aria-labelledby="heatH">
-    <div class="panel-head"><h2 id="heatH">Reading calendar</h2>
-      <div class="legend"><span>Each day in its month's colour, brighter for more pages</span></div>
-    </div>
-    <div class="heat-scroll"><div class="heat" id="heat" role="img" aria-label="Pages read each day this year"></div></div>
-  </section>
-  <div class="dash-2">
-    <section class="panel" aria-labelledby="ratH"><div class="panel-head"><h2 id="ratH">Ratings</h2><span class="muted" id="ratNote" style="font-size:13px"></span></div><ul class="hbars" id="ratBars"></ul></section>
-    <section class="panel" aria-labelledby="genH"><div class="panel-head"><h2 id="genH">Genres</h2><span class="muted" style="font-size:13px">Books read · average rating</span></div><ul class="hbars" id="genBars"></ul></section>
-  </div>
-  <div class="dash-2">
-    <section class="panel" aria-labelledby="fmtH"><div class="panel-head"><h2 id="fmtH">Type &amp; format</h2></div><div id="typeSplit"></div><ul class="hbars" id="fmtBars" style="margin-top:16px"></ul></section>
-    <section class="panel" aria-labelledby="authH"><div class="panel-head"><h2 id="authH">Top authors</h2></div><ul class="mini-list" id="authList"></ul></section>
-  </div>
-  <div class="dash-2">
-    <section class="panel" aria-labelledby="awH"><div class="panel-head"><h2 id="awH">Award winners</h2><span class="muted" style="font-size:13px">Read of those you own</span></div><ul class="hbars" id="awBars"></ul></section>
-    <section class="panel" aria-labelledby="serH"><div class="panel-head"><h2 id="serH">Series progress</h2></div><ul class="hbars" id="serBars"></ul></section>
-  </div>
-  <section class="panel" style="margin-bottom:20px" aria-labelledby="mapH">
-    <div class="panel-head"><h2 id="mapH">Where your books are set</h2><span class="muted small" id="mapNote"></span></div>
-    <div class="map-wrap"><div class="map-box" id="mapBox"></div><div><ul class="hbars" id="mapBars"></ul><div class="map-other" id="mapOther"></div></div></div>
-  </section>
-    <div class="dash-2">
-    <section class="panel" aria-labelledby="whenH"><div class="panel-head"><h2 id="whenH">When you read</h2>
-      <div class="chips" id="whenModes" role="group" aria-label="Show" style="margin:0"><button class="chip" type="button" data-w="day" aria-pressed="true">Weekday</button><button class="chip" type="button" data-w="time" aria-pressed="false">Time of day</button></div></div>
-      <ul class="hbars" id="whenBars"></ul><p class="muted small" id="whenNote" style="margin:10px 0 0"></p></section>
-    <section class="panel" aria-labelledby="sessH"><div class="panel-head"><h2 id="sessH">Reading sessions</h2><span class="muted small" id="sessNote"></span></div>
-      <div class="mini-tiles" id="sessTiles"></div><ul class="hbars" id="sessBars" style="margin-top:14px"></ul></section>
-  </div>
-    <div class="dash-2">
-    <section class="panel" aria-labelledby="bpH"><div class="panel-head"><h2 id="bpH">Pace per book</h2><span class="muted small" id="bpNote"></span></div><div class="chart-box tall"><canvas id="bpChart" aria-label="Pages a day for each book against its length"></canvas></div></section>
-    <section class="panel" aria-labelledby="rbH"><div class="panel-head"><h2 id="rbH">Ratings by</h2>
-      <div class="chips" id="rbModes" role="group" aria-label="Break ratings down by" style="margin:0"><button class="chip" type="button" data-r="length" aria-pressed="true">Length</button><button class="chip" type="button" data-r="decade" aria-pressed="false">Published</button><button class="chip" type="button" data-r="kind" aria-pressed="false">Kind</button><button class="chip" type="button" data-r="format" aria-pressed="false">Format</button><button class="chip" type="button" data-r="owned" aria-pressed="false">Owned</button><button class="chip" type="button" data-r="publisher" aria-pressed="false">Publisher</button></div></div>
-      <ul class="hbars" id="rbBars"></ul><p class="muted small" id="rbNote" style="margin:10px 0 0"></p></section>
-  </div>
-    <div class="dash-2">
-    <section class="panel" aria-labelledby="tageH"><div class="panel-head"><h2 id="tageH">TBR age</h2><span class="muted small" id="tageNote"></span></div><div class="chart-box"><canvas id="tageChart" aria-label="TBR books by how long ago they were added"></canvas></div></section>
-    <section class="panel" aria-labelledby="tgrH"><div class="panel-head"><h2 id="tgrH">TBR in and out</h2><span class="muted small">Books added vs finished, last 12 months</span></div><div class="chart-box"><canvas id="tgrChart" aria-label="Books added and finished each month"></canvas></div></section>
-  </div>
-    <div class="dash-2">
-      <section class="panel" aria-labelledby="stallH"><div class="panel-head"><h2 id="stallH">Stalled books</h2><span class="muted small">Reading or Paused, nothing logged for 10+ days</span></div><ul class="plan-list" id="stallList"></ul></section>
-      <section class="panel" aria-labelledby="nisH"><div class="panel-head"><h2 id="nisH">Next in series</h2><span class="muted small">Series you've started, most recent first</span></div><ol class="plan-list" id="nisList"></ol><button class="btn" type="button" id="nisMore" hidden>Show all</button></section>
-    </div>
-    <div class="dash-2">
-      <section class="panel" aria-labelledby="rrH"><div class="panel-head"><h2 id="rrH">Re-reads</h2><span class="muted small" id="rrNote"></span></div><ul class="rr-list" id="rrList"></ul></section>
-      <section class="panel" aria-labelledby="dogH">
-        <div class="panel-head"><h2 id="dogH">Dog-ear quotes</h2><button class="btn" type="button" id="dogAdd">Dog-ear a quote</button></div>
-        <ul class="dog-list" id="dogList"></ul>
-      </section>
-    </div>
+    <nav class="ins-idx" id="insIdx" aria-label="Chapters"><a href="#insC1" data-c="insC1" id="insNav1"><b>1</b>This year</a><a href="#insC2" data-c="insC2"><b>2</b>What I love</a><a href="#insC3" data-c="insC3"><b>3</b>How I read</a><a href="#insC4" data-c="insC4"><b>4</b>What I read</a><a href="#insC5" data-c="insC5"><b>5</b>My pile</a></nav>
+    <section class="ins-chap" id="insC1" aria-labelledby="insC1h"><div class="ins-chap-h"><span>01</span><h2 id="insC1h">This year at a glance</h2></div>
+      <section class="dash-tiles" id="dashTiles" aria-label="Totals"></section><div id="insG1"></div></section>
+    <section class="ins-chap" id="insC2" aria-labelledby="insC2h"><div class="ins-chap-h"><span>02</span><h2 id="insC2h">What do I love?</h2></div><div id="insG2a"></div><div id="insG2b"></div></section>
+    <section class="ins-chap" id="insC3" aria-labelledby="insC3h"><div class="ins-chap-h"><span>03</span><h2 id="insC3h">How do I read?</h2></div><div id="insG3a"></div><div id="insG3b"></div><div id="insG3c"></div></section>
+    <section class="ins-chap" id="insC4" aria-labelledby="insC4h"><div class="ins-chap-h"><span>04</span><h2 id="insC4h">What do I read?</h2></div><div id="insG4a"></div><div id="insG4b"></div><div id="insG4c"></div></section>
+    <section class="ins-chap" id="insC5" aria-labelledby="insC5h"><div class="ins-chap-h"><span>05</span><h2 id="insC5h">What&rsquo;s on my pile?</h2></div><div id="insG5"></div></section>
     <section class="panel" aria-labelledby="yirH"><div class="panel-head"><h2 id="yirH">Year in review</h2><select id="yirYear" aria-label="Year"></select></div><div id="yirBox"></div></section>
+    <section class="panel" aria-labelledby="dogH">
+      <div class="panel-head"><h2 id="dogH">Dog-ear quotes</h2><button class="btn" type="button" id="dogAdd">Dog-ear a quote</button></div>
+      <ul class="dog-list" id="dogList"></ul>
+    </section>
   </div>
 
   <div id="view-toolbox" class="vstack" role="tabpanel" aria-label="Toolbox" hidden>
@@ -1799,7 +1816,7 @@ async function editEntry(e, change, btn) {
 
 /* ---------- charts ---------- */
 const css = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-let dailyChart, monthChart;
+let dailyChart;
 
 function chartBase() {
   Chart.defaults.font.family = css('--body');
@@ -1867,57 +1884,6 @@ const goalLinePlugin = {
     ctx.restore();
   }
 };
-
-// Month labels on the 12-month charts: one letter on a phone so they stay level
-const monthTick = i => innerWidth < 560 ? MONTHS[i].slice(0, 1) : MONTHS[i];
-function renderMonthly(totals, y = today().slice(0, 4)) {
-  const t = today(), curM = y < t.slice(0, 4) ? 12 : Number(t.slice(5, 7));
-  // All 12 months on the axis; months still to come stay empty
-  const tot = MONTHS.map((_, i) => i < curM ? 0 : null), days = new Array(12).fill(0);
-  for (const [d, p] of totals) if (d.startsWith(y)) { const m = Number(d.slice(5, 7)) - 1; if (m < curM) { tot[m] += p; days[m]++; } }
-  const best = tot.indexOf(Math.max(...tot));
-  $('monthNote').textContent = tot[best] ? `Best: ${MONTHS[best]} with ${fmt(tot[best])}` : '';
-  const cfg = {
-    type: 'bar',
-    data: { labels: MONTHS, datasets: [{ label: 'Pages', data: tot,
-      backgroundColor: tot.map((_, i) => i === curM - 1 && y === t.slice(0, 4) ? MC[i] + '8c' : MC[i]), borderRadius: 4, maxBarThickness: 44 }] },
-    options: {
-      responsive: true, maintainAspectRatio: false, animation: false,
-      plugins: { legend: { display: false }, tooltip: { callbacks: {
-        label: c => `${fmt(c.raw)} pages · ${fmt(Math.round(c.raw / Math.max(1, days[c.dataIndex])))} a day${c.dataIndex === curM - 1 && y === t.slice(0, 4) ? ' (month in progress)' : ''}`
-      } } },
-      scales: { x: { grid: { display: false }, ticks: { maxRotation: 0, autoSkip: false, callback: (v, i) => monthTick(i) } }, y: { beginAtZero: true, grid: { color: css('--line') }, ticks: { maxTicksLimit: 5, callback: v => fmt(v) } } }
-    }
-  };
-  if (monthChart) monthChart.destroy();
-  monthChart = new Chart($('monthChart'), cfg);
-}
-
-function renderHeat(totals, y = today().slice(0, 4)) {
-  const box = $('heat');
-  box.textContent = '';
-  const t = today();
-  const jan1 = `${y}-01-01`, dec31 = `${y}-12-31`;
-  const lead = (fromIso(jan1).getDay() + 6) % 7; // Monday-first rows
-  const strength = p => p <= 0 ? 0 : p < 50 ? .3 : p < 100 ? .5 : p < 200 ? .78 : 1;
-  let col = 0, lastMonth = -1;
-  const frag = document.createDocumentFragment();
-  const addMonthLabel = (m, c) => { const s = document.createElement('span'); s.className = 'm'; s.style.gridColumn = String(c + 1); s.textContent = MONTHS[m]; frag.appendChild(s); };
-  for (let i = 0; i < lead; i++) { const c = document.createElement('i'); c.style.visibility = 'hidden'; c.style.gridRow = String(i + 2); c.style.gridColumn = '1'; frag.appendChild(c); }
-  for (let d = jan1, i = lead; d <= dec31; d = addDays(d, 1), i++) {
-    col = Math.floor(i / 7);
-    const m = Number(d.slice(5, 7)) - 1;
-    if (m !== lastMonth) { addMonthLabel(m, col); lastMonth = m; }
-    const c = document.createElement('i');
-    c.className = 'c';
-    c.style.gridRow = String((i % 7) + 2);
-    c.style.gridColumn = String(col + 1);
-    if (d > t) c.setAttribute('data-future', '');
-    else { const p = totals.get(d) || 0; c.style.background = mix(BASE.raise, dayColour(d), strength(p)); c.title = `${fromIso(d).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })}: ${fmt(p)} pages`; }
-    frag.appendChild(c);
-  }
-  box.appendChild(frag);
-}
 
 // A confirmation the page draws itself, because confirm() is blocked inside claude.ai
 function askOk(msg, ok = 'Delete') {
@@ -2124,7 +2090,7 @@ function renderAll() {
   renderQuote();
   renderDogears();
   renderLent();
-  if (state.libLoaded && !$('view-insights').hidden) { renderDashboard(); renderAnalysis(); }
+  if (state.libLoaded) { if (!$('view-insights').hidden) { renderDashboard(); renderAnalysis(); } else insDirty = true; }
   if (state.libLoaded && !$('view-next').hidden) renderRecs();
   if (state.libLoaded && !$('view-toolbox').hidden) renderTools();
   if (card.id) showCard(card.id);
@@ -3419,10 +3385,8 @@ async function finishBook(book, rating, btn) {
 
 
 /* ---------- dashboard ---------- */
-let dashPeriod = String(new Date().getFullYear()), finChart;
+let dashPeriod = String(new Date().getFullYear());
 // Monthly totals and the calendar follow the chosen year; "All time" shows this year
-const dashYear = () => dashPeriod === 'all' ? today().slice(0, 4) : dashPeriod;
-const finYear = b => (b.finishDate || '').slice(0, 4);
 function hbars(el, items, max, fmtVal) {
   el.textContent = '';
   if (!items.length) { el.innerHTML = '<li class="empty">Nothing here yet for this period.</li>'; return; }
@@ -3444,118 +3408,909 @@ function split(el, parts, colours) {
 }
 function countBy(list, key) { const m = new Map(); for (const b of list) { const k = typeof key === 'function' ? key(b) : b[key]; if (k) m.set(k, (m.get(k) || 0) + 1); } return m; }
 
+/* ---------- Insights: five chapters, each chart opens with its question and a takeaway worked out from your data ----------
+   Read-only: everything is computed from state.allBooks, state.entries, state.settings (the same in Sheet and Supabase mode).
+   Built when the Insights tab is opened, and again only after a data change (renderAll) or a period change. */
+const INS = (() => {
+const NS = 'http://www.w3.org/2000/svg';
+const C = { surface: '#1e1b2b', raise: '#2a2640', line: '#353050', fg: '#f1effa', muted: '#a49fbf', accent: '#7bae6a', grey: '#8a85a5', dim: '#6f6a8c', warm: '#d95926', cool: '#3987e5', aqua: '#199e70', grid: '#2c2840', goal: '#c9c5dd' };
+// Genre colours: validated categorical slots 1-5 and 7 (dark) for the six commonest genres, grey for everything else
+const GCOL = ['#3987e5', '#d95926', '#199e70', '#c98500', '#d55181', '#9085e9'], OTHER = '#6f6a8c';
+
+/* ---- tiny helpers ---- */
+function el(tag, at, parent, text) { const e = document.createElementNS(NS, tag); if (at) for (const k in at) e.setAttribute(k, at[k]); if (text != null) e.textContent = text; if (parent) parent.appendChild(e); return e; }
+function h(tag, cls, parent, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; if (parent) parent.appendChild(e); return e; }
+function T(p, x, y, s, o) { o = o || {}; const t = el('text', { x, y, 'text-anchor': o.a || 'start', 'font-size': o.s || 11, fill: o.c || C.muted, 'font-weight': o.w || 400 }, p, s); if (o.halo) { t.setAttribute('stroke', C.surface); t.setAttribute('stroke-width', 3); t.setAttribute('paint-order', 'stroke'); t.setAttribute('stroke-linejoin', 'round'); } return t; }
+const lin = (d0, d1, r0, r1) => v => r0 + (v - d0) / ((d1 - d0) || 1) * (r1 - r0);
+const sum = a => a.reduce((s, v) => s + v, 0), avg = a => a.length ? sum(a) / a.length : 0;
+const med = a => { if (!a.length) return 0; const s = [...a].sort((x, y) => x - y), m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
+const f1 = v => (Math.round(v * 10) / 10).toFixed(1), n0 = v => fmt(Math.round(v));
+const MON = MONTHS, WD = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'], WDF = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+const DAY = 864e5;
+const dn = s => { const m = /^(\d{4})-(\d\d)-(\d\d)/.exec(String(s || '')); return m ? Date.UTC(+m[1], +m[2] - 1, +m[3]) / DAY : null; };
+const d0 = (y, m, d) => Date.UTC(y, m - 1, d) / DAY;
+const dt = n => new Date(n * DAY), yr = n => dt(n).getUTCFullYear(), mo0 = n => dt(n).getUTCMonth();
+const fd = n => { const d = dt(n); return d.getUTCDate() + ' ' + MON[d.getUTCMonth()] + ' ' + d.getUTCFullYear(); };
+const fds = n => { const d = dt(n); return d.getUTCDate() + ' ' + MON[d.getUTCMonth()]; };
+const wdOf = n => (dt(n).getUTCDay() + 6) % 7;
+const trunc = (s, n) => s.length > n ? s.slice(0, Math.max(1, n - 1)) + '…' : s;
+const stars = r => r > 0 ? f1(r) + '★' : 'Not rated';
+const nice = v => { if (v <= 0) return 1; const p = Math.pow(10, Math.floor(Math.log10(v))), f = v / p; return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 5 ? 5 : 10) * p; };
+const isLeap = y => (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0;
+const pct = (a, b) => b ? Math.round(a / b * 100) : 0;
+const cap1 = s => s ? s[0].toUpperCase() + s.slice(1) : s;
+const plural = (n, w, ws) => n + ' ' + (n === 1 ? w : ws || w + 's');
+function hash01(s) { let x = 0; for (const c of String(s)) x = (x * 31 + c.charCodeAt(0)) >>> 0; return ((x ^ (x >>> 15)) % 1000) / 1000; }
+function niceStep(v) { if (v <= 0) return 1; const p = Math.pow(10, Math.floor(Math.log10(v))), f = v / p; return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10) * p; }
+function ticks(max, n) { const step = niceStep(max / (n || 4)); const out = [0]; for (let v = step; out[out.length - 1] < max - 1e-9; v += step) out.push(Math.round(v * 100) / 100); return out; }
+// One-hue ramp from the month's accent colour: dark to light, so more pages is always lighter
+let RAMP = [];
+const ramp = t => { t = Math.max(0, Math.min(1, t)) * (RAMP.length - 1); const i = Math.min(RAMP.length - 2, Math.floor(t)), f = t - i, a = RAMP[i], b = RAMP[i + 1]; return 'rgb(' + a.map((v, k) => Math.round(v + (b[k] - v) * f)).join(',') + ')'; };
+const rgbOf = hex => [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16));
+const rgba = (hex, a) => { const [r, g, b] = rgbOf(hex); return `rgba(${r},${g},${b},${a})`; };
+const EMPTY = '#262238';
+function rich(p, s) { String(s).split('**').forEach((t, i) => { if (!t) return; if (i % 2) h('b', null, p, t); else p.appendChild(document.createTextNode(t)); }); }
+// Pixel offsets across the main axis so dots never overlap (beeswarm); only looks at neighbours within one dot width
+function swarm(vals, r) {
+  const gap = 2 * r + 1.2, placed = [], out = [];
+  vals.forEach(a => {
+    let o = 0, k = 0, found = false;
+    while (!found && k < 400) {
+      const cs = k === 0 ? [0] : [k * r * .5, -k * r * .5];
+      for (const c of cs) { let ok = true; for (let i = placed.length - 1; i >= 0 && a - placed[i][0] < gap; i--) if (Math.hypot(a - placed[i][0], c - placed[i][1]) < gap) { ok = false; break; } if (ok) { o = c; found = true; break; } }
+      k++;
+    }
+    placed.push([a, o]); out.push(o);
+  });
+  return out;
+}
+function colPath(x, w, y0, y1, r) {   // column from baseline y0 to end y1, rounded at the free end only
+  const up = y1 < y0, e = Math.abs(y0 - y1); r = Math.min(r, e, w / 2); if (e < 1) return '';
+  return up ? `M${x},${y0}V${y1 + r}Q${x},${y1} ${x + r},${y1}H${x + w - r}Q${x + w},${y1} ${x + w},${y1 + r}V${y0}Z`
+            : `M${x},${y0}V${y1 - r}Q${x},${y1} ${x + r},${y1}H${x + w - r}Q${x + w},${y1} ${x + w},${y1 - r}V${y0}Z`;
+}
+function spread(items, gap, lo, hi) {   // nudge label y positions apart: items [{y}] sorted by y
+  items.sort((a, b) => a.y - b.y);
+  for (let i = 1; i < items.length; i++) if (items[i].y - items[i - 1].y < gap) items[i].y = items[i - 1].y + gap;
+  const over = items.length ? items[items.length - 1].y - hi : 0;
+  if (over > 0) { for (let i = items.length - 1; i >= 0; i--) { items[i].y -= over; if (i && items[i].y - items[i - 1].y < gap) continue; else break; } }
+  items.forEach(i => { if (i.y < lo) i.y = lo; });
+}
+
+/* ---- tooltip, hover and keyboard stepping ---- */
+let tipEl = null, ACTIVE = null;
+function tipInit() {
+  if (tipEl) return;
+  tipEl = h('div', 'ins-tip', document.body); tipEl.setAttribute('role', 'status'); tipEl.setAttribute('aria-live', 'polite');
+  document.addEventListener('pointerdown', e => { if (ACTIVE && !(e.target.closest && e.target.closest('.ins-cbox svg'))) ACTIVE(); });
+}
+function tipShow(o, x, y) {
+  tipEl.replaceChildren(); h('div', 'th', tipEl, o.head); if (o.sub) h('div', 'ts', tipEl, o.sub);
+  (o.rows || []).forEach(r => { const d = h('div', 'tr', tipEl); if (r.c) { const k = h('span', 'k' + (r.k === 'dot' ? ' dot' : ''), d); k.style.background = r.c; } h('span', null, d, r.l); h('b', null, d, r.v); });
+  tipEl.classList.add('on');
+  const w = tipEl.offsetWidth, hh = tipEl.offsetHeight;
+  let px = x + 14, py = y + 14;
+  if (px + w > innerWidth - 6) px = x - w - 14; if (px < 6) px = Math.max(6, innerWidth - w - 6);
+  if (py + hh > innerHeight - 6) py = y - hh - 14; if (py < 6) py = 6;
+  tipEl.style.left = px + 'px'; tipEl.style.top = py + 'px';
+}
+function tipHide() { if (tipEl) tipEl.classList.remove('on'); }
+function dist(p, x, y) { if (p.r != null) return Math.hypot(x - p.x, y - p.y) - p.r; const dx = Math.max(p.x - x, 0, x - (p.x + p.w)), dy = Math.max(p.y - y, 0, y - (p.y + p.h)); return Math.hypot(dx, dy); }
+// pts: [{x,y,r}] circles or [{x,y,w,h}] boxes, each with .tip {head, sub, rows}
+function hover(svg, pts, o) {
+  o = o || {}; const tol = o.tol == null ? 12 : o.tol, pl = o.plot || [0, 0, +svg.getAttribute('width'), +svg.getAttribute('height')];
+  const hl = el('g', { 'pointer-events': 'none' }, svg);
+  const ov = el('rect', { x: pl[0], y: pl[1], width: pl[2], height: pl[3], fill: 'transparent' }, svg);
+  svg.setAttribute('tabindex', '0'); let cur = -1;
+  function draw1(i) {
+    hl.replaceChildren(); if (i < 0) return; const p = pts[i];
+    if (p.r != null) el('circle', { cx: p.x, cy: p.y, r: p.r + 3, fill: 'none', stroke: C.fg, 'stroke-width': 2 }, hl);
+    else el('rect', { x: p.x - 1, y: p.y - 1, width: p.w + 2, height: p.h + 2, rx: 2, fill: p.row ? 'rgba(255,255,255,.07)' : 'none', stroke: p.row ? 'none' : C.fg, 'stroke-width': 1.5 }, hl);
+  }
+  function show(i, cx, cy) { cur = i; draw1(i); tipShow(pts[i].tip, cx, cy); ACTIVE = clear; }
+  function clear() { cur = -1; hl.replaceChildren(); tipHide(); if (ACTIVE === clear) ACTIVE = null; }
+  function kb(i) { const r = svg.getBoundingClientRect(), p = pts[i]; show(i, r.left + p.x + (p.w || 0) / 2, r.top + p.y + (p.h || 0) / 2); }
+  function at(e) {
+    const r = svg.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top; let bi = -1, bd = 1e9;
+    for (let i = 0; i < pts.length; i++) { const d = dist(pts[i], x, y); if (d < bd) { bd = d; bi = i; } }
+    if (bi >= 0 && bd <= tol) show(bi, e.clientX, e.clientY); else clear();
+  }
+  ov.addEventListener('pointermove', at); ov.addEventListener('pointerdown', at);
+  ov.addEventListener('pointerleave', e => { if (e.pointerType !== 'touch') clear(); });
+  svg.addEventListener('keydown', e => {
+    const k = e.key; if (!pts.length) return; let n = cur;
+    if (k === 'ArrowRight' || k === 'ArrowDown') n = cur < 0 ? 0 : Math.min(pts.length - 1, cur + 1);
+    else if (k === 'ArrowLeft' || k === 'ArrowUp') n = cur < 0 ? 0 : Math.max(0, cur - 1);
+    else if (k === 'Escape') { clear(); return; } else return;
+    e.preventDefault(); kb(n);
+  });
+  svg.addEventListener('focus', () => { if (cur < 0 && svg.matches(':focus-visible') && pts.length) kb(0); });
+  svg.addEventListener('blur', clear);
+}
+// Vertical crosshair that steps along an x axis (line charts)
+function cross(svg, xs, pl, cb) {
+  const g = el('g', { 'pointer-events': 'none' }, svg);
+  const ln = el('line', { y1: pl[1], y2: pl[1] + pl[3], stroke: C.muted, 'stroke-width': 1, visibility: 'hidden' }, g), dg = el('g', null, g);
+  const ov = el('rect', { x: pl[0], y: pl[1], width: pl[2], height: pl[3], fill: 'transparent' }, svg); svg.setAttribute('tabindex', '0'); let cur = -1;
+  function show(i, cx, cy) {
+    cur = i; const o = cb(i); ln.setAttribute('x1', xs[i]); ln.setAttribute('x2', xs[i]); ln.setAttribute('visibility', 'visible'); dg.replaceChildren();
+    (o.dots || []).forEach(d => el('circle', { cx: xs[i], cy: d.y, r: 5, fill: d.c, stroke: C.surface, 'stroke-width': 2 }, dg));
+    tipShow(o.tip, cx, cy); ACTIVE = clear;
+  }
+  function clear() { cur = -1; ln.setAttribute('visibility', 'hidden'); dg.replaceChildren(); tipHide(); if (ACTIVE === clear) ACTIVE = null; }
+  function at(e) { const r = svg.getBoundingClientRect(), x = e.clientX - r.left; let bi = 0, bd = 1e9; xs.forEach((v, i) => { const d = Math.abs(v - x); if (d < bd) { bd = d; bi = i; } }); show(bi, e.clientX, e.clientY); }
+  ov.addEventListener('pointermove', at); ov.addEventListener('pointerdown', at); ov.addEventListener('pointerleave', e => { if (e.pointerType !== 'touch') clear(); });
+  svg.addEventListener('keydown', e => {
+    let n = cur;
+    if (e.key === 'ArrowRight') n = cur < 0 ? 0 : Math.min(xs.length - 1, cur + 1); else if (e.key === 'ArrowLeft') n = cur < 0 ? xs.length - 1 : Math.max(0, cur - 1); else if (e.key === 'Escape') { clear(); return; } else return;
+    e.preventDefault(); const r = svg.getBoundingClientRect(); show(n, r.left + xs[n], r.top + pl[1] + 20);
+  });
+  svg.addEventListener('focus', () => { if (cur < 0 && svg.matches(':focus-visible')) { const r = svg.getBoundingClientRect(); show(xs.length - 1, r.left + xs[xs.length - 1], r.top + pl[1] + 20); } });
+  svg.addEventListener('blur', clear);
+}
+
+/* ---- panels: question, takeaway, legend, chart, "why this chart", table toggle ---- */
+let REG = [], RO = null;
+function teardown() { REG = []; if (RO) RO.disconnect(); RO = null; tipHide(); ACTIVE = null; }
+function mount(box, render, P, fixed) {
+  const r = { box, render, w: 0, P, fixed };
+  REG.push(r);
+  if (!RO) RO = new ResizeObserver(es => { for (const en of es) { const q = REG.find(x => x.box === en.target); if (q && !q.fixed) { const w = q.box.clientWidth; if (w > 0 && Math.abs(w - q.w) > 1) requestAnimationFrame(() => drawR(q)); } } });
+  drawR(r); if (!fixed) RO.observe(box);
+}
+function drawR(r) {
+  const w = r.box.clientWidth;
+  if (!r.fixed && w <= 0) return;
+  r.w = w; r.box.replaceChildren();
+  const res = r.render(r.box, w, r.P) || null;
+  if (res && res.empty) { r.table = null; ph(r.box, res.empty); } else r.table = res;
+  if (r.after) r.after();
+}
+function ph(parent, msg) { const d = h('div', 'ins-ph', parent); h('b', null, d, 'Not enough data yet'); h('span', 'muted', d, msg); return d; }
+function mkSvg(box, W, H, label) { const s = el('svg', { width: W, height: H, viewBox: '0 0 ' + W + ' ' + H, role: 'img', 'aria-label': label }); box.appendChild(s); return s; }
+function legend(p, items) { const l = h('div', 'ins-legend', p); items.forEach(it => { const sp = h('span', null, l); const i = h('i', it.k, sp); if (it.k === 'ring') i.style.borderColor = it.c; else i.style.background = it.c; sp.appendChild(document.createTextNode(it.l)); }); return l; }
+function fillTable(tb, t) { tb.replaceChildren(); if (!t) return; const tbl = h('table', null, tb), th = h('thead', null, tbl), tr = h('tr', null, th); t.head.forEach(x => h('th', null, tr, x)); const body = h('tbody', null, tbl); t.rows.forEach(rw => { const r = h('tr', null, body); rw.forEach(c => h('td', null, r, String(c))); }); }
+// o: { title, take, legend, note, why, render(box,W,P) -> {head,rows} | {empty}, empty (string), controls(headEl, redraw), fixed, wide }
+function panel(grid, o) {
+  const p = h('section', 'panel ins-panel' + (o.cls ? ' ' + o.cls : ''), grid);
+  const hd = h('div', 'ins-ph-head', p); h('h3', null, hd, o.title);
+  const tk = h('p', 'ins-take', p); if (o.take) rich(tk, o.take); else tk.hidden = true;
+  const P = { root: p, take(s) { tk.textContent = ''; tk.hidden = !s; if (s) rich(tk, s); } };
+  if (o.empty) { ph(p, o.empty); return p; }
+  let r = null;
+  if (o.controls) o.controls(hd, () => { if (r) { tipHide(); drawR(r); } });
+  if (o.legend) legend(p, o.legend);
+  if (o.note) h('p', 'ins-note', p, o.note);
+  const box = h('div', 'ins-cbox', p), tb = h('div', 'ins-tbox', p), ft = h('div', 'ins-foot', p), w = h('p', 'ins-why', ft);
+  h('b', null, w, 'Why this chart'); w.appendChild(document.createTextNode(o.why || ''));
+  const btn = h('button', 'ins-tbtn', ft, 'Table'); btn.type = 'button'; btn.setAttribute('aria-pressed', 'false');
+  mount(box, o.render, P, o.fixed); r = REG[REG.length - 1];
+  r.after = () => { btn.hidden = !r.table; if (p.classList.contains('show-table')) fillTable(tb, r.table); };
+  r.after();
+  btn.addEventListener('click', () => { const on = !p.classList.contains('show-table'); p.classList.toggle('show-table', on); btn.setAttribute('aria-pressed', on); btn.textContent = on ? 'Chart' : 'Table'; if (on) fillTable(tb, r.table); tipHide(); });
+  return p;
+}
+// A box that scrolls sideways inside its panel on a phone, so the page itself never does
+function scroller(box, W, minW) { const sc = h('div', 'ins-scroll', box), Wd = Math.max(W, minW); sc.style.minWidth = '0'; return { sc, Wd }; }
+
+/* ---- data: one pass over the books, shared by every chart ---- */
+let D = null, TODAY = 0;
+const authorName = b => authorSplit(b.author)[0] || String(b.author || '').trim();
+function build(period) {
+  TODAY = dn(today());
+  const recs = [];
+  for (const b of state.allBooks) {
+    if (b.status !== 'Finished') continue;
+    const f = dn(b.finishDate), s = dn(b.startDate), pages = toNum(b.pages), rating = toNum(b.rating);
+    const themes = [...new Set([b.theme1, b.theme2, b.theme3].map(t => String(t || '').trim().toLowerCase()).filter(Boolean))];
+    recs.push({ b, id: b.id, title: String(b.title || 'Untitled'), author: authorName(b), akey: authorFirstKey(b.author), genre: String(b.genre || '').trim(), themes, f, s: s != null && f != null && s <= f ? s : null,
+      pages, rating, fav: isFav(b), pub: toNum(b.year), tkey: readKey(b), jit: (hash01(b.id || b.title) - .5) * .26, fmt: b.format || '' });
+  }
+  const gc = new Map(); recs.forEach(r => { if (r.genre) gc.set(r.genre, (gc.get(r.genre) || 0) + 1); });
+  const gRank = [...gc].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).map(x => x[0]), slotOf = new Map(gRank.slice(0, 6).map((g, i) => [g, i]));
+  recs.forEach(r => { r.slot = slotOf.has(r.genre) ? slotOf.get(r.genre) : 6; r.col = r.slot < 6 ? GCOL[r.slot] : OTHER; r.hi = r.fav || r.rating >= 5; r.days = r.s != null ? r.f - r.s + 1 : 0; r.pace = r.days && r.pages ? r.pages / r.days : 0; });
+  const top6 = gRank.slice(0, 6);
+  const gname = i => i < 6 ? (top6[i] || 'Other') : 'Other';
+  const curY = String(yr(TODAY)), P = period;
+  return { recs, top6, gname, gc, curY, period: P, y: P === 'all' ? null : +P, goal: state.settings.yearBookGoal || 0,
+    dated: recs.filter(r => r.f != null), rated: recs.filter(r => r.rating > 0), scat: recs.filter(r => r.rating > 0 && r.pages > 0) };
+}
+const gcol = r => r.col;
+function bookTip(r) {
+  return { head: r.title, sub: r.author + (r.genre ? ' · ' + r.genre : ''), rows: [{ k: 'dot', c: r.col, l: r.fav ? 'Rating · favourite' : 'Rating', v: stars(r.rating) }, ...(r.pages ? [{ l: 'Pages', v: fmt(r.pages) }] : []), ...(r.f != null ? [{ l: 'Finished', v: fd(r.f) }] : [])] };
+}
+// Marker for favourites / 5 stars: bigger, with a 2px ring in the surface colour. Identity stays in the fill colour.
+function dotAt(svg, x, y, r, col, hi, big) { return el('circle', { cx: x, cy: y, r: hi ? r + (big || 1.4) : r, fill: col, 'fill-opacity': hi ? 1 : .88, stroke: C.surface, 'stroke-width': hi ? 2 : .8 }, svg); }
+const GEN_LEGEND = d => [...d.top6.map((g, i) => ({ k: 'dot', c: GCOL[i], l: g })), ...(d.gc.size > 6 || d.recs.some(r => !r.genre) ? [{ k: 'dot', c: OTHER, l: 'Other' }] : [])];
+const HI_LEGEND = { k: 'ring', c: C.muted, l: 'Larger dot with ring: favourite or 5★' };
+
+/* ================= 1 · This year at a glance ================= */
+function tiles(box) {
+  const d = D, P = d.period, y = d.y, all = state.allBooks;
+  const read = d.recs.filter(r => P === 'all' || (r.b.finishDate || '').slice(0, 4) === P);
+  const dnf = all.filter(b => b.status === 'DNF' && (P === 'all' || (b.finishDate || b.startDate || '').slice(0, 4) === P));
+  const rated = read.filter(r => r.rating > 0), pages = sum(read.map(r => r.pages));
+  const longest = read.reduce((m, r) => r.pages > (m ? m.pages : 0) ? r : m, null);
+  const avgR = rated.length ? avg(rated.map(r => r.rating)) : 0;
+  const label = P === 'all' ? 'all time' : P;
+  const prev = y ? d.recs.filter(r => (r.b.finishDate || '').slice(0, 4) === String(y - 1)) : [];
+  const monthly = f => { if (!y) return null; const out = []; const lastM = P === d.curY ? mo0(TODAY) : 11; for (let m = 0; m < 12; m++) { if (m > lastM) { out.push(null); continue; } out.push(f(read.filter(r => r.f != null && mo0(r.f) === m))); } return out.filter(v => v != null).length >= 3 ? out : null; };
+  const sparkBooks = monthly(a => a.length), sparkPages = monthly(a => sum(a.map(r => r.pages))), sparkRate = monthly(a => { const q = a.filter(r => r.rating > 0); return q.length ? avg(q.map(r => r.rating)) : null; });
+  const tile = (lab, num, sub, spark, sfmt, neg) => {
+    const t = h('div', 'stat', box); h('span', 'eyebrow', t, lab); h('span', 'num tnum', t, num);
+    const sb = h('span', 'sub', t); rich(sb, sub); if (neg) { const bb = sb.querySelector('b'); if (bb) bb.className = 'neg'; }
+    if (spark && spark.filter(v => v != null).length >= 3) {
+      const bx = h('div', 'ins-spark', t);
+      mount(bx, (b, W) => {
+        const H = 30, svg = mkSvg(b, W, H, lab + ' by month'), v = spark.filter(x => x != null), mx = Math.max(...v), mn = Math.min(...v);
+        const X = lin(0, spark.length - 1, 5, W - 5), Y = lin(mn, mx === mn ? mn + 1 : mx, H - 5, 5), pts = [];
+        spark.forEach((x, i) => { if (x != null) pts.push({ x: X(i), y: Y(x), i, v: x }); });
+        el('polyline', { points: pts.map(p => p.x + ',' + p.y).join(' '), fill: 'none', stroke: C.grey, 'stroke-width': 2, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' }, svg);
+        const L = pts[pts.length - 1]; el('circle', { cx: L.x, cy: L.y, r: 4, fill: C.accent, stroke: C.surface, 'stroke-width': 2 }, svg);
+        hover(svg, pts.map(p => ({ x: p.x, y: p.y, r: 4, tip: { head: sfmt(p.v), sub: MON[p.i] + ' ' + P } })), { tol: 10 });
+      });
+    }
+  };
+  // Books read: against the same date last year, when there is a last year to compare with
+  let booksSub = label;
+  if (y && prev.some(r => r.f != null)) {
+    if (P === d.curY) { const doy = TODAY - d0(y, 1, 1), same = prev.filter(r => r.f != null && r.f - d0(y - 1, 1, 1) <= doy).length, dlt = read.length - same; booksSub = `**${dlt >= 0 ? '+' : '−'}${Math.abs(dlt)}** vs ${y - 1} (${same})`; }
+    else { const dlt = read.length - prev.length; booksSub = `**${dlt >= 0 ? '+' : '−'}${Math.abs(dlt)}** vs ${y - 1} (${prev.length})`; }
+  } else if (P === d.curY) { const doy = TODAY - d0(y, 1, 1) + 1; booksSub = `on pace for ${Math.round(read.length / doy * (isLeap(y) ? 366 : 365))} this year`; }
+  tile('Books read', fmt(read.length), booksSub, sparkBooks, v => v + (v === 1 ? ' book' : ' books'), booksSub.startsWith('**−'));
+  // Pages read: for a year the daily log fully covers, say how many were logged
+  let pagesSub = 'total length of books finished';
+  if (P !== 'all') {
+    const first = state.entries.reduce((m, e) => !m || e.date < m ? e.date : m, '');
+    if (first && first <= P + '-01-01') { let tot = 0; for (const [dd, p] of dailyTotals()) if (dd.startsWith(P)) tot += p; const span = P === d.curY ? daysBetween(P + '-01-01', today()) + 1 : (isLeap(y) ? 366 : 365); pagesSub = `${fmt(Math.round(pages / span))} a day · ${fmt(tot)} logged`; }
+  }
+  tile('Pages read', fmt(pages), pagesSub, sparkPages, v => fmt(v) + ' pages');
+  let rateSub = `${rated.length} rated`, rateNeg = false;
+  const pr = prev.filter(r => r.rating > 0);
+  if (y && rated.length && pr.length) { const dl = avgR - avg(pr.map(r => r.rating)); rateNeg = dl < 0; rateSub = `**${dl >= 0 ? '+' : '−'}${f1(Math.abs(dl))}** vs ${y - 1} (${f1(avg(pr.map(r => r.rating)))}★)`; }
+  tile('Average rating', avgR ? f1(avgR) + '★' : '–', rateSub, sparkRate, v => f1(v) + '★ average', rateNeg);
+  tile('Average length', read.length && pages ? fmt(Math.round(pages / Math.max(1, read.filter(r => r.pages).length))) : '–', 'pages per book');
+  tile('Longest', longest && longest.pages ? fmt(longest.pages) : '–', longest && longest.pages ? trunc(longest.title, 30) : '');
+  tile('Did not finish', fmt(dnf.length), label);
+}
+
+function chOnTrack(g) {
+  const d = D, y = d.y;
+  if (y == null) { // all time: one column per year
+    const byY = new Map(); d.dated.forEach(r => byY.set(yr(r.f), (byY.get(yr(r.f)) || 0) + 1));
+    const ys = [...byY.keys()].sort((a, b) => a - b), y0 = ys[0], y1 = Math.max(+d.curY, ys[ys.length - 1] || 0), cols = []; for (let v = y0; v <= y1; v++) cols.push({ y: v, n: byY.get(v) || 0 });
+    if (ys.length < 2) return panel(g, { title: 'How many books do I finish a year?', empty: 'Needs finished books with dates in at least 2 different years.' });
+    const full = cols.filter(c => c.y < +d.curY), best = cols.reduce((a, c) => c.n > a.n ? c : a), mean = avg(full.length ? full.map(c => c.n) : cols.map(c => c.n));
+    return panel(g, { title: 'How many books do I finish a year?',
+      take: `You finish about **${Math.round(mean)} books a year**. ${best.y} is your biggest year with ${best.n}${best.y === +d.curY ? ' so far' : ''}.`,
+      legend: [{ k: 'box', c: C.accent, l: 'Biggest year' }, { k: 'box', c: C.grey, l: 'Other years' }],
+      why: 'One column per year on a zero baseline: a count by year is a comparison of lengths, and the biggest year is the only one highlighted.',
+      render: (box, W) => {
+        const H = W < 500 ? 230 : 270, m = { l: 28, r: 6, t: 14, b: 26 }, pw = W - m.l - m.r, ph0 = H - m.t - m.b, svg = mkSvg(box, W, H, 'Books finished each year');
+        const mx = Math.max(...cols.map(c => c.n)), tk = ticks(mx * 1.05, 4), Y = lin(0, tk[tk.length - 1] || 1, m.t + ph0, m.t), band = pw / cols.length, cw = Math.min(40, band * .62), pts = [];
+        tk.forEach(v => { el('line', { x1: m.l, x2: m.l + pw, y1: Y(v), y2: Y(v), stroke: C.grid }, svg); T(svg, m.l - 6, Y(v) + 4, v, { a: 'end' }); });
+        cols.forEach((c, i) => {
+          const x = m.l + band * i + (band - cw) / 2, hi = c === best;
+          el('path', { d: colPath(x, cw, Y(0), Y(c.n), 4), fill: hi ? C.accent : C.grey, 'fill-opacity': hi ? 1 : .8 }, svg);
+          if (band >= 26 || i % 2 === 0) T(svg, x + cw / 2, H - 8, band < 34 ? String(c.y).slice(2) : c.y, { a: 'middle' });
+          if (cols.length <= 14) T(svg, x + cw / 2, Y(c.n) - 5, c.n, { a: 'middle', c: C.fg, w: hi ? 700 : 400 });
+          pts.push({ x: m.l + band * i, y: m.t, w: band, h: ph0, row: 1, tip: { head: String(c.y) + (c.y === +d.curY ? ' (so far)' : ''), rows: [{ k: 'dot', c: hi ? C.accent : C.grey, l: 'Books finished', v: String(c.n) }] } });
+        });
+        hover(svg, pts, { tol: 0 });
+        return { head: ['Year', 'Books finished'], rows: cols.map(c => [c.y, c.n]) };
+      } });
+  }
+  const jan1 = d0(y, 1, 1), nd = isLeap(y) ? 366 : 365, cur = String(y) === d.curY, last = cur ? TODAY - jan1 + 1 : nd;
+  const cum = yy => { const a = new Array(nd + 2).fill(0), j = d0(yy, 1, 1); d.dated.forEach(r => { if (yr(r.f) === yy) a[Math.min(nd + 1, r.f - j + 1)]++; }); for (let i = 1; i < a.length; i++) a[i] += a[i - 1]; return a; };
+  const cy = cum(y), cp = cum(y - 1), nowN = cy[last], hasPrev = cp[nd] > 0, goal = cur ? d.goal : 0;
+  if (nowN < 3 && !(goal && nowN)) return panel(g, { title: cur ? 'How is this year going?' : `How did ${y} go?`, empty: `Needs at least 3 finished books with dates in ${y}.` });
+  const goalAt = k => goal * k / nd, pace = goalAt(last), diff = Math.round(pace - nowN), ly = hasPrev ? cp[Math.min(last, nd)] : 0, vs = hasPrev ? nowN - ly : 0;
+  let take;
+  if (goal) take = (diff > 0 ? `You're **${diff} ${diff === 1 ? 'book' : 'books'} behind** the ${goal}-book pace: ${nowN} finished against ${Math.round(pace)} needed by ${fds(TODAY)}.` : `You're **${-diff} ${diff === -1 ? 'book' : 'books'} ahead** of the ${goal}-book pace (${nowN} against ${Math.round(pace)} by ${fds(TODAY)}).`) + (hasPrev ? ` You're ${vs >= 0 ? vs + ' ahead of' : -vs + ' behind'} ${y - 1} on this date (${ly}).` : '');
+  else if (cur) take = `You've finished **${nowN} books** so far in ${y}${hasPrev ? `, ${vs >= 0 ? '**' + vs + ' ahead of**' : '**' + (-vs) + ' behind**'} ${y - 1} on this date (${ly})` : ''}. Set a goal in Toolbox to add a pace line.`;
+  else take = `You finished **${nowN} books** in ${y}${hasPrev ? `, ${nowN >= cp[nd] ? '**' + (nowN - cp[nd]) + ' more**' : '**' + (cp[nd] - nowN) + ' fewer**'} than in ${y - 1} (${cp[nd]})` : ''}.`;
+  const lg = [{ k: 'line', c: C.accent, l: String(y) }]; if (goal) lg.push({ k: 'line', c: C.goal, l: `Goal pace (${goal})` }); if (hasPrev) lg.push({ k: 'line', c: C.dim, l: String(y - 1) });
+  return panel(g, { title: goal ? `Am I on track for ${goal} books?` : cur ? 'How is this year going?' : `How did ${y} go?`, take, legend: lg,
+    why: goal ? 'One line per year on a single axis: the gap between your line and the goal line is the answer, and last year stays grey as context.' : 'Cumulative lines on one axis: the height of each line is books finished by that day, so two years compare directly.',
+    render: (box, W) => {
+      const H = W < 500 ? 250 : 300, m = { l: 30, r: W < 500 ? 62 : 92, t: 12, b: 26 }, pw = W - m.l - m.r, ph0 = H - m.t - m.b, svg = mkSvg(box, W, H, `Cumulative books finished in ${y}`);
+      const mx = Math.max(goal, cy[last], hasPrev ? cp[nd] : 0, 5), tk = ticks(mx * 1.06, 4), Ymax = tk[tk.length - 1], X = lin(1, nd, m.l, m.l + pw), Y = lin(0, Ymax, m.t + ph0, m.t);
+      tk.forEach(v => { el('line', { x1: m.l, x2: m.l + pw, y1: Y(v), y2: Y(v), stroke: C.grid }, svg); T(svg, m.l - 6, Y(v) + 4, v, { a: 'end' }); });
+      for (let k = 0; k < 12; k++) T(svg, X(d0(y, k + 1, 1) - jan1 + 1), H - 8, MON[k].slice(0, W < 500 ? 1 : 3), {});
+      const line = (f, n, c, w) => { let p = ''; for (let k = 1; k <= n; k++) p += (k > 1 ? 'L' : 'M') + X(k) + ',' + Y(f(k)); el('path', { d: p, fill: 'none', stroke: c, 'stroke-width': w, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' }, svg); };
+      if (hasPrev) line(k => cp[k], nd, C.dim, 2);
+      if (goal) line(goalAt, nd, C.goal, 1.5);
+      line(k => cy[k], last, C.accent, 2);
+      el('circle', { cx: X(last), cy: Y(cy[last]), r: 5, fill: C.accent, stroke: C.surface, 'stroke-width': 2 }, svg);
+      const ends = []; if (goal) ends.push({ y: Y(goal) + 4, t: 'Goal · ' + goal, c: C.fg }); if (hasPrev) ends.push({ y: Y(cp[nd]) + 4, t: (y - 1) + ' · ' + cp[nd], c: C.fg });
+      if (last < nd - 45) T(svg, X(last) + 9, Y(cy[last]) + 4, y + ' · ' + cy[last], { c: C.fg, w: 700, halo: 1 }); else ends.push({ y: Y(cy[last]) + 4, t: y + ' · ' + cy[last], c: C.fg, w: 700 });
+      spread(ends, 13, m.t + 8, m.t + ph0); ends.forEach(e => T(svg, X(nd) + 6, e.y, e.t, { c: e.c, w: e.w }));
+      const xs = []; for (let k = 1; k <= nd; k++) xs.push(X(k));
+      cross(svg, xs, [m.l, m.t, pw, ph0], i => {
+        const k = i + 1, rows = [], dots = [];
+        if (k <= last) { rows.push({ k: 'line', c: C.accent, l: String(y), v: cy[k] + ' books' }); dots.push({ y: Y(cy[k]), c: C.accent }); }
+        if (goal) { rows.push({ k: 'line', c: C.goal, l: 'Goal pace', v: f1(goalAt(k)) }); dots.push({ y: Y(goalAt(k)), c: C.goal }); }
+        if (hasPrev) { rows.push({ k: 'line', c: C.dim, l: String(y - 1), v: cp[k] + ' books' }); dots.push({ y: Y(cp[k]), c: C.dim }); }
+        return { tip: { head: fd(jan1 + i), sub: k <= last ? (goal ? (cy[k] >= goalAt(k) ? 'Ahead of pace by ' : 'Behind pace by ') + f1(Math.abs(cy[k] - goalAt(k))) + ' books' : '') : 'Future date', rows }, dots };
+      });
+      const rows = []; for (let k = 0; k < 12; k++) { const e = Math.min(nd, d0(y, k + 2, 1) - jan1); rows.push([MON[k], e <= last ? cy[e] : '–', ...(goal ? [f1(goalAt(e))] : []), ...(hasPrev ? [cp[e]] : [])]); }
+      return { head: ['Month end', String(y), ...(goal ? ['Goal pace'] : []), ...(hasPrev ? [String(y - 1)] : [])], rows };
+    } });
+}
+
+/* ================= 2 · What do I love? ================= */
+let SWEET = null;
+function sweetSpot() {
+  const hi = D.scat.filter(r => r.rating >= 4.5);
+  if (hi.length < 5) return null;
+  let best = null;
+  for (let a = 100; a <= 1200; a += 5) { const k = hi.filter(r => r.pages >= a && r.pages <= a + 120).length; if (!best || k > best.k) best = { a, k }; }
+  const inW = hi.filter(r => r.pages >= best.a && r.pages <= best.a + 120);
+  const SA = Math.round(Math.min(...inW.map(r => r.pages)) / 10) * 10, SB = Math.max(SA + 10, Math.round(Math.max(...inW.map(r => r.pages)) / 10) * 10);
+  const allIn = D.scat.filter(r => r.pages >= SA && r.pages <= SB), gm = new Map(); inW.forEach(r => { if (r.genre) gm.set(r.genre, (gm.get(r.genre) || 0) + 1); });
+  const dom = [...gm].sort((a, b) => b[1] - a[1])[0];
+  return { SA, SB, nHi: hi.length, nIn: inW.length, share: pct(allIn.length, D.scat.length), dom: dom ? dom[0] : '' };
+}
+function xDomain() { const ps = D.scat.map(r => r.pages).sort((a, b) => a - b), p98 = ps[Math.min(ps.length - 1, Math.floor(ps.length * .98))]; return Math.min(1500, Math.max(600, Math.ceil(p98 / 100) * 100)); }
+const NEED_SCAT = 8;
+function chScatter(g) {
+  const title = 'What does a book I love look like?';
+  if (D.scat.length < NEED_SCAT) return panel(g, { title, empty: `Needs at least ${NEED_SCAT} finished books with pages and a rating (you have ${D.scat.length}).` });
+  const S = SWEET, xmax = xDomain();
+  const take = S ? `Your sweet spot is **${S.SA}–${S.SB} pages**: ${S.nIn} of your ${S.nHi} reads rated 4.5+ sit there, in a range holding ${S.share < pct(S.nIn, S.nHi) ? 'only ' : ''}${S.share}% of all your rated books${S.dom ? ' (mostly ' + S.dom.toLowerCase() + ')' : ''}.`
+    : `You have ${D.scat.filter(r => r.rating >= 4.5).length} reads rated 4.5 or more. Once you have five, the page length where your favourites cluster shows here.`;
+  return panel(g, { title, take, legend: [...GEN_LEGEND(D), HI_LEGEND, ...(S ? [{ k: 'box', c: rgba(C.accent, .3), l: 'Sweet spot' }] : [])],
+    why: 'Dots, not bars: length and rating together show the shape of a favourite, and every book stays visible. Colour is the genre; size and a ring mark favourites and 5★.',
+    render: (box, W) => {
+      const H = W < 500 ? 290 : 350, m = { l: 30, r: 8, t: 22, b: 36 }, pw = W - m.l - m.r, ph0 = H - m.t - m.b, svg = mkSvg(box, W, H, 'Pages versus rating for every rated finished book, coloured by genre');
+      const X = lin(100, xmax, m.l, m.l + pw), Y = lin(.8, 5.4, m.t + ph0, m.t), px = r => X(Math.min(xmax, Math.max(100, r.pages)));
+      if (S) el('rect', { x: X(S.SA), y: m.t, width: Math.max(2, X(S.SB) - X(S.SA)), height: ph0, fill: C.accent, 'fill-opacity': .13 }, svg);
+      [1, 2, 3, 4, 5].forEach(v => { el('line', { x1: m.l, x2: m.l + pw, y1: Y(v), y2: Y(v), stroke: C.grid }, svg); T(svg, m.l - 7, Y(v) + 4, v, { a: 'end' }); });
+      const xt = [100]; for (let v = 300; v < xmax; v += 200) xt.push(v); xt.push(xmax);
+      xt.forEach((v, i) => T(svg, X(v), H - 20, v, { a: i === xt.length - 1 ? 'end' : i === 0 ? 'start' : 'middle' }));
+      T(svg, m.l + pw / 2, H - 4, 'Pages', { a: 'middle' }); T(svg, 0, m.t - 8, 'Rating', { s: 10 });
+      if (S) T(svg, (X(S.SA) + X(S.SB)) / 2, m.t - 8, 'Sweet spot ' + S.SA + '–' + S.SB, { a: 'middle', c: C.fg, w: 500 });
+      const pts = [];
+      [false, true].forEach(hl => D.scat.filter(r => r.hi === hl).forEach(r => { const x = px(r), y = Y(r.rating + r.jit), rr = hl ? 5.2 : 3.6; dotAt(svg, x, y, 3.6, r.col, hl, 1.6); pts.push({ x, y, r: rr, tip: bookTip(r), px: x }); }));
+      pts.sort((a, b) => a.px - b.px); hover(svg, pts, { plot: [m.l, m.t, pw, ph0], tol: 12 });
+      return { head: ['Title', 'Author', 'Genre', 'Pages', 'Rating', 'Favourite'], rows: [...D.scat].sort((a, b) => b.rating - a.rating || a.pages - b.pages).map(r => [r.title, r.author, r.genre, r.pages, f1(r.rating), r.fav ? 'yes' : '']) };
+    } });
+}
+function chGenreMultiples(g) {
+  const title = 'Does the sweet spot hold in every genre?';
+  const gs = D.top6.map((n, i) => ({ n, i, bs: D.scat.filter(r => r.slot === i) })).filter(q => q.bs.length);
+  const rk = gs.filter(q => q.bs.length >= 3);
+  if (D.scat.length < NEED_SCAT || rk.length < 2) return panel(g, { title, empty: 'Needs at least 2 genres with 3 or more rated books each.' });
+  const ranked = [...rk].sort((a, b) => avg(b.bs.map(r => r.rating)) - avg(a.bs.map(r => r.rating))), gb = ranked[0], gw = ranked[ranked.length - 1], S = SWEET, xmax = xDomain();
+  const take = `Genre moves the level more than length does: **${gb.n}** averages ${f1(avg(gb.bs.map(r => r.rating)))}★ over ${gb.bs.length} books and **${gw.n}** only ${f1(avg(gw.bs.map(r => r.rating)))}★.${S ? ` The band marks your overall ${S.SA}–${S.SB} page sweet spot in each.` : ''}`;
+  return panel(g, { title, take, legend: [HI_LEGEND, ...(S ? [{ k: 'box', c: rgba(C.accent, .3), l: 'Sweet spot' }] : [])],
+    why: 'Small multiples of the same scatter: one shared scale, and each genre keeps its colour from the chart beside it, so genre, length and rating read together.',
+    render: (box, W) => {
+      const cols = W >= 520 ? 3 : 2, gap = 14, cw = (W - gap * (cols - 1)) / cols, rows = Math.ceil(gs.length / cols), ph0 = Math.max(96, cw * .62), cellH = ph0 + 54, H = rows * cellH, svg = mkSvg(box, W, H, 'Pages versus rating for each of your top genres');
+      const pts = [], tb = [];
+      gs.forEach((q, k) => {
+        const cx = (k % cols) * (cw + gap), cy = Math.floor(k / cols) * cellH, m = { l: 14, r: 2, t: 36 }, pw = cw - m.l - m.r, X = lin(100, xmax, cx + m.l, cx + m.l + pw), Y = lin(.8, 5.4, cy + m.t + ph0, cy + m.t);
+        el('circle', { cx: cx + 4, cy: cy + 7, r: 4, fill: GCOL[q.i] }, svg);
+        T(svg, cx + 13, cy + 11, trunc(q.n, cw < 150 ? 14 : 22), { c: C.fg, w: 500, s: 12 });
+        T(svg, cx, cy + 26, q.bs.length + ' books · ' + f1(avg(q.bs.map(r => r.rating))) + '★', { s: 11 });
+        if (S) el('rect', { x: X(S.SA), y: cy + m.t, width: Math.max(2, X(S.SB) - X(S.SA)), height: ph0, fill: C.accent, 'fill-opacity': .13 }, svg);
+        [2, 4].forEach(v => { el('line', { x1: cx + m.l, x2: cx + m.l + pw, y1: Y(v), y2: Y(v), stroke: C.grid }, svg); T(svg, cx + m.l - 4, Y(v) + 3, v, { a: 'end', s: 9.5 }); });
+        el('line', { x1: cx + m.l, x2: cx + m.l + pw, y1: cy + m.t + ph0, y2: cy + m.t + ph0, stroke: C.line }, svg);
+        [300, Math.round(xmax / 200) * 100, xmax].forEach((v, i) => T(svg, X(v), cy + m.t + ph0 + 12, v, { a: i === 2 ? 'end' : 'middle', s: 9.5 }));
+        [false, true].forEach(hl => q.bs.filter(r => r.hi === hl).forEach(r => { const x = X(Math.min(xmax, Math.max(100, r.pages))), y = Y(r.rating + r.jit); dotAt(svg, x, y, 2.4, r.col, hl, 1); pts.push({ x, y, r: hl ? 3.4 : 2.4, tip: bookTip(r), k, px: x }); }));
+        const inS = S ? q.bs.filter(r => r.pages >= S.SA && r.pages <= S.SB) : [];
+        tb.push([q.n, q.bs.length, f1(avg(q.bs.map(r => r.rating))), q.bs.filter(r => r.rating >= 4.5).length, inS.length ? f1(avg(inS.map(r => r.rating))) : '–']);
+      });
+      pts.sort((a, b) => a.k - b.k || a.px - b.px); hover(svg, pts, { tol: 9 });
+      return { head: ['Genre', 'Books', 'Avg rating', '4.5+ reads', 'Avg in sweet spot'], rows: tb };
+    } });
+}
+
+// Which themes and genres rate highest: a ranked dot plot around your own average
+const RANK = { mode: 'genre', all: false };
+const NEED_RANK = 3;
+function rankItems(mode) {
+  const m = new Map();
+  D.rated.forEach(r => { const keys = mode === 'genre' ? (r.genre ? [r.genre] : []) : r.themes; keys.forEach(k => { if (!m.has(k)) m.set(k, []); m.get(k).push(r); }); });
+  return [...m].filter(([, a]) => a.length >= NEED_RANK).map(([k, a]) => ({ k, name: mode === 'theme' ? cap1(k) : k, n: a.length, avg: avg(a.map(r => r.rating)), fav: a.filter(r => r.fav).length, best: [...a].sort((x, y) => y.rating - x.rating || y.pages - x.pages)[0] }))
+    .sort((a, b) => b.avg - a.avg || b.n - a.n || a.name.localeCompare(b.name));
+}
+function chRanked(g) {
+  const title = 'Which themes and genres rate highest?';
+  if (D.rated.length < 6) return panel(g, { title, empty: 'Needs at least 6 finished books with a rating.' });
+  const overall = avg(D.rated.map(r => r.rating));
+  return panel(g, { title,
+    note: `Only genres and themes with ${NEED_RANK} or more finished, rated reads are shown (a book counts once under each of its themes).`,
+    legend: [{ k: 'dot', c: C.accent, l: 'Above your average' }, { k: 'dot', c: C.warm, l: 'Below your average' }, { k: 'line', c: C.fg, l: `Your average ${f1(overall)}★` }],
+    why: 'A ranked dot plot on one shared 1–5 axis: the line from your own average to each dot shows how far above or below it that group sits, so rows compare at a glance.',
+    controls: (hd, redraw) => {
+      const seg = h('div', 'lib-mode ins-seg', hd); seg.setAttribute('role', 'group'); seg.setAttribute('aria-label', 'Rank by');
+      [['genre', 'Genres'], ['theme', 'Themes']].forEach(([k, l]) => { const b = h('button', null, seg, l); b.type = 'button'; b.setAttribute('aria-pressed', String(RANK.mode === k)); b.addEventListener('click', () => { RANK.mode = k; RANK.all = false; seg.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x === b))); redraw(); }); });
+    },
+    render: (box, W, P) => {
+      const mode = RANK.mode, items = rankItems(mode), unit = mode === 'genre' ? 'genre' : 'theme';
+      if (!items.length) { P.take(''); return { empty: `Needs at least ${NEED_RANK} finished, rated books in the same ${unit}.` }; }
+      const shown = RANK.all ? items : items.slice(0, 12), top = items[0];
+      P.take(mode === 'theme' ? `Books about **${top.name.toLowerCase()}** average **${f1(top.avg)}★** over ${top.n} reads, your highest theme.` : `**${top.name}** averages **${f1(top.avg)}★** over ${top.n} reads, your highest genre.`);
+      const rowH = W < 500 ? 25 : 24, lw = W < 500 ? 118 : 170, rw = 40, m = { t: 22, b: 24 }, H = m.t + shown.length * rowH + m.b, svg = mkSvg(box, W, H, `Average rating for each ${unit} with ${NEED_RANK} or more reads`);
+      const X = lin(1, 5, lw, W - rw);
+      [1, 2, 3, 4, 5].forEach(v => { el('line', { x1: X(v), x2: X(v), y1: m.t, y2: H - m.b, stroke: C.grid }, svg); T(svg, X(v), H - 8, v + '★', { a: 'middle' }); });
+      el('line', { x1: X(overall), x2: X(overall), y1: m.t - 4, y2: H - m.b, stroke: C.fg, 'stroke-width': 1.2 }, svg);
+      T(svg, X(overall), m.t - 8, 'Your average ' + f1(overall) + '★', { a: X(overall) > W - 90 ? 'end' : 'middle', c: C.fg, s: 10.5 });
+      const pts = [];
+      shown.forEach((it, i) => {
+        const y = m.t + i * rowH + rowH / 2, up = it.avg >= overall, c = up ? C.accent : C.warm, cnt = ' · ' + it.n, nm = trunc(it.name, Math.floor((lw - 14) / (W < 500 ? 6.1 : 6.4)) - cnt.length);
+        const lab = T(svg, 0, y + 4, nm, { c: '#d3cfe6' }); el('tspan', { fill: C.muted }, lab, cnt);
+        el('line', { x1: X(overall), x2: X(it.avg), y1: y, y2: y, stroke: c, 'stroke-width': 3, 'stroke-linecap': 'round', 'stroke-opacity': up ? 1 : .75 }, svg);
+        el('circle', { cx: X(it.avg), cy: y, r: 5.5, fill: c, 'fill-opacity': up ? 1 : .85, stroke: C.surface, 'stroke-width': 2 }, svg);
+        T(svg, W - 2, y + 4, f1(it.avg), { a: 'end', c: C.fg, w: 500 });
+        pts.push({ x: 0, y: y - rowH / 2, w: W, h: rowH, row: 1, tip: { head: it.name, sub: unit === 'theme' ? 'Theme' : 'Genre', rows: [{ k: 'dot', c, l: 'Average rating', v: stars(it.avg) }, { l: 'Rated reads', v: String(it.n) }, { l: 'Against your average', v: (it.avg >= overall ? '+' : '−') + f1(Math.abs(it.avg - overall)) + '★' }, ...(it.fav ? [{ l: 'Favourites', v: String(it.fav) }] : []), { l: 'Best read', v: trunc(it.best.title, 24) }] } });
+      });
+      hover(svg, pts, { tol: 0 });
+      if (items.length > 12) { const b = h('button', 'btn ins-more', box, RANK.all ? 'Show top 12' : `Show all ${items.length}`); b.type = 'button'; b.addEventListener('click', () => { RANK.all = !RANK.all; drawR(REG.find(x => x.box === box)); }); }
+      return { head: [cap1(unit), 'Rated reads', 'Average', 'Favourites'], rows: items.map(it => [it.name, it.n, f1(it.avg), it.fav]) };
+    } });
+}
+
+function chRereads(g) {
+  const title = 'Do books hold up on a re-read?';
+  const seen = new Set(), rr = [];
+  for (const b of state.allBooks) {
+    const l = readsOf(b); if (l.length < 2 || seen.has(l[0])) continue; seen.add(l[0]);
+    const f = l.filter(x => x.status === 'Finished' && toNum(x.rating) > 0); if (f.length < 2) continue;
+    const a = f[0], z = f[f.length - 1]; rr.push({ title: a.title, author: authorName(a), first: toNum(a.rating), second: toNum(z.rating), when: dn(z.finishDate) });
+  }
+  if (rr.length < 3) return panel(g, { title, empty: `Needs at least 3 books you have re-read and rated both times (you have ${rr.length}).` });
+  rr.sort((a, b) => (b.second - b.first) - (a.second - a.first) || b.first - a.first || a.title.localeCompare(b.title));
+  const rose = rr.filter(r => r.second > r.first).length, fell = rr.filter(r => r.second < r.first).length, same = rr.length - rose - fell, avgFall = avg(rr.filter(r => r.second < r.first).map(r => r.first - r.second));
+  const shown = rr.length > 25 ? [...rr.slice(0, 13), ...rr.slice(-12)] : rr;
+  const take = `${rose + same >= fell ? 'Mostly yes' : 'Not always'}: **${rose + same} of ${rr.length}** re-reads held or improved (${rose} rose, ${same} stayed)${fell ? `, while ${fell} fell${avgFall ? ' by ' + f1(avgFall) + '★ on average' : ''}` : ''}.`;
+  return panel(g, { title, take, legend: [{ k: 'box', c: C.accent, l: 'Rated higher' }, { k: 'box', c: C.warm, l: 'Rated lower' }, { k: 'box', c: C.grey, l: 'Same' }, { k: 'ring', c: C.muted, l: 'First read' }, { k: 'dot', c: C.muted, l: 'Latest read' }],
+    note: rr.length > 25 ? `Showing the 13 biggest rises and 12 biggest falls of ${rr.length} re-reads; the table lists them all.` : '',
+    why: 'A dumbbell: one row per book from first to latest rating, so the length and direction of each change are immediate. The signed number repeats it for anyone who cannot rely on colour.',
+    render: (box, W) => {
+      const rowH = W < 500 ? 24 : 22, lw = W < 500 ? 104 : 210, rw = 44, m = { t: 8, b: 26 }, H = m.t + shown.length * rowH + m.b, svg = mkSvg(box, W, H, 'First versus latest rating for each re-read book');
+      const lo = Math.floor(Math.min(...rr.map(r => Math.min(r.first, r.second)))), X = lin(lo - .3, 5.25, lw, W - rw);
+      [1, 2, 3, 4, 5].filter(v => v >= lo).forEach(v => { el('line', { x1: X(v), x2: X(v), y1: m.t, y2: H - m.b, stroke: C.grid }, svg); T(svg, X(v), H - 8, v + '★', { a: 'middle' }); });
+      const pts = [];
+      shown.forEach((r, i) => {
+        const y = m.t + i * rowH + rowH / 2, c = r.second > r.first ? C.accent : r.second < r.first ? C.warm : C.grey, dl = r.second - r.first;
+        T(svg, 0, y + 4, trunc(r.title, W < 500 ? 15 : 32), { c: '#d3cfe6' });
+        if (dl) el('line', { x1: X(r.first), x2: X(r.second), y1: y, y2: y, stroke: c, 'stroke-width': 3, 'stroke-linecap': 'round' }, svg);
+        el('circle', { cx: X(r.first), cy: y, r: 5, fill: C.surface, stroke: c, 'stroke-width': 2 }, svg);
+        el('circle', { cx: X(r.second), cy: y, r: dl ? 5 : 3.2, fill: c, stroke: C.surface, 'stroke-width': dl ? 2 : 0 }, svg);
+        T(svg, W - 2, y + 4, dl ? (dl > 0 ? '+' : '−') + f1(Math.abs(dl)) : '=', { a: 'end', c: dl ? C.fg : C.muted, w: dl ? 500 : 400 });
+        pts.push({ x: 0, y: y - rowH / 2, w: W, h: rowH, row: 1, tip: { head: r.title, sub: r.author + (r.when ? ' · re-read ' + fd(r.when) : ''), rows: [{ k: 'dot', c: C.muted, l: 'First read', v: stars(r.first) }, { k: 'dot', c, l: 'Latest read', v: stars(r.second) }, { l: 'Change', v: (dl > 0 ? '+' : dl < 0 ? '−' : '') + f1(Math.abs(dl)) + '★' }] } });
+      });
+      hover(svg, pts, { tol: 0 });
+      return { head: ['Title', 'Author', 'First', 'Latest', 'Change'], rows: rr.map(r => [r.title, r.author, f1(r.first), f1(r.second), f1(r.second - r.first)]) };
+    } });
+}
+
+/* ================= 3 · How do I read? ================= */
+function window12(d) { const y = d.y; return y ? { w0: d0(y, 1, 1), w1: String(y) === d.curY ? TODAY : d0(y, 12, 31) } : { w0: TODAY - 364, w1: TODAY }; }
+function chRiver(g) {
+  const title = 'What did my year look like?', { w0, w1 } = window12(D), yearLabel = D.y ? String(D.y) : 'the last 12 months';
+  const rb = D.recs.filter(r => r.s != null && r.f >= w0 && r.s <= w1).sort((a, b) => a.s - b.s || a.f - b.f);
+  if (rb.length < 5) return panel(g, { title, empty: `Needs at least 5 finished books with start and finish dates in ${yearLabel} (you have ${rb.length}).` });
+  const ends = []; rb.forEach(r => { let l = ends.findIndex(e => e < r.s - 1); if (l < 0) { l = ends.length; ends.push(0); } ends[l] = r.f; r.lane = l; });
+  const lanes = ends.length; let maxC = 0;
+  { const ev = []; rb.forEach(r => { ev.push([r.s, 1]); ev.push([r.f + 1, -1]); }); ev.sort((a, b) => a[0] - b[0] || a[1] - b[1]); let c = 0; ev.forEach(e => { c += e[1]; if (c > maxC) maxC = c; }); }
+  const stalls = rb.filter(r => r.days >= 60).sort((a, b) => b.days - a.days), lab = stalls.slice(0, 2), medDays = med(rb.map(r => r.days));
+  const take = `Most books take **${Math.round(medDays)} days**${stalls.length ? `, but ${stalls.length} dragged past two months. The longest, “${trunc(stalls[0].title, 40)}”, took ${stalls[0].days} days` : ''}. At the busiest point you had **${maxC} ${maxC === 1 ? 'book' : 'books'} open** at once.`;
+  return panel(g, { title, take, legend: [{ k: 'box', c: C.accent, l: 'Favourite' }, { k: 'box', c: C.grey, l: 'Other book' }, ...(lab.length ? [{ k: 'ring', c: C.fg, l: 'Outlined: the longest stalls' }] : [])],
+    why: 'A timeline of thin bars packed into lanes: dates are the data, so each book is a span, and overlaps and stalls show as they happened. On a phone it scrolls sideways inside this panel.',
+    render: (box, W) => {
+      const { sc, Wd } = scroller(box, W, 760), pitch = W < 500 ? 8 : 10, bh = pitch - 3;
+      // stall labels sit in a strip above the lanes, never over a bar
+      const labs = lab.map(r => { const t = trunc(r.title, 24) + ' · ' + r.days + ' days', tw = t.length * 5.8 + 4, cx = (Math.max(6, X0(r)) + X0e(r)) / 2; return { r, t, tw, row: 0, x: 0, cx }; });
+      function X0(r) { return lin(w0, w1 + 9, 6, Wd - 8)(Math.max(r.s, w0)); }
+      function X0e(r) { return lin(w0, w1 + 9, 6, Wd - 8)(r.f + 1); }
+      labs.forEach((q, i) => { q.x = Math.max(4, Math.min(Wd - q.tw - 4, q.cx - q.tw / 2)); if (i && q.x < labs[0].x + labs[0].tw + 8 && q.x + q.tw + 8 > labs[0].x) q.row = 1; });
+      const strip = labs.length ? (labs.some(q => q.row) ? 34 : 20) : 4, m = { l: 6, r: 8, t: strip + 4, b: 24 }, H = m.t + lanes * pitch + m.b, svg = mkSvg(sc, Wd, H, `Each book finished in ${yearLabel} as a bar from start to finish date`);
+      const X = lin(w0, w1 + 9, m.l, Wd - m.r);
+      for (let k = 0; k < 14; k++) { const yy = yr(w0) + Math.floor((mo0(w0) + k) / 12), mm = (mo0(w0) + k) % 12, dd = d0(yy, mm + 1, 1); if (dd < w0 || dd > w1) continue; const x = X(dd); el('line', { x1: x, x2: x, y1: m.t, y2: H - m.b, stroke: C.grid }, svg); T(svg, x + 3, H - 8, MON[mm].slice(0, W < 500 ? 1 : 3) + (mm === 0 && !D.y ? ' ' + yy : ''), {}); }
+      const pts = [];
+      rb.forEach(r => {
+        const x = Math.max(m.l, X(Math.max(r.s, w0))), w = Math.max(3, X(r.f + 1) - x), y = m.t + r.lane * pitch, out = lab.includes(r);
+        el('rect', { x, y, width: w, height: bh, rx: bh / 2, fill: r.fav ? C.accent : C.grey, 'fill-opacity': r.fav ? 1 : .8, stroke: out ? C.fg : 'none', 'stroke-width': out ? 1.5 : 0 }, svg);
+        pts.push({ x, y, w, h: bh, tip: { head: r.title, sub: r.author, rows: [{ k: 'dot', c: r.fav ? C.accent : C.grey, l: 'Started', v: fd(r.s) }, { l: 'Finished', v: fd(r.f) }, { l: 'Days taken', v: String(r.days) }, ...(r.rating ? [{ l: 'Rating', v: stars(r.rating) + (r.fav ? ' · favourite' : '') }] : [])] } });
+      });
+      labs.forEach(q => T(svg, q.x, 12 + q.row * 13, q.t, { c: C.fg, s: 10.5, w: 500 }));
+      pts.sort((a, b) => a.x - b.x); hover(svg, pts, { tol: 5 });
+      return { head: ['Title', 'Author', 'Started', 'Finished', 'Days', 'Rating'], rows: [...rb].reverse().map(r => [r.title, r.author, fd(r.s), fd(r.f), r.days, r.rating ? f1(r.rating) : '']) };
+    } });
+}
+
+// Reading log entries that carry a time (entries added in the app do; imported and backdated ones do not)
+function timedEntries() {
+  const out = []; let total = 0;
+  for (const e of state.entries) {
+    if (!(e.pages > 0) || e.source === 'deleted') continue; total++;
+    if (!/^\d{4}-\d\d-\d\d[ T]\d\d:\d\d/.test(e.loggedAt || '') || e.loggedAt.slice(0, 10) !== e.date) continue;
+    let hr = Number(e.loggedAt.slice(11, 13)) + Number(e.loggedAt.slice(14, 16)) / 60 - (e.minutes || 0) / 120;
+    hr = ((Math.floor(hr) % 24) + 24) % 24;
+    const dd = dn(e.date); if (dd == null) continue;
+    out.push({ d: dd, h: hr, p: e.pages });
+  }
+  return { out, total };
+}
+let GID = 0;
+function gradKey() { return 'ig' + (++GID); }
+function chWhen(g) {
+  const title = 'When do I read?', { out: L, total } = timedEntries(), NEED = 20;
+  if (L.length < NEED) return panel(g, { title, empty: `Needs at least ${NEED} log entries with a time (${L.length} of your ${total} have one). Pages logged in the app are timed; imported and backdated entries are not.` });
+  const cell = Array.from({ length: 7 }, () => Array.from({ length: 24 }, () => ({ p: 0, n: 0 })));
+  L.forEach(l => { const c = cell[wdOf(l.d)][l.h]; c.p += l.p; c.n++; });
+  const totP = sum(L.map(l => l.p)), eve = sum(L.filter(l => l.h >= 20).map(l => l.p)), wkP = sum(L.filter(l => wdOf(l.d) >= 5).map(l => l.p)), wkdP = totP - wkP;
+  let top = { p: 0 }; cell.forEach((r, d) => r.forEach((c, hr) => { if (c.p > top.p) top = { p: c.p, d, h: hr }; }));
+  const hh2 = n => String(n).padStart(2, '0') + ':00';
+  let take = `**${pct(eve, totP)}% of your logged pages** are read after 8pm, and ${WDF[top.d]} ${hh2(top.h)} is your busiest hour.`;
+  if (wkP > 0 && wkdP > 0) { const a = sum(L.filter(l => wdOf(l.d) >= 5 && l.h < 18).map(l => l.p)) / wkP, b = sum(L.filter(l => wdOf(l.d) < 5 && l.h < 18).map(l => l.p)) / wkdP; take += ` ${a > b ? 'Weekends start earlier' : 'Weekdays start earlier'}: ${Math.round((a > b ? a : b) * 100)}% of ${a > b ? 'weekend' : 'weekday'} pages are read before 6pm vs ${Math.round((a > b ? b : a) * 100)}% on ${a > b ? 'weekdays' : 'weekends'}.`; }
+  return panel(g, { title, take, note: `Uses the ${fmt(L.length)} of ${fmt(total)} log entries that have a time. The hour is when you logged, less half the timed session if there was one.`,
+    why: 'A weekday-by-hour grid with one hue, lighter meaning more pages: it shows a routine, which a bar of totals cannot.',
+    render: (box, W) => {
+      const lw = 32, cw = (W - lw) / 24, ch = W < 500 ? 20 : 24, m = { t: 4, b: 48 }, H = m.t + 7 * ch + m.b, svg = mkSvg(box, W, H, 'Pages read by weekday and hour of day');
+      const mx = Math.max(...cell.flat().map(c => c.p)), pts = [];
+      cell.forEach((row, d) => { T(svg, lw - 8, m.t + d * ch + ch / 2 + 4, WD[d], { a: 'end' }); row.forEach((c, hr) => {
+        const x = lw + hr * cw + .75, y = m.t + d * ch + .75, w = cw - 1.5, hg = ch - 1.5;
+        el('rect', { x, y, width: w, height: hg, rx: 3, fill: c.p ? ramp(Math.pow(c.p / mx, .7)) : EMPTY }, svg);
+        pts.push({ x, y, w, h: hg, tip: { head: c.p ? n0(c.p) + ' pages' : 'No reading', sub: WDF[d] + ', ' + hh2(hr) + '–' + hh2((hr + 1) % 24), rows: c.n ? [{ l: 'Entries logged', v: String(c.n) }] : [] } });
+      }); });
+      [0, 6, 12, 18].forEach(hr => T(svg, lw + hr * cw + 2, m.t + 7 * ch + 14, hh2(hr), { s: 10 }));
+      const gy = H - 18, k = gradKey(), defs = el('defs', null, svg), lg = el('linearGradient', { id: k }, defs); [0, .25, .5, .75, 1].forEach(t => el('stop', { offset: t, 'stop-color': ramp(t) }, lg));
+      T(svg, lw, gy + 4, 'Fewer pages', { s: 10 }); el('rect', { x: lw + 70, y: gy - 4, width: 90, height: 8, rx: 4, fill: 'url(#' + k + ')' }, svg); T(svg, lw + 168, gy + 4, 'More', { s: 10 });
+      const rows = []; cell.forEach((r, d) => r.forEach((c, hr) => { if (c.p) rows.push([WD[d], hh2(hr), c.p, c.n]); }));
+      hover(svg, pts, { tol: 2 });
+      return { head: ['Weekday', 'Hour', 'Pages', 'Entries'], rows };
+    } });
+}
+
+function chCalendar(g) {
+  const title = 'Reading calendar', { w0, w1 } = window12(D);
+  const dm = new Map();
+  for (const e of state.entries) { if (!(e.pages > 0) || e.source === 'deleted') continue; const d = dn(e.date); if (d == null) continue; let o = dm.get(d); if (!o) { o = { p: 0, books: [] }; dm.set(d, o); } o.p += e.pages; if (e.title && !o.books.includes(e.title)) o.books.push(e.title); }
+  let rd = 0, run = 0, bestRun = 0, bestDay = { p: 0 };
+  for (let d = w0; d <= w1; d++) { const o = dm.get(d); if (o) { rd++; run++; if (run > bestRun) bestRun = run; if (o.p > bestDay.p) bestDay = { p: o.p, d }; } else run = 0; }
+  const span = w1 - w0 + 1, NEED = 10;
+  if (rd < NEED) return panel(g, { title, empty: `Needs at least ${NEED} days with pages logged in ${D.y ? D.y : 'the last 12 months'} (you have ${rd}).` });
+  const take = `You read on **${rd} of ${D.y && String(D.y) === D.curY ? 'the ' + span + ' days so far' : 'the ' + span + ' days'}** (${pct(rd, span)}%), with a longest run of ${bestRun} ${bestRun === 1 ? 'day' : 'days'} in a row. Your biggest day was ${n0(bestDay.p)} pages on ${fd(bestDay.d)}.`;
+  return panel(g, { title, take, why: 'Kept from the old Insights: a day-by-day grid is the right form for streaks and gaps, and one hue keeps it quiet. On a phone it scrolls sideways inside this panel.',
+    render: (box, W) => {
+      const lw = 26, cs = w0 - wdOf(w0), weeks = Math.ceil((w1 - cs + 1) / 7), sz = Math.max(W < 500 ? 11 : 8, Math.min(16, (W - lw - 4) / weeks)), Wd = Math.max(W, lw + weeks * sz + 6), m = { t: 16, b: 34 }, H = m.t + 7 * sz + m.b;
+      const sc = h('div', 'ins-scroll', box), svg = mkSvg(sc, Wd, H, 'Pages read on each day');
+      const vals = [...dm.entries()].filter(e => e[0] >= w0 && e[0] <= w1).map(e => e[1].p), mx = nice(Math.max(...vals) * .8), pts = [];
+      ['Mon', 'Wed', 'Fri'].forEach((l, i) => T(svg, lw - 6, m.t + i * 2 * sz + sz * .5 + 4, l, { a: 'end', s: 9.5 }));
+      for (let w = 0; w < weeks; w++) {
+        const d1 = cs + w * 7;
+        for (let r = 0; r < 7; r++) {
+          const d = d1 + r; if (d < w0 || d > w1) continue;
+          if (dt(d).getUTCDate() === 1) T(svg, lw + w * sz, m.t - 5, MON[mo0(d)] + (mo0(d) === 0 && !D.y ? ' ’' + String(yr(d)).slice(2) : ''), { s: 10 });
+          const o = dm.get(d), x = lw + w * sz + .6, y = m.t + r * sz + .6, s2 = Math.max(3, sz - 1.4);
+          el('rect', { x, y, width: s2, height: s2, rx: 2, fill: o ? ramp(Math.pow(Math.min(1, o.p / mx), .8)) : EMPTY }, svg);
+          pts.push({ x, y, w: s2, h: s2, tip: { head: o ? n0(o.p) + ' pages' : 'No reading', sub: WD[wdOf(d)] + ' ' + fd(d), rows: o ? o.books.slice(0, 3).map(t => ({ l: trunc(t, 28), v: '' })) : [] } });
+        }
+      }
+      const gy = H - 14, k = gradKey(), defs = el('defs', null, svg), lg = el('linearGradient', { id: k }, defs); [0, .25, .5, .75, 1].forEach(t => el('stop', { offset: t, 'stop-color': ramp(t) }, lg));
+      T(svg, lw, gy + 4, 'Fewer pages', { s: 10 }); el('rect', { x: lw + 70, y: gy - 4, width: 90, height: 8, rx: 4, fill: 'url(#' + k + ')' }, svg); T(svg, lw + 168, gy + 4, 'More', { s: 10 });
+      hover(svg, pts, { tol: 2 });
+      const ms = h('div', 'ins-mini', box);
+      [[`Days read (of ${span})`, rd + ' days'], ['Longest run', bestRun + ' days'], ['Biggest day', n0(bestDay.p) + ' pp']].forEach(a => { const t = h('div', null, ms); h('span', null, t, a[0]); h('b', null, t, a[1]); });
+      const rows = []; for (let d = w1; d > w1 - 60 && d >= w0; d--) { const o = dm.get(d); rows.push([fd(d), o ? o.p : 0, o ? o.books.length : 0]); }
+      return { head: ['Date (last 60 days)', 'Pages', 'Books'], rows };
+    } });
+}
+
+function chPace(g) {
+  const title = 'How fast do I get through a book?';
+  const months = []; for (let i = 11; i >= 0; i--) { let yy = yr(TODAY), m = mo0(TODAY) - i; while (m < 0) { m += 12; yy--; } months.push({ y: yy, m }); }
+  const pm = months.map(q => D.recs.filter(r => r.pace > 0 && r.f != null && yr(r.f) === q.y && mo0(r.f) === q.m)), allRec = pm.flat(), NEED = 6;
+  if (allRec.length < NEED) return panel(g, { title, empty: `Needs at least ${NEED} finished books with dates and pages in the last 12 months (you have ${allRec.length}).` });
+  const medAll = med(allRec.map(r => r.pace)), medM = pm.map(a => a.length ? med(a.map(r => r.pace)) : null);
+  const vm = medM.map((v, i) => ({ v, i })).filter(x => x.v != null && pm[x.i].length >= 2), pool = vm.length >= 2 ? vm : medM.map((v, i) => ({ v, i })).filter(x => x.v != null);
+  const fast = pool.reduce((a, b) => b.v > a.v ? b : a), slow = pool.reduce((a, b) => b.v < a.v ? b : a), ml = q => MON[q.m] + ' ' + q.y;
+  const take = `Your typical book goes at **${n0(medAll)} pages a day**.${fast.i !== slow.i ? ` ${ml(months[fast.i])} was your fastest month (median ${n0(fast.v)}) and ${ml(months[slow.i])} your slowest (${n0(slow.v)}).` : ''}`;
+  return panel(g, { title, take, legend: [{ k: 'dot', c: C.grey, l: 'One book' }, { k: 'line', c: C.accent, l: 'Median for the month' }],
+    why: 'Replaces the old scatter with a dot per book in each month: you see the spread (and the slow outliers) inside each month, with the median marked.',
+    render: (box, W) => {
+      const H = W < 500 ? 270 : 300, m = { l: 34, r: 6, t: 12, b: 26 }, pw = W - m.l - m.r, ph0 = H - m.t - m.b, svg = mkSvg(box, W, H, 'Pages per day for each book finished, by month');
+      const ps = allRec.map(r => r.pace).sort((a, b) => a - b), p98 = ps[Math.min(ps.length - 1, Math.floor(ps.length * .98))], mx = nice(Math.max(p98, medAll * 1.5) * 1.05), Y = lin(0, mx, m.t + ph0, m.t), cw = pw / 12, rr = W < 500 ? 3.2 : 4;
+      [0, .25, .5, .75, 1].forEach(t => { const v = Math.round(mx * t); el('line', { x1: m.l, x2: m.l + pw, y1: Y(v), y2: Y(v), stroke: C.grid }, svg); T(svg, m.l - 6, Y(v) + 4, v, { a: 'end' }); });
+      const pts = [];
+      months.forEach((q, i) => {
+        const cx = m.l + cw * i + cw / 2, bs = [...pm[i]].sort((a, b) => a.pace - b.pace);
+        T(svg, cx, H - 8, W < 500 ? MON[q.m][0] : MON[q.m], { a: 'middle' });
+        const off = swarm(bs.map(r => Y(Math.min(mx, r.pace))), rr), lim = cw / 2 - rr - 1;
+        bs.forEach((r, k) => { const x = cx + Math.max(-lim, Math.min(lim, off[k])), y = Y(Math.min(mx, r.pace)); el('circle', { cx: x, cy: y, r: rr, fill: C.grey, 'fill-opacity': .85, stroke: C.surface, 'stroke-width': 1 }, svg);
+          pts.push({ x, y, r: rr, i, tip: { head: n0(r.pace) + ' pages a day', sub: r.title + ' · ' + r.author, rows: [{ l: 'Pages', v: fmt(r.pages) }, { l: 'Days taken', v: String(r.days) }, { l: 'Finished', v: fd(r.f) }, { l: 'Month median', v: n0(medM[i]) + ' a day' }] } }); });
+        if (medM[i] != null) el('line', { x1: cx - cw * .36, x2: cx + cw * .36, y1: Y(Math.min(mx, medM[i])), y2: Y(Math.min(mx, medM[i])), stroke: C.accent, 'stroke-width': 2, 'stroke-linecap': 'round' }, svg);
+      });
+      if (fast.i !== slow.i) [fast, slow].forEach(q => T(svg, m.l + cw * q.i + cw / 2, Y(q.v) - 7, n0(q.v), { a: 'middle', c: C.fg, w: 700, halo: 1 }));
+      pts.sort((a, b) => a.i - b.i || a.y - b.y); hover(svg, pts, { tol: 10 });
+      return { head: ['Month', 'Title', 'Pages', 'Days', 'Pages/day'], rows: [...allRec].sort((a, b) => b.f - a.f).map(r => [MON[mo0(r.f)] + ' ' + yr(r.f), r.title, r.pages, r.days, n0(r.pace)]) };
+    } });
+}
+
+function chSessions(g) {
+  const title = 'Reading sessions', ses = state.entries.filter(e => e.minutes > 0 && e.pages > 0 && e.source !== 'deleted'), NEED = 5;
+  if (ses.length < NEED) return panel(g, { title, empty: `Needs at least ${NEED} timed sessions (you have ${ses.length}). Press Start timer in Reading now when you sit down to read; the minutes save with the next pages you log.` });
+  const mins = sum(ses.map(e => e.minutes)), pgs = sum(ses.map(e => e.pages));
+  return panel(g, { title, fixed: true, take: `A typical sitting is **${Math.round(mins / ses.length)} minutes** at about **${fmt(Math.round(pgs / mins * 60))} pages an hour**, over ${fmt(ses.length)} timed sessions.`,
+    why: 'Counts of sessions by length, as plain bars: the shape of a sitting is a distribution, and these bands match how you would describe one.',
+    render: box => {
+      const tl = h('div', 'mini-tiles', box); [[Math.round(mins / ses.length), 'minutes a session'], [Math.round(pgs / mins * 60), 'pages an hour'], [(mins / 60).toFixed(1), 'hours timed']].forEach(([v, l]) => { const d = h('div', null, tl); h('b', 'tnum', d, String(v)); h('span', null, d, l); });
+      const B = [['Under 15 min', 0, 15], ['15–30 min', 15, 30], ['30–60 min', 30, 60], ['1–1½ hours', 60, 90], ['1½ hours +', 90, 1e9]];
+      const items = B.map(([l, a, z]) => { const x = ses.filter(e => e.minutes >= a && e.minutes < z); return { label: l, value: x.length, tip: `${l}: ${x.length} sessions, ${sum(x.map(e => e.pages))} pages` }; });
+      const ul = h('ul', 'hbars', box); ul.style.marginTop = '14px'; hbars(ul, items, Math.max(1, ...items.map(x => x.value)));
+      return { head: ['Length', 'Sessions', 'Pages'], rows: B.map(([l, a, z]) => { const x = ses.filter(e => e.minutes >= a && e.minutes < z); return [l, x.length, sum(x.map(e => e.pages))]; }) };
+    } });
+}
+
+/* ================= 4 · What do I read? ================= */
+function chTaste(g) {
+  const title = 'Is my taste shifting?', ds = D.dated, NEED = 20;
+  const qOf = r => yr(r.f) * 4 + Math.floor(mo0(r.f) / 3);
+  const qs = ds.map(qOf), qmin = qs.length ? Math.min(...qs) : 0, qmax = qs.length ? Math.max(...qs) : 0, nq0 = qmax - qmin + 1, byYear = nq0 > 16;
+  const bOf = r => byYear ? yr(r.f) : qOf(r), b0 = byYear ? Math.floor(qmin / 4) : qmin, b1 = byYear ? Math.floor(qmax / 4) : qmax, NB = b1 - b0 + 1;
+  if (ds.length < NEED || NB < 3) return panel(g, { title, empty: `Needs at least ${NEED} finished books with dates, spread over at least 3 quarters (you have ${ds.length} over ${ds.length ? NB : 0}).` });
+  const cnt = Array.from({ length: NB }, () => new Array(7).fill(0)); ds.forEach(r => cnt[bOf(r) - b0][r.slot]++);
+  const qn = cnt.map(a => sum(a)); let lastShare = null; const share = cnt.map((a, i) => { if (qn[i]) lastShare = a.map(v => v / qn[i]); return lastShare; });
+  { let nx = null; for (let i = NB - 1; i >= 0; i--) { if (qn[i]) nx = share[i]; else if (!share[i]) share[i] = nx; } }
+  const lab = i => byYear ? String(b0 + i) : 'Q' + ((b0 + i) % 4 + 1) + ' ' + Math.floor((b0 + i) / 4);
+  // first vs latest: calendar years with 5+ books when there are two, otherwise the earlier and later half of your books
+  const yc = new Map(); ds.forEach(r => yc.set(yr(r.f), (yc.get(yr(r.f)) || 0) + 1));
+  const ys = [...yc].filter(x => x[1] >= 5).map(x => x[0]).sort((a, b) => a - b); let A, B, la, lb;
+  if (ys.length >= 2) { A = ds.filter(r => yr(r.f) === ys[0]); B = ds.filter(r => yr(r.f) === ys[ys.length - 1]); la = 'in ' + ys[0]; lb = 'in ' + ys[ys.length - 1]; }
+  else { const s = [...ds].sort((a, b) => a.f - b.f), h2 = s.length >> 1; A = s.slice(0, h2); B = s.slice(h2); la = 'in your earlier books'; lb = 'in your latest'; }
+  const sh = (bs, i) => pct(bs.filter(r => r.slot === i).length, bs.length);
+  const chg = D.top6.map((n, i) => ({ i, n, d: sh(B, i) - sh(A, i) })).sort((a, b) => b.d - a.d), up = chg[0], dn2 = chg[chg.length - 1];
+  const take = up && up.d > 0 ? `**${up.n}** grew from ${sh(A, up.i)}% of your reading ${la} to ${sh(B, up.i)}% ${lb}${dn2 && dn2.d < 0 && dn2 !== up ? `, while **${dn2.n}** moved from ${sh(A, dn2.i)}% to ${sh(B, dn2.i)}%` : ''}.` : `No genre has moved much: your mix of genres has stayed steady${byYear ? ' year to year' : ' quarter to quarter'}.`;
+  return panel(g, { title, take, legend: GEN_LEGEND(D).map(x => ({ ...x, k: 'box' })),
+    why: `A 100% stacked area: the question is about share, not volume, and ${byYear ? 'years' : 'quarters'} keep each slice big enough to see move. Six genres plus Other is the colour limit.`,
+    render: (box, W) => {
+      const H = W < 500 ? 270 : 300, m = { l: 40, r: W < 500 ? 74 : 118, t: 10, b: 26 }, pw = W - m.l - m.r, ph0 = H - m.t - m.b, svg = mkSvg(box, W, H, 'Genre share of books finished over time');
+      const X = lin(0, NB - 1, m.l, m.l + pw), Y = lin(0, 100, m.t + ph0, m.t), names = i => i < 6 ? (D.top6[i] || '') : 'Other';
+      [0, 25, 50, 75, 100].forEach(v => T(svg, m.l - 6, Y(v) + 4, v + '%', { a: 'end' }));
+      const cum = share.map(a => { let c = 0; return [0, ...a.map(v => c += v * 100)]; });
+      const present = k => share.some(a => a[k] > 0);
+      for (let k = 0; k < 7; k++) { if (!present(k)) continue; const topP = cum.map((c, q) => X(q) + ',' + Y(c[k + 1])).join(' '), bot = cum.map((c, q) => X(q) + ',' + Y(c[k])).reverse().join(' '); el('polygon', { points: topP + ' ' + bot, fill: k < 6 ? GCOL[k] : OTHER, stroke: C.surface, 'stroke-width': 1.5, 'stroke-linejoin': 'round' }, svg); }
+      if (byYear) for (let q = 0; q < NB; q++) { if (NB <= 10 || q % 2 === 0) T(svg, X(q), H - 8, String(b0 + q), { a: q === 0 ? 'start' : q === NB - 1 ? 'end' : 'middle' }); }
+      else for (let q = 0; q < NB; q++) { if ((b0 + q) % 4 === 0) T(svg, X(q), H - 8, String(Math.floor((b0 + q) / 4)), { a: q === 0 ? 'start' : 'middle' }); }
+      for (let q = 0; q < NB; q++) el('line', { x1: X(q), x2: X(q), y1: m.t + ph0, y2: m.t + ph0 + 4, stroke: C.line }, svg);
+      const endL = []; for (let k = 0; k < 7; k++) { const a = cum[NB - 1][k], b = cum[NB - 1][k + 1]; if ((b - a) / 100 * ph0 < 11) continue; endL.push({ k, y: Y((a + b) / 2) + 4 }); }
+      endL.forEach(e => { el('circle', { cx: m.l + pw + 9, cy: e.y - 4, r: 3.5, fill: e.k < 6 ? GCOL[e.k] : OTHER }, svg); T(svg, m.l + pw + 17, e.y, trunc(names(e.k), W < 500 ? 9 : 17), { c: C.fg, s: W < 500 ? 10.5 : 11 }); });
+      const xs = []; for (let q = 0; q < NB; q++) xs.push(X(q));
+      cross(svg, xs, [m.l, m.t, pw, ph0], q => ({ tip: { head: lab(q), sub: qn[q] ? plural(qn[q], 'book') + ' finished' : 'No books finished', rows: [6, 5, 4, 3, 2, 1, 0].filter(k => present(k)).map(k => ({ k: 'dot', c: k < 6 ? GCOL[k] : OTHER, l: names(k), v: Math.round(share[q][k] * 100) + '%' })) }, dots: [] }));
+      return { head: [byYear ? 'Year' : 'Quarter', 'Books', ...[0, 1, 2, 3, 4, 5, 6].filter(present).map(names)], rows: share.map((a, q) => [lab(q), qn[q], ...[0, 1, 2, 3, 4, 5, 6].filter(present).map(k => Math.round(a[k] * 100) + '%')]) };
+    } });
+}
+
+// Authors: one list drives both the chart and the sentence above it
+function authorList() {
+  const am = new Map();
+  D.recs.forEach(r => { if (!r.akey) return; let a = am.get(r.akey); if (!a) { a = { name: r.author, titles: new Map(), rs: [] }; am.set(r.akey, a); } a.rs.push(r); a.titles.set(r.tkey, r.title); });
+  const all = [...am.values()].map(a => { const rated = a.rs.filter(r => r.rating > 0); return { n: a.name, c: a.titles.size, r: rated.length ? avg(rated.map(x => x.rating)) : 0, rn: rated.length, rs: a.rs, titles: [...a.titles.values()] }; });
+  const rep = all.filter(a => a.c >= 2).sort((x, y) => y.c - x.c || y.r - x.r || x.n.localeCompare(y.n));
+  return { rep, shown: rep.slice(0, 12) };
+}
+function chAuthors(g) {
+  const title = 'Which authors do I come back to?', { rep, shown: au } = authorList();
+  if (rep.length < 3) return panel(g, { title, empty: `Needs at least 3 authors with two or more finished books (you have ${rep.length}).` });
+  const lead = au.filter(a => a.c === au[0].c), names = lead.slice(0, 2).map(a => a.n);
+  const reg = au.filter(a => a.c >= 3 && a.rn >= 3); const bestA = (reg.length ? reg : au.filter(a => a.rn >= 2)).sort((a, b) => b.r - a.r || b.c - a.c)[0];
+  const tail = !bestA ? '' : lead.includes(bestA) ? `, and ${bestA.n} is also your highest-rated regular (${f1(bestA.r)}★ over ${bestA.c} books)` : `. Your highest-rated regular here is **${bestA.n}** (${f1(bestA.r)}★ over ${bestA.c} books)`;
+  const take = `**${rep.length} authors** have more than one book on your list. ${names.join(' and ')}${lead.length > 2 ? ' and ' + (lead.length - 2) + ' more' : ''} ${lead.length > 1 ? 'lead' : 'leads'} with ${au[0].c}${lead.length > 1 ? ' each' : ''}${tail}.`;
+  return panel(g, { title, take, legend: [{ k: 'dot', c: C.accent, l: 'Average 4.25★ or more' }, { k: 'dot', c: C.grey, l: 'Lower' }],
+    note: rep.length > au.length ? `The ${au.length} authors with the most books of your ${rep.length}.` : '',
+    why: 'A dot plot with two aligned columns: how many you read, then how well you rated them. Same rows, separate scales, so there is no dual axis.',
+    render: (box, W) => {
+      const rowH = 24, lw = W < 500 ? 98 : 126, gap = 18, m = { t: 26, b: 24 }, cwid = (W - lw - gap - 8) / 2, H = m.t + au.length * rowH + m.b, svg = mkSvg(box, W, H, 'Books read and average rating for authors with two or more books');
+      const mxc = Math.max(...au.map(a => a.c)), X1 = lin(0, mxc + .5, lw, lw + cwid), X2 = lin(2.5, 5.1, lw + cwid + gap, W - 8);
+      T(svg, lw, 12, 'Books read', { c: C.fg, w: 500 }); T(svg, lw + cwid + gap, 12, 'Average rating', { c: C.fg, w: 500 });
+      const st = mxc <= 8 ? 2 : mxc <= 20 ? 5 : 10; for (let v = 0; v <= mxc; v += st) { el('line', { x1: X1(v), x2: X1(v), y1: m.t, y2: H - m.b, stroke: C.grid }, svg); T(svg, X1(v), H - 8, v, { a: 'middle' }); }
+      [3, 4, 5].forEach(v => { el('line', { x1: X2(v), x2: X2(v), y1: m.t, y2: H - m.b, stroke: C.grid }, svg); T(svg, X2(v), H - 8, v + '★', { a: 'middle' }); });
+      const pts = [];
+      au.forEach((a, i) => {
+        const y = m.t + i * rowH + rowH / 2, hi = a.r >= 4.25;
+        T(svg, 0, y + 4, trunc(a.n, W < 500 ? 15 : 19), { c: '#d3cfe6' });
+        el('line', { x1: X1(0), x2: X1(a.c), y1: y, y2: y, stroke: C.grey, 'stroke-width': 2, 'stroke-linecap': 'round' }, svg);
+        el('circle', { cx: X1(a.c), cy: y, r: 5, fill: C.grey, stroke: C.surface, 'stroke-width': 2 }, svg);
+        if (a.rn) el('circle', { cx: X2(Math.max(2.5, a.r)), cy: y, r: 5, fill: hi ? C.accent : C.grey, stroke: C.surface, 'stroke-width': 2 }, svg);
+        const latest = [...a.rs].sort((x, z) => (z.f || 0) - (x.f || 0))[0];
+        pts.push({ x: 0, y: y - rowH / 2, w: W, h: rowH, row: 1, tip: { head: a.n, sub: [...new Set(a.rs.map(r => r.genre).filter(Boolean))].slice(0, 3).join(', '), rows: [{ k: 'dot', c: C.grey, l: 'Books read', v: String(a.c) }, { k: 'dot', c: hi ? C.accent : C.grey, l: 'Average rating', v: a.rn ? stars(a.r) : 'Not rated' }, { l: 'Latest', v: trunc(latest.title, 26) }] } });
+      });
+      hover(svg, pts, { tol: 0 });
+      return { head: ['Author', 'Books', 'Avg rating', 'Titles'], rows: au.map(a => [a.n, a.c, a.rn ? f1(a.r) : '', a.titles.join('; ')]) };
+    } });
+}
+
+// Publication year: a swarm while it stays compact, otherwise a dot histogram by decade (1 dot = k books)
+function binLayout(bins, o) {
+  const r = o.r, step = 2 * r + 1.6, maxRows = Math.max(3, Math.floor(o.ph / step)), colsOf = b => Math.max(1, Math.floor((b.x1 - b.x0) * .84 / step));
+  let k = 1; while (bins.some(b => Math.ceil(Math.ceil(b.n / k) / colsOf(b)) > maxRows)) k++;
+  return { k, rows: Math.max(1, ...bins.map(b => Math.ceil(Math.ceil(b.n / k) / colsOf(b)))), step, colsOf };
+}
+function binDots(svg, bins, o) {   // bins [{x0,x1,n,hi,label,tip}] drawn as stacks from the baseline
+  const r = o.r, { k, step, colsOf } = binLayout(bins, o);
+  const pts = [];
+  bins.forEach(b => {
+    const cols = colsOf(b), nd = Math.ceil(b.n / k), nh = b.hi ? Math.min(nd, Math.max(1, Math.round(b.hi / k))) : 0, w = cols * step, sx = (b.x0 + b.x1) / 2 - w / 2 + step / 2;
+    for (let i = 0; i < nd; i++) { const col = i % cols, row = Math.floor(i / cols), isHi = i >= nd - nh; const x = sx + col * step, y = o.base - r - row * step; el('circle', { cx: x, cy: y, r: isHi ? r + .6 : r, fill: isHi ? C.accent : C.grey, 'fill-opacity': isHi ? 1 : .85, stroke: C.surface, 'stroke-width': isHi ? 1.6 : .8 }, svg); }
+    const rows = Math.ceil(nd / cols);
+    pts.push({ x: b.x0, y: o.base - rows * step - 4, w: b.x1 - b.x0, h: rows * step + 8, tip: b.tip, row: 1 });
+  });
+  return { k, pts };
+}
+function chPubYear(g) {
+  const title = 'How old are the books I read?', ps = D.recs.filter(r => r.pub > 0 && r.pub <= yr(TODAY) + 1), NEED = 10;
+  if (ps.length < NEED) return panel(g, { title, empty: `Needs at least ${NEED} finished books with a publication year (you have ${ps.length}).` });
+  const medY = Math.round(med(ps.map(r => r.pub))), nowY = yr(TODAY), recent = ps.filter(r => r.pub >= nowY - 10).length, oldFav = ps.filter(r => r.fav).sort((a, b) => a.pub - b.pub)[0];
+  const take = `Half your books were published after **${medY}**, and ${pct(recent, ps.length)}% in the last ten years${oldFav && oldFav.pub < nowY - 10 ? `, but your favourites reach back to ${oldFav.pub} (“${trunc(oldFav.title, 28)}”)` : ''}.`;
+  return panel(g, { title, take, legend: [{ k: 'dot', c: C.accent, l: 'Favourite' }, { k: 'dot', c: C.grey, l: 'Other reads' }],
+    why: 'Dots on a year axis show the clump of recent books and the long thin tail of older ones. With many books it folds into a dot histogram by decade so the panel stays compact.',
+    render: (box, W, P) => {
+      const H = W < 500 ? 210 : 220, m = { l: 8, r: 8, t: 8, b: 30 }, pw = W - m.l - m.r, ph0 = H - m.t - m.b, svg = mkSvg(box, W, H, 'Publication year of every book read');
+      const lo = Math.max(1800, Math.floor(Math.min(...ps.map(r => r.pub)) / 10) * 10), X = lin(lo, nowY, m.l, m.l + pw), r1 = W < 500 ? 2.8 : 3.2;
+      const old = ps.filter(r => r.pub < lo);
+      const sorted = [...ps].sort((a, b) => a.pub - b.pub);
+      let off = null; if (sorted.length <= 300) { off = swarm(sorted.map(r => X(Math.max(lo, r.pub))), r1); if (Math.max(...off.map(Math.abs)) > ph0 / 2 - r1) off = null; }
+      if (off) {
+        const span = nowY - lo, st = span > 120 ? 50 : span > 60 ? 20 : 10;
+        for (let y = Math.ceil(lo / st) * st; y <= nowY; y += st) { el('line', { x1: X(y), x2: X(y), y1: m.t, y2: m.t + ph0 + 3, stroke: C.grid }, svg); T(svg, X(y), H - 8, y, { a: 'middle' }); }
+        T(svg, X(nowY), H - 8, String(nowY), { a: 'end' });
+        const cy = m.t + ph0 / 2, pts = sorted.map((r, i) => ({ r, x: X(Math.max(lo, r.pub)), y: cy + off[i] }));
+        [false, true].forEach(f => pts.filter(p => p.r.fav === f).forEach(p => el('circle', { cx: p.x, cy: p.y, r: f ? r1 + .8 : r1, fill: f ? C.accent : C.grey, 'fill-opacity': f ? 1 : .85, stroke: C.surface, 'stroke-width': f ? 1.8 : .8 }, svg)));
+        hover(svg, pts.map(p => ({ x: p.x, y: p.y, r: r1, tip: { head: p.r.title, sub: p.r.author + (p.r.genre ? ' · ' + p.r.genre : ''), rows: [{ k: 'dot', c: p.r.fav ? C.accent : C.grey, l: 'Published', v: String(p.r.pub) }, ...(p.r.rating ? [{ l: 'Rating', v: stars(p.r.rating) }] : []), ...(p.r.pages ? [{ l: 'Pages', v: fmt(p.r.pages) }] : [])] } })), { tol: 9 });
+      } else {
+        const first = Math.max(1900, lo), nb = Math.floor((nowY - first) / 10) + 1, bins = [], bw = pw / (nb + (old.length || ps.some(r => r.pub < first) ? 1 : 0));
+        const mk = (label, a, z, xi) => { const bs = ps.filter(r => r.pub >= a && r.pub <= z); return { label, n: bs.length, hi: bs.filter(r => r.fav).length, x0: m.l + xi * bw + 2, x1: m.l + (xi + 1) * bw - 2, bs }; };
+        let xi = 0; const early = ps.filter(r => r.pub < first);
+        if (early.length) { bins.push(mk('Before ' + first, -1e9, first - 1, xi++)); }
+        for (let i = 0; i < nb; i++) bins.push(mk(i === nb - 1 && (first + i * 10) + 9 > nowY ? (first + i * 10) + 's' : (first + i * 10) + 's', first + i * 10, first + i * 10 + 9, xi++));
+        bins.forEach(b => { b.tip = { head: b.label === 'Before ' + first ? b.label : b.label + ' (' + b.label.slice(0, 4) + '–' + (+b.label.slice(0, 4) + 9) + ')', sub: plural(b.n, 'book'), rows: [{ k: 'dot', c: C.accent, l: 'Favourites', v: String(b.hi) }, ...(b.bs.some(r => r.rating) ? [{ l: 'Average rating', v: stars(avg(b.bs.filter(r => r.rating).map(r => r.rating))) }] : [])] }; });
+        const lay = binLayout(bins.filter(b => b.n), { r: 3, ph: ph0 - 6 }), ph1 = Math.min(ph0, Math.max(90, lay.rows * lay.step + 14)), H1 = m.t + ph1 + m.b;
+        svg.setAttribute('height', H1); svg.setAttribute('viewBox', `0 0 ${W} ${H1}`);
+        const base = m.t + ph1; el('line', { x1: m.l, x2: m.l + pw, y1: base, y2: base, stroke: C.line }, svg);
+        const skip = bw < 46 ? 2 : 1;
+        bins.forEach((b, i) => { if (i % skip === 0 || b.label.startsWith('Before')) T(svg, (b.x0 + b.x1) / 2, H1 - 8, b.label.startsWith('Before') ? '<' + first : b.label, { a: 'middle', s: W < 500 ? 10 : 11 }); });
+        const { k, pts } = binDots(svg, bins.filter(b => b.n), { r: 3, base, ph: ph0 - 6 });
+        if (k > 1) T(svg, m.l + pw, m.t + 8, '1 dot = ' + k + ' books', { a: 'end', c: C.fg, s: 11 });
+        hover(svg, pts, { tol: 0 });
+      }
+      return { head: ['Title', 'Author', 'Published', 'Favourite'], rows: sorted.map(r => [r.title, r.author, r.pub, r.fav ? 'yes' : '']) };
+    } });
+}
+
+function chMap(g) {
+  const title = 'Where are my books set?', per = new Map(), other = new Map();
+  D.recs.forEach(r => settingsOf(r.b).forEach(c => { const m = WORLD.p[c] ? per : other; m.set(c, (m.get(c) || 0) + 1); }));
+  const nSet = D.recs.filter(r => settingsOf(r.b).length).length, NEED = 5;
+  if (nSet < NEED) return panel(g, { title, empty: `Needs at least ${NEED} finished books with a setting (you have ${nSet}).` });
+  const ce = [...per].sort((a, b) => b[1] - a[1]), nm = c => c === 'United States of America' ? 'the USA' : c;
+  const take = ce.length ? `Your books are set in **${plural(ce.length, 'country', 'countries')}**; ${nm(ce[0][0])} leads with ${ce[0][1]}${ce[1] ? `, then ${nm(ce[1][0])} (${ce[1][1]})` : ''}${ce[2] ? ` and ${nm(ce[2][0])} (${ce[2][1]})` : ''}.` : `${fmt(nSet)} of your books have a setting, but none is a real country yet.`;
+  return panel(g, { title, take, fixed: true, why: 'A map is the natural form for place, so this panel keeps the map you had and adds a question and a takeaway. Press a country to see its books.',
+    render: box => {
+      const wrap = h('div', 'map-wrap', box); h('div', 'map-box', wrap).id = 'mapBox'; const side = h('div', null, wrap); h('ul', 'hbars', side).id = 'mapBars'; h('div', 'map-other', side).id = 'mapOther';
+      renderMap(D.recs.map(r => r.b));
+      h('p', 'ins-note', box, `${fmt(nSet)} of ${fmt(D.recs.length)} finished books have a setting.`);
+      return { head: ['Country', 'Books'], rows: ce.map(([c, n]) => [c, n]) };
+    } });
+}
+
+const AW_KNOWN = ['Miles Franklin', 'Booker', 'Pulitzer', 'Hugo', 'Nebula', 'World Fantasy', 'Stella', 'Orange', 'Carnegie', 'Whitbread', 'Nobel'];
+const awNorm = a => AW_KNOWN.find(k => a.toLowerCase().includes(k.toLowerCase())) || a.replace(/\s+(Prize|Award)$/i, '').trim();
+const awOf = b => [...new Set(String(b.awards || '').split(/[|,;]/).map(x => x.trim()).filter(Boolean).map(awNorm))];
+function chAwards(g) {
+  const title = 'How many award winners have I read?', all = state.allBooks, tot = new Map(), rd = new Map(); let nBooks = 0, nRead = 0;
+  for (const b of all) { const aw = awOf(b); if (!aw.length) continue; nBooks++; if (b.status === 'Finished') nRead++; for (const a of aw) { tot.set(a, (tot.get(a) || 0) + 1); if (b.status === 'Finished') rd.set(a, (rd.get(a) || 0) + 1); } }
+  if (nBooks < 1) return panel(g, { title, empty: 'No awards are recorded in your library yet. Add them in a book’s edit form.' });
+  const items = [...tot].map(([k, n]) => ({ label: k, value: rd.get(k) || 0, total: n })).sort((a, b) => b.total - a.total || a.label.localeCompare(b.label)).slice(0, 8);
+  const close = [...items].filter(x => x.total >= 3 && x.value < x.total).sort((a, b) => b.value / b.total - a.value / a.total)[0];
+  const take = `You've read **${nRead} of ${nBooks}** award-winning books in your library (${pct(nRead, nBooks)}%)${close ? `; ${close.label} is closest to done, with ${close.value} of ${close.total}` : ''}.`;
+  return panel(g, { title, take, fixed: true, cls: 'ins-wide', why: 'A meter per award: how much of each list you own is already read, as a share of that list.',
+    render: box => {
+      const ul = h('ul', 'hbars ins-awl', box);
+      hbars(ul, items.map(x => ({ ...x, value: x.value / x.total * 100, tip: `${x.label}: ${x.value} of ${x.total} read`, books: all.filter(b => awOf(b).includes(x.label)), drillTitle: `${x.label} books in your library` })), 100, it => `${rd.get(it.label) || 0}/${tot.get(it.label)}`);
+      return { head: ['Award', 'Read', 'In library'], rows: items.map(x => [x.label, x.value, x.total]) };
+    } });
+}
+
+/* ================= 5 · What's on my pile? ================= */
+function chPileFlow(g) {
+  const title = 'Is my TBR growing or shrinking?', months = []; for (let i = 11; i >= 0; i--) { let yy = yr(TODAY), m = mo0(TODAY) - i; while (m < 0) { m += 12; yy--; } months.push({ y: yy, m }); }
+  const key = (y, m) => y + '-' + String(m + 1).padStart(2, '0');
+  const addC = new Map(), finC = new Map();
+  for (const b of state.allBooks) { const a = toDate(b.added); if (a) addC.set(a.slice(0, 7), (addC.get(a.slice(0, 7)) || 0) + 1); }
+  D.dated.forEach(r => { const k = (r.b.finishDate || '').slice(0, 7); finC.set(k, (finC.get(k) || 0) + 1); });
+  const flow = months.map(q => { const add = addC.get(key(q.y, q.m)) || 0, fin = finC.get(key(q.y, q.m)) || 0; return { add, fin, net: add - fin }; });
+  const A = sum(flow.map(f => f.add)), F = sum(flow.map(f => f.fin)), NEED = 5;
+  if (A < NEED) return panel(g, { title, empty: `Needs at least ${NEED} books with an added date in the last 12 months (you have ${A}).` });
+  const shrank = flow.filter(f => f.net < 0).length;
+  const take = A > F ? `The pile **grew by ${A - F} ${A - F === 1 ? 'book' : 'books'}** in 12 months: ${A} added against ${F} finished. It shrank in ${shrank === 0 ? 'none' : 'only ' + shrank} of the 12 months.` : A < F ? `The pile **shrank by ${F - A} ${F - A === 1 ? 'book' : 'books'}** in 12 months: ${F} finished against ${A} added.` : `The pile **held steady** over 12 months: ${A} added and ${F} finished.`;
+  return panel(g, { title, take, legend: [{ k: 'box', c: C.cool, l: 'Added to the pile' }, { k: 'box', c: C.aqua, l: 'Finished' }],
+    why: 'Columns up for in, down for out, around one baseline: the imbalance between them is the story. The net per month is printed as text, so there is no second axis.',
+    render: (box, W) => {
+      const H = W < 500 ? 260 : 290, m = { l: 26, r: 4, t: 8, b: 44 }, pw = W - m.l - m.r, ph0 = H - m.t - m.b, svg = mkSvg(box, W, H, 'Books added to and finished from the TBR, by month');
+      const mx = ticks(Math.max(4, ...flow.map(f => Math.max(f.add, f.fin))) * 1.05, 2).pop(), Y = lin(-mx, mx, m.t + ph0, m.t), y0 = Y(0), band = pw / 12, cw = Math.min(24, band * .62);
+      [-mx, -mx / 2, 0, mx / 2, mx].forEach(v => { el('line', { x1: m.l, x2: m.l + pw, y1: Y(v), y2: Y(v), stroke: v === 0 ? C.line : C.grid }, svg); T(svg, m.l - 6, Y(v) + 4, Math.abs(Math.round(v * 10) / 10), { a: 'end' }); });
+      const pts = [];
+      flow.forEach((f, i) => {
+        const x = m.l + band * i + (band - cw) / 2;
+        el('path', { d: colPath(x, cw, y0 - 1, Y(f.add), 4), fill: C.cool }, svg); el('path', { d: colPath(x, cw, y0 + 1, Y(-f.fin), 4), fill: C.aqua }, svg);
+        T(svg, x + cw / 2, H - 26, W < 500 ? MON[months[i].m][0] : MON[months[i].m], { a: 'middle' });
+        T(svg, x + cw / 2, H - 9, (f.net > 0 ? '+' : f.net < 0 ? '−' : '') + Math.abs(f.net), { a: 'middle', c: C.fg, w: 500, s: W < 500 ? 10.5 : 11.5 });
+        pts.push({ x: m.l + band * i, y: m.t, w: band, h: ph0, row: 1, tip: { head: MON[months[i].m] + ' ' + months[i].y + (i === 11 ? ' (to ' + fds(TODAY) + ')' : ''), sub: f.net > 0 ? 'Pile grew by ' + f.net : f.net < 0 ? 'Pile shrank by ' + (-f.net) : 'No change', rows: [{ k: 'dot', c: C.cool, l: 'Added', v: String(f.add) }, { k: 'dot', c: C.aqua, l: 'Finished', v: String(f.fin) }, { l: 'Net', v: (f.net > 0 ? '+' : f.net < 0 ? '−' : '') + Math.abs(f.net) }] } });
+      });
+      T(svg, m.l - 6, H - 9, 'Net', { a: 'end', s: 10 });
+      hover(svg, pts, { tol: 0 });
+      return { head: ['Month', 'Added', 'Finished', 'Net'], rows: flow.map((f, i) => [MON[months[i].m] + ' ' + months[i].y, f.add, f.fin, f.net]) };
+    } });
+}
+function chPileAge(g) {
+  const title = 'How long do books wait?', tbr = state.allBooks.filter(b => b.status === 'TBR' && toDate(b.added)).map(b => ({ b, wait: Math.max(0, TODAY - dn(b.added)), added: dn(b.added) })).sort((a, b) => b.wait - a.wait), NEED = 8;
+  if (tbr.length < NEED) return panel(g, { title, empty: `Needs at least ${NEED} TBR books with an added date (you have ${tbr.length}).` });
+  const mw = Math.round(med(tbr.map(t => t.wait))), yearPlus = tbr.filter(t => t.wait > 365).length, old = tbr[0], five = tbr[Math.min(4, tbr.length - 1)].wait;
+  const take = `Half your pile has waited **over ${mw >= 365 ? f1(mw / 365) + ' years' : mw + ' days'}**, and **${yearPlus} ${yearPlus === 1 ? 'book has' : 'books have'}** waited more than a year. The oldest, “${trunc(old.b.title, 30)}”, arrived ${old.wait >= 365 ? f1(old.wait / 365) + ' years' : old.wait + ' days'} ago.`;
+  return panel(g, { title, take, legend: [{ k: 'dot', c: C.accent, l: 'Five longest waiting' }, { k: 'dot', c: C.grey, l: 'Other books' }],
+    why: 'A dot per book on a time axis: the long tail of old arrivals stands out and the oldest few are highlighted. A big pile folds into a dot histogram by wait.',
+    render: (box, W) => {
+      const H = W < 500 ? 210 : 220, m = { l: 8, r: 12, t: 10, b: 30 }, pw = W - m.l - m.r, ph0 = H - m.t - m.b, svg = mkSvg(box, W, H, 'Days each book on the pile has been waiting');
+      const mxd = Math.max(365, Math.ceil(old.wait / 365) * 365), X = lin(0, mxd, m.l, m.l + pw), r1 = W < 500 ? 3.2 : 3.6, asc = [...tbr].reverse();
+      let off = null; if (asc.length <= 250) { off = swarm(asc.map(t => X(t.wait)), r1); if (Math.max(...off.map(Math.abs)) > ph0 / 2 - r1 - 6) off = null; }
+      const waitStr = w => w >= 365 ? f1(w / 365) + ' years' : w >= 60 ? Math.round(w / 30) + ' months' : w + ' days';
+      if (off) {
+        const ny = mxd / 365, stp = ny > 8 ? 2 : 1;
+        for (let y = 0; y <= ny; y += stp) { el('line', { x1: X(y * 365), x2: X(y * 365), y1: m.t, y2: m.t + ph0, stroke: C.grid }, svg); T(svg, X(y * 365), H - 8, y === 0 ? '0' : y + (y === 1 ? ' yr' : ' yrs'), { a: y === 0 ? 'start' : 'middle' }); }
+        const cy = m.t + ph0 / 2 + 8, pts = asc.map((t, i) => ({ t, x: X(t.wait), y: cy + off[i], old: t.wait >= five }));
+        [false, true].forEach(f => pts.filter(q => q.old === f).forEach(q => el('circle', { cx: q.x, cy: q.y, r: f ? r1 + 1.2 : r1, fill: f ? C.accent : C.grey, 'fill-opacity': f ? 1 : .85, stroke: C.surface, 'stroke-width': f ? 2 : .8 }, svg)));
+        const mx = X(mw); el('line', { x1: mx, x2: mx, y1: m.t + 14, y2: m.t + ph0, stroke: C.muted, 'stroke-width': 1 }, svg); T(svg, Math.min(mx + 4, W - 110), m.t + 10, 'median ' + waitStr(mw), { c: C.fg, s: 10.5 });
+        hover(svg, pts.map(q => ({ x: q.x, y: q.y, r: r1, tip: { head: q.t.b.title, sub: q.t.b.author + (q.t.b.genre ? ' · ' + q.t.b.genre : ''), rows: [{ k: 'dot', c: q.old ? C.accent : C.grey, l: 'Waiting', v: waitStr(q.t.wait) }, { l: 'Added', v: fd(q.t.added) }, ...(toNum(q.t.b.pages) ? [{ l: 'Pages', v: fmt(toNum(q.t.b.pages)) }] : [])] } })), { tol: 10 });
+      } else {
+        const E = [[0, 91, 'Under 3 months'], [91, 183, '3–6 months'], [183, 365, '6–12 months'], [365, 730, '1–2 years'], [730, 1096, '2–3 years'], [1096, 1826, '3–5 years'], [1826, 1e9, '5 years +']].filter(e => e[0] < mxd + 1), bw = pw / E.length;
+        const bins = E.map(([a, z, label], i) => { const bs = tbr.filter(t => t.wait >= a && t.wait < z); return { label, n: bs.length, hi: bs.filter(t => t.wait >= five).length, x0: m.l + i * bw + 2, x1: m.l + (i + 1) * bw - 2, tip: { head: label, sub: plural(bs.length, 'book') + ' waiting', rows: [...(bs.length ? [{ l: 'Longest wait', v: waitStr(Math.max(...bs.map(t => t.wait))) }] : []), ...(bs.some(t => t.wait >= five) ? [{ k: 'dot', c: C.accent, l: 'Among the five oldest', v: String(bs.filter(t => t.wait >= five).length) }] : [])] } }; });
+        const base = m.t + ph0; el('line', { x1: m.l, x2: m.l + pw, y1: base, y2: base, stroke: C.line }, svg);
+        bins.forEach(b => T(svg, (b.x0 + b.x1) / 2, H - 8, W < 500 ? b.label.replace('Under 3 months', '<3 mo').replace(' months', ' mo').replace(' years +', ' yr+').replace(' years', ' yr') : b.label, { a: 'middle', s: W < 500 ? 9.5 : 11 }));
+        const { k, pts } = binDots(svg, bins.filter(b => b.n), { r: 3, base, ph: ph0 - 6 });
+        if (k > 1) T(svg, m.l + pw, m.t + 8, '1 dot = ' + k + ' books', { a: 'end', c: C.fg, s: 11 });
+        T(svg, m.l, m.t + 8, 'Median ' + waitStr(mw), { c: C.fg, s: 10.5 });
+        hover(svg, pts, { tol: 0 });
+      }
+      return { head: ['Title', 'Author', 'Added', 'Days waiting'], rows: tbr.map(t => [t.b.title, t.b.author, fd(t.added), t.wait]) };
+    } });
+}
+
+/* ================= put it together ================= */
+let lastPeriod = null;
+function mountPoint(id) { const e = document.getElementById(id); e.replaceChildren(); return e; }
+function grid(id, two) { const e = mountPoint(id); e.className = 'ins-grid' + (two ? ' g2' : ''); return e; }
+function render(period) {
+  tipInit(); teardown(); GID = 0;
+  C.accent = css('--accent') || C.accent;
+  RAMP = [mix(BASE.surface, C.accent, .22), mix(BASE.surface, C.accent, .52), C.accent, mix(C.accent, '#ffffff', .4), mix(C.accent, '#ffffff', .8)].map(rgbOf);
+  D = build(period); SWEET = sweetSpot(); lastPeriod = period;
+  const P = period, label = P === 'all' ? 'At a glance' : P === D.curY ? 'This year at a glance' : P + ' at a glance';
+  document.getElementById('insC1h').textContent = label; document.getElementById('insNav1').lastChild.textContent = P === 'all' ? 'Overview' : P === D.curY ? 'This year' : P;
+  tiles(mountPoint('dashTiles'));
+  chOnTrack(grid('insG1', false));
+  let g = grid('insG2a', true); chScatter(g); chGenreMultiples(g);
+  g = grid('insG2b', true); chRanked(g); chRereads(g);
+  chRiver(grid('insG3a', false));
+  g = grid('insG3b', true); chWhen(g); chCalendar(g);
+  g = grid('insG3c', true); chPace(g); chSessions(g);
+  g = grid('insG4a', true); chTaste(g); chAuthors(g);
+  g = grid('insG4b', true); chPubYear(g); chMap(g);
+  chAwards(grid('insG4c', false));
+  g = grid('insG5', true); chPileFlow(g); chPileAge(g);
+}
+return { render, get period() { return lastPeriod; } };
+})();
+let insDirty = true;
 function renderDashboard() {
   if (!state.libLoaded) { $('dashTiles').innerHTML = `<p class="empty">${isLive() ? 'Loading your library…' : 'The dashboard loads from your sheet. ' + connectHint()}</p>`; return; }
-  const all = state.allBooks;
-  const years = [...new Set(all.filter(b => b.status === 'Finished').map(finYear).filter(Boolean))].sort().reverse();
+  const years = [...new Set(state.allBooks.filter(b => b.status === 'Finished').map(b => (b.finishDate || '').slice(0, 4)).filter(Boolean))].sort().reverse();
   if (dashPeriod !== 'all' && !years.includes(dashPeriod)) dashPeriod = years[0] || 'all';
   $('dashPeriods').innerHTML = [...years, 'all'].map(y => `<button class="chip" type="button" data-p="${y}" aria-pressed="${dashPeriod === y}">${y === 'all' ? 'All time' : y}</button>`).join('');
-  const inP = b => dashPeriod === 'all' || finYear(b) === dashPeriod;
-  const read = all.filter(b => b.status === 'Finished' && inP(b));
-  const dnf = all.filter(b => b.status === 'DNF' && (dashPeriod === 'all' || (b.finishDate || b.startDate || '').slice(0, 4) === dashPeriod));
-  const rated = read.filter(b => toNum(b.rating) > 0);
-  const pages = read.reduce((a, b) => a + toNum(b.pages), 0);
-  const longest = read.reduce((m, b) => toNum(b.pages) > toNum(m && m.pages) ? b : m, null);
-  const avgRating = rated.length ? rated.reduce((a, b) => a + toNum(b.rating), 0) / rated.length : 0;
-  const label = dashPeriod === 'all' ? 'all time' : dashPeriod;
-  // Pages read: for a year the daily log fully covers, use the logged total (matches the Log tab);
-  // otherwise fall back to the length of the books finished
-  const pagesTile = () => {
-    const first = state.entries.reduce((m, e) => !m || e.date < m ? e.date : m, '');
-    if (dashPeriod === 'all' || !first || first > dashPeriod + '-01-01') return tile('Pages read', fmt(pages), 'total length of books finished');
-    let tot = 0;
-    for (const [d, p] of dailyTotals()) if (d.startsWith(dashPeriod)) tot += p;
-    const span = dashPeriod === today().slice(0, 4) ? daysBetween(dashPeriod + '-01-01', today()) + 1 : 365;
-    return tile('Pages read', fmt(pages), `${fmt(Math.round(pages / span))} a day · ${fmt(tot)} logged`);
-  };
-  const tile = (eb, num, sub) => `<div class="stat"><span class="eyebrow">${eb}</span><span class="num tnum">${num}</span><span class="sub">${sub}</span></div>`;
-  // Pace this year vs a full year, only for the current year
-  const thisYear = String(new Date().getFullYear());
-  let paceSub = label;
-  if (dashPeriod === thisYear) { const doy = daysBetween(thisYear + '-01-01', today()) + 1; paceSub = `on pace for ${Math.round(read.length / doy * 365)} this year`; }
-  $('dashTiles').innerHTML =
-    tile('Books read', fmt(read.length), paceSub) +
-    pagesTile() +
-    tile('Average rating', avgRating ? avgRating.toFixed(2) : '–', `${rated.length} rated`) +
-    tile('Average length', read.length ? fmt(Math.round(pages / read.length)) : '–', 'pages per book') +
-    tile('Longest', longest ? fmt(toNum(longest.pages)) : '–', longest ? escapeText(longest.title) : '') +
-    tile('Did not finish', fmt(dnf.length), label);
-
-  renderMonthly(dailyTotals(), dashYear());
-  renderHeat(dailyTotals(), dashYear());
-
-  // Books finished: by month for a year, by year for all time
-  const accent = css('--accent');
-  let labels, data, colours;
-  if (dashPeriod === 'all') {
-    const ys = [...years].reverse();
-    labels = ys; data = ys.map(y => all.filter(b => b.status === 'Finished' && finYear(b) === y).length); colours = ys.map(() => accent);
-    $('finNote').textContent = 'by year';
-  } else {
-    const curM = dashPeriod < today().slice(0, 4) ? 12 : Number(today().slice(5, 7));
-    labels = MONTHS; data = MONTHS.map((_, i) => i < curM ? read.filter(b => +b.finishDate.slice(5, 7) === i + 1).length : null); colours = MC.slice();
-    const best = data.indexOf(Math.max(...data));
-    $('finNote').textContent = data[best] ? `Most in ${FULL_MONTHS[best]}: ${data[best]}` : '';
-  }
-  if (finChart) finChart.destroy();
-  finChart = new Chart($('finChart'), {
-    type: 'bar',
-    data: { labels, datasets: [{ label: 'Books finished', data, backgroundColor: colours, borderRadius: 4, maxBarThickness: 40 }] },
-    options: { responsive: true, maintainAspectRatio: false, animation: false,
-      onClick: (_e, els) => {
-        if (!els.length) return; const i = els[0].index;
-        const books = dashPeriod === 'all' ? all.filter(b => b.status === 'Finished' && finYear(b) === labels[i]) : read.filter(b => +b.finishDate.slice(5, 7) === i + 1);
-        if (books.length) openDrill(dashPeriod === 'all' ? `Finished in ${labels[i]}` : `Finished in ${FULL_MONTHS[i]} ${dashPeriod}`, books);
-      },
-      onHover: (e, els) => { e.native.target.style.cursor = els.length ? 'pointer' : 'default'; },
-      plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => `${c.raw} book${c.raw === 1 ? '' : 's'} · click to see them` } } },
-      scales: { x: { grid: { display: false }, ticks: { maxRotation: 0, autoSkip: false, callback: (v, i) => dashPeriod === 'all' ? labels[i] : monthTick(i) } }, y: { beginAtZero: true, grid: { color: css('--line') }, ticks: { precision: 0, maxTicksLimit: 5 } } } }
-  });
-
-  // Ratings distribution, high to low
-  const steps = ['5', '4.5', '4', '3.5', '3', '2.5', '2', '1.5', '1', '0.5'];
-  const rc = steps.map(s => ({ label: '★'.repeat(Math.floor(+s)) + (+s % 1 ? '½' : ''), value: rated.filter(b => toNum(b.rating) === +s).length, tip: `${s} stars`, books: rated.filter(b => toNum(b.rating) === +s), drillTitle: `Rated ${s} stars` }));
-  const firstNonZero = rc.findIndex(x => x.value), lastNonZero = rc.length - 1 - [...rc].reverse().findIndex(x => x.value);
-  hbars($('ratBars'), firstNonZero < 0 ? [] : rc.slice(firstNonZero, lastNonZero + 1), Math.max(...rc.map(x => x.value)));
-  $('ratNote').textContent = rated.length ? `${rated.length} rated · average ${avgRating.toFixed(2)}` : '';
-
-  // Genres: count, with average rating
-  const gm = new Map();
-  for (const b of read) { if (!b.genre) continue; const g = gm.get(b.genre) || { n: 0, r: 0, rn: 0 }; g.n++; if (toNum(b.rating)) { g.r += toNum(b.rating); g.rn++; } gm.set(b.genre, g); }
-  const gItems = [...gm].map(([k, g]) => ({ label: k, value: g.n, avg: g.rn ? g.r / g.rn : 0, books: read.filter(b => b.genre === k), tip: `${k}: ${g.n} read${g.rn ? `, average ${(g.r / g.rn).toFixed(1)}★` : ''}` })).sort((a, b) => b.value - a.value).slice(0, 10);
-  hbars($('genBars'), gItems, gItems[0] ? gItems[0].value : 0, it => `${it.value}${it.avg ? ' · ' + it.avg.toFixed(1) + '★' : ''}`);
-
-  // Type split + formats
-  const tm = countBy(read, 'type');
-  split($('typeSplit'), [{ label: 'Fiction', value: tm.get('Fiction') || 0 }, { label: 'Non-Fiction', value: tm.get('Non-Fiction') || 0 }], [accent, MC[(+today().slice(5, 7) + 5) % 12]]);
-  const fItems = [...countBy(read, 'format')].map(([k, v]) => ({ label: k, value: v, books: read.filter(b => b.format === k) })).sort((a, b) => b.value - a.value).slice(0, 8);
-  hbars($('fmtBars'), fItems, fItems[0] ? fItems[0].value : 0);
-
-  // Top authors
-  const am = new Map();
-  for (const b of read) { if (!b.author) continue; const a = am.get(b.author) || { n: 0, r: 0, rn: 0 }; a.n++; if (toNum(b.rating)) { a.r += toNum(b.rating); a.rn++; } am.set(b.author, a); }
-  const aItems = [...am].sort((x, y) => y[1].n - x[1].n || (y[1].r / (y[1].rn || 1)) - (x[1].r / (x[1].rn || 1))).slice(0, 8);
-  $('authList').innerHTML = aItems.length ? '' : '<li class="empty">Nothing here yet for this period.</li>';
-  for (const [name, a] of aItems) { const li = document.createElement('li'); li.innerHTML = '<span></span><span class="r"></span>'; li.firstChild.textContent = name; li.lastChild.textContent = `${a.n} book${a.n > 1 ? 's' : ''}${a.rn ? ' · ' + (a.r / a.rn).toFixed(1) + '★' : ''}`; makeDrill(li, `${name} · everything in your library`, all.filter(b => b.author === name)); $('authList').appendChild(li); }
-
-  // Awards: read vs in library (all time, awards normalised e.g. "Booker Prize" → "Booker")
-  // Group award spellings: "Booker Prize" → Booker, "Pulitzer Prize for Fiction" → Pulitzer, etc.
-  const KNOWN = ['Miles Franklin', 'Booker', 'Pulitzer', 'Hugo', 'Nebula', 'World Fantasy', 'Stella', 'Orange', 'Carnegie', 'Whitbread', 'Nobel'];
-  const normAward = a => KNOWN.find(k => a.toLowerCase().includes(k.toLowerCase())) || a.replace(/\s+(Prize|Award)$/i, '').trim();
-  const awAll = new Map(), awRead = new Map();
-  for (const b of all) for (const a of [...new Set((b.awards || '').split(/[|,;]/).map(x => x.trim()).filter(Boolean).map(normAward))]) { awAll.set(a, (awAll.get(a) || 0) + 1); if (b.status === 'Finished') awRead.set(a, (awRead.get(a) || 0) + 1); }
-  const awItems = [...awAll].map(([k, n]) => ({ label: k, value: awRead.get(k) || 0, total: n })).sort((a, b) => b.total - a.total).slice(0, 7);
-  const hasAward = (b, k) => (b.awards || '').split(/[|,;]/).map(x => x.trim()).filter(Boolean).map(normAward).includes(k);
-  hbars($('awBars'), awItems.map(x => ({ ...x, value: x.value / x.total * 100, tip: `${x.label}: ${x.value} of ${x.total} read`, books: all.filter(b => hasAward(b, x.label)), drillTitle: `${x.label} books in your library` })), 100, it => `${awRead.get(it.label) || 0}/${it.total}`);
-
-  // Series: read vs total in the library (all time), unfinished series first
-  const sm = new Map();
-  for (const b of all) { if (!b.series) continue; const x = sm.get(b.series) || { n: 0, r: 0 }; x.n++; if (b.status === 'Finished') x.r++; sm.set(b.series, x); }
-  const sItems = [...sm].filter(([, x]) => x.n > 1 && x.r > 0).map(([k, x]) => ({ label: k, value: x.r / x.n * 100, r: x.r, n: x.n, tip: `${k}: ${x.r} of ${x.n} read`, books: all.filter(b => b.series === k).sort((a, b) => toNum(a.seriesNum) - toNum(b.seriesNum)), drillTitle: k }))
-    .sort((a, b) => (a.value === 100) - (b.value === 100) || b.value - a.value).slice(0, 7);
-  hbars($('serBars'), sItems, 100, it => `${it.r}/${it.n}`);
-  renderStats2(read, d => dashPeriod === 'all' || d.startsWith(dashPeriod));
-
+  INS.render(dashPeriod); insDirty = false;
 }
 
 function renderTBR() {
@@ -3649,17 +4404,6 @@ const COUNTRY_ALIAS = { 'USA': 'United States of America', 'US': 'United States 
   'Congo (DRC)': 'Dem. Rep. Congo', 'DRC': 'Dem. Rep. Congo', 'Democratic Republic of the Congo': 'Dem. Rep. Congo', 'Czech Republic': 'Czechia', 'Bosnia': 'Bosnia and Herz.',
   'Dominican Republic': 'Dominican Rep.', 'Burma': 'Myanmar', 'Ivory Coast': "Côte d'Ivoire", 'South Sudan': 'S. Sudan', 'Eswatini': 'eSwatini', 'North Macedonia': 'Macedonia' };
 const settingsOf = b => String(b.setting || '').split('|').map(x => x.trim()).filter(Boolean).map(x => COUNTRY_ALIAS[x] || x);
-const whenState = { mode: 'day' }, rbState = { mode: 'length' };
-
-function renderStats2(read, inYear) {
-  renderMap(read);
-  renderWhen(inYear);
-  renderSessions(inYear);
-  renderBookPace(read);
-  renderRatingsBy(read);
-  renderRereads();
-  renderTbrAge();
-}
 
 function renderMap(read) {
   const per = new Map(), other = new Map();
@@ -3688,148 +4432,6 @@ function renderMap(read) {
     x.textContent = `${c === 'Imaginary' ? 'Imaginary worlds' : c === 'World' ? 'Whole world' : c} · ${l.length}`;
     makeDrill(x, c === 'Imaginary' ? 'Set in imaginary worlds' : c === 'World' ? 'About the whole world' : `Set in ${c}`, l); ob.appendChild(x);
   }
-  const noSet = read.filter(b => !settingsOf(b).length).length;
-  $('mapNote').textContent = `${per.size} countries · ${fmt(read.length - noSet)} of ${fmt(read.length)} books have a setting`;
-}
-
-// Weekday uses the daily totals; time of day uses when app entries were logged (minus the session, if timed)
-function renderWhen(inYear) {
-  const days = [...dailyTotals()].filter(([d]) => inYear(d));
-  document.querySelectorAll('#whenModes .chip').forEach(c => c.setAttribute('aria-pressed', String(c.dataset.w === whenState.mode)));
-  if (whenState.mode === 'day') {
-    const names = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    const sum = Array(7).fill(0), n = Array(7).fill(0);
-    for (const [d, p] of days) { const i = (fromIso(d).getDay() + 6) % 7; sum[i] += p; n[i]++; }
-    const items = names.map((l, i) => ({ label: l, value: n[i] ? sum[i] / n[i] : 0, tip: `${l}: ${n[i] ? Math.round(sum[i] / n[i]) : 0} pages on average over ${n[i]} days` }));
-    hbars($('whenBars'), items, Math.max(1, ...items.map(x => x.value)), it => fmt(Math.round(it.value)));
-    const best = items.reduce((m, x) => x.value > m.value ? x : m, items[0]);
-    $('whenNote').textContent = days.length ? `Average pages per day. ${best.label} is your biggest reading day.` : '';
-  } else {
-    const B = [['Early (5–9am)', 5, 9], ['Morning (9–12)', 9, 12], ['Afternoon (12–5pm)', 12, 17], ['Evening (5–9pm)', 17, 21], ['Late (9pm–1am)', 21, 25], ['Small hours (1–5am)', 1, 5]];
-    const sum = Array(B.length).fill(0), cnt = Array(B.length).fill(0);
-    let used = 0;
-    for (const e of state.entries) {
-      if (!inYear(e.date) || !/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}/.test(e.loggedAt) || e.loggedAt.slice(0, 10) !== e.date) continue;
-      let h = Number(e.loggedAt.slice(11, 13)) + Number(e.loggedAt.slice(14, 16)) / 60 - (e.minutes || 0) / 120;
-      if (h < 1) h += 24;
-      const i = B.findIndex(([, a, z]) => h >= a && h < z);
-      if (i < 0) continue;
-      sum[i] += e.pages; cnt[i]++; used++;
-    }
-    hbars($('whenBars'), used ? B.map(([l], i) => ({ label: l, value: sum[i], tip: `${l}: ${fmt(sum[i])} pages over ${cnt[i]} entries` })) : [], Math.max(1, ...sum), it => fmt(it.value));
-    $('whenNote').textContent = used ? `Pages logged in the app, by the time you logged them (${used} entries). Backdated entries are left out.` : 'This fills in as you log pages in the app.';
-  }
-}
-
-function renderSessions(inYear) {
-  const ses = state.entries.filter(e => e.minutes > 0 && inYear(e.date));
-  const mins = ses.reduce((a, e) => a + e.minutes, 0), pgs = ses.reduce((a, e) => a + e.pages, 0);
-  $('sessNote').textContent = ses.length ? `${ses.length} timed session${ses.length > 1 ? 's' : ''}` : '';
-  $('sessTiles').innerHTML = [[ses.length ? Math.round(mins / ses.length) : '–', 'minutes a session'], [mins ? Math.round(pgs / mins * 60) : '–', 'pages an hour'], [mins ? (mins / 60).toFixed(1) : '–', 'hours timed']]
-    .map(([v, l]) => `<div><b class="tnum">${v}</b><span>${l}</span></div>`).join('');
-  const B = [['Under 15 min', 0, 15], ['15–30 min', 15, 30], ['30–60 min', 30, 60], ['1–1½ hours', 60, 90], ['1½ hours +', 90, 1e9]];
-  const items = B.map(([l, a, z]) => { const x = ses.filter(e => e.minutes >= a && e.minutes < z); return { label: l, value: x.length, tip: `${l}: ${x.length} sessions, ${x.reduce((s, e) => s + e.pages, 0)} pages` }; });
-  if (ses.length) hbars($('sessBars'), items, Math.max(1, ...items.map(x => x.value)));
-  else $('sessBars').innerHTML = '<li class="empty">Press Start timer in Reading now when you sit down to read. The minutes save with the next pages you log.</li>';
-}
-
-let bpChart, tageChart, tgrChart;
-function renderBookPace(read) {
-  const list = read.filter(b => b.startDate && b.finishDate && toNum(b.pages) && b.finishDate >= b.startDate)
-    .map(b => { const d = daysBetween(b.startDate, b.finishDate) + 1; return { b, d, pace: toNum(b.pages) / d }; });
-  if (bpChart) { bpChart.destroy(); bpChart = null; }
-  if (!list.length) { $('bpNote').textContent = 'No finished books with both dates yet.'; return; }
-  const avg = list.reduce((a, x) => a + x.pace, 0) / list.length;
-  const fast = list.reduce((m, x) => x.pace > m.pace ? x : m), slow = list.reduce((m, x) => x.pace < m.pace ? x : m);
-  $('bpNote').textContent = `${fmt(Math.round(avg))} pages a day on average · fastest ${fast.b.title} · slowest ${slow.b.title}`;
-  // One dot per book: length across, pages a day up, in the colour of the month it was finished
-  const pts = list.map(x => ({ x: toNum(x.b.pages), y: Math.round(x.pace * 10) / 10, b: x.b, d: x.d }));
-  bpChart = new Chart($('bpChart'), {
-    type: 'scatter',
-    data: { datasets: [{ data: pts, pointRadius: 4, pointHoverRadius: 6, pointBackgroundColor: pts.map(p => MC[+p.b.finishDate.slice(5, 7) - 1] + 'cc'), pointBorderWidth: 0 }] },
-    options: { responsive: true, maintainAspectRatio: false, animation: false,
-      onClick: (_e, els) => { if (els.length) openDrill(pts[els[0].index].b.title, [pts[els[0].index].b]); },
-      onHover: (e, els) => { e.native.target.style.cursor = els.length ? 'pointer' : 'default'; },
-      plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => { const p = pts[c.dataIndex]; return `${p.b.title}: ${fmt(p.x)} pages in ${p.d} day${p.d > 1 ? 's' : ''} · ${fmt(Math.round(p.y))} a day`; } } } },
-      scales: { x: { title: { display: true, text: 'Pages in the book', color: css('--muted') }, grid: { color: css('--line') }, ticks: { maxTicksLimit: 6, callback: v => fmt(v) } },
-        y: { beginAtZero: true, title: { display: true, text: 'Pages a day', color: css('--muted') }, grid: { color: css('--line') }, ticks: { maxTicksLimit: 5 } } } }
-  });
-}
-
-// Books read more than once: each read keeps its own rating, so you can see where your taste moved
-function renderRereads() {
-  const seen = new Set(), groups = [];
-  for (const b of state.allBooks) {
-    const l = readsOf(b); if (l.length < 2 || seen.has(l[0])) continue;
-    seen.add(l[0]);
-    if (l.filter(x => x.status === 'Finished').length >= 2 || l.some(x => x.status === 'Reading')) groups.push(l);
-  }
-  const pile = state.allBooks.filter(b => b.status === 'Re-read').length;
-  const rated = groups.map(l => l.filter(x => x.status === 'Finished' && toNum(x.rating))).filter(r => r.length >= 2);
-  const d = rated.map(r => toNum(r[r.length - 1].rating) - toNum(r[r.length - 2].rating));
-  $('rrNote').textContent = groups.length ? `${groups.length} read more than once · ${d.filter(x => x > 0).length} rated higher, ${d.filter(x => x < 0).length} lower, ${d.filter(x => !x).length} the same${pile ? ` · ${pile} on the re-read pile` : ''}`
-    : pile ? `${pile} on the re-read pile. Finish one and its new rating shows here next to the old one.` : '';
-  const ul = $('rrList'); ul.textContent = '';
-  if (!groups.length) { ul.innerHTML = '<li class="empty" style="display:block">No finished re-reads yet.</li>'; return; }
-  groups.sort((a, b) => (b[b.length - 1].finishDate || '').localeCompare(a[a.length - 1].finishDate || ''));
-  for (const l of groups.slice(0, 20)) {
-    const last = l.filter(x => x.status === 'Finished').pop() || l[l.length - 1], p = prevRated(last);
-    const delta = p && toNum(last.rating) ? toNum(last.rating) - toNum(p.rating) : null;
-    const li = document.createElement('li');
-    li.innerHTML = '<span><span class="t"></span><br><span class="m"></span></span><span class="chain"></span>';
-    li.querySelector('.t').textContent = l[0].title;
-    li.querySelector('.m').textContent = readsText(l[0]);
-    li.querySelector('.chain').innerHTML = delta == null ? '<span class="rr">not rated yet</span>' : `<span class="rr${delta > 0 ? ' up' : delta < 0 ? ' down' : ''}">${delta > 0 ? '▲ ' + halfStr(delta) : delta < 0 ? '▼ ' + halfStr(delta) : 'same'}</span>`;
-    li.style.cursor = 'pointer'; li.addEventListener('click', () => openInLibrary(last.id));
-    ul.appendChild(li);
-  }
-}
-function renderRatingsBy(read) {
-  document.querySelectorAll('#rbModes .chip').forEach(c => c.setAttribute('aria-pressed', String(c.dataset.r === rbState.mode)));
-  const rated = read.filter(b => toNum(b.rating) > 0);
-  const keyOf = {
-    length: b => { const p = toNum(b.pages); return !p ? '' : p < 200 ? 'Under 200 pages' : p < 350 ? '200–349 pages' : p < 500 ? '350–499 pages' : '500+ pages'; },
-    decade: b => { const y = toNum(b.year); return !y ? '' : y < 1900 ? 'Before 1900' : y < 1950 ? '1900–1949' : Math.floor(y / 10) * 10 + 's'; },
-    kind: categoryOf, format: b => b.format, owned: ownedOf, publisher: b => b.publisher
-  }[rbState.mode];
-  const order = { length: ['Under 200 pages', '200–349 pages', '350–499 pages', '500+ pages'] }[rbState.mode];
-  const g = new Map();
-  for (const b of rated) { const k = keyOf(b); if (!k) continue; if (!g.has(k)) g.set(k, []); g.get(k).push(b); }
-  let items = [...g].map(([k, l]) => ({ label: k, value: l.reduce((a, b) => a + toNum(b.rating), 0) / l.length, n: l.length, books: l, tip: `${k}: ${l.length} books` }));
-  items = order ? items.sort((a, b) => order.indexOf(a.label) - order.indexOf(b.label))
-    : rbState.mode === 'decade' ? items.sort((a, b) => (a.label === 'Before 1900' ? '0' : a.label).localeCompare(b.label === 'Before 1900' ? '0' : b.label)) : items.filter(x => x.n >= 2).sort((a, b) => b.value - a.value);
-  hbars($('rbBars'), items, 5, it => `${it.value.toFixed(2)}★ · ${it.n}`);
-  const best = items.filter(x => x.n >= 3).sort((a, b) => b.value - a.value)[0];
-  $('rbNote').textContent = best ? `Your highest average: ${best.label} (${best.value.toFixed(2)}★ over ${best.n} books).` : '';
-}
-
-function renderTbrAge() {
-  const t = today(), tbr = state.allBooks.filter(b => b.status === 'TBR');
-  const dated = tbr.filter(b => toDate(b.added));
-  $('tageNote').textContent = `${fmt(dated.length)} of ${fmt(tbr.length)} TBR books have an added date`;
-  const B = [['Under 6 months', 0, 183], ['6–12 months', 183, 365], ['1–2 years', 365, 730], ['2–5 years', 730, 1826], ['5 years +', 1826, 1e9]];
-  const items = B.map(([l, a, z]) => { const x = dated.filter(b => { const d = daysBetween(toDate(b.added), t); return d >= a && d < z; }); return { label: l, value: x.length, books: x }; });
-  const barOpts = (onClick, tip) => ({ responsive: true, maintainAspectRatio: false, animation: false, onClick,
-    onHover: (e, els) => { e.native.target.style.cursor = els.length ? 'pointer' : 'default'; },
-    plugins: { legend: { display: false }, tooltip: { callbacks: { label: tip } } },
-    scales: { x: { grid: { display: false } }, y: { beginAtZero: true, grid: { color: css('--line') }, ticks: { precision: 0, maxTicksLimit: 5 } } } });
-  if (tageChart) tageChart.destroy();
-  tageChart = new Chart($('tageChart'), { type: 'bar',
-    data: { labels: items.map(x => x.label), datasets: [{ data: items.map(x => x.value), backgroundColor: css('--accent'), borderRadius: 4, maxBarThickness: 44 }] },
-    options: barOpts((_e, els) => { if (els.length && items[els[0].index].books.length) openDrill(`TBR added ${items[els[0].index].label.toLowerCase()} ago`, items[els[0].index].books); }, c => `${c.raw} book${c.raw === 1 ? '' : 's'}`) });
-  const months = []; for (let i = 11; i >= 0; i--) { const d = fromIso(t.slice(0, 8) + '01'); d.setMonth(d.getMonth() - i); months.push(iso(d).slice(0, 7)); }
-  const addedIn = m => state.allBooks.filter(b => toDate(b.added) && b.added.slice(0, 7) === m);
-  const readIn = m => state.allBooks.filter(b => b.status === 'Finished' && (b.finishDate || '').slice(0, 7) === m);
-  const rows = months.reverse().map(m => { const a = addedIn(m), r = readIn(m); return { label: MONTHS[Number(m.slice(5)) - 1].slice(0, 3) + ' ' + m.slice(2, 4), value: a.length, a: a.length, r: r.length, books: [...a, ...r], drillTitle: m, tip: `${m}: ${a.length} added, ${r.length} finished` }; });
-  const ord = rows.slice().reverse();
-  if (tgrChart) tgrChart.destroy();
-  tgrChart = new Chart($('tgrChart'), { type: 'bar',
-    data: { labels: ord.map(x => x.label.slice(0, 3)), datasets: [
-      { label: 'Added', data: ord.map(x => x.a), backgroundColor: css('--accent'), borderRadius: 4, maxBarThickness: 22 },
-      { label: 'Finished', data: ord.map(x => x.r), backgroundColor: css('--accent-2'), borderRadius: 4, maxBarThickness: 22 }] },
-    options: { ...barOpts((_e, els) => { if (els.length && ord[els[0].index].books.length) openDrill(ord[els[0].index].drillTitle, ord[els[0].index].books); }, c => `${c.dataset.label}: ${c.raw}`),
-      plugins: { legend: { display: true, labels: { color: css('--muted'), boxWidth: 10, boxHeight: 10 } }, tooltip: { callbacks: { title: items => ord[items[0].dataIndex].drillTitle, label: c => `${c.dataset.label}: ${c.raw}` } } },
-      scales: { x: { grid: { display: false }, ticks: { maxRotation: 0, autoSkip: false } }, y: { beginAtZero: true, grid: { color: css('--line') }, ticks: { precision: 0, maxTicksLimit: 5 } } } } });
 }
 
 /* ---------- TBR plan: Up next / Soon / Someday ---------- */
@@ -3956,6 +4558,7 @@ function renderPlan() {
   for (const b of rest.slice(0, planUI.limit)) sl.appendChild(planRow(b, { kind: 'sheet' }));
   $('sheetMore').hidden = rest.length <= planUI.limit;
   renderDeck(pool);
+  renderStalled(); renderNextInSeries();
 }
 
 // Sort deck: unsorted books (and Someday picks over a year old), most promising first
@@ -4310,7 +4913,7 @@ function renderRevisit(box, normT) {
 }
 // Toolbox panels (Rate a book, Find covers, Goal planner, Lucky dip, Do I own this?) and the Insights analysis panels
 function renderTools() { renderFill(); renderCovers(); renderRate(); renderOwn(); renderDip(); renderGoal(); }
-function renderAnalysis() { renderStalled(); renderNextInSeries(); renderYear(); }
+function renderAnalysis() { renderYear(); }
 
 /* ---------- Fill details (Toolbox → Fill details) ----------
    A queue of Books rows with blank details. For one book it looks up Google Books and Open Library, one request at a time,
@@ -6001,7 +6604,7 @@ function showTab(name, tool) {
   if ((name === 'library' || name === 'next') && state.libLoaded) { fillSelects(); renderLibrary(); }
   if (name === 'now') redraw();
   if (name === 'next') { renderRecs(); renderDiscover(); }
-  if (name === 'insights') { renderDashboard(); renderAnalysis(); }
+  if (name === 'insights') { if (insDirty) renderDashboard(); renderAnalysis(); }
   if (name === 'toolbox') renderTools();
   if (name !== 'toolbox') { try { localStorage.setItem('mbl-tab', name); } catch (e) {} }
 }
@@ -6020,6 +6623,7 @@ $('recLike').addEventListener('change', e => { recState.likeId = e.target.value;
 $('ctText').addEventListener('input', previewContents);
 $('ctSave').addEventListener('click', saveContents);
 $('ctClose').addEventListener('click', () => $('contentsDlg').close());
+$('insIdx').addEventListener('click', e => { const a = e.target.closest('a[data-c]'); if (!a) return; e.preventDefault(); const t = $(a.dataset.c); if (t) t.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }); });
 $('dashPeriods').addEventListener('click', e => { const c = e.target.closest('.chip'); if (!c) return; dashPeriod = c.dataset.p; renderDashboard(); });
 let searchT;
 $('libSearch').addEventListener('input', e => { clearTimeout(searchT); searchT = setTimeout(() => { state.lib.q = e.target.value; state.lib.lim = {}; renderLibrary(); }, 150); });
@@ -6104,8 +6708,6 @@ $('goalSave').addEventListener('click', async () => {
 });
 $('timerBtn').addEventListener('click', () => timerStart() ? stopTimer() : startTimer());
 drawTimer();
-$('whenModes').addEventListener('click', e => { const c = e.target.closest('.chip'); if (!c) return; whenState.mode = c.dataset.w; renderDashboard(); });
-$('rbModes').addEventListener('click', e => { const c = e.target.closest('.chip'); if (!c) return; rbState.mode = c.dataset.r; renderDashboard(); });
 document.querySelectorAll('.lib-mode').forEach(g => g.addEventListener('click', e => { const m = e.target.closest('button[data-mode]'); if (m) setLibMode(m.dataset.mode); }));
 $('soonMore').addEventListener('click', () => { planUI.soonAll = !planUI.soonAll; renderPlan(); });
 $('sheetMore').addEventListener('click', () => { planUI.limit += 50; renderPlan(); });
