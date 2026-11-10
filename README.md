@@ -17,7 +17,7 @@ The app was first called "Jackets & Manuscripts"; that name is retired. The repo
 | `HANDOVER.md` | Current sheet layout, working rules, conventions, known gaps and open ideas. Start here. |
 | `tools/build-pages.py` | Builds `index.html` from `app.html`. |
 | `supabase/` | SQL to paste into the Supabase SQL Editor: tables and access, a check, and the shared activity view. |
-| `plans/` | Plans for upcoming work. `FAMILY.md`: family profiles and sharing, aiming for Christmas 2026. |
+| `plans/` | Plans for upcoming work. `FAMILY.md`: family profiles and sharing, aiming for Christmas 2026. `THEMES.md`: theme ideas (not built). |
 | `tests/` | `bash tests/run-all.sh` runs every test suite (see `tests/README.md`). |
 | `project.json` | The charter read by the Control Room dashboard. |
 
