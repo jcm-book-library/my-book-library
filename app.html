@@ -85,49 +85,83 @@ button{font:inherit;cursor:pointer}
 .logday button[aria-pressed="true"]{background:color-mix(in srgb,var(--accent) 22%,transparent);border-color:var(--accent);color:var(--fg)}
 .logday input[type=date]{font:inherit;font-size:12px;background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:999px;padding:3px 10px;color-scheme:dark}
 .logday-banner{margin:-4px 0 12px;padding:8px 12px;border-radius:10px;font-size:13px;font-weight:500;background:color-mix(in srgb,var(--accent) 16%,transparent);border:1px solid color-mix(in srgb,var(--accent) 45%,transparent)}
-.nb{--bc:var(--accent);display:grid;grid-template-columns:minmax(0,1.15fr) 118px minmax(0,1.9fr) 190px;align-items:stretch;padding:12px 0;border-radius:12px;border:1px solid color-mix(in srgb,var(--bc) 24%,var(--line));border-left:4px solid var(--bc);background:color-mix(in srgb,var(--bc) 14%,var(--surface))}
-.nb + .nb{margin-top:12px}
-.nb-sec{display:flex;flex-direction:column;justify-content:center;min-width:0;padding:4px 18px}
-.nb-sec + .nb-sec{border-left:1px solid color-mix(in srgb,var(--bc) 22%,var(--line))}
-.nb .nb-info{flex-direction:row;align-items:center;gap:12px;justify-content:flex-start}
-.nb .nb-info > div{min-width:0}
-.nb .book-title{font-size:21px;font-weight:500;line-height:1.2;cursor:pointer;overflow-wrap:anywhere}
-.nb .book-meta{font-size:14px;margin-top:3px}
-.nb .book-series{font-size:12px;color:var(--muted);margin-top:2px}
-.nb .nb-page{display:flex;flex-direction:column;align-items:stretch;width:max-content;min-width:64px;margin:auto;padding:4px 0;white-space:nowrap}
-.nb .pg-now{font-family:var(--display);font-size:38px;font-weight:700;line-height:1;color:var(--fg);text-align:center;padding-bottom:7px}
-.nb .pg-now:not(:last-child){border-bottom:1px solid color-mix(in srgb,var(--fg) 45%,transparent);margin-bottom:7px}
-.nb .pg-of{font-size:17px;line-height:1;color:var(--muted);text-align:center}
-.nb .nb-prog{gap:12px}
-.nb .pr-top{display:flex;align-items:center;gap:14px}
-.nb .pr-top .prog{flex:1;min-width:0}
-.nb .pr-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px 18px;align-items:start}
-.nb .pr-wide{grid-column:1/-1}
-.nb .nb-sub{font-size:12.5px;color:var(--muted)}
-.nb .nb-sub b{color:var(--fg);font-weight:500}
-.nb .recent{display:flex;gap:6px;flex-wrap:wrap;margin:0}
-.nb .recent button{font:inherit;border:0;cursor:pointer}
+.nb{--bc:var(--accent);--sp:var(--bc);--mut:color-mix(in srgb,var(--muted) 70%,#fff);--val:var(--fg);--chip:rgba(255,255,255,.08);--trk:rgba(255,255,255,.12);--rule:rgba(241,239,250,.35);--link:color-mix(in srgb,var(--accent) 65%,#fff);--ibg:color-mix(in srgb,var(--bg) 75%,var(--raise));--ibd:color-mix(in srgb,var(--line) 80%,#fff 12%);
+ container-type:inline-size;position:relative;overflow:hidden;border-radius:16px;padding:34px 20px 20px;background:linear-gradient(160deg,color-mix(in srgb,var(--raise),#fff 5%),color-mix(in srgb,var(--raise),#fff 10%));box-shadow:inset 0 1px 0 rgba(255,255,255,.16),0 10px 26px rgba(0,0,0,.5),0 1px 3px rgba(0,0,0,.5)}
+.nb + .nb{margin-top:16px}
+.nb::before{content:"";position:absolute;top:0;right:18px;width:16px;height:28px;background:var(--sp);clip-path:polygon(0 0,100% 0,100% 100%,50% 76%,0 100%);box-shadow:inset 0 -6px 8px rgba(0,0,0,.2)}
+.nb-in{display:grid;gap:14px 24px;align-items:start;--rs:84px;--th:44px;grid-template-columns:auto minmax(0,1fr);grid-template-areas:"ring head" "stats stats" "low low" "foot foot"}
+.nb-head{grid-area:head;align-self:center;min-width:0}
+.nb-tw{height:var(--th);display:flex;align-items:flex-end;overflow:hidden}
+.nb .book-title{font-size:18px;font-weight:700;line-height:1.2;max-height:var(--th);overflow:hidden;overflow-wrap:break-word;width:100%;cursor:pointer;margin:0}
+.nb .book-meta{font-size:13px;line-height:20px;color:var(--mut);margin:0}
+.nb-head .nb-pct{margin-top:2px}.nb-ringw .nb-pct{display:none}
+.nb-ringw{grid-area:ring;width:var(--rs);justify-self:center;align-self:center;text-align:center}
+.nb-ring{position:relative;width:var(--rs);height:var(--rs)}
+.nb-ring svg{width:100%;height:100%;transform:rotate(-90deg);display:block}
+.nb-ring .trk{stroke:var(--trk)}.nb-ring .arc{stroke:var(--accent)}
+.nb-rc{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--val)}
+.nb-rc b{font-size:calc(var(--rs)*.24);line-height:1.1;font-weight:700}
+.nb-rc i{display:block;width:calc(var(--rs)*.3);height:1px;background:var(--rule);margin:3px 0}
+.nb-rc span{font-size:calc(var(--rs)*.115);color:var(--mut);line-height:1.1}
+.nb-pct{font-size:12px;font-weight:500;color:var(--mut);margin-top:6px;line-height:16px;letter-spacing:.02em}
+.nb-stats{grid-area:stats;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 16px}
+.nb-st{min-width:0}
+.nb-st small{display:block;font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--mut);line-height:14px;font-weight:500}
+.nb-st b{display:block;font-size:18px;line-height:24px;font-weight:700;color:var(--val);white-space:nowrap}
+.nb .na{color:var(--mut);font-weight:400}
+.nb-low{grid-area:low;display:grid;grid-template-columns:minmax(0,1fr);gap:12px 24px;align-items:center}
+.nb .recent{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:0}
+.nb .recent > *{height:34px;border-radius:9px;background:var(--chip);display:flex;align-items:center;justify-content:center;gap:5px;font:inherit;font-size:13px;color:var(--val);white-space:nowrap;border:0;padding:0;margin:0}
+.nb .recent button{cursor:pointer}
 .nb .recent button[aria-expanded="true"]{outline:1px solid var(--accent)}
-.nb .recent span,.nb .recent button{font-size:11px;padding:2px 8px;border-radius:999px;background:color-mix(in srgb,var(--bc) 16%,var(--raise));color:var(--muted)}
-.nb .recent b{color:var(--fg);font-weight:500}
-.nb .nb-log{display:flex;flex-direction:column;align-items:stretch;gap:8px}
-.nb .lr-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
-.nb .nb-log input{width:100%;box-sizing:border-box}
-.nb .lr-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.nb .lr-btns .btn{display:flex;align-items:center;justify-content:center;min-height:36px}
-.nb .nb-log .delta{min-width:0;font-size:12px}
-.nb .nb-extra{grid-column:1/-1;display:flex;flex-direction:column;gap:6px;padding:12px 18px 2px;margin-top:10px;border-top:1px dashed color-mix(in srgb,var(--bc) 25%,var(--line))}
+.nb .recent em{font-style:normal;color:var(--mut)}.nb .recent b{font-weight:700}
+.nb .recent .na{font-weight:400}
+.nb-spark{display:flex;align-items:center;gap:12px;height:34px}
+.nb-bars{flex:1;display:flex;align-items:flex-end;gap:3px;height:28px;min-width:0}
+.nb-bars span{flex:1;background:var(--accent);border-radius:2px 2px 0 0}
+.nb-bars span.z{height:2px!important;background:rgba(255,255,255,.14)}
+.nb-day{font-size:12px;color:var(--mut);white-space:nowrap}
+.nb-foot{grid-area:foot;display:flex;flex-direction:column;gap:12px}
+.nb-meta{display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:13px;line-height:20px;min-height:20px;color:var(--val)}
+.nb-meta .sr{white-space:nowrap}
+.nb-meta .nb-acts{display:flex;gap:12px;align-items:center}
+.nb .linkbtn{font:500 12px/20px inherit;font-family:inherit;color:var(--link);text-decoration:underline;text-underline-offset:3px;white-space:nowrap}
+.nb-log{display:flex;flex-direction:column;gap:4px;width:100%}
+.nb-ctl{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;width:100%}
+.nb-ctl>*{height:44px;width:100%;min-width:0;border-radius:10px;font:500 13px Roboto,sans-serif;text-align:center;padding:0 4px;margin:0;box-sizing:border-box}
+.nb-of{position:relative;display:block;background:var(--ibg);border:1px solid var(--ibd)}
+.nb-of span{position:absolute;top:4px;left:0;right:0;font-size:10px;line-height:12px;letter-spacing:.07em;text-transform:uppercase;color:var(--mut);font-weight:500}
+.nb-of:focus-within{outline:2px solid var(--accent);outline-offset:2px}
+.nb .nb-ctl input[type=number]{position:absolute;inset:0;width:100%;height:100%;border:0;background:transparent;color:var(--fg);font:700 16px Roboto,sans-serif;text-align:center;padding:16px 2px 0;-moz-appearance:textfield;appearance:none;outline:0;border-radius:10px}
+.nb-ctl input[type=number]::-webkit-outer-spin-button,.nb-ctl input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.nb-ctl button:focus-visible,.nb .linkbtn:focus-visible,.nb .recent button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.nb-ctl .btn{white-space:nowrap;display:flex;align-items:center;justify-content:center;gap:5px}
+.nb-ctl .btn-primary{color:var(--accent-ink)}
+.nb-ctl .dog-btn{background:transparent;border-color:var(--ibd);line-height:normal}
+.nb-ctl .dog-btn svg{width:14px;height:14px;flex:none}
+.nb .delta{min-height:16px;font-size:12px;line-height:16px;color:var(--mut);text-align:right}
+.nb .delta[data-bad]{color:#ff9d8f}
+.nb .nb-extra{display:flex;flex-direction:column;gap:6px;margin-top:14px;padding-top:12px;border-top:1px dashed var(--ibd)}
 .nb .nb-extra:empty{display:none}
-@media (max-width:700px){
-  .nb{grid-template-columns:84px minmax(0,1fr);padding:4px 0}
-  .nb-sec{padding:12px 14px}
-  .nb .nb-info{grid-column:1/-1}
-  .nb-sec + .nb-sec{border-left:0;border-top:1px solid color-mix(in srgb,var(--bc) 22%,var(--line))}
-  .nb .nb-page{grid-column:1;padding:12px 8px}
-  .nb .nb-prog{grid-column:2;border-top:0;border-left:1px solid color-mix(in srgb,var(--bc) 22%,var(--line))}
-  .nb .nb-log{grid-column:1/-1}
-  .nb .pg-now{font-size:32px}
-  .nb .nb-extra{padding:12px 14px 6px;margin-top:0}
+@container (min-width:660px){
+ .nb-in{--rs:112px;--th:48px;grid-template-columns:132px minmax(0,1fr);grid-template-areas:"ring head" "ring stats" "low low" "foot foot"}
+ .nb-ringw .nb-pct{display:block}.nb-head .nb-pct{display:none}.nb-head{align-self:end}
+ .nb-low{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .nb-bars{max-width:240px}
+ .nb-foot{flex-direction:row;justify-content:space-between;align-items:center}
+ .nb-meta{justify-content:flex-start;gap:14px;width:auto}
+ .nb-log{width:246px}
+ .nb-ctl{grid-template-columns:repeat(3,78px);gap:6px}
+ .nb .book-title{font-size:20px}
+}
+@container (min-width:960px){
+ .nb-in{grid-template-columns:132px minmax(0,1fr) 250px;grid-template-areas:"ring head ." "ring stats ." "ring low .";align-items:stretch}
+ .nb-head{align-self:baseline}.nb-tw{align-items:flex-start;height:auto;max-height:var(--th)}.nb-head{min-height:calc(var(--th) + 24px)}
+ .nb-stats{grid-template-columns:repeat(4,minmax(0,1fr));align-self:center}
+ .nb-low{align-self:end}
+ .nb-foot{display:contents}
+ .nb-meta{grid-area:1/3/2/4;z-index:1;justify-self:end;align-self:baseline;line-height:24px;min-height:24px}
+ .nb-log{grid-area:1/3/4/4;justify-self:end;align-self:center}
 }
 .today-list .edit{display:flex;gap:6px;flex-wrap:wrap;align-items:center;grid-column:1/-1}
 .today-list .edit input{font:inherit;font-size:13px;background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:4px 8px;color-scheme:dark}
@@ -193,8 +227,6 @@ input[type="number"]:focus{border-color:var(--accent);outline:none}
 @media (max-width:560px){.rl-ol li{grid-template-columns:2em minmax(0,1fr) auto}.rl-ol .acts{grid-column:2/-1;justify-content:flex-start}}
 .cov-s{width:26px;height:38px;object-fit:cover;border-radius:3px;margin-right:8px;vertical-align:-14px;background:var(--raise)}
 .cov-m{width:46px;height:68px;object-fit:cover;border-radius:4px;flex:none;background:var(--raise)}
-.nb-info{display:flex;gap:14px;align-items:center;min-width:0}
-.nb-info>div{min-width:0}
 .nb .book-title:hover{color:var(--accent)}
 .fy-rec .top{display:flex;gap:14px;align-items:flex-start}
 .fy-rec .cov-l{width:72px;height:108px;object-fit:cover;border-radius:5px;flex:none;background:var(--raise)}
@@ -1646,7 +1678,25 @@ const spineCol = (pal, h) => pal[h % pal.length];
 function recolourCards() {
   const box = document.getElementById('books'); if (!box) return;
   const pal = spinePalette(look.spines, today());
-  box.querySelectorAll('.nb[data-sh]').forEach(el => el.style.setProperty('--bc', spineCol(pal, +el.dataset.sh)));
+  box.querySelectorAll('.nb[data-sh]').forEach(el => { const c = spineCol(pal, +el.dataset.sh); el.style.setProperty('--bc', c); el.style.setProperty('--sp', leather(c)); });
+}
+// Titles: two lines reserved; shrink to 15px before cutting; then cut after a whole word (no ellipsis)
+function fitTitles() {
+  document.querySelectorAll('#books .book-title').forEach(t => {
+    const full = t.dataset.full || t.textContent; t.textContent = full; t.style.fontSize = '';
+    if (!t.clientHeight && !t.scrollHeight) return;
+    const ok = () => t.scrollHeight <= t.clientHeight + 1;
+    if (ok()) return;
+    for (let f = Math.round(parseFloat(getComputedStyle(t).fontSize)); f >= 15; f--) { t.style.fontSize = f + 'px'; if (ok()) return; }
+    const ws = full.split(' '); while (ws.length > 1 && !ok()) { ws.pop(); t.textContent = ws.join(' '); }
+  });
+}
+let titleRO = null;
+function watchTitles() {
+  if (titleRO || typeof ResizeObserver === 'undefined') return;
+  let w = 0; titleRO = new ResizeObserver(() => { const nw = $('books').clientWidth; if (nw !== w) { w = nw; fitTitles(); } });
+  titleRO.observe($('books'));
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitTitles);
 }
 function renderBooks() {
   const box = $('books');
@@ -1663,31 +1713,30 @@ function renderBooks() {
     const el = document.createElement('div');
     el.className = 'nb';
     const inputId = 'pg-' + b.id;
-    el.innerHTML = `
-      <div class="nb-sec nb-info">${coverImg(b, 'cov-m', 'S')}<div><div class="book-title" tabindex="0" role="button"></div><div class="book-meta"></div><div class="book-series"></div></div></div>
-      <div class="nb-sec"><div class="nb-page tnum" id="meta-${b.id}" aria-label="Page ${last}${b.pages ? ' of ' + b.pages : ''}"><span class="pg-now">${fmt(last)}</span>${b.pages ? `<span class="pg-of">${fmt(b.pages)}</span>` : ''}</div></div>
-      <div class="nb-sec nb-prog">
-        <div class="pr-top">${b.pages ? `<span class="book-pct tnum">${Math.round(pct)}%</span>` : ''}<div class="prog" aria-hidden="true"><i style="width:${pct}%"></i></div></div>
-        <div class="pr-grid tnum"><span class="nb-sub nb-left"></span><span class="nb-sub nb-rate"></span><span class="nb-sub nb-fin"></span><div class="recent tnum"></div></div>
-      </div>
-      <div class="nb-sec nb-log">
-        <div class="lr-head"><label for="${inputId}">On page</label><span class="delta tnum" aria-live="polite"></span></div>
-        <input type="number" id="${inputId}" min="1" ${b.pages ? `max="${b.pages}"` : ''} inputmode="numeric" aria-describedby="meta-${b.id}">
-        <div class="lr-btns"><button class="btn btn-primary" type="button">Log</button>
-        <button class="btn dog-btn" type="button" title="Dog-ear a quote"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 1.5h6.5L13 5v9.5H3z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M9.5 1.5V5H13" fill="currentColor" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg></button></div>
+    const R = 44, CIRC = 2 * Math.PI * R, pctTxt = b.pages ? Math.round(pct) + '% read' : '';
+    el.innerHTML = `<div class="nb-in">
+      <div class="nb-head"><div class="nb-tw"><div class="book-title" tabindex="0" role="button"></div></div><div class="book-meta"></div>${pctTxt ? `<div class="nb-pct tnum">${pctTxt}</div>` : ''}</div>
+      <div class="nb-ringw"><div class="nb-ring tnum" id="meta-${b.id}" role="img" aria-label="Page ${last}${b.pages ? ' of ' + b.pages : ''}"><svg viewBox="0 0 100 100" aria-hidden="true"><circle class="trk" cx="50" cy="50" r="${R}" fill="none" stroke-width="7"/>${pct > 0 ? `<circle class="arc" cx="50" cy="50" r="${R}" fill="none" stroke-width="7" stroke-linecap="round" stroke-dasharray="${(CIRC * pct / 100).toFixed(1)} ${CIRC.toFixed(1)}"/>` : ''}</svg><div class="nb-rc"><b>${fmt(last)}</b>${b.pages ? `<i></i><span>${fmt(b.pages)}</span>` : ''}</div></div>${pctTxt ? `<div class="nb-pct tnum">${pctTxt}</div>` : ''}</div>
+      <div class="nb-stats tnum"></div>
+      <div class="nb-low"><div class="recent tnum"></div><div class="nb-spark"><div class="nb-bars" role="img"></div><div class="nb-day"></div></div></div>
+      <div class="nb-foot"><div class="nb-meta"></div>
+        <div class="nb-log"><div class="nb-ctl"><label class="nb-of"><span>On page</span><input type="number" id="${inputId}" min="1" ${b.pages ? `max="${b.pages}"` : ''} inputmode="numeric" aria-describedby="meta-${b.id}"></label><button class="btn btn-primary" type="button">Log</button>
+        <button class="btn dog-btn" type="button" title="Dog-ear a quote"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 1.5h6.5L13 5v9.5H3z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M9.5 1.5V5H13" fill="currentColor" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>Dog-ear</button></div>
+        <span class="delta tnum" aria-live="polite"></span></div></div>
       </div>
       <div class="nb-extra"></div>`;
     el.dataset.sh = titleHash(b.title);
     el.style.setProperty('--bc', spineCol(pal0, el.dataset.sh));
+    el.style.setProperty('--sp', leather(spineCol(pal0, el.dataset.sh)));
     const extra = el.querySelector('.nb-extra');
     const rec = el.querySelector('.recent');
     const days = recentDays(b.id);
-    if (!days.length) rec.innerHTML = '<span>Not logged yet</span>';
     // Each day is a button: open it to fix or delete that day's entries for this book
     for (const d of days) {
       const key = b.id + '|' + d.date, open = state.editing === key;
       const sp = document.createElement('button'); sp.type = 'button';
-      sp.innerHTML = `${dayLabel(d.date)} <b>+${fmt(d.pages)}</b>`;
+      const lab = daysBetween(d.date, today()) > 6 ? fromIso(d.date).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' }) : fromIso(d.date).toLocaleDateString('en-AU', { weekday: 'short' });
+      sp.innerHTML = `<em>${lab}</em> <b>+${fmt(d.pages)}</b>`;
       sp.title = 'Edit or delete this day\'s entries';
       sp.setAttribute('aria-expanded', String(open));
       sp.addEventListener('click', () => { state.editing = open ? null : key; renderBooks(); });
@@ -1698,14 +1747,23 @@ function renderBooks() {
         w.append(lab, entryEditor(e)); extra.appendChild(w);
       }
     }
-    { const pp = bookPaceParts(b), set = (c, h) => { const n = el.querySelector(c); n.innerHTML = h; return n; };
-      if (pp.left == null) { set('.nb-left', pp.none).classList.add('pr-wide'); el.querySelector('.nb-rate').remove(); el.querySelector('.nb-fin').remove(); }
-      else {
-        set('.nb-left', `Pages left · <b>${pp.left}</b>`);
-        if (pp.rate == null) { set('.nb-rate', pp.none); }
-        else { set('.nb-rate', `About <b>${pp.rate}</b> a day`); set('.nb-fin', `Finish ${pp.fin}`); }
-      } }
-    { const ab = state.allBooks.find(x => x.id === b.id) || {}; if (ab.series) el.querySelector('.book-series').textContent = ab.series + (ab.seriesNum ? ' #' + ab.seriesNum : ''); }
+    for (let i = days.length; i < 3; i++) { const sp = document.createElement('span'); sp.className = 'na'; sp.textContent = '—'; rec.appendChild(sp); }
+    { const pp = bookPaceParts(b), num = v => v == null ? null : Number(String(v).replace(/,/g, '')), ave = num(pp.rate), left = b.pages ? Math.max(0, b.pages - last) : null;
+      const st = (l, v) => `<div class="nb-st"><small>${l}</small>${v == null || v === '' ? '<b class="na">—</b>' : `<b>${v}</b>`}</div>`;
+      el.querySelector('.nb-stats').innerHTML = st('Pages to go', left == null ? null : fmt(left)) + st('Ave a day', ave) + st('Days to go', left != null && ave > 0 ? fmt(Math.ceil(left / ave)) : null)
+        + st('Approx finish', pp.fin ? (pp.fin === 'today' ? 'Today' : pp.fin.replace(/^around /, '').replace(/,/g, '')) : null); }
+    { // pages read in the last 14 days for this book, and how far into reading it is
+      const tot = new Map(); for (const e of state.entries) if (e.bookId === b.id && e.pages > 0) tot.set(e.date, (tot.get(e.date) || 0) + e.pages);
+      const vals = Array.from({ length: 14 }, (_, i) => tot.get(addDays(today(), i - 13)) || 0), mx = Math.max(60, ...vals);
+      const bars = el.querySelector('.nb-bars');
+      bars.setAttribute('aria-label', 'Pages read, last 14 days');
+      bars.innerHTML = vals.map(v => v ? `<span style="height:${Math.max(8, Math.min(100, v / mx * 100)).toFixed(0)}%"></span>` : '<span class="z"></span>').join('');
+      const ab0 = state.allBooks.find(x => x.id === b.id) || {};
+      const dayEl = el.querySelector('.nb-day');
+      if (ab0.startDate && ab0.startDate <= today()) dayEl.textContent = `Day ${daysBetween(ab0.startDate, today()) + 1} of reading`; else dayEl.remove();
+    }
+    { const ab = state.allBooks.find(x => x.id === b.id) || {}; const sr = document.createElement('span');
+      sr.className = 'sr' + (ab.series ? '' : ' na'); sr.textContent = ab.series ? ab.series + (ab.seriesNum ? ' #' + ab.seriesNum : '') : 'Standalone'; el.querySelector('.nb-meta').appendChild(sr); }
     if (b.pages && last >= b.pages) {
       const fin = document.createElement('div');
       fin.className = 'finish';
@@ -1722,23 +1780,21 @@ function renderBooks() {
     if (story) ctRow.innerHTML = `<span>Now in <b></b> · story ${story.n} of ${story.of} · <span class="tnum">${story.left}</span> pages left in it</span>`;
     if (story) ctRow.querySelector('b').textContent = story.story;
     if (story || isCollection) {
-      const cb = document.createElement('button'); cb.type = 'button'; cb.className = 'linkbtn'; cb.textContent = story ? 'Edit contents' : 'Add contents';
-      cb.addEventListener('click', () => openContents(b)); ctRow.appendChild(cb); extra.appendChild(ctRow);
+      const n = (state.contents.get(b.id) || []).length;
+      const cb = document.createElement('button'); cb.type = 'button'; cb.className = 'linkbtn'; cb.textContent = n ? `Contents · ${n} ${n === 1 ? 'story' : 'stories'}` : 'Add contents';
+      cb.addEventListener('click', () => openContents(b)); el.querySelector('.nb-meta').appendChild(cb);
+      if (story) extra.appendChild(ctRow);
     }
     el.querySelector('.book-title').textContent = b.title;
     el.querySelector('.book-meta').textContent = b.author || '';
+    el.querySelector('.book-title').dataset.full = b.title;
     { const bt = el.querySelector('.book-title'); bt.addEventListener('click', () => showCard(b.id)); bt.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); showCard(b.id); } }); }
     const input = el.querySelector('input'), btn = el.querySelector('.nb-log .btn-primary'), delta = el.querySelector('.delta');
     const dog = el.querySelector('.dog-btn');
     dog.setAttribute('aria-label', `Dog-ear a quote from ${b.title}`);
     dog.addEventListener('click', () => openQuoteDlg(state.allBooks.find(x => x.id === b.id) || b));
-    const pctEl = el.querySelector('.book-pct'), bar = el.querySelector('.prog > i');
     const update = () => {
       const v = parseInt(input.value, 10);
-      // Preview the new % while typing a valid page; fall back to the logged page otherwise
-      const shown = last;
-      if (pctEl) { pctEl.textContent = Math.round(Math.min(100, shown / b.pages * 100)) + '%'; pctEl.toggleAttribute('data-preview', shown !== last); }
-      if (b.pages) bar.style.width = Math.min(100, shown / b.pages * 100) + '%';
       delta.removeAttribute('data-bad');
       if (!v) { delta.textContent = ''; return; }
       if (v <= last) { delta.textContent = `Already at ${last}`; delta.setAttribute('data-bad', ''); return; }
@@ -1754,6 +1810,7 @@ function renderBooks() {
     });
     box.appendChild(el);
   }
+  fitTitles(); watchTitles();
 }
 
 function entryEditor(e) {
