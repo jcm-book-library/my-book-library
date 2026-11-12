@@ -1,10 +1,10 @@
 {
-  "name": "The Library",
+  "name": "Our Library",
   "repo": "my-book-library",
   "purpose": "Logs reading and keeps a library and dashboard of books, moving from the Entertainment Tracker Google Sheet to Supabase.",
   "family": "Entertainment",
   "stage": "Mature",
-  "live": "https://jcm-book-library.github.io/my-book-library/",
+  "live": "https://ourlibrary.au/",
   "tags": [
     "media-tracker"
   ],
