@@ -1666,13 +1666,27 @@ function setLogDay(d) {
 }
 
 // Pace for one book: your recent daily pages, split by how much this book got in the last 14 days
+// This book's own pace: pages read on it ÷ days since you started it, days off included.
+// Long reads only count the last 14 days. Pages come from page numbers reached, so Kobo's inflated day totals don't skew it.
+function bookOwnPace(b) {
+  const t = today(), win = addDays(t, -13), cur = lastPageFor(b);
+  const ab = state.allBooks.find(x => x.id === b.id) || b;
+  const start = ab.startDate && ab.startDate <= t ? ab.startDate : null;
+  let from, base;
+  if (start && start >= win) { from = start; base = 0; }
+  else {
+    from = win; base = null; let inWin = 0;
+    for (const e of state.entries) if (e.bookId === b.id) {
+      if (e.date < win) { if (e.pageReached && (base == null || e.pageReached > base)) base = e.pageReached; }
+      else inWin += e.pages;
+    }
+    if (base == null) base = Math.max(0, cur - inWin);
+  }
+  const read = Math.max(0, cur - base), days = daysBetween(from, t) + 1;
+  return read > 0 ? read / days : 0;
+}
 function bookPaceParts(b) {
-  const avg = recentDailyAverage(14), since = addDays(today(), -14);
-  const per = new Map();
-  for (const e of state.entries) if (e.bookId && e.date > since) per.set(e.bookId, (per.get(e.bookId) || 0) + e.pages);
-  const logged = state.books.reduce((a, x) => a + (per.get(x.id) || 0), 0);
-  const share = logged ? (per.get(b.id) || 0) / logged : 1 / Math.max(1, state.books.length);
-  const rate = avg * share, left = Math.max(0, (b.pages || 0) - lastPageFor(b));
+  const rate = bookOwnPace(b), left = Math.max(0, (b.pages || 0) - lastPageFor(b));
   const days = rate > 0 && b.pages ? Math.ceil(left / rate) : null;
   if (!b.pages) return { none: 'Add a page count to estimate a finish date' };
   if (days == null) return { left: fmt(left), none: 'log some pages to estimate' };
