@@ -1,10 +1,10 @@
-# The Library
+# Our Library
 
 My reading log, library and dashboard. The data is moving from the Google Sheet "Entertainment Tracker" to Supabase (project `jcm-apps`, schema `books`). Each device chooses where its data lives, in Toolbox > Data & sign-in.
 
 The app was first called "Jackets & Manuscripts"; that name is retired. The repo is still `my-book-library`.
 
-- **Live site:** https://jcm-book-library.github.io/my-book-library/
+- **Live site:** https://ourlibrary.au/
 - **Old app:** `old.html`. It's kept for reference only. Don't use its Save, because it rewrites the whole sheet.
 
 ## Files

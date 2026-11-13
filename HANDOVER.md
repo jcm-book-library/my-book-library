@@ -1,10 +1,11 @@
-# The Library: handover
+# Our Library: handover
 
 Read this after `CLAUDE.md` and the house rules. It records how the app and its sheet fit together as of 2026-10-31 (app Version 34: the claude.ai artifact version; the app itself shows no version number), so a fresh session can carry on without the old conversation.
 
 ## What it is
 - A personal reading tracker. One file, `app.html`, is both the private claude.ai artifact and (built by `python3 tools/build-pages.py` into `index.html`) the GitHub Pages site.
-- The app is called **The Library** (since October 2026; the owner confirmed it as the name on 1 Nov). "Jackets & Manuscripts" is retired. It survives only in the old branch notes (`v3/brand`, `v3/STARTER-PROMPT.md` on `claude/keen-sagan-yf9rqf`) and the house rules' "Look" line in `control-room`. The repo name stays `my-book-library`.
+- The app is called **Our Library** (renamed from "The Library" on 12 Nov 2026, to match the domain `ourlibrary.au`).
+- **Live address: https://ourlibrary.au/** (GitHub Pages custom domain via the `CNAME` file; DNS at VentraIP: four GitHub A records and `www` CNAME to `jcm-book-library.github.io`). The old `jcm-book-library.github.io/my-book-library/` address forwards to it. Sign-in storage is per address, so the owner signs in once on the new one; other jcm apps keep the old shared session. "Jackets & Manuscripts" is retired. It survives only in the old branch notes (`v3/brand`, `v3/STARTER-PROMPT.md` on `claude/keen-sagan-yf9rqf`) and the house rules' "Look" line in `control-room`. The repo name stays `my-book-library`.
 - The data lives in the **Entertainment Tracker** Google Sheet. The app reads and writes it through the `Google Sheets` connector (claude.ai) or a small REST adapter with the owner's Google sign-in (Pages).
 - Look: Proton Seasons month colours, dark, Roboto everywhere with tabular figures on every element.
 

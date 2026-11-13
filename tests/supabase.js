@@ -457,7 +457,7 @@ const step = async (name, fn) => { try { await fn(); } catch (e) { check(name + 
     // window.claude is stubbed and window.__TEST_WRITES__ is not set, so this is the read-only claude.ai copy
     await page.waitForFunction(() => state.live && state.libLoaded, null, { timeout: 10000 });
     check('artifact: reads still work', (await page.evaluate(() => state.allBooks.length)) === 16);
-    check('artifact: persistent read-only notice after load', (await page.locator('#notice').innerText()) === 'This copy is read-only. Use the live site: https://jcm-book-library.github.io/my-book-library/');
+    check('artifact: persistent read-only notice after load', (await page.locator('#notice').innerText()) === 'This copy is read-only. Use the live site: https://ourlibrary.au/');
     const res = await page.evaluate(async () => {
       const calls = { bookUpdate: ['1', { notes: 'x' }], bookPage: ['1', 200], bookAdd: [{ title: 't' }], booksAddMany: [[{ title: 't' }]], logAdd: [[]], logEdit: [{ _row: 2 }, { del: true }], ratingAdd: [[]], contentsAdd: ['1', [], 's'], quoteAdd: [[]],
         settingSave: ['k', 'v'], wishUpdate: ['WL0001', {}], wishClear: ['WL0001'], wishAdd: [[{ title: 't' }]], archiveAdd: [[]], seriesSave: [{ series: 's' }, 's'], seriesClear: ['s'], listUpdate: ['RL0001', {}], listAdd: [{}], listClear: ['RL0001'] };
@@ -465,7 +465,7 @@ const step = async (name, fn) => { try { await fn(); } catch (e) { check(name + 
       for (const [k, a] of Object.entries(calls)) out[k] = await DB()[k](...a).then(() => 'wrote', e => e && e.code + '|' + e.message);
       return out;
     });
-    const MSG = 'tool_error|This copy is read-only. Use the live site: https://jcm-book-library.github.io/my-book-library/';
+    const MSG = 'tool_error|This copy is read-only. Use the live site: https://ourlibrary.au/';
     check('artifact: every write method throws the read-only error', Object.values(res).every(v => v === MSG) && Object.keys(res).length === 19, res);
     check('artifact: no write reached the sheet', w.writes.length === 0, w.writes.length);
     const logged = await page.evaluate(async () => { const b = document.createElement('button'); return logEntry({ pages: 5, bookId: '1', title: 'x', pageReached: 125 }, b); });
