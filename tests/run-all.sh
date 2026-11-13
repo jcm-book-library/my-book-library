@@ -20,6 +20,7 @@ FAIL  $label  ${counts}"; fail=1; fi
 run "check.sh (screens and write flows)" bash tests/check.sh
 run "supabase.js" node tests/supabase.js tests/out/sb
 run "copyback.js" node tests/copyback.js tests/out/cb
+run "family SQL (local Postgres)" bash tests/sql/family.sh
 echo; echo "======== Summary$summary"
 if [ "$fail" -eq 0 ]; then echo "ALL PASS"; else echo "FAIL"; fi
 exit "$fail"
