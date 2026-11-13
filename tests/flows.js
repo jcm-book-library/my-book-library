@@ -286,6 +286,95 @@ flow('r-series-missing-to-wishlist', async ({ page }) => {
   await settle(page, 800);
 });
 
+// ===== Remove (TBR / Paused / DNF), Undo, Restore, Delete for good =====
+// The synthetic rows in data.js are shared objects that earlier flows write into, so these flows each start from a pristine copy of the sheet
+const pristine = () => { const k = require.resolve('./data.js'), old = require.cache[k]; delete require.cache[k]; const m = require('./data.js').makeSheets(); require.cache[k] = old; return m; };
+const fresh = extra => s => { Object.assign(s, pristine()); if (extra) extra(s); };
+const must = (cond, msg) => { if (!cond) throw new Error(msg); };
+const ids = (page, which) => page.evaluate(w => state[w].map(b => b.id).join(','), which);
+// (s1) the plan's x on an Up next book: status Removed with tier and upNextOrder cleared, then Up next is renumbered; the book is gone from every list
+flow('s1-remove-up-next', async ({ page }) => {
+  await page.evaluate(() => { showTab('library'); document.querySelector('.lib-mode [data-mode="plan"]').click(); });
+  await page.click('#upList li[data-id="9"] button[aria-label="Remove Paper Towns Revisited"]');
+  await settle(page, 800);
+  must(!(await ids(page, 'allBooks')).split(',').includes('9') && (await ids(page, 'removedBooks')) === '9', 'book 9 should be in removedBooks only');
+  must(await page.evaluate(() => upNext().map(b => b.id + ':' + b.upNextOrder).join()) === '13:1', 'Up next not renumbered');
+  must(await page.evaluate(() => !document.getElementById('undoBar').hidden && /Removed “Paper Towns Revisited”/.test(document.getElementById('undoBar').textContent)), 'undo bar missing');
+}, { mutate: fresh() });
+// (s2) the Library list's x on a Paused book (no plan fields to clear)
+flow('s2-remove-list-paused', async ({ page }) => {
+  await page.evaluate(() => { showTab('library'); state.lib.sec.Paused = true; renderLibrary(); });
+  await page.click('#libSecs [data-rm="45"]');
+  await settle(page, 800);
+  must((await ids(page, 'removedBooks')) === '45' && !(await ids(page, 'allBooks')).split(',').includes('45'), 'book 45 should be removed');
+}, { mutate: fresh() });
+// (s3) "Remove" in the floating book card of a DNF book
+flow('s3-remove-card-dnf', async ({ page }) => {
+  await page.evaluate(() => { showTab('library'); showCard('49'); });
+  await page.click('#bookCard [data-a="remove"]');
+  await settle(page, 800);
+  must((await ids(page, 'removedBooks')) === '49' && await page.evaluate(() => document.getElementById('bookCard').hidden), 'book 49 should be removed and the card closed');
+}, { mutate: fresh() });
+// (s3b) a Reading or Finished book has no remove button
+flow('s3b-no-remove-for-others', async ({ page }) => {
+  await page.evaluate(() => { showTab('library'); showCard('1'); });
+  must(await page.evaluate(() => !document.querySelector('#bookCard [data-a="remove"]') && !document.querySelector('#libSecs [data-rm="1"], #libSecs [data-rm="33"]')), 'Reading/Finished books must not show a remove button');
+}, { mutate: fresh() });
+// (s4) remove an Up next book, then Undo: the old status, tier and Up next number are written back and Up next is renumbered again
+flow('s4-remove-undo', async ({ page }) => {
+  await page.evaluate(() => { showTab('library'); document.querySelector('.lib-mode [data-mode="plan"]').click(); });
+  await page.click('#upList li[data-id="9"] button.rm');
+  await settle(page, 800);
+  await page.click('#undoBtn');
+  await settle(page, 800);
+  must((await ids(page, 'removedBooks')) === '' && await page.evaluate(() => upNext().map(b => b.id + ':' + b.upNextOrder).join()) === '9:1,13:2', 'undo should restore book 9 as Up next #1');
+  must(await page.evaluate(() => document.getElementById('undoBar').hidden), 'undo bar should be gone');
+}, { mutate: fresh() });
+// (s5) Toolbox > Removed books: Restore (default TBR), then Restore another one as Paused with the segmented choice
+flow('s5-restore-from-toolbox', async ({ page }) => {
+  await page.evaluate(() => showTab('toolbox', 'removed'));
+  must(await page.evaluate(() => document.querySelectorAll('#rmBox li').length) === 2, 'two removed books should be listed');
+  await page.click('#rmBox li[data-id="45"] [data-a="restore"]');
+  await settle(page, 800);
+  await page.click('#rmBox li[data-id="49"] .seg button:nth-child(2)');
+  await page.click('#rmBox li[data-id="49"] [data-a="restore"]');
+  await settle(page, 800);
+  must(await page.evaluate(() => state.allBooks.find(b => b.id === '45').status + '/' + state.allBooks.find(b => b.id === '49').status) === 'TBR/Paused' && (await ids(page, 'removedBooks')) === '', 'restored statuses wrong');
+}, { mutate: fresh(s => { setBook('45', { status: 'Removed' })(s); setBook('49', { status: 'Removed' })(s); }) });
+// (s6) Delete for good: asks first (Cancel writes nothing), then clears that one Books row, never the remain / % formula columns
+flow('s6-delete-for-good', async ({ page }) => {
+  await page.evaluate(() => showTab('toolbox', 'removed'));
+  await page.click('#rmBox li[data-id="45"] [data-a="delete"]');
+  await page.waitForSelector('#askDlg[open]');
+  must(await page.evaluate(() => document.getElementById('askMsg').textContent) === 'Delete “Slow Orbit” for good? This can\'t be undone.', 'ask text');
+  await page.evaluate(() => document.getElementById('askNo').click());
+  await settle(page, 300);
+  must((await ids(page, 'removedBooks')) === '45', 'cancel must keep the book');
+  await page.click('#rmBox li[data-id="45"] [data-a="delete"]');
+  await yes(page);
+  await settle(page, 800);
+  must((await ids(page, 'removedBooks')) === '', 'book should be gone from the list');
+}, { mutate: fresh(setBook('45', { status: 'Removed' })) });
+// (s7) a removed book keeps its id: with the highest id (61) removed, the next new book still gets 65, not 61
+flow('s7-new-id-after-removed', async ({ page }) => {
+  must(!(await ids(page, 'allBooks')).split(',').includes('61') && (await ids(page, 'removedBooks')) === '61', 'removed book 61 should be split out on load: ' + await ids(page, 'allBooks') + ' / ' + await ids(page, 'removedBooks'));
+  await page.evaluate(() => { showTab('library'); openBookDialog(null); });
+  await fill(page, '#bookForm [name="%"]', { title: 'After Removed', author: 'Ida After', status: 'TBR', pages: '100' });
+  await submit(page, '#bookForm');
+  await settle(page);
+  must(await page.evaluate(() => state.allBooks[state.allBooks.length - 1].id) === '65', 'new id should be 65');
+}, { mutate: fresh(setBook('61', { status: 'Removed' })) });
+// (s8) delete the highest id (61) for good: bookIdFloor=61 is saved first (App Settings), so the next new book gets 65, not the freed 61
+flow('s8-delete-highest-then-add', async ({ page }) => {
+  await page.evaluate(() => showTab('toolbox', 'removed'));
+  await page.click('#rmBox li[data-id="61"] [data-a="delete"]'); await yes(page); await settle(page, 800);
+  await page.evaluate(() => { showTab('library'); openBookDialog(null); });
+  await fill(page, '#bookForm [name="%"]', { title: 'After Delete', author: 'Ida After', status: 'TBR', pages: '100' });
+  await submit(page, '#bookForm');
+  await settle(page);
+  must(await page.evaluate(() => state.allBooks[state.allBooks.length - 1].id) === '65', 'new id should be 65, not the deleted 61');
+}, { mutate: fresh(setBook('61', { status: 'Removed' })) });
+
 (async () => {
   const browser = await launch();
   const only = process.argv[4] ? new Set(process.argv[4].split(',')) : null;
