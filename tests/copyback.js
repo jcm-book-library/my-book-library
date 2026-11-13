@@ -383,10 +383,28 @@ const get = (w, tab, row, col) => (tabOf(w, tab).data[row - 1] || [])[col];
     check('when the Sheet already matches there is nothing to copy', /^Your Sheet already matches Supabase\. Nothing to copy\./.test(m4) && (await btnText(page, '#sbCopy')) === 'Copy Supabase → Sheet (weekly backup)', m4);
   } });
 
+  // A book deleted for good in Supabase (Toolbox > Removed books) is cleared in the Sheet: the row stays, empty, and the remain / % formula columns are never written
   await scenario(browser, 'copy-back-books-removed', { mode: 'sb', build: { sbEdit: w => { dbDel(w, 'books', r => r.id === 9); dbSet(w, 'settings', r => r.key === 'yearBookGoal', { value: '41' }); } }, run: async (page, w) => {
-    const m = await press(page, '#sbCopy');
-    check('(j) a Books id in the Sheet but missing from Supabase is refused', /Books: 1 book in the Sheet is missing from Supabase \(row 5 \(id 9\)\)\. The app never removes books, so nothing was written\./.test(m), m);
-    check('(j) nothing written, no backups, button not armed', w.sheetsApi.writes().length === 0 && (await btnText(page, '#sbCopy')) === 'Copy Supabase → Sheet (weekly backup)');
+    const api = w.sheetsApi, rows0 = tabOf(w, 'Books').data.length, m = await press(page, '#sbCopy');
+    check('(j) a book deleted in Supabase shows in the preview as a cleared Sheet row, listed by title', /Books: 1 row cleared/.test(m) && /In the Sheet but not in the app, will be cleared: Harbour Lights/.test(m) && !/missing from Supabase/.test(m), m);
+    await page.click('#sbCopy'); await page.waitForSelector('#askDlg[open]');
+    check('(j) a second press asks "Clear these 1 book from the Sheet backup?"', (await page.locator('#askMsg').innerText()) === 'Clear these 1 book from the Sheet backup?');
+    await page.evaluate(() => document.getElementById('askNo').click()); await page.waitForFunction(() => /Cancelled/.test((document.getElementById('toolMsg') || {}).textContent || ''), null, { timeout: 5000 }).catch(() => {}); await idle(page);
+    check('(j) Cancel copies nothing: no Sheet writes, no backups', api.writes().length === 0 && /Cancelled\. Nothing was copied\./.test(await page.locator('#toolMsg').innerText()), api.writes().length);
+    await press(page, '#sbCopy');
+    await page.click('#sbCopy'); await page.waitForSelector('#askDlg[open]'); await page.evaluate(() => document.getElementById('askYes').click()); await page.waitForTimeout(300); await idle(page);
+    const ranges = dataRanges(api).filter(r => /^Books!/.test(r.range));
+    check('(j) the Sheet row is cleared in two ranges around the formula columns (A5:H5, K5:AJ5); remain / % (I, J) are never written', JSON.stringify(ranges.map(r => r.range).sort()) === JSON.stringify(['Books!A5:H5', 'Books!K5:AJ5']) && ranges.every(r => r.values.length === 1 && r.values[0].every(v => v === '')), ranges.map(r => r.range));
+    const t = tabOf(w, 'Books');
+    check('(j) the row is not deleted or shifted: the Books tab keeps its row count and the id 9 row is blank', t.data.length === rows0 && String(t.data[4][35] ?? '') === '' && reqs(api).every(q => !q.deleteDimension && !q.deleteRange) && !t.data[4].some((v, i) => i !== 8 && i !== 9 && String(v ?? '').trim()), t.data.length);
+    t.data[4][8] = ''; t.data[4][9] = '';   // the formulas in a real Sheet show blank on an empty row (the fixture holds plain values there)
+    check('(j) after the clear, a second copy finds nothing left to do', /already matches|nothing to copy/i.test(await press(page, '#sbCopy')));
+  } });
+  // Copy Sheet -> Supabase ignores a cleared (blank) Sheet row
+  await scenario(browser, 'copy-books-cleared-row', { mode: 'sheet', run: async (page, w) => {
+    const t = tabOf(w, 'Books'); for (let c = 0; c < t.data[4].length; c++) t.data[4][c] = '';   // blank, as the formulas show on an empty row
+    await press(page, '#sbCopy'); await press(page, '#sbCopy');
+    check('(a2) a cleared Books row in the Sheet is skipped by Copy Sheet -> Supabase (4 books, none with id 9)', w.db.books.length === 4 && !w.db.books.some(r => r.id === 9), w.db.books.map(r => r.id));
   } });
   await scenario(browser, 'copy-back-fewer', { mode: 'sb', build: { sbEdit: w => { w.db.reading_log.pop(); dbSet(w, 'settings', r => r.key === 'yearBookGoal', { value: '41' }); } }, run: async (page, w) => {
     const m = await press(page, '#sbCopy');

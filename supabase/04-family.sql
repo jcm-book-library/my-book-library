@@ -4,7 +4,7 @@
 --
 -- What family members can see of each other is decided here, not in the app:
 --   * books: only the shared columns below, never notes, why, plan, copies or loans,
---     and never a book marked hidden;
+--     and never a book marked hidden or removed;
 --   * reading: this month's pages per day and the current streak, nothing older;
 --   * reviews, recommendations to or from you, family chat and challenges.
 -- Everything in the books schema stays "own rows": a member still cannot read
@@ -62,7 +62,7 @@ $$;
 
 -- ---------- what family can read ----------
 
--- Everyone's shareable books (yours included), hidden ones left out.
+-- Everyone's shareable books (yours included), hidden and removed ones left out.
 create or replace function family.books(member uuid default null)
 returns table (user_id uuid, id integer, title text, author text, status text, rating numeric,
                favourite boolean, cover text, pages numeric, current_page numeric,
@@ -75,6 +75,7 @@ language sql stable security definer set search_path = '' as $$
          b.genre, b.theme1, b.theme2, b.theme3, b.year, b.isbn, b.synopsis
   from books.books b
   where not b.hidden
+    and coalesce(b.status, '') <> 'Removed'
     and family.in_my_family(b.user_id)
     and (member is null or b.user_id = member)
 $$;

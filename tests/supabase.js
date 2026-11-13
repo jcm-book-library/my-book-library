@@ -326,6 +326,104 @@ const step = async (name, fn) => { try { await fn(); } catch (e) { check(name + 
     check('main: no write sent user_id or row_id', w.calls.filter(c => c.method !== 'GET' && c.body).every(c => [].concat(c.body).every(b => !('user_id' in b) && !('row_id' in b))));
   } });
 
+  // ===== Remove, Undo, Restore, Delete for good (Supabase mode) =====
+  await scenario(browser, 'remove', { init: SB_CFG, run: async (page, w) => {
+    await live(page);
+    const rowOf = id => w.db.books.find(r => r.id === id), ids = which => page.evaluate(k => state[k].map(b => b.id).join(','), which);
+    await step('remove from the plan, then undo', async () => {
+      const n = w.calls.length;
+      await page.evaluate(() => { showTab('library'); document.querySelector('.lib-mode [data-mode="plan"]').click(); });
+      await page.click('#upList li[data-id="9"] button.rm'); await saved(page, 800);
+      const ws = writesSince(w, n);
+      const rm = ws.find(c => c.method === 'PATCH' && /id=eq\.9$/.test(c.query)), rn = ws.find(c => c.method === 'PATCH' && /id=eq\.13$/.test(c.query));
+      check('remove: one PATCH on that book with status Removed and tier / Up next cleared', !!rm && keysOf(rm.body) === 'status,tier,up_next_order' && rm.body.status === 'Removed' && rm.body.tier === '' && rm.body.up_next_order === null, rm && rm.body);
+      check('remove: Up next renumbered (book 13 becomes #1)', !!rn && keysOf(rn.body) === 'up_next_order' && rn.body.up_next_order === 1, rn && rn.body);
+      check('remove: nothing else written, no DELETE', ws.length === 2 && ws.every(c => c.method === 'PATCH'), ws.map(c => c.method + ' ' + c.query));
+      check('remove: the row is still in Supabase (status Removed) and out of the app\'s lists', rowOf(9) && rowOf(9).status === 'Removed' && (await ids('removedBooks')) === '9' && !(await ids('allBooks')).split(',').includes('9'));
+      const m = w.calls.length;
+      await page.click('#undoBtn'); await saved(page, 800);
+      const us = writesSince(w, m), ub = us.find(c => /id=eq\.9$/.test(c.query)), u13 = us.find(c => /id=eq\.13$/.test(c.query));
+      check('undo: writes back the old status, tier and Up next number', !!ub && ub.body.status === 'TBR' && ub.body.tier === 'Up next' && ub.body.up_next_order === 1, ub && ub.body);
+      check('undo: Up next renumbered again (13 becomes #2)', !!u13 && u13.body.up_next_order === 2 && rowOf(13).up_next_order === 2 && (await ids('removedBooks')) === '');
+    });
+    await step('restore and delete for good', async () => {
+      await page.evaluate(() => { showTab('library'); state.lib.mode = 'books'; state.lib.view = 'list'; state.lib.sec.Paused = true; state.lib.sec.DNF = true; renderLibrary(); });
+      await page.click('#libSecs [data-rm="45"]'); await saved(page, 600); await page.click('#libSecs [data-rm="49"]'); await saved(page, 600);
+      check('remove: Paused and DNF books go too', (await ids('removedBooks')) === '45,49');
+      await page.evaluate(() => showTab('toolbox', 'removed'));
+      let n = w.calls.length;
+      await page.click('#rmBox li[data-id="45"] .seg button:nth-child(2)'); await page.click('#rmBox li[data-id="45"] [data-a="restore"]'); await saved(page, 800);
+      const rs = writesSince(w, n);
+      check('restore: one PATCH with just the chosen status (Paused)', rs.length === 1 && rs[0].method === 'PATCH' && /id=eq\.45$/.test(rs[0].query) && keysOf(rs[0].body) === 'status' && rs[0].body.status === 'Paused' && rowOf(45).status === 'Paused', rs.map(c => [c.query, c.body]));
+      n = w.calls.length;
+      await page.click('#rmBox li[data-id="49"] [data-a="delete"]');
+      await page.waitForSelector('#askDlg[open]'); await page.evaluate(() => document.getElementById('askNo').click()); await saved(page, 300);
+      check('delete: Cancel sends nothing', writesSince(w, n).length === 0 && !!rowOf(49));
+      const before = w.db.books.length;
+      await page.click('#rmBox li[data-id="49"] [data-a="delete"]'); await yes(page); await saved(page, 800);
+      const ds = writesSince(w, n);
+      check('delete: looks the book up first, then exactly one DELETE of that one row (row_id + user), asking for the row back', ds.length === 1 && ds[0].method === 'DELETE' && /^\?row_id=eq\.\d+&user_id=eq\.u1$/.test(ds[0].query) && /return=representation/.test(ds[0].headers.prefer), ds.map(c => [c.method, c.query]));
+      check('delete: that one row is gone, every other book stays', w.db.books.length === before - 1 && !rowOf(49) && (await ids('removedBooks')) === '' && !(await ids('allBooks')).includes('49'));
+      check('delete: the list says nothing is removed', /No removed books/.test(await page.locator('#rmBox').innerText()));
+    });
+    await step('delete refused when the row is already gone', async () => {
+      await page.evaluate(() => { showTab('library'); state.lib.mode = 'books'; state.lib.view = 'list'; state.lib.sec.Paused = true; renderLibrary(); });
+      await page.click('#libSecs [data-rm="45"]'); await saved(page, 600);
+      await page.evaluate(() => showTab('toolbox', 'removed'));
+      w.db.books = w.db.books.filter(r => r.id !== 45);   // deleted from another device
+      const n = w.calls.length, before = w.db.books.length;
+      await page.click('#rmBox li[data-id="45"] [data-a="delete"]'); await yes(page); await saved(page, 800);
+      const ds = writesSince(w, n);
+      check('delete: book already gone: no DELETE is sent, a clear error, and the book stays listed', ds.length === 0 && /ID 45 isn't in Books any more/.test(await page.locator('#notice').innerText()) && (await ids('removedBooks')) === '45' && w.db.books.length === before, await page.locator('#notice').innerText());
+      // A duplicate id (should never happen): the lookup finds two rows, so nothing is deleted at all
+      const src = w.db.books.find(r => r.id === 13), dupRow = Math.max(...w.db.books.map(r => r.row_id)) + 1;
+      w.db.books.push({ ...src, row_id: dupRow });
+      const n2 = w.calls.length;
+      const e = await page.evaluate(async () => { try { await sbDb.bookDelete('13'); return 'wrote'; } catch (x) { return x.message; } });
+      check('delete: a duplicate id is refused before any DELETE, and both rows stay', /found 2 times in Books, so nothing was deleted/.test(e) && writesSince(w, n2).length === 0 && w.db.books.filter(r => r.id === 13).length === 2, e);
+      w.db.books = w.db.books.filter(r => r.row_id !== dupRow);
+    });
+  } });
+  await scenario(browser, 'removed-id', { init: SB_CFG, setup: w => { w.db.books.find(b => b.id === 61).status = 'Removed'; }, run: async (page, w) => {
+    await live(page);
+    check('load: a Removed book is split out of every list into state.removedBooks', await page.evaluate(() => state.allBooks.length === 15 && state.removedBooks.length === 1 && state.removedBooks[0].id === '61' && !state.allBooks.some(b => b.id === '61')));
+    const n = w.calls.length;
+    await page.evaluate(() => { showTab('library'); openBookDialog(null); });
+    await fill(page, '#bookForm [name="%"]', { title: 'After Removed', author: 'Ida After', status: 'TBR', pages: '100' });
+    await submit(page, '#bookForm'); await saved(page, 800);
+    const ins = writesSince(w, n).find(c => c.method === 'POST' && c.table === 'books');
+    check('new id: the highest id counts removed books too (61 + 4 = 65, never reused)', !!ins && [].concat(ins.body)[0].id === 65, ins && ins.body);
+  } });
+
+  await scenario(browser, 'delete-highest-id', { init: SB_CFG, setup: w => { w.db.books.find(b => b.id === 61).status = 'Removed'; }, run: async (page, w) => {
+    await live(page);
+    let n = w.calls.length;
+    await page.evaluate(() => showTab('toolbox', 'removed'));
+    await page.click('#rmBox li[data-id="61"] [data-a="delete"]'); await yes(page); await saved(page, 800);
+    const ws = writesSince(w, n), fl = w.db.settings.find(r => r.key === 'bookIdFloor');
+    check('delete highest id: bookIdFloor=61 saved through settings, before the DELETE', !!fl && fl.value === '61' && ws.length === 2 && ws[0].table === 'settings' && ws[1].method === 'DELETE' && /^\?row_id=eq\.\d+&user_id=eq\.u1$/.test(ws[1].query) && !w.db.books.some(b => b.id === 61), ws.map(c => [c.method, c.table, c.query]));
+    n = w.calls.length;
+    await page.evaluate(() => { showTab('library'); openBookDialog(null); });
+    await fill(page, '#bookForm [name="%"]', { title: 'After Delete', author: 'Ida After', status: 'TBR', pages: '100' });
+    await submit(page, '#bookForm'); await saved(page, 800);
+    const ins = writesSince(w, n).find(c => c.method === 'POST' && c.table === 'books');
+    check('delete highest id: the next new book gets 65 (floor + 4), not the freed 61', !!ins && [].concat(ins.body)[0].id === 65, ins && ins.body);
+    n = w.calls.length;
+  } });
+  await scenario(browser, 'floor-never-drops', { init: SB_CFG, setup: w => { w.db.books.find(b => b.id === 61).status = 'Removed'; w.insert('settings', { key: 'bookIdFloor', value: '100' }); }, run: async (page, w) => {
+    await live(page);
+    let n = w.calls.length;
+    await page.evaluate(() => showTab('toolbox', 'removed'));
+    await page.click('#rmBox li[data-id="61"] [data-a="delete"]'); await yes(page); await saved(page, 800);
+    const ws = writesSince(w, n), fl = w.db.settings.find(r => r.key === 'bookIdFloor');
+    check('floor: an existing higher bookIdFloor (100) is kept when deleting 61', !!fl && fl.value === '100' && ws.length === 1 && ws[0].method === 'DELETE', ws.map(c => [c.method, c.table]));
+    n = w.calls.length;
+    await page.evaluate(() => { showTab('library'); openBookDialog(null); });
+    await fill(page, '#bookForm [name="%"]', { title: 'After Floor', author: 'Ida After', status: 'TBR', pages: '100' });
+    await submit(page, '#bookForm'); await saved(page, 800);
+    const ins = writesSince(w, n).find(c => c.method === 'POST' && c.table === 'books');
+    check('floor: the next new book gets 104 (floor 100 + 4)', !!ins && [].concat(ins.body)[0].id === 104, ins && ins.body);
+  } });
   // ===== prune =====
   await scenario(browser, 'prune', { init: SB_CFG, setup: w => { w.insert('series_tracker', { series: 'Ghost Series', author: 'Gus Ghost', kind: 'Novel', status: 'Ongoing' }); w.insert('series_tracker', { series: 'Phantom Run', kind: 'Comic', status: 'Following' }); }, run: async (page, w) => {
     await live(page);
@@ -460,13 +558,13 @@ const step = async (name, fn) => { try { await fn(); } catch (e) { check(name + 
     check('artifact: persistent read-only notice after load', (await page.locator('#notice').innerText()) === 'This copy is read-only. Use the live site: https://ourlibrary.au/');
     const res = await page.evaluate(async () => {
       const calls = { bookUpdate: ['1', { notes: 'x' }], bookPage: ['1', 200], bookAdd: [{ title: 't' }], booksAddMany: [[{ title: 't' }]], logAdd: [[]], logEdit: [{ _row: 2 }, { del: true }], ratingAdd: [[]], contentsAdd: ['1', [], 's'], quoteAdd: [[]],
-        settingSave: ['k', 'v'], wishUpdate: ['WL0001', {}], wishClear: ['WL0001'], wishAdd: [[{ title: 't' }]], archiveAdd: [[]], seriesSave: [{ series: 's' }, 's'], seriesClear: ['s'], listUpdate: ['RL0001', {}], listAdd: [{}], listClear: ['RL0001'] };
+        settingSave: ['k', 'v'], wishUpdate: ['WL0001', {}], wishClear: ['WL0001'], wishAdd: [[{ title: 't' }]], archiveAdd: [[]], seriesSave: [{ series: 's' }, 's'], seriesClear: ['s'], listUpdate: ['RL0001', {}], listAdd: [{}], listClear: ['RL0001'], bookDelete: ['1'] };
       const out = {};
       for (const [k, a] of Object.entries(calls)) out[k] = await DB()[k](...a).then(() => 'wrote', e => e && e.code + '|' + e.message);
       return out;
     });
     const MSG = 'tool_error|This copy is read-only. Use the live site: https://ourlibrary.au/';
-    check('artifact: every write method throws the read-only error', Object.values(res).every(v => v === MSG) && Object.keys(res).length === 19, res);
+    check('artifact: every write method throws the read-only error', Object.values(res).every(v => v === MSG) && Object.keys(res).length === 20, res);
     check('artifact: no write reached the sheet', w.writes.length === 0, w.writes.length);
     const logged = await page.evaluate(async () => { const b = document.createElement('button'); return logEntry({ pages: 5, bookId: '1', title: 'x', pageReached: 125 }, b); });
     check('artifact: logging pages shows the read-only message and writes nothing', logged !== true && w.writes.length === 0 && /read-only/.test(await page.locator('#notice').innerText()));

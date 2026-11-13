@@ -201,6 +201,18 @@ input[type="number"]:focus{border-color:var(--accent);outline:none}
 .lib tbody tr:hover .fav,.fav:focus-visible{opacity:.9}
 .fav[aria-pressed="true"]{color:var(--fav);opacity:1}
 .fav[aria-pressed="true"] svg{fill:currentColor}
+.rm{font:inherit;font-size:12px;line-height:1;width:22px;height:22px;padding:0;margin-left:6px;border:1px solid var(--line);border-radius:999px;background:transparent;color:var(--muted);cursor:pointer;vertical-align:1px;opacity:.6}
+.rm:hover,.rm:focus-visible{opacity:1;color:var(--fg);border-color:var(--accent)}
+.plan-list .acts .rm{padding:0;width:26px;height:26px;margin:0}
+.undo-bar{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:60;max-width:calc(100vw - 32px);display:flex;align-items:center;gap:8px;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--fg);box-shadow:0 6px 24px rgba(0,0,0,.4);font-size:14px}
+.undo-bar[hidden]{display:none}
+.undo-bar span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.undo-bar button{font:inherit;font-weight:700;border:0;background:transparent;color:var(--accent);cursor:pointer;padding:4px 6px;border-radius:6px}
+.rm-list{list-style:none;margin:0;padding:0}
+.rm-list li{display:flex;gap:10px 16px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:10px 0;border-top:1px solid var(--line)}
+.rm-list li:first-child{border-top:0}
+.rm-t{min-width:0;flex:1 1 200px}.rm-t .t{font-weight:500}.rm-t .m{font-size:12px;color:var(--muted)}
+.rm-acts{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .fav.static{pointer-events:none;width:auto;height:auto;margin:0 0 0 2px;opacity:1;vertical-align:-2px}
 .fy{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;margin-top:20px;align-items:stretch}
 .fy .panel+.panel{margin-top:0}
@@ -1020,7 +1032,7 @@ body[data-bg="plain"] .ground{display:none}
       <button class="tab tb" id="toolboxBtn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="toolboxPop"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg>Toolbox</button>
     </nav>
     <div class="pop" id="toolboxPop" hidden>
-      <div class="pg"><p class="pg-label">Books</p><div class="tgrid"><button class="btn" type="button" data-tool="rate">Rate a book</button><button class="btn" type="button" data-tool="fill">Fill details</button><button class="btn" type="button" data-tool="covers">Find covers</button></div></div>
+      <div class="pg"><p class="pg-label">Books</p><div class="tgrid"><button class="btn" type="button" data-tool="rate">Rate a book</button><button class="btn" type="button" data-tool="fill">Fill details</button><button class="btn" type="button" data-tool="covers">Find covers</button><button class="btn" type="button" data-tool="removed">Removed books</button></div></div>
       <div class="pg"><p class="pg-label">Plan</p><div class="tgrid"><button class="btn" type="button" data-tool="goal">Goal planner</button><button class="btn" type="button" data-tool="dip">Lucky dip</button><button class="btn" type="button" data-tool="own">Do I own this?</button></div></div>
       <div class="pg"><p class="pg-label">Look</p>
         <div class="look-row"><span>Background</span><div class="seg"><button type="button" data-bg="shelf" aria-pressed="true">Shelf</button><button type="button" data-bg="plain" aria-pressed="false">Plain</button></div></div>
@@ -1252,6 +1264,10 @@ body[data-bg="plain"] .ground{display:none}
     <div class="panel-head"><h2 id="covH">Book covers</h2><span class="muted small">From Open Library, one book at a time</span></div>
     <div id="covBox"></div>
   </section>
+    <section class="panel" data-tool="removed" aria-labelledby="rmH">
+    <div class="panel-head"><h2 id="rmH">Removed books</h2><span class="muted small">Books you took off your library. Restore one, or delete it for good.</span></div>
+    <div id="rmBox"></div>
+  </section>
     <section class="panel" data-tool="goal" aria-labelledby="goalH"><div class="panel-head"><h2 id="goalH">Goal planner</h2><span class="muted small" id="goalYear"></span></div>
       <div class="logrow"><label for="goalIn">Books this year</label><input type="number" id="goalIn" min="1" max="1000" inputmode="numeric"><button class="btn btn-primary" type="button" id="goalSave">Save goal</button></div>
       <div id="goalOut" style="margin-top:14px"></div></section>
@@ -1377,6 +1393,7 @@ body[data-bg="plain"] .ground{display:none}
 </dialog>
 
 <aside id="bookCard" class="bcard" role="dialog" aria-label="Book details" hidden></aside>
+<div id="undoBar" class="undo-bar" role="status" hidden><span></span><button type="button" id="undoBtn">Undo</button></div>
 
 <dialog id="coverDlg" aria-labelledby="cvTitle" style="width:min(760px,calc(100vw - 32px))">
   <div class="dlg-head"><h2 id="cvTitle">Find cover</h2><span class="muted small" id="cvProg"></span><button class="btn" type="button" id="cvClose">Done for now</button></div>
@@ -1576,7 +1593,7 @@ const state = {
   books: SNAPSHOT.books.map(b => ({ ...b })),
   settings: { ...SNAPSHOT.settings },
   mcp: null, live: false, busy: false, range: 'ytd', logDate: null, editing: null,
-  allBooks: [], header: [], libLoaded: false,
+  allBooks: [], removedBooks: [], header: [], libLoaded: false,
   lib: { sec: {}, lim: {}, q: '', status: 'All', type: '', format: '', genre: '', publisher: '', tier: '', owned: '', sort: 'sheet', dir: 1, limit: 100, open: null, view: libViewPref(), shelf: null }
 };
 
@@ -2097,7 +2114,7 @@ function showCard(id) {
     <div class="bc-top">${coverUrl(b) ? coverImg(b, 'bc-cov', 'M') : '<div class="bc-cov" aria-hidden="true"></div>'}<div style="min-width:0"><h3></h3><div class="bc-by"></div>
       <div class="bc-row"><select class="pill pill-sel" data-s="${escapeText(b.status)}" aria-label="Status"></select>${favBtn(b)}<span class="stars"></span></div></div></div>
     <dl></dl><p class="bc-syn"></p>
-    <div class="bc-acts"><button class="btn btn-primary" type="button" data-a="edit">Edit book</button><button class="btn" type="button" data-a="cover"></button></div>`;
+    <div class="bc-acts"><button class="btn btn-primary" type="button" data-a="edit">Edit book</button><button class="btn" type="button" data-a="cover"></button>${REMOVABLE.includes(b.status) ? '<button class="btn" type="button" data-a="remove" title="Remove from your library">Remove</button>' : ''}</div>`;
   const ph = el.querySelector('div.bc-cov'); if (ph) ph.textContent = 'No cover yet';
   el.querySelector('h3').textContent = b.title;
   setAuthorLinks(el.querySelector('.bc-by'), b.author);
@@ -2114,6 +2131,7 @@ function showCard(id) {
   el.querySelector('.bc-syn').textContent = b.synopsis || '';
   el.querySelector('.bc-x').addEventListener('click', () => { hideCard(); state.lib.open = null; if (!$('view-library').hidden) renderLibrary(); });
   el.querySelector('[data-a="edit"]').addEventListener('click', () => openBookDialog(b));
+  { const rb = el.querySelector('[data-a="remove"]'); if (rb) { rb.setAttribute('aria-label', 'Remove ' + b.title); rb.addEventListener('click', () => removeBook(b.id)); } }
   const cb = el.querySelector('[data-a="cover"]');
   cb.textContent = coverId(b) ? 'Change cover' : String(b.cover || '').trim() === 'none' ? 'Look for a cover again' : 'Find cover';
   cb.addEventListener('click', () => openCoverFinder([b.id], [coverId(b) ? 'Changing the cover' : b.status]));
@@ -2239,6 +2257,9 @@ async function refresh() {
       bh.forEach((h, i) => { o[h] = String(r[i] ?? '').trim(); });
       return o;
     }).filter(o => o.id && o.title);
+    // Removed books stay in the data (their ids are never reused) but are kept out of every list: they live in state.removedBooks only
+    state.removedBooks = state.allBooks.filter(o => o.status === 'Removed');
+    state.allBooks = state.allBooks.filter(o => o.status !== 'Removed');
     syncReadingBooks();
     state.libLoaded = true;
     queueMicrotask(tidyPlan);
@@ -2423,6 +2444,18 @@ const sheetDb = {
       dup: (id, n) => `ID ${id} appears ${n} times in Books`, gone: id => `ID ${id} isn't in Books any more` });
     await writeCells('Books', header, row, fields, cellValue, FORMULA_FIELDS);
   },
+  // Delete for good: the row is found by id (exactly one match) and its cells are blanked; the empty row stays, like every other
+  // removal in the Sheet. The remain / % formula columns are never written, so each run of columns between them is one ranged update.
+  async bookDelete(id) {
+    const { header, row } = await findRowById('Books', id, { header: () => readHeader('Books!A1:AZ1'), last: 5000, noCol: 'Books tab has no id column',
+      dup: (id, n) => `ID ${id} appears ${n} times in Books`, gone: id => `ID ${id} isn't in Books any more` });
+    for (let c = 0; c < header.length; c++) {
+      if (FORMULA_FIELDS.includes(header[c])) continue;
+      let e = c; while (e + 1 < header.length && !FORMULA_FIELDS.includes(header[e + 1])) e++;
+      await sheetPut(`Books!${colLetter(c)}${row}:${colLetter(e)}${row}`, [Array(e - c + 1).fill('')]);
+      c = e;
+    }
+  },
   // Move a book's currentPage forward only. Returns true if a cell was written.
   async bookPage(bookId, pageReached) {
     const header = (await readRange('Books!A1:AZ1'))[0] || [];
@@ -2438,11 +2471,16 @@ const sheetDb = {
     await sheetPut(cell, [[pageReached]]);
     return true;
   },
-  // One new book with the next id (highest + 4) and the remain / % formulas. Returns { id, header }.
+  // bookIdFloor (App Settings): the highest id ever deleted for good, so a new book never reuses an id that old log, quote, rating or contents rows still point at
+  async _idFloor() {
+    const r = (await readRange("'App Settings'!A1:B50")).find(r => String(r[0] ?? '').trim() === 'bookIdFloor');
+    return r ? toNum(r[1]) || 0 : 0;
+  },
+  // One new book with the next id (highest, or bookIdFloor, + 4) and the remain / % formulas. Returns { id, header }.
   async bookAdd(fields) {
     const header = ((await readRange('Books!A1:AZ1'))[0] || []).map(h => String(h).trim());
     const ids = (await readRange(`Books!${colLetter(header.indexOf('id'))}2:${colLetter(header.indexOf('id'))}5000`)).map(r => toNum(r[0]));
-    const id = String(Math.max(0, ...ids) + 4);
+    const id = String(Math.max(0, ...ids, await sheetDb._idFloor()) + 4);
     const row = header.map(h => h === 'id' ? "'" + id : FORMULA_FIELDS.includes(h) ? '' : cellValue(h, fields[h]));
     const m = rowFromResult(await sheetAppend('Books!A1', [row]));
     // Put the remain / % formulas on the new row, matching the rest of the sheet
@@ -2459,7 +2497,7 @@ const sheetDb = {
     const header = ((await readRange('Books!A1:AZ1'))[0] || []).map(h => String(h).trim());
     const ic = header.indexOf('id');
     const used = (await readRange(`Books!${colLetter(ic)}2:${colLetter(ic)}5000`)).map(r => toNum(r[0]));
-    let next = Math.max(0, ...used);
+    let next = Math.max(0, ...used, await sheetDb._idFloor());
     const books = list.map(f => ({ ...f, id: String(next += 4) }));
     const values = books.map(f => header.map(h => h === 'id' ? "'" + f.id : FORMULA_FIELDS.includes(h) ? '' : cellValue(h, f[h])));
     const r0 = rowFromResult(await sheetAppend('Books!A1', values)), ci = k => header.indexOf(k);
@@ -2806,6 +2844,17 @@ const sbDb = {
     const got = await sbWrite(`books?id=eq.${sbEnc(id)}`, { method: 'PATCH', body, prefer: 'return=representation' });
     if (got.length !== 1) throw { code: 'tool_error', message: got.length ? `ID ${id} appears ${got.length} times in Books` : `ID ${id} isn't in Books any more` };
   },
+  // Delete for good: only the signed-in user's row with this id; refuses (and says so) unless exactly one row went. The copy back clears the Sheet row.
+  async bookDelete(id) {
+    const uid = jwtClaims(await sb.token()).sub;
+    if (!uid) throw { code: 'tool_error', message: "Couldn't tell who is signed in, so nothing was deleted. Sign out of Supabase and sign in again." };
+    // Find first and require exactly one row, then delete that row only (by row_id), so a duplicate id can never take two books with it
+    const found = await sb.api(`books?user_id=eq.${sbEnc(uid)}&id=eq.${sbEnc(id)}&select=row_id`);
+    if (found.length !== 1) throw { code: 'tool_error', message: found.length ? `ID ${id} was found ${found.length} times in Books, so nothing was deleted` : `ID ${id} isn't in Books any more` };
+    const got = await sbWrite(`books?row_id=eq.${sbEnc(found[0].row_id)}&user_id=eq.${sbEnc(uid)}`, { method: 'DELETE', prefer: 'return=representation' });
+    got.forEach(r => this._drop('Books', r.row_id));
+    if (got.length !== 1) throw { code: 'tool_error', message: `ID ${id} couldn't be deleted (it may have changed on another device). Refresh and try again.` };
+  },
   // Move a book's currentPage forward only. Returns true if it was written.
   async bookPage(bookId, pageReached) {
     const got = await sb.api(`books?id=eq.${sbEnc(bookId)}&select=row_id,current_page`);
@@ -2814,10 +2863,16 @@ const sbDb = {
     await sbWrite(`books?row_id=eq.${got[0].row_id}`, { method: 'PATCH', body: { current_page: pageReached }, prefer: 'return=minimal' });
     return true;
   },
+  // bookIdFloor (App Settings): the highest id ever deleted for good (see sheetDb._idFloor)
+  async _idFloor() {
+    const fl = await sb.api('settings?key=eq.bookIdFloor&select=value');
+    return fl && fl[0] ? Number(fl[0].value) || 0 : 0;
+  },
   // New ids are the highest id + 4, read just before inserting; one retry if another device took the id first.
   async _insertBooks(list) {
     for (let attempt = 0; ; attempt++) {
-      const top = await sb.api('books?select=id&order=id.desc&limit=1'), max = top && top[0] ? Number(top[0].id) || 0 : 0;
+      const top = await sb.api('books?select=id&order=id.desc&limit=1'), fl = await sb.api('settings?key=eq.bookIdFloor&select=value');
+      const max = Math.max(top && top[0] ? Number(top[0].id) || 0 : 0, fl && fl[0] ? Number(fl[0].value) || 0 : 0);
       const ids = list.map((_, i) => max + 4 * (i + 1));
       try { await sbWrite('books', { method: 'POST', body: list.map((f, i) => ({ ...sbFullObj('Books', f, cellValue), id: ids[i] })), prefer: 'return=minimal' }); return ids; }
       catch (err) { if (!(err && err.status === 409 && attempt === 0)) throw err; }
@@ -2985,10 +3040,105 @@ async function addBook(fields) {
   fields = { added: today(), ...fields };
   const { id, header } = await DB().bookAdd(fields);
   const book = { ...Object.fromEntries(header.map(h => [h, ''])), ...Object.fromEntries(Object.entries(fields).map(([k, v]) => [k, String(v ?? '').trim()])), id };
-  book._row = state.allBooks.length;
+  book._row = state.allBooks.length + state.removedBooks.length;
   state.allBooks.push(book);
   syncReadingBooks();
   return book;
+}
+
+/* ---------- Remove a book (TBR, Paused or DNF) ----------
+   One tap sets status Removed (and clears tier and Up next) through writeBookFields. The book leaves state.allBooks for state.removedBooks,
+   so every list, stat and chart stops seeing it. Its row stays in the data, so its id is never reused. Undo (10 seconds) and
+   Toolbox > Removed books put it back; "Delete for good" is the only thing that deletes the row (DB().bookDelete). */
+const REMOVABLE = ['TBR', 'Paused', 'DNF'];
+const undoBar = { cur: null, timer: 0 };
+const inPlanQ = fn => { planQ.pending++; planStatus(); const p = planQ.chain.then(fn); planQ.chain = p.catch(() => {}); return p.finally(() => { planQ.pending--; }); };
+const rmBtn = b => `<button type="button" class="rm" data-rm="${escapeText(b.id)}" aria-label="Remove ${escapeText(b.title)}" title="Remove from your library">✕</button>`;
+function hideUndo() { clearTimeout(undoBar.timer); undoBar.cur = null; const u = $('undoBar'); if (u) u.hidden = true; }
+function showUndo(b, prev) {
+  clearTimeout(undoBar.timer); undoBar.cur = { id: b.id, prev };
+  const u = $('undoBar'); u.querySelector('span').textContent = `Removed “${b.title}” · `; u.hidden = false;
+  undoBar.timer = setTimeout(hideUndo, 10000);
+}
+// Put a removed book back: it rejoins allBooks (in sheet order) first, so the write finds it; if the write fails it goes back to removed
+async function restoreBook(b, fields) {
+  const rm = state.removedBooks.indexOf(b); if (rm < 0) return false;
+  state.removedBooks.splice(rm, 1);
+  const at = state.allBooks.findIndex(x => x._row > b._row);
+  state.allBooks.splice(at < 0 ? state.allBooks.length : at, 0, b);
+  try { await inPlanQ(() => writeBookFields(b.id, fields)); }
+  catch (err) {
+    state.allBooks.splice(state.allBooks.indexOf(b), 1); state.removedBooks.push(b); syncReadingBooks();
+    notice(`Couldn't restore “${b.title}”: ${err.message || explain(err)}`, 'error'); return false;
+  }
+  renumberUpNext();
+  return true;
+}
+async function removeBook(id) {
+  const b = state.allBooks.find(x => x.id === id); if (!b || !REMOVABLE.includes(b.status)) return;
+  if (!isLive()) { notice('Removing a book needs the live connection. ' + connectHint(), 'error'); return; }
+  const prev = { status: b.status, tier: b.tier || '', upNextOrder: b.upNextOrder || '' };
+  try { await inPlanQ(() => writeBookFields(id, { status: 'Removed', tier: '', upNextOrder: '' })); }
+  catch (err) { notice(`Couldn't remove “${b.title}”: ${err.message || explain(err)}`, 'error'); renderAll(); return; }
+  state.allBooks.splice(state.allBooks.indexOf(b), 1); state.removedBooks.push(b); syncReadingBooks();
+  if (card.id === id) hideCard();
+  if (state.lib.open === id) state.lib.open = null;
+  renumberUpNext();
+  showUndo(b, prev);
+  setStatus('live', `Removed “${b.title}”`);
+  renderAll(); renderRemoved();
+}
+async function undoRemove() {
+  const u = undoBar.cur; if (!u) return;
+  const b = state.removedBooks.find(x => x.id === u.id); hideUndo(); if (!b) return;
+  if (await restoreBook(b, u.prev)) { setStatus('live', `Put “${b.title}” back`); renderAll(); renderRemoved(); }
+  else renderAll();
+}
+async function restoreRemoved(id, status) {
+  const b = state.removedBooks.find(x => x.id === id); if (!b) return;
+  if (undoBar.cur && undoBar.cur.id === id) hideUndo();
+  if (await restoreBook(b, { status })) { setStatus('live', `Restored “${b.title}” to ${status}`); renderAll(); }
+  renderRemoved();
+}
+async function deleteRemoved(id) {
+  const b = state.removedBooks.find(x => x.id === id); if (!b) return;
+  if (!(await askOk(`Delete “${b.title}” for good? This can't be undone.`))) return;
+  try {
+    // High-water mark first: if this is the highest id, remember it so the next new book can't reuse it
+    const top = Math.max(0, ...[...state.allBooks, ...state.removedBooks].filter(x => x !== b).map(x => toNum(x.id)));
+    // The floor only ever goes up, so an earlier higher deleted id is never forgotten
+    const floor = DB()._idFloor ? await DB()._idFloor() : 0;
+    if (toNum(id) >= top && toNum(id) > floor) await DB().settingSave('bookIdFloor', String(id));
+    await DB().bookDelete(id);
+  }
+  catch (err) { notice(`Couldn't delete “${b.title}”: ${err.message || explain(err)}`, 'error'); return; }
+  state.removedBooks.splice(state.removedBooks.indexOf(b), 1);
+  if (undoBar.cur && undoBar.cur.id === id) hideUndo();
+  setStatus('live', `Deleted “${b.title}” for good`);
+  renderRemoved();
+}
+const rmTo = { v: 'TBR' };
+function renderRemoved() {
+  const box = $('rmBox'); if (!box) return;
+  box.textContent = '';
+  if (!state.libLoaded) return;
+  if (!state.removedBooks.length) { box.innerHTML = '<p class="empty">No removed books. Books you remove from TBR, Paused or DNF wait here.</p>'; return; }
+  const ul = document.createElement('ul'); ul.className = 'rm-list';
+  for (const b of state.removedBooks.slice().sort((a, c) => a.title.localeCompare(c.title))) {
+    const li = document.createElement('li'); li.dataset.id = b.id;
+    li.innerHTML = `<span class="rm-t"><span class="t"></span><br><span class="m"></span></span><span class="rm-acts"><span class="seg" role="group" aria-label="Restore to"></span><button type="button" class="btn" data-a="restore">Restore</button><button type="button" class="btn" data-a="delete">Delete for good</button></span>`;
+    li.querySelector('.t').textContent = b.title;
+    li.querySelector('.m').textContent = [b.author, b.added ? 'Added ' + b.added : ''].filter(Boolean).join(' · ');
+    const seg = li.querySelector('.seg');
+    for (const s of REMOVABLE) { const x = document.createElement('button'); x.type = 'button'; x.textContent = s; x.setAttribute('aria-pressed', String(s === rmTo.v));
+      x.addEventListener('click', () => { rmTo.v = s; renderRemoved(); }); seg.appendChild(x); }
+    li.querySelector('[data-a="restore"]').setAttribute('aria-label', 'Restore ' + b.title);
+    li.querySelector('[data-a="delete"]').setAttribute('aria-label', 'Delete ' + b.title + ' for good');
+    li.querySelector('[data-a="restore"]').addEventListener('click', e => { e.target.disabled = true; restoreRemoved(b.id, rmTo.v); });
+    li.querySelector('[data-a="delete"]').addEventListener('click', e => { e.target.disabled = true; deleteRemoved(b.id).finally(() => { e.target.disabled = false; }); });
+    ul.appendChild(li);
+  }
+  box.appendChild(ul);
 }
 
 /* ---------- library view ---------- */
@@ -3146,6 +3296,7 @@ function renderLibrary() {
         { const rb = rereadBadge(b); if (rb) tr.querySelector('.t').insertAdjacentHTML('afterend', rb); }
         if (b.tier && b.tier !== 'Someday') tr.querySelector('.t').insertAdjacentHTML('afterend', `<span class="tier-chip" data-t="${b.tier}">${b.tier === 'Up next' && b.upNextOrder ? 'Up next #' + escapeText(b.upNextOrder) : b.tier}</span>`);
         tr.children[1].textContent = b.author;
+        if (REMOVABLE.includes(b.status)) tr.children[0].insertAdjacentHTML('beforeend', rmBtn(b));
         body.appendChild(tr);
       }
       sec.appendChild(wrap);
@@ -4602,6 +4753,7 @@ function planRow(b, { num, kind }) {
     btn('Up next', () => setTier(b, 'Up next'), { aria: 'Add to Up next:' });
     btn('Soon', () => setTier(b, 'Soon'), { aria: 'Add to Soon:' });
   }
+  { const x = document.createElement('button'); x.type = 'button'; x.className = 'rm'; x.textContent = '✕'; x.setAttribute('aria-label', 'Remove ' + b.title); x.title = 'Remove from your library'; x.addEventListener('click', () => removeBook(b.id)); acts.appendChild(x); }
   if (planUI.whyOpen === b.id) {
     const w = document.createElement('div'); w.className = 'whyedit';
     w.innerHTML = '<input type="text" maxlength="200" aria-label="Why it\'s on the list" placeholder="Why it\'s on the list"><button class="btn btn-primary" type="button">Save</button>';
@@ -4996,7 +5148,7 @@ function renderRevisit(box, normT) {
   }
 }
 // Toolbox panels (Rate a book, Find covers, Goal planner, Lucky dip, Do I own this?) and the Insights analysis panels
-function renderTools() { renderFill(); renderCovers(); renderRate(); renderOwn(); renderDip(); renderGoal(); }
+function renderTools() { renderFill(); renderCovers(); renderRate(); renderOwn(); renderDip(); renderGoal(); renderRemoved(); }
 function renderAnalysis() { renderYear(); }
 
 /* ---------- Fill details (Toolbox → Fill details) ----------
@@ -6100,6 +6252,7 @@ function renderStalled() {
     if (b.status === 'Reading') act('Pause', { status: 'Paused' });
     else act('Pick it back up', { status: 'Reading' });
     act('DNF', { status: 'DNF', finishDate: today() });
+    if (b.status === 'Paused') acts.insertAdjacentHTML('beforeend', rmBtn(b));
     box.appendChild(li);
   }
 }
@@ -6664,7 +6817,7 @@ function renderLinks() {
 const TABS = ['now', 'library', 'next', 'insights', 'toolbox'];
 const TAB_ALIAS = { log: 'now', dashboard: 'insights', discover: 'next', tools: 'toolbox' };   // the old tab names still work (saved tab, tests)
 const nav = { tab: 'now', last: 'now', tool: null };
-const TOOL_PANELS = { rate: 'Rate a book', fill: 'Fill details', covers: 'Find covers', goal: 'Goal planner', dip: 'Lucky dip', own: 'Do I own this?' };
+const TOOL_PANELS = { rate: 'Rate a book', fill: 'Fill details', covers: 'Find covers', goal: 'Goal planner', dip: 'Lucky dip', own: 'Do I own this?', removed: 'Removed books' };
 const isPlanMode = m => m === 'plan' || m === 'wish';
 function showTab(name, tool) {
   name = TAB_ALIAS[name] || name; if (!TABS.includes(name)) name = 'now';
@@ -6729,12 +6882,15 @@ $('libSecs').addEventListener('click', e => {
   const mo = e.target.closest('[data-more]');
   if (mo) { const n = mo.dataset.more; state.lib.lim[n] = (state.lib.lim[n] || 10) > 10 ? 10 : 1e9; renderLibrary(); return; }
   const fv = e.target.closest('[data-fav]'); if (fv) { e.stopPropagation(); toggleFav(fv.dataset.fav); return; }
+  const rm = e.target.closest('[data-rm]'); if (rm) { e.stopPropagation(); removeBook(rm.dataset.rm); return; }
   if (e.target.closest('[data-status]')) return;
   const tr = e.target.closest('tr.row'); if (!tr) return;
   if (state.lib.open === tr.dataset.id && card.id === tr.dataset.id) { state.lib.open = null; hideCard(); }
   else { state.lib.open = tr.dataset.id; showCard(tr.dataset.id); }
   renderLibrary();
 });
+$('undoBtn').addEventListener('click', undoRemove);
+$('stallList').addEventListener('click', e => { const rm = e.target.closest('[data-rm]'); if (rm) removeBook(rm.dataset.rm); });
 $('addBookBtn').addEventListener('click', () => { if (!state.libLoaded) return; qaOpen('one'); });
 $('bookForm').addEventListener('submit', saveBookDialog);
 $('bookForm').addEventListener('input', updateDlgLog);
@@ -7160,15 +7316,18 @@ function toolPlan(sheet, db) {
       seen.add(k);
     });
     const d = toolDiff(tab, p.recs, db[tab]);
-    if (tab === 'Books' && d.onlyS.length) refuse.push(`Books: ${toolPlural(d.onlyS.length, 'book')} in the Sheet ${d.onlyS.length === 1 ? 'is' : 'are'} missing from Supabase (${d.onlyS.slice(0, 5).map(s => toolWho(tab, s, true)).join('; ')}${d.onlyS.length > 5 ? '; …' : ''}). The app never removes books, so nothing was written. Work out which side is right first.`);
     if (ki < 0 && d.onlyS.length) refuse.push(`${tab}: Supabase has ${toolPlural(db[tab].length, 'row')} but the Sheet has ${toolPlural(p.recs.length, 'row')}. This tab only ever grows, so nothing was written. Work out which side is right first.`);
     if (d.cells.length || d.onlyD.length || d.onlyS.length) tabs.push({ tab, ...d });
   }
   return { refuse, tabs, snap: Object.fromEntries(tabs.map(t => [t.tab, toolSnap(sheet[t.tab])])) };
 }
 const toolSnap = p => JSON.stringify(p.recs.map(r => [r.row, r.n]));
+// Titles of Books rows that are in the Sheet but not in Supabase: the copy back will clear them
+const toolSheetOnlyBooks = plan => { const t = plan.tabs.find(x => x.tab === 'Books'), ti = SBT.Books[1].findIndex(c => c[0] === 'title'); return t ? t.onlyS.map(s => String(s.cells[ti] || '').replace(/^'/, '').trim() || '(no title)') : []; };
 function toolPreview(plan) {
+  const gone = toolSheetOnlyBooks(plan);
   return 'This will change your Sheet:\n' + plan.tabs.map(t => `${t.tab}: ` + [t.cells.length && toolPlural(t.cells.length, 'cell') + ' changed', t.onlyD.length && toolPlural(t.onlyD.length, 'row') + ' added', t.onlyS.length && toolPlural(t.onlyS.length, 'row') + ' cleared'].filter(Boolean).join(', ')).join('\n')
+    + (gone.length ? `\nIn the Sheet but not in the app, will be cleared: ${gone.slice(0, 20).join(', ')}${gone.length > 20 ? `, …and ${gone.length - 20} more` : ''}` : '')
     + '\nEach of these tabs is backed up first (a hidden tab with today\'s date; backups are never deleted). Press the button again to write.';
 }
 async function toolWriteSheet(plan, say) {
@@ -7207,7 +7366,14 @@ async function toolWriteSheet(plan, say) {
   for (const t of plan.tabs) {
     const s = toolSheet(t.tab), ref = tabRef(s.title), p = now[t.tab], cols = SBT[t.tab][1], L = h => colLetter(p.at[h]);
     for (const { s: sr, d, j } of t.cells) { const [h, c, ty] = cols[j]; push(edits, s.id, { range: `${ref}!${L(h)}${sr.row}`, values: [[toolOut(t.tab, h, ty, sbToCell(ty, d.r[c]))]] }); }
-    for (const sr of t.onlyS) push(edits, s.id, { range: `${ref}!A${sr.row}:${colLetter(p.width - 1)}${sr.row}`, values: [Array(p.width).fill('')] });
+    for (const sr of t.onlyS) {   // a cleared row; in Books the remain / % formula columns are left alone, so it is one range per run of columns between them
+      const calc = new Set(cols.filter(c => c[2] === 'calc').map(c => p.at[c[0]]));
+      for (let c = 0; c < p.width; c++) {
+        if (calc.has(c)) continue;
+        let e = c; while (e + 1 < p.width && !calc.has(e + 1)) e++;
+        push(edits, s.id, { range: `${ref}!${colLetter(c)}${sr.row}:${colLetter(e)}${sr.row}`, values: [Array(e - c + 1).fill('')] }); c = e;
+      }
+    }
     if (!t.onlyD.length) continue;
     const r0 = p.last + 1, r1 = p.last + t.onlyD.length;
     if (grid[t.tab].rows != null && r1 > grid[t.tab].rows) grow.push([s.id, { appendDimension: { sheetId: grid[t.tab].sheetId, dimension: 'ROWS', length: r1 - grid[t.tab].rows } }]);
@@ -7322,7 +7488,11 @@ function toolCopy() {
     });
   }
   const plan = tl.plan, mode = tl.armed; toolDisarm();
-  return toolRun(async () => { toolSay(mode === 'toSheet' ? await toolWriteSheet(plan, toolSay) : await toolCopyToSb(toolSay)); });
+  return (async () => {
+    const gone = mode === 'toSheet' ? toolSheetOnlyBooks(plan) : [];
+    if (gone.length && !(await askOk(`Clear these ${gone.length} book${gone.length === 1 ? '' : 's'} from the Sheet backup?`, 'Clear'))) { toolSay('Cancelled. Nothing was copied.'); drawTools(); return; }
+    return toolRun(async () => { toolSay(mode === 'toSheet' ? await toolWriteSheet(plan, toolSay) : await toolCopyToSb(toolSay)); });
+  })();
 }
 $('sbTools').addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b || tl.busy) return;

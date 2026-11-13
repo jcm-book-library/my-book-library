@@ -40,7 +40,8 @@ select family.add_member('member@example.com','Member');
 -- Owner's data: one shared book, one hidden book, notes; log for this month and older.
 insert into books.books (user_id,id,title,author,status,notes,why,loanee,hidden,pages,current_page)
   values ('$O',1,'Shared Book','A','Reading','private note','private why','Sam',false,300,120),
-         ('$O',5,'Hidden Book','B','Finished','hidden note',null,null,true,200,200);
+         ('$O',5,'Hidden Book','B','Finished','hidden note',null,null,true,200,200),
+         ('$O',9,'Removed Book','C','Removed','removed note',null,null,false,100,0);
 insert into books.books (user_id,id,title,status,notes) values ('$X',1,'Outsider Book','Reading','x note');
 insert into books.settings (user_id,key,value) values ('$O','streakMinPages','10');
 with t as (select (now() at time zone 'Australia/Melbourne')::date d)
@@ -64,6 +65,8 @@ fails() { # name, user, sql : the statement must be refused
 }
 
 check "member sees owner's shared book only (not hidden)" $M "select string_agg(title, ',' order by id) from family.books() where user_id='$O'" "Shared Book"
+check "a Removed book is not returned by family.books (member and owner)" $M "select count(*) from family.books() where title='Removed Book'" "0"
+check "a Removed book is not returned to its owner by family.books either" $O "select count(*) from family.books() where title='Removed Book'" "0"
 check "family.books has no notes/why/loanee columns" $M "select count(*) from information_schema.columns where table_schema='family' and table_name='books'" "0"
 fails "member cannot read owner's notes via books table" $M "select 1/(count(*)) from books.books where user_id='$O'"
 check "member reading books table directly sees nothing of owner" $M "select count(*) from books.books where user_id='$O'" "0"
@@ -96,7 +99,7 @@ fails "members: member cannot make themself owner" $M "update family.members set
 check "members: member cannot rename the owner" $M "with u as (update family.members set display_name='X' where user_id='$O' returning 1) select count(*) from u" "0"
 fails "members: app cannot add members" $M "select family.add_member('outsider@example.com','X')"
 fails "signed-out visitors get nothing" "" "set local role anon; select count(*) from family.messages"
-check "books own rows still work for owner" $O "select count(*) from books.books" "2"
+check "books own rows still work for owner" $O "select count(*) from books.books" "3"
 
 echo "$pass PASS, $fail FAIL"
 [ "$fail" = 0 ]
