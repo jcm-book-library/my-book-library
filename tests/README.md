@@ -6,7 +6,7 @@ Synthetic data only; the sheet is a stateful fake (`lib.js`), so nothing touches
     bash tests/check.sh       # about 2 minutes; prints PASS or FAIL
 
 - `visual.js`: about 50 screenshots (390px and 1280px), compared pixel by pixel (<=100 px and <=12 channel diff counts as noise).
-- `flows.js`: 22 write flows (add/edit book, log pages, wishlist, series, lists, ratings...). Each records every non-read call; the JSON must be byte-identical.
+- `flows.js`: write flows (add/edit book, log pages, wishlist, series, lists, ratings...). Each records every non-read call; the JSON must be byte-identical.
 - Needs Playwright (global install is found automatically), python3 with numpy and Pillow. Outputs go to `tests/out/` (git-ignored).
 - `copyback.js`: the data tools in Data & sign-in (Copy Sheet -> Supabase, Check, Copy Supabase -> Sheet). A fake Sheets API (two spreadsheets, every write recorded) and a fake Supabase; `node tests/copyback.js tests/out/cb`. The fakes are shared with `supabase.js` through `fakes.js`.
 - `supabase.js`: Supabase mode end to end against the fake Supabase (`node tests/supabase.js tests/out/sb`).

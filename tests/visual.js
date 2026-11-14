@@ -23,9 +23,9 @@ fs.mkdirSync(outDir, { recursive: true });
     await closeAll(page);
     await ev(page,()=>{document.querySelector('.lib-mode [data-mode="plan"]').click()}); await shot('lib-plan');
     await ev(page,()=>{document.querySelector('.lib-mode [data-mode="wish"]').click()}); await shot('wish-inbox');
-    await ev(page,()=>{document.querySelector('[data-wv="session"]').click()}); await shot('wish-getthem');
-    await ev(page,()=>{document.getElementById('wlGroup').value='wantAs';document.getElementById('wlGroup').dispatchEvent(new Event('change'))}); await shot('wish-getthem-grouped');
-    await ev(page,()=>{document.getElementById('wlGroup').value='';document.getElementById('wlGroup').dispatchEvent(new Event('change'));document.querySelector('[data-wv="series"]').click()}); await shot('wish-series');
+    for(const h of ['Download','Buy','Borrow']){ await ev(page,h=>{const b=document.querySelector('#wlTabs [data-wv="'+h+'"]');b&&b.click()},h); await shot('wish-'+h.toLowerCase()); }
+    await ev(page,()=>{const b=document.querySelector('#wlTabs [data-wv="Download"]');b&&b.click();const g=document.querySelector('.wl-row [data-got]');g&&g.click()}); await shot('wish-gotit');
+    await ev(page,()=>{document.querySelectorAll('.wl-pop').forEach(p=>p.remove())});
     await ev(page,()=>{const w=disc.wish.find(x=>x.id==='WL0003'); openWishDlg(w)}); await shot('wish-dialog');
     await closeAll(page);
     await ev(page,()=>{openSeriesDlg(null)}); await shot('series-dialog-new');
@@ -59,6 +59,8 @@ fs.mkdirSync(outDir, { recursive: true });
     const row=await page.$('#libShelves .shelf-row'); if(row){ await row.screenshot({path:path.join(outDir,`${width}-lib-shelves-spines.png`)}); }
     await ev(page,()=>{const b=document.querySelector('#libShelves [data-seeall]');b&&b.click()}); await shot('lib-shelves-seeall');
     // Insights with enough synthetic books and log entries that every chart has something to draw (injected here only)
+    // the tab bar is sticky now, so it would sit on top of the element screenshots below; unpin it for these shots
+    await ev(page,()=>{document.querySelector('.wrap > .bar').style.position='static'});
     await seedInsights(page, 180);
     await ev(page,()=>showTab('insights')); await page.waitForTimeout(500); await shot('insights-full');
     for(const c of ['insC1','insC2','insC3','insC4','insC5']){ const e=await page.$('#'+c); if(e) await e.screenshot({path:path.join(outDir,`${width}-insights-${c}.png`)}); }
