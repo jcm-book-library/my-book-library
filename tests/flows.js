@@ -458,6 +458,50 @@ flow('t6-wish-remove-undo', async ({ page }) => {
   must(!!(await wishRow(page, 'WL0001')), 'Undo should bring WL0001 back');
 }, { mutate: fresh() });
 
+// (t7) Kind sticker: a tap on the sticker and "Comic" writes the one `format` cell (Book > Comic); the same kind again writes nothing; reading never writes
+flow('t7-wish-kind-sticker', async ({ page, writes }) => {
+  await wishMode(page);
+  must(writes.length === 0, 'opening the Wishlist must not write');
+  must(await page.evaluate(() => wishKind(disc.wish.find(x => x.id === 'WL0001')) + '|' + wishKind(disc.wish.find(x => x.id === 'WL0006')) + '|' + wishKind(disc.wish.find(x => x.id === 'WL0010')) + '|' + wishKind({ format: '' })) === 'Book|Comic|Graphic novel|', 'kind mapping');
+  await page.click('.wl-row[data-id="WL0001"] [data-kind]');
+  await page.click('.wl-menu [data-k="Book"]');                    // already Book: no write
+  await settle(page, 400);
+  must(writes.length === 0, 'choosing the current kind must not write');
+  await page.click('.wl-row[data-id="WL0001"] [data-kind]');
+  await page.click('.wl-menu [data-k="Comic"]');
+  await settle(page, 800);
+  must((await wishRow(page, 'WL0001')).format === 'Comic', 'WL0001 format should be Comic');
+  must(await page.evaluate(() => document.querySelector('.wl-row[data-id="WL0001"] .wl-kind').textContent) === 'Comic', 'sticker should read Comic');
+}, { mutate: fresh() });
+// (t8) Edit How Download > Buy: only the stage is written, the Download tab stays active (the row just leaves it), an Undo toast appears
+flow('t8-wish-edit-how-stays-on-tab', async ({ page }) => {
+  await wishMode(page);
+  await page.click('#wlTabs [data-wv="Download"]');
+  await page.click('.wl-row[data-id="WL0009"] [data-edit]');
+  await page.waitForSelector('#wishEditDlg[open]');
+  await fill(page, '#%', { 'we-how': 'Buy' });
+  await submit(page, '#wishEditForm');
+  await settle(page, 800);
+  must(await page.evaluate(() => wl.tab) === 'Download', 'the active Wishlist tab must stay Download');
+  must(await page.evaluate(() => document.querySelector('#wlTabs [aria-pressed="true"]').dataset.wv) === 'Download', 'the Download tab button should still be pressed');
+  must(!(await page.$('.wl-row[data-id="WL0009"]')), 'the row should have left the Download list');
+  must((await wishRow(page, 'WL0009')).stage === 'Buy', 'WL0009 should be Buy');
+  must(/Moved .*Box Of Wonders.* to Buy/.test(await page.evaluate(() => document.getElementById('wlToasts').textContent)), 'Undo toast missing');
+}, { mutate: fresh() });
+// (t9) Kind filter is display-only: no writes; counts follow the filter; the filter is remembered
+flow('t9-wish-kind-filter-display-only', async ({ page, writes }) => {
+  await wishMode(page);
+  await page.click('#wlKind [data-k="Comic"]');
+  await page.click('#wlKind [data-k="Graphic novel"]');
+  const cnt = () => page.evaluate(() => [...document.querySelectorAll('#wlTabs button')].map(b => b.dataset.wv + b.querySelector('.n').textContent).join());
+  must(await cnt() === 'Inbox2,Download3,Buy2,Borrow0', 'counts should follow the kind filter: ' + await cnt());
+  must(await page.evaluate(() => localStorage.getItem('mbl_wkind')) === '["Comic","Graphic novel"]', 'filter remembered');
+  await page.click('#wlKind [data-k="Comic"]'); await page.click('#wlKind [data-k="Graphic novel"]');
+  must(await cnt() === 'Inbox3,Download4,Buy2,Borrow1', 'cleared filter shows all: ' + await cnt());
+  await settle(page, 400);
+  must(writes.length === 0, 'the kind filter must not write: ' + JSON.stringify(writes));
+}, { mutate: fresh() });
+
 // (u) Themes: loading writes nothing; changing the theme writes only the `theme` setting row, the dyslexia toggle only `dyslexiaFont`;
 // a reload (browser storage cleared) takes the saved theme from the settings without writing
 flow('u-theme-settings', async ({ page, writes }) => {

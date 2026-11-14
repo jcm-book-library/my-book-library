@@ -473,6 +473,20 @@ const step = async (name, fn) => { try { await fn(); } catch (e) { check(name + 
       check('edit: one PATCH with only author, notes and the new stage word', ws.length === 1 && ws[0].method === 'PATCH' && ws[0].query.startsWith('?id=eq.WL0009') && keysOf(ws[0].body) === 'author,notes,stage' && ws[0].body.stage === 'Download', ws.map(c => c.body));
       check('edit: every other column is unchanged', Object.keys(before).every(k => ['author', 'notes', 'stage'].includes(k) || JSON.stringify(before[k]) === JSON.stringify(after[k])), [before, after]);
     });
+    await step('kind sticker writes one format cell; the kind filter writes nothing', async () => {
+      const n = w.calls.length;
+      await page.click('#wlTabs [data-wv="Inbox"]'); await page.click('.wl-row[data-id="WL0002"] [data-kind]'); await page.click('.wl-menu [data-k="Graphic novel"]'); await saved(page, 600);
+      const ws = writesSince(w, n);
+      check('kind sticker: one PATCH by id with only the format column', ws.length === 1 && ws[0].method === 'PATCH' && ws[0].table === 'wishlist' && ws[0].query.startsWith('?id=eq.WL0002') && keysOf(ws[0].body) === 'format' && ws[0].body.format === 'Graphic novel' && rowOfW('WL0002').format === 'Graphic novel', ws.map(c => [c.query, c.body]));
+      const m = w.calls.length;
+      await page.click('#wlKind [data-k="Book"]'); await page.click('#wlKind [data-k="Book"]'); await saved(page, 300);
+      check('kind filter: display only, no calls', writesSince(w, m).length === 0, writesSince(w, m).map(c => c.method + ' ' + c.table));
+      const k = w.calls.length;
+      await page.click('#wlTabs [data-wv="Download"]'); await page.click('.wl-row[data-id="WL0009"] [data-edit]'); await page.waitForSelector('#wishEditDlg[open]');
+      await fill(page, '#%', { 'we-how': 'Borrow' }); await submit(page, '#wishEditForm'); await saved(page, 600);
+      const es = writesSince(w, k);
+      check('edit How: one PATCH with only the stage, and the Download tab stays active', es.length === 1 && es[0].method === 'PATCH' && keysOf(es[0].body) === 'stage' && es[0].body.stage === 'Borrow' && await page.evaluate(() => wl.tab) === 'Download', es.map(c => [c.query, c.body]));
+    });
     await step('remove then Undo writes nothing', async () => {
       const n = w.calls.length;
       await page.click('#wlTabs [data-wv="Inbox"]'); await page.click('.wl-row[data-id="WL0002"] [data-rm]'); await page.click('.wl-toast:last-child .linkbtn');

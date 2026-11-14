@@ -1008,7 +1008,18 @@ body[data-bg="plain"] .ground{display:none}
 .wl-how .chip,.wl-chips .chip{white-space:nowrap;padding:4px 11px}
 .wl-foot{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:-2px;min-width:0}
 .wl-foot .small{overflow-wrap:anywhere}
-.wl-tabs{min-width:min(100%,460px)}
+.nx-bar{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center}
+.nx-bar .lib-mode{margin:0!important;align-self:auto}
+.nx-bar.wish .lib-mode{min-width:0}
+.nx-bar.wish .lib-mode button{white-space:nowrap}
+@media (max-width:700px){.nx-bar.wish .lib-mode{flex:1 1 100%}}
+.wl-kind{font:inherit;font-size:11px;font-weight:500;line-height:17px;border-radius:999px;padding:0 8px;background:transparent;cursor:pointer;white-space:nowrap;border:1px solid var(--line);color:var(--muted)}
+.wl-kind[data-kind="Book"]{color:var(--pill-fin);border-color:var(--pill-fin-b)}
+.wl-kind[data-kind="Graphic novel"]{color:var(--pill-tbr);border-color:var(--pill-tbr-b)}
+.wl-kind[data-kind="Comic"]{color:var(--pill-pau);border-color:var(--pill-pau-b)}
+.wl-kind.none{border-style:dashed;opacity:.65}
+.wl-kind:hover,.wl-kind:focus-visible{opacity:1;background:var(--raise)}
+.wl-menu button[aria-checked="true"]::before{content:"\2713\00a0"}
 .lib-mode .n{margin-left:5px;opacity:.7;font-size:12px}
 #wlBody{gap:12px}
 .wl-sec{padding:10px 14px}
@@ -1068,7 +1079,7 @@ body[data-bg="plain"] .ground{display:none}
  .wl-row .wl-acts{grid-row:1;grid-column:2}
  .wl-ibx .wl-acts{grid-column:1/-1;grid-row:2;justify-content:stretch}.wl-ibx .wl-acts .btn{flex:1}.wl-ibx .wl-acts .wl-ib{flex:none}
 }
-@media (max-width:560px){.lib-mode .n{margin-left:3px}.wl-tabs{width:100%}.wl-tabs button{padding:5px 4px;font-size:12.5px}.wl-pop:not(.wl-menu){left:8px!important;right:8px;top:auto!important;bottom:8px;width:auto}}
+@media (max-width:560px){.lib-mode .n{margin-left:3px}.wl-tabs button{padding:5px 4px;font-size:12.5px}.wl-kinds button{padding:5px 4px;font-size:12.5px}.wl-pop:not(.wl-menu){left:8px!important;right:8px;top:auto!important;bottom:8px;width:auto}}
 /* ===== Themes (Toolbox > Look). Only colour tokens, the page background, Reading now cards, spines/background shelf and fonts change; layout never does.
    JS (applyTheme) sets --accent, --accent-ink, --bg, --surface, --raise and --line inline for the active theme, so the monthly drift works in every theme. ===== */
 :root[data-theme="day"]{
@@ -1312,7 +1323,9 @@ body[data-bg="plain"] .ground{display:none}
       <button class="btn btn-primary" type="submit" id="wlAddBtn">Add</button>
       <div class="wl-foot"><span class="muted small" id="wlAddHint" aria-live="polite">Adds to the Wishlist Inbox</span><button type="button" class="linkbtn" id="wlPasteBtn">Paste a list</button></div>
     </form></div>
-    <div class="lib-mode" role="group" aria-label="Next view"><button type="button" data-mode="plan" aria-pressed="true">Plan</button><button type="button" data-mode="wish" aria-pressed="false">Wishlist</button></div>
+    <div class="nx-bar" id="nxBar"><div class="lib-mode" role="group" aria-label="Next view"><button type="button" data-mode="plan" aria-pressed="true">Plan</button><button type="button" data-mode="wish" aria-pressed="false">Wishlist</button></div>
+      <div class="lib-mode wl-tabs" id="wlTabs" role="group" aria-label="Wishlist view" hidden></div>
+      <div class="lib-mode wl-kinds" id="wlKind" role="group" aria-label="Filter by kind (none selected shows all)" hidden><button type="button" data-k="Book" aria-pressed="false">Book</button><button type="button" data-k="Graphic novel" aria-pressed="false">Graphic novel</button><button type="button" data-k="Comic" aria-pressed="false">Comic</button></div></div>
     <div id="toolsMountNext"></div>
     <div id="planView" class="vstack" hidden>
       <div class="dash-2">
@@ -1360,7 +1373,6 @@ body[data-bg="plain"] .ground{display:none}
       </div>
     </div>
     <div id="wishView" class="vstack" hidden>
-      <div class="lib-mode wl-tabs" id="wlTabs" role="group" aria-label="Wishlist view"></div>
       <div id="wlBody" class="vstack"></div>
       <div class="dash-2">
         <section class="panel" style="grid-column:1/-1" aria-labelledby="csH"><div class="panel-head"><h2 id="csH">Coming soon</h2><span class="muted small">From your Wishlist</span></div><ul class="mini-list" id="discSoon"></ul><div class="why" id="discPipe" style="margin-top:14px"></div></section>
@@ -1495,6 +1507,7 @@ body[data-bg="plain"] .ground{display:none}
       <div class="field w2"><label for="we-title">Title</label><input id="we-title" required autocomplete="off"></div>
       <div class="field w2"><label for="we-author">Author</label><input id="we-author" autocomplete="off"></div>
       <div class="field w2"><label for="we-how">How</label><select id="we-how"><option>Inbox</option><option>Download</option><option>Buy</option><option>Borrow</option></select></div>
+      <div class="field w2"><label id="we-kind-l">Kind</label><div class="seg" id="we-kind" role="group" aria-labelledby="we-kind-l"><button type="button" data-k="Book" aria-pressed="false">Book</button><button type="button" data-k="Graphic novel" aria-pressed="false">Graphic novel</button><button type="button" data-k="Comic" aria-pressed="false">Comic</button></div></div>
       <div class="field w2"><label for="we-av">Availability</label><select id="we-av"><option>Available</option><option>Coming soon</option><option>Not available</option></select></div>
       <div class="field w2" id="we-dwrap"><label for="we-date" id="we-dlab">Release date</label><input type="date" id="we-date"></div>
       <div class="field w2"><label for="we-link">Link</label><input id="we-link" inputmode="url" autocomplete="off" placeholder="https://"></div>
@@ -3478,6 +3491,7 @@ function renderLibrary() {
   placeLibTools(mode); renderFilterChips();
   $('planView').hidden = !plan;
   $('wishView').hidden = !wish;
+  $('wlTabs').hidden = $('wlKind').hidden = !wish; $('nxBar').classList.toggle('wish', wish);
   $('view-library').classList.toggle('wish-mode', wish || lists);
   $('listsView').hidden = !lists;
   const shelvesOn = mode === 'books' && L.view === 'shelves';
@@ -3688,9 +3702,10 @@ $('libShelves').addEventListener('click', e => {
 });
 $('libViewSeg').addEventListener('click', e => {
   const b = e.target.closest('button[data-v]'); if (!b) return;
+  if (state.lib.view !== b.dataset.v) scrollSave();
   state.lib.view = b.dataset.v; if (b.dataset.v === 'shelves') state.lib.shelf = null;
   try { localStorage.setItem('mbl_libview', b.dataset.v); } catch (err) {}
-  renderLibrary();
+  renderLibrary(); scrollRestore();
 });
 // Status straight from the Library list. Finished fills the finish date and last page; Reading fills the start date.
 async function quickStatus(id, status, sel) {
@@ -5749,7 +5764,13 @@ const WL_HOWS = ['Inbox', 'Download', 'Buy', 'Borrow'];
 const WL_AVS = ['Available', 'Coming soon', 'Not available'];
 const WL_OLD_STAGE = { 'To download': 'Download', 'To buy': 'Buy', 'To borrow': 'Borrow' };
 const WL_WANT_HOW = { Kobo: 'Download', PDF: 'Download', Physical: 'Buy', Library: 'Borrow' };
-const wl = { tab: 'Inbox', closed: {}, lim: {}, addHow: 'Inbox', moving: false, editing: null, rm: 0 };
+const wl = { tab: 'Inbox', closed: {}, lim: {}, addHow: 'Inbox', moving: false, editing: null, rm: 0, kinds: new Set() };
+// Kind of a row (Book / Graphic novel / Comic), read from the `format` column; blank or unknown formats have no kind. Reading never writes.
+const WL_KINDS = ['Book', 'Graphic novel', 'Comic'];
+const WL_KIND_MAP = { 'book': 'Book', 'graphic novel': 'Graphic novel', 'manga': 'Graphic novel', 'comic': 'Comic', 'issues': 'Comic', 'deluxe': 'Comic', 'omnibus': 'Comic', 'compendium': 'Comic', 'box set': 'Comic', 'limited edition': 'Comic' };
+const wishKind = w => WL_KIND_MAP[String(w.format || '').trim().toLowerCase()] || '';
+try { const k = JSON.parse(localStorage.getItem('mbl_wkind') || '[]'); if (Array.isArray(k)) k.filter(x => WL_KINDS.includes(x)).forEach(x => wl.kinds.add(x)); } catch (e) {}
+const wlKindSave = () => { try { localStorage.setItem('mbl_wkind', JSON.stringify([...wl.kinds])); } catch (e) {} };
 const wishKey = t => normQ(t).replace(/^(the|a|an) /, '');
 const wishById = id => (disc.wish || []).find(w => w.id === id);
 const libByTitle = () => new Map(state.allBooks.map(b => [wishKey(b.title), b]));
@@ -5799,7 +5820,8 @@ function wishBarPaint(msg) {
 }
 function wishPaint() {
   const body = $('wlBody'), by = Object.fromEntries(WL_HOWS.map(h => [h, []]));
-  for (const w of disc.wish || []) by[wishHow(w)].push(w);
+  for (const w of disc.wish || []) if (!wl.kinds.size || wl.kinds.has(wishKind(w))) by[wishHow(w)].push(w);
+  $('wlKind').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(wl.kinds.has(b.dataset.k))));
   $('wlTabs').innerHTML = WL_HOWS.map(h => `<button type="button" data-wv="${h}" aria-pressed="${wl.tab === h}">${h}<span class="n">${by[h].length}</span></button>`).join('');
   const list = by[wl.tab], lib = libByTitle();
   const rows = (arr, key, mk) => arr.slice(0, wl.lim[key] || 100).map(w => mk(w, lib)).join('') + (arr.length > (wl.lim[key] || 100) ? `<button class="btn" type="button" data-more-rows="${key}" style="margin-top:8px">Show ${Math.min(100, arr.length - (wl.lim[key] || 100))} more</button>` : '');
@@ -5815,10 +5837,11 @@ function wishPaint() {
       h += `<section class="panel wl-sec${wl.closed[key] ? ' closed' : ''}" data-sec="${key}"><button class="wl-sec-head" type="button" aria-expanded="${!wl.closed[key]}"><h2>${v}</h2><span class="cnt">${s.length}</span><span class="hint">${hint}</span><span class="car">▼</span></button><div class="wl-rows">${s.length ? rows(s, key, wishRow) : `<div class="wl-empty">${empty}</div>`}</div></section>`;
     }
   }
-  body.innerHTML = h;
+  const y = window.scrollY; body.innerHTML = h;
+  if (window.scrollY !== y) window.scrollTo({ top: y, behavior: 'instant' });
 }
 function wishMeta(w, av) {
-  const p = [];
+  const k = wishKind(w), p = [`<button type="button" class="wl-kind${k ? '' : ' none'}" data-kind="${k}" aria-haspopup="true" aria-label="Kind: ${k || 'not set'}. Change" title="${k ? 'Change kind' : 'Set kind'}">${k || 'Set kind'}</button>`];
   if (w.author) p.push(`<span>${escapeText(w.author)}</span>`);
   if (w.series) p.push(`<span>${escapeText(w.series + (w.number ? ' #' + w.number : ''))}</span>`);
   if (w.gift === 'TRUE') p.push(WL_GIFT);
@@ -5908,6 +5931,15 @@ async function wishGotIt(w, how, tier, copy) {
   const n = await moveWishToBooks([w], true, { tier, copies: how === 'Download' ? copy : how === 'Buy' ? 'Physical' : '', library: how === 'Borrow', silent: true });
   if (n === null) return;
   wlToast(n ? `${wlQ(w)} is in your TBR · ${tier}` : `${wlQ(w)} was already in your library, so it's off your Wishlist`);
+}
+// Kind sticker: a tiny menu; only a real change writes (`format` = Book | Graphic novel | Comic, one cell)
+function wishKindMenu(w, btn) {
+  wlClosePop();
+  const cur = wishKind(w), p = document.createElement('div'); p.className = 'wl-pop wl-menu'; p.setAttribute('role', 'menu'); p.setAttribute('aria-label', 'Kind');
+  p.innerHTML = WL_KINDS.map(k => `<button type="button" role="menuitemradio" aria-checked="${k === cur}" data-k="${k}">${k}</button>`).join('');
+  document.body.appendChild(p); wlPlace(p, btn);
+  p.addEventListener('click', e => { const b = e.target.closest('[data-k]'); if (!b) return; wlClosePop(); if (b.dataset.k !== cur) wishSet(w, { format: b.dataset.k }); });
+  (p.querySelector('[aria-checked="true"]') || p.querySelector('button')).focus();
 }
 function wishMenu(w, btn) {
   wlClosePop();
@@ -6173,10 +6205,13 @@ async function saveWish(e) {
   } catch (err) { $('wdMsg').textContent = 'Couldn\'t save it: ' + (err.message || explain(err)); $('wdSave').disabled = false; }
 }
 // Edit: title, author, how, availability, release date, link, note and gift. Every other column is left exactly as it is.
+const weKind = () => { const b = $('we-kind').querySelector('[aria-pressed="true"]'); return b ? b.dataset.k : ''; };
+$('we-kind').addEventListener('click', e => { const b = e.target.closest('button[data-k]'); if (b) $('we-kind').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x === b))); });
 const weSync = () => { const on = $('we-av').value === 'Coming soon'; $('we-dwrap').classList.toggle('dis', !on); $('we-date').disabled = !on; };
 function openWishEdit(w) {
   wl.editing = w;
   $('we-title').value = w.title; $('we-author').value = w.author || '';
+  $('we-kind').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.k === wishKind(w))));
   $('we-how').value = wishHow(w); $('we-av').value = wishAvail(w).v;
   $('we-date').value = isoDate(w.release) ? w.release : '';
   $('we-dlab').textContent = w.release && !isoDate(w.release) ? `Release date (now “${w.release}”)` : 'Release date';
@@ -6194,6 +6229,7 @@ function saveWishEdit(e) {
   if (v('we-title') !== w.title) ch.title = v('we-title');
   if (v('we-author') !== (w.author || '')) ch.author = v('we-author');
   if ($('we-how').value !== wishHow(w)) ch.stage = $('we-how').value;
+  if (weKind() && weKind() !== wishKind(w)) ch.format = weKind();
   const av = $('we-av').value;
   if (av !== wishAvail(w).v) { ch.checked = av; ch.checkedOn = today(); }
   if (av === 'Coming soon' && $('we-date').value !== (isoDate(w.release) ? w.release : '')) ch.release = $('we-date').value;
@@ -6201,7 +6237,11 @@ function saveWishEdit(e) {
   if (v('we-note') !== (w.notes || '')) ch.notes = v('we-note');
   if ($('we-gift').checked !== (w.gift === 'TRUE')) ch.gift = $('we-gift').checked ? 'TRUE' : 'FALSE';
   $('wishEditDlg').close();
-  if (Object.keys(ch).length) { if (ch.stage && !$('wishView').hidden) wl.tab = ch.stage; wishSet(w, ch); }
+  // An edit never switches the Wishlist tab: a row whose How changed just leaves the current list (with an Undo)
+  if (Object.keys(ch).length) {
+    const prev = w.stage; wishSet(w, ch);
+    if (ch.stage) wlToast(`Moved ${wlQ(w)} to ${ch.stage}`, () => setWishFields(w, { stage: prev }));
+  }
 }
 
 /* Moving to Books. Got it → new TBR row in Books (or a link if the title's already there),
@@ -7122,8 +7162,28 @@ const TAB_ALIAS = { log: 'now', dashboard: 'insights', discover: 'next', tools: 
 const nav = { tab: 'now', last: 'now', tool: null };
 const TOOL_PANELS = { rate: 'Rate a book', fill: 'Fill details', covers: 'Find covers', goal: 'Goal planner', dip: 'Lucky dip', own: 'Do I own this?', removed: 'Removed books' };
 const isPlanMode = m => m === 'plan' || m === 'wish';
+// Scroll position per view (kept in memory): leaving a view stores it, coming back restores it after the render; a first visit starts at the top
+const scrollMem = {}; let scrollTok = 0;
+function viewKey() {
+  const L = state.lib;
+  if (nav.tab === 'library') return 'library/' + (L.mode || 'books') + (L.mode === 'books' || !L.mode ? '/' + (L.view || 'list') : '');
+  if (nav.tab === 'next') return 'next/' + (L.mode === 'wish' ? 'wish/' + wl.tab : 'plan');
+  return nav.tab;
+}
+const scrollSave = () => { scrollMem[viewKey()] = window.scrollY; };
+function scrollRestore() {
+  const key = viewKey(), want = scrollMem[key] || 0, tok = ++scrollTok;
+  const apply = n => {
+    if (tok !== scrollTok) return;
+    const max = Math.max(0, document.documentElement.scrollHeight - innerHeight);
+    window.scrollTo({ top: Math.min(want, max), behavior: 'instant' });
+    if (want > max + 1 && n < 6) setTimeout(() => apply(n + 1), 120);   // content still loading: try again shortly
+  };
+  requestAnimationFrame(() => apply(0));
+}
 function showTab(name, tool) {
   name = TAB_ALIAS[name] || name; if (!TABS.includes(name)) name = 'now';
+  const sameView = name === nav.tab; if (!sameView) scrollSave();
   hideCard(); closePops();
   const L = state.lib;
   if (name === 'library' && isPlanMode(L.mode)) L.mode = L.libMode || 'books';
@@ -7147,6 +7207,7 @@ function showTab(name, tool) {
   if (name === 'insights') { if (insDirty) renderDashboard(); renderAnalysis(); }
   if (name === 'toolbox') renderTools();
   if (name !== 'toolbox') { try { localStorage.setItem('mbl-tab', name); } catch (e) {} }
+  if (!sameView) scrollRestore();
   wlStick();
 }
 // The tab bar and the Wishlist add bar stay pinned while you scroll; "stuck" gives them a background only once they are pinned
@@ -7168,9 +7229,11 @@ if (window.ResizeObserver) new ResizeObserver(wlStick).observe(document.querySel
 // Switch the Library / Next sub-view (Books, Reading lists | Plan, Wishlist); it moves to the tab it belongs to
 function setLibMode(mode) {
   const L = state.lib, tab = isPlanMode(mode) ? 'next' : 'library';
+  if (nav.tab === tab && L.mode === mode) return renderLibrary();
+  scrollSave();
   if (mode === 'authors' || mode === 'series' || L.mode === 'authors' || L.mode === 'series') hideCard();
   L.mode = mode; L[tab === 'next' ? 'nextMode' : 'libMode'] = mode;
-  if (nav.tab !== tab) showTab(tab); else renderLibrary();
+  if (nav.tab !== tab) showTab(tab); else { renderLibrary(); scrollRestore(); }
 }
 for (const t of TABS.slice(0, 4)) $('tab-' + t).addEventListener('click', () => showTab(t));
 $('recModes').addEventListener('click', e => { const c = e.target.closest('.chip'); if (!c) return; recState.mode = c.dataset.m; $('recModes').querySelectorAll('.chip').forEach(x => x.setAttribute('aria-pressed', String(x === c))); renderRecs(); });
@@ -7229,14 +7292,20 @@ document.querySelectorAll('.logday button').forEach(b => b.addEventListener('cli
 $('logDate').addEventListener('change', e => setLogDay(toDate(e.target.value)));
 setLogDay(null);
 $('dogAdd').addEventListener('click', () => openQuoteDlg(null));
-$('wlTabs').addEventListener('click', e => { const b = e.target.closest('button[data-wv]'); if (!b) return; wl.tab = b.dataset.wv; wlClosePop(); wishPaint(); });
+$('wlTabs').addEventListener('click', e => { const b = e.target.closest('button[data-wv]'); if (!b) return; if (wl.tab === b.dataset.wv) return; scrollSave(); wl.tab = b.dataset.wv; wlClosePop(); wishPaint(); scrollRestore(); });
+$('wlKind').addEventListener('click', e => {
+  const b = e.target.closest('button[data-k]'); if (!b) return;
+  if (wl.kinds.has(b.dataset.k)) wl.kinds.delete(b.dataset.k); else wl.kinds.add(b.dataset.k);
+  wlKindSave(); wlClosePop(); wishPaint();
+});
 $('wlBody').addEventListener('click', e => {
   const t = e.target, q = s => t.closest(s), row = q('.wl-row'), w = row && wishById(row.dataset.id);
   if (q('[data-more-rows]')) { const k = q('[data-more-rows]').dataset.moreRows; wl.lim[k] = (wl.lim[k] || 100) + 100; wishPaint(); return; }
   const sh = q('.wl-sec-head');
   if (sh) { const k = sh.closest('.wl-sec').dataset.sec; wl.closed[k] = !wl.closed[k]; wishPaint(); return; }
   if (!w || q('.wl-datebox') || q('.wl-m a')) return;
-  if (q('[data-mv]')) wishMove(w, q('[data-mv]').dataset.mv);
+  if (q('[data-kind]')) wishKindMenu(w, q('[data-kind]'));
+  else if (q('[data-mv]')) wishMove(w, q('[data-mv]').dataset.mv);
   else if (q('[data-rm]')) wishRemove(w);
   else if (q('[data-edit]')) openWishDlg(w);
   else if (q('[data-a]')) wishSetAvail(w, q('[data-a]').dataset.a);
@@ -7244,7 +7313,7 @@ $('wlBody').addEventListener('click', e => {
   else if (q('[data-more]')) wishMenu(w, q('[data-more]'));
 });
 $('wlBody').addEventListener('change', e => { if (!e.target.matches('[data-date]')) return; const w = wishById(e.target.closest('.wl-row').dataset.id); if (w && e.target.value !== (isoDate(w.release) ? w.release : '')) wishSet(w, { release: e.target.value }); });
-document.addEventListener('click', e => { if (!e.target.closest('.wl-pop') && !e.target.closest('[data-got],[data-more]')) wlClosePop(); });
+document.addEventListener('click', e => { if (!e.target.closest('.wl-pop') && !e.target.closest('[data-got],[data-more],[data-kind]')) wlClosePop(); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') wlClosePop(); });
 addEventListener('scroll', wlClosePop, { passive: true });
 $('wlHow').addEventListener('click', e => { const c = e.target.closest('.chip'); if (!c) return; wl.addHow = c.dataset.h; delete $('wlAddT').dataset.confirm; wishBarPaint(); });
