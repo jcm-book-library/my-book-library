@@ -1039,6 +1039,12 @@ body[data-bg="plain"] .ground{display:none}
 .wl-gifti{color:var(--gift-c)}
 .wl-m a{color:color-mix(in srgb,var(--accent) 65%,var(--hi));display:inline-flex}
 .wl-rel{color:var(--warn);font-weight:500}.wl-rel.late{color:var(--danger)}
+.wl-ks,.wl-ks *{-webkit-user-select:none;user-select:none}
+.wl-ks{display:inline-flex;gap:6px;align-items:center;flex:none}
+.wl-ctl{display:flex;gap:8px;align-items:center;min-width:0}
+.wl-cp{display:inline-flex;align-items:center;background:none;border:0;padding:2px;color:var(--muted);cursor:pointer;border-radius:6px;-webkit-user-select:none;user-select:none}
+.wl-cp svg{width:14px;height:14px}.wl-cp:hover,.wl-cp:focus-visible{color:var(--fg);background:var(--raise)}
+.wl-row{grid-template-columns:minmax(0,1fr) auto auto}
 .wl-tag{font-size:11px;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:0 7px;line-height:17px;white-space:nowrap}
 .wl-note{font-size:12.5px;color:var(--muted);font-style:italic;margin-top:1px;overflow-wrap:anywhere}
 .wl-av{display:inline-grid;grid-auto-flow:column;border:1px solid var(--line);border-radius:999px;padding:2px;gap:1px}
@@ -1075,7 +1081,8 @@ body[data-bg="plain"] .ground{display:none}
  .wl-addbar .btn-primary{grid-column:2/3;grid-row:2/4;align-self:stretch;justify-self:end;padding:6px 26px}
  .wl-foot{grid-column:1/-1;grid-row:4}
  .wl-row{grid-template-columns:minmax(0,1fr) auto}
- .wl-row .wl-av{grid-column:1/-1;grid-row:2;display:grid}.wl-av button{padding:4px 2px;font-size:11.5px}
+ .wl-row .wl-ctl{grid-column:1/-1;grid-row:2}.wl-ctl{flex-wrap:wrap}.wl-ctl .wl-av{flex:1 1 230px;display:grid;min-width:0}.wl-av button{padding:4px 2px;font-size:11.5px}
+ .wl-ibx .wl-acts .wl-ks{flex:none}
  .wl-row .wl-acts{grid-row:1;grid-column:2}
  .wl-ibx .wl-acts{grid-column:1/-1;grid-row:2;justify-content:stretch}.wl-ibx .wl-acts .btn{flex:1}.wl-ibx .wl-acts .wl-ib{flex:none}
 }
@@ -1146,9 +1153,90 @@ body[data-bg="plain"] .ground{display:none}
 .look-sub{font-size:12.5px;color:var(--muted);margin-bottom:2px}
 .look-row.dys{align-items:center}
 .look-row .seg button[disabled]{opacity:.6;cursor:default}
+/* Email-code sign-in card (Supabase mode, nobody signed in): replaces the app */
+body.signed-out .wrap{display:none}
+#signCard{position:fixed;inset:0;z-index:5;display:flex;align-items:center;justify-content:center;padding:16px;overflow:auto}
+#signCard[hidden]{display:none}
+.sc-card{width:min(400px,100%);background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:28px 24px 22px;box-shadow:0 14px 44px rgba(var(--shc),.55);display:grid;gap:14px;min-width:0}
+.sc-card .lockup{justify-content:center}
+.sc-card h2{font-size:20px;text-align:center}
+.sc-card form{display:grid;gap:10px;min-width:0}
+.sc-card form[hidden]{display:none}
+.sc-card label{font-size:12.5px;color:var(--muted)}
+.sc-card input{width:100%;min-width:0;font:inherit;font-size:16px;background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+.sc-card input:focus{border-color:var(--accent);outline:none}
+.sc-card .btn{min-height:42px;font-size:15px}
+#scCode{font-size:26px;letter-spacing:.4em;text-align:center;padding-left:calc(12px + .4em)}
+.sc-sub{margin:0;text-align:center;font-size:13.5px;color:var(--muted);overflow-wrap:anywhere}
+.sc-msg{margin:0;min-height:1.3em;text-align:center;font-size:13.5px;color:var(--muted)}
+.sc-msg[data-kind="err"]{color:var(--danger)}
+.sc-links{display:flex;justify-content:center;gap:6px 16px;flex-wrap:wrap}
+.linkish{background:none;border:0;padding:4px;font:inherit;font-size:13px;color:var(--accent);cursor:pointer;text-decoration:underline}
+.linkish[disabled]{color:var(--muted);cursor:default;text-decoration:none}
+/* Who am I: avatar and menu, member mode, welcome panel */
+.me-wrap{position:relative;margin-left:auto}
+.me-wrap[hidden]{display:none}
+.me-btn{display:inline-flex;align-items:center;gap:8px;background:transparent;border:1px solid var(--line);border-radius:999px;padding:3px 12px 3px 3px;color:var(--fg);font:inherit;font-size:13px;font-weight:500;min-height:34px;cursor:pointer}
+.me-btn .nm{max-width:12ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.avatar{width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#15121b;background:var(--av,var(--accent));flex:none}
+#mePop{right:0;top:calc(100% + 6px);min-width:190px;padding:8px;display:grid;gap:6px}
+#mePop[hidden]{display:none}
+#mePop .who{font-size:12px;color:var(--muted);padding:2px 4px 4px;overflow-wrap:anywhere}
+#mePop .btn{text-align:left}
+.member-only{display:none}
+body[data-role="member"] .own-only{display:none!important}
+body[data-role="member"] #toolboxPop .pg:not(.own-only){margin-top:0;padding-top:0;border-top:0}
+body[data-role="member"] #toolboxPop .pg:not(.own-only) ~ .pg:not(.own-only){margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+body[data-role="member"] .member-only{display:block}
+.welcome{display:grid;gap:14px}
+.welcome h2{font-size:20px}
+.wl-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.wl-card{border:1px solid var(--line);border-radius:12px;padding:14px;background:var(--bg);display:grid;gap:8px;align-content:start;min-width:0}
+.wl-card h3{font-size:15px;margin:0}
+.wl-card p{margin:0;font-size:13px;color:var(--muted)}
+.wl-card .btn{justify-self:start}
+.wl-card .btn[disabled]{opacity:.6}
+.prof{display:flex;gap:10px 14px;align-items:center;flex-wrap:wrap;min-width:0}
+.prof input[type=text]{font:inherit;font-size:14px;background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:7px 10px;width:min(220px,100%);min-width:0}
+.prof input[type=text]:focus{border-color:var(--accent);outline:none}
+.swatches{display:flex;gap:8px;flex-wrap:wrap}
+.swatch{width:26px;height:26px;border-radius:50%;border:2px solid transparent;background:var(--c);padding:0;cursor:pointer}
+.swatch[aria-pressed="true"]{border-color:var(--fg);box-shadow:0 0 0 2px var(--surface) inset}
+.prof-msg{font-size:13px;color:var(--muted)}
+#profDlg{width:min(420px,calc(100vw - 24px))}
+#profDlg .prof{padding:6px 16px 16px}
+@media (max-width:700px){.wl-cards{grid-template-columns:1fr}}
+body.is-blank #view-now :is(.stats,.dash-2){display:none}
 </style>
 
 <div class="ground" aria-hidden="true"><div class="row" id="gRow"></div><div class="plank"></div></div>
+<div id="signCard" hidden>
+  <div class="sc-card" role="main">
+    <div id="scLogo"></div>
+    <h2 id="scTitle">Sign in with your email</h2>
+    <form id="scEmailForm" novalidate>
+      <label for="scEmail">Email</label>
+      <input id="scEmail" type="email" inputmode="email" autocomplete="username email" autocapitalize="off" spellcheck="false" placeholder="you@example.com">
+      <button class="btn btn-primary" type="submit" id="scSend">Send code</button>
+    </form>
+    <form id="scCodeForm" novalidate hidden>
+      <p class="sc-sub">We sent a code to <b id="scSentTo"></b>. It can take a minute to arrive.</p>
+      <label for="scCode">6-digit code</label>
+      <input id="scCode" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="8" autocomplete="one-time-code" placeholder="000000">
+      <button class="btn btn-primary" type="submit" id="scGo">Sign in</button>
+      <div class="sc-links"><button class="linkish" type="button" id="scResend" disabled>Resend code</button><button class="linkish" type="button" id="scBack">Use a different email</button></div>
+    </form>
+    <form id="scPwForm" novalidate hidden>
+      <label for="scPwEmail">Email</label>
+      <input id="scPwEmail" type="email" inputmode="email" autocomplete="username" autocapitalize="off" spellcheck="false">
+      <label for="scPw">Password</label>
+      <input id="scPw" type="password" autocomplete="current-password">
+      <button class="btn btn-primary" type="submit" id="scPwGo">Sign in</button>
+    </form>
+    <p class="sc-msg" id="scMsg" role="alert"></p>
+    <div class="sc-links"><button class="linkish" type="button" id="scAlt">Use a password instead</button></div>
+  </div>
+</div>
 <div class="wrap">
   <header>
     <div class="hd-top">
@@ -1156,6 +1244,10 @@ body[data-bg="plain"] .ground{display:none}
       <div class="status" id="status" data-state="loading" role="status">
       <span class="dot"></span><span id="statusText">Connecting to your sheet…</span>
       <button class="btn" id="refreshBtn" type="button">Refresh</button>
+    </div>
+    <div class="me-wrap" id="meWrap" hidden>
+      <button class="me-btn" id="meBtn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="mePop"><span class="avatar" id="meAv" aria-hidden="true">?</span><span class="nm" id="meName"></span></button>
+      <div class="pop" id="mePop" hidden><div class="who" id="meWho"></div><button class="btn" type="button" id="meProf">Profile</button><button class="btn" type="button" id="meOut">Sign out</button></div>
     </div>
     </div>
     <div class="hd-main">
@@ -1179,8 +1271,8 @@ body[data-bg="plain"] .ground{display:none}
       <button class="tab tb" id="toolboxBtn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="toolboxPop"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg>Toolbox</button>
     </nav>
     <div class="pop" id="toolboxPop" hidden>
-      <div class="pg"><p class="pg-label">Books</p><div class="tgrid"><button class="btn" type="button" data-tool="rate">Rate a book</button><button class="btn" type="button" data-tool="fill">Fill details</button><button class="btn" type="button" data-tool="covers">Find covers</button><button class="btn" type="button" data-tool="removed">Removed books</button></div></div>
-      <div class="pg"><p class="pg-label">Plan</p><div class="tgrid"><button class="btn" type="button" data-tool="goal">Goal planner</button><button class="btn" type="button" data-tool="dip">Lucky dip</button><button class="btn" type="button" data-tool="own">Do I own this?</button></div></div>
+      <div class="pg own-only"><p class="pg-label">Books</p><div class="tgrid"><button class="btn" type="button" data-tool="rate">Rate a book</button><button class="btn" type="button" data-tool="fill">Fill details</button><button class="btn" type="button" data-tool="covers">Find covers</button><button class="btn" type="button" data-tool="removed">Removed books</button></div></div>
+      <div class="pg own-only"><p class="pg-label">Plan</p><div class="tgrid"><button class="btn" type="button" data-tool="goal">Goal planner</button><button class="btn" type="button" data-tool="dip">Lucky dip</button><button class="btn" type="button" data-tool="own">Do I own this?</button></div></div>
       <div class="pg"><p class="pg-label">Look</p>
         <div class="look-sub">Theme</div><div class="theme-grid" id="themeGrid" role="group" aria-label="Theme"></div>
         <div class="look-row"><span>Dyslexia font</span><div class="seg"><button type="button" data-dys="off" aria-pressed="true">Off</button><button type="button" data-dys="on" aria-pressed="false">On</button></div></div>
@@ -1188,12 +1280,23 @@ body[data-bg="plain"] .ground{display:none}
         <div class="look-row"><span>Background</span><div class="seg"><button type="button" data-bg="shelf" aria-pressed="true">Shelf</button><button type="button" data-bg="plain" aria-pressed="false">Plain</button></div></div>
         <div class="look-row"><span>Spine colours</span><div class="seg"><button type="button" data-cm="month" aria-pressed="false">Month</button><button type="button" data-cm="daily" aria-pressed="true">Daily mix</button><button type="button" data-cm="contrast" aria-pressed="false">Contrast</button></div></div>
       </div>
-      <div class="pg" id="dataPg" hidden><p class="pg-label">Data</p><div class="tgrid"><button class="btn" type="button" id="dataBtn">Data &amp; sign-in</button></div></div>
-      <div class="pg"><p class="pg-label">Links</p><div class="links" id="discLinks"></div></div>
+      <div class="pg own-only" id="dataPg" hidden><p class="pg-label">Data</p><div class="tgrid"><button class="btn" type="button" id="dataBtn">Data &amp; sign-in</button></div></div>
+      <div class="pg own-only"><p class="pg-label">Links</p><div class="links" id="discLinks"></div></div>
+      <div class="pg member-only"><p class="pg-label">Account</p><div class="tgrid"><button class="btn" type="button" id="toolOut">Sign out</button></div></div>
     </div>
   </div>
 
   <div id="view-now" class="vstack" role="tabpanel" aria-labelledby="tab-now">
+  <section class="panel welcome" id="welcome" aria-labelledby="wlHello" hidden>
+    <h2 id="wlHello">Welcome to Our Library</h2>
+    <p class="muted" style="margin:0">Your shelves are empty for now. Pick a way to fill them; you can do the others any time.</p>
+    <div class="wl-cards">
+      <div class="wl-card"><h3>Import from StoryGraph or Goodreads</h3><p>Bring your whole history across from an export file.</p><button class="btn" type="button" id="wlImport" disabled>Coming next</button></div>
+      <div class="wl-card"><h3>Paste a list</h3><p>One book per line, from notes or a spreadsheet.</p><button class="btn btn-primary" type="button" id="wlPaste">Paste a list</button></div>
+      <div class="wl-card"><h3>Add one at a time</h3><p>Title and author, and you are away.</p><button class="btn btn-primary" type="button" id="wlOne">Add a book</button></div>
+    </div>
+    <div class="prof" id="wlProf" hidden></div>
+  </section>
   <section class="stats" aria-label="Summary">
     <div class="stat streak">
       <span class="eyebrow">Reading streak</span>
@@ -1518,6 +1621,10 @@ body[data-bg="plain"] .ground{display:none}
   </form>
 </dialog>
 
+<dialog id="profDlg" aria-labelledby="profH">
+  <div class="dlg-head"><h2 id="profH">Your profile</h2><button class="x" type="button" id="profClose" aria-label="Close">×</button></div>
+  <div class="prof" id="profBody"></div>
+</dialog>
 <dialog id="quickDlg" aria-labelledby="qdHead">
   <form id="quickForm" novalidate>
     <div class="dlg-head"><h2 id="qdHead">Add a book</h2><button class="x" type="button" id="qClose" aria-label="Close">×</button></div>
@@ -1972,7 +2079,7 @@ function renderBooks() {
   box.textContent = '';
   $('paceNote').textContent = state.books.length ? `You average ${fmt(Math.round(recentDailyAverage(14)))} pages a day (last 14 days)` : '';
   if (!state.books.length) {
-    box.innerHTML = '<p class="muted">No books marked Reading in your sheet. Set a book\'s status to Reading and press Refresh.</p>';
+    box.innerHTML = state.sb ? '<p class="muted">Nothing on the go yet. Start a book from your Library or Next Up and it will appear here.</p>' : '<p class="muted">No books marked Reading in your sheet. Set a book\'s status to Reading and press Refresh.</p>';
     return;
   }
   const pal0 = spinePalette(look.spines, today());
@@ -2411,12 +2518,14 @@ function renderForYou() {
   if (!near.length) od.innerHTML = '<li class="empty" style="display:block;cursor:default">Nothing finished around this date in earlier years yet.</li>';
   for (const { b } of near) od.appendChild(row(b, `${starStr(b.rating)}${b.rating ? '\n' : ''}${fromIso(b.finishDate).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' })}`));
 }
+const noBooksMsg = () => state.allBooks.length ? 'No books match these filters.' : 'Nothing on your shelves yet. Add a book or paste a list, and it will show up here.';
 function renderAll() {
   readCache.map = null;
   applyTheme();
   const totals = dailyTotals();
   renderStats(totals);
   renderBooks();
+  renderWelcome();
   chartBase();
   renderDaily(totals);
   if (state.libLoaded) { renderLibrary(); renderTBR(); renderForYou(); }
@@ -2470,6 +2579,7 @@ async function refresh() {
   $('refreshBtn').disabled = true;
   try {
     const { log, books, settings } = await DB().loadCore();
+    if (state.sb) await loadMe();
     // Reading Log: header row, then one row per entry
     const lh = (log[0] || []).map(h => String(h).trim());
     const li = k => lh.indexOf(k);
@@ -2496,6 +2606,7 @@ async function refresh() {
     queueMicrotask(tidyPlan);
     await loadContents();
     const savedLook = {};
+    if (state.sb) state.settings = { streakStartDate: '', streakMinPages: 1, dailyGoalPages: 100 };   // never carry the built-in snapshot's settings into someone's account
     for (const r of settings.slice(1)) {
       const k = String(r[0] ?? '').trim(), v = r[1];
       if (k === 'theme') savedLook.theme = String(v ?? '').trim();
@@ -2508,7 +2619,7 @@ async function refresh() {
     if (savedLook.theme || savedLook.dys) { adoptSavedLook(savedLook.theme, savedLook.dys); applyTheme(); }   // display only: nothing is written on load
     state.live = true;
     notice('');
-    if (state.sb && books.length <= 1) notice(SB_EMPTY, 'error');
+    if (state.sb && books.length <= 1 && !(state.me && state.me.hasRow)) notice(SB_EMPTY, 'error');
     setStatus('live', (state.sb ? 'Supabase' : 'Live from your sheet') + ' · ' + new Date().toLocaleTimeString('en-AU', { hour: 'numeric', minute: '2-digit' }));
     if (state.sb) { rt.lastLoad = Date.now(); rt.start(); drawSb(); } else rt.stop();
     $('refreshBtn').textContent = 'Refresh';
@@ -2516,7 +2627,7 @@ async function refresh() {
     renderAll();
     loadDiscover().then(autoMoveWish).then(() => { if (state.lib.mode === 'wish' && !$('view-next').hidden) renderWish(); });
   } catch (err) {
-    if (state.sb && err && err.code === 'sb_signin') { sbSignedOut(); return; }
+    if (state.sb && err && err.code === 'sb_signin') { sbSignedOut('Your sign-in has expired. Please sign in again.'); return; }
     setStatus('error', state.live ? 'Showing the last data loaded' : 'Showing the 9 Oct snapshot');
     notice(explain(err), 'error');
   } finally {
@@ -2841,7 +2952,8 @@ const sheetDb = {
     const { header, row } = await sheetDb._listRow(id);
     await sheetPut(`'Reading Lists'!A${row}:${colLetter(header.length - 1)}${row}`, [header.map(() => '')]);
     rlRows.delete(id);
-  }
+  },
+  async profileSave() { return false; }   // names and colours live in Supabase only
 };
 /* Read-only copy for the claude.ai artifact: reads pass through, every write throws. The test harness (which drives the
    app through a stubbed window.claude) sets window.__TEST_WRITES__ so it still gets its writes. */
@@ -2884,6 +2996,21 @@ const sb = {
     const { r, b } = await this.post(`otp?redirect_to=${encodeURIComponent(location.origin + location.pathname)}`, { email, create_user: false });
     if (r.ok) return;
     throw { message: r.status === 429 ? 'too many emails for now. Wait an hour, or use the last link you were sent.' : (b.msg || b.message || b.error_description || 'HTTP ' + r.status) };
+  },
+  /* Email code (the usual way in): Supabase emails a 6-digit code ({{ .Token }} in the Magic Link template). Invite-only: create_user false. */
+  async sendCode(email) {
+    let res; try { res = await this.post('otp', { email, create_user: false }); } catch (e) { throw { message: 'Couldn\'t reach the sign-in service. Check your connection and try again.' }; }
+    const { r, b } = res; if (r.ok) return;
+    const c = String(b.error_code || b.code || '');
+    if (r.status === 429 || /rate_limit/.test(c)) throw { message: 'Too many codes requested. Wait a minute, then try again.' };
+    if (r.status === 422 || r.status === 400 || /otp_disabled|signup_disabled|user_not_found/.test(c) || /signups? not allowed/i.test(b.msg || b.message || '')) throw { message: 'This email hasn\'t been invited yet — ask Josh.' };
+    throw { message: r.status >= 500 ? 'The sign-in service had a problem (HTTP ' + r.status + '). Try again shortly.' : (b.msg || b.message || b.error_description || 'HTTP ' + r.status) };
+  },
+  async verifyCode(email, token) {
+    let res; try { res = await this.post('verify', { type: 'email', email, token }); } catch (e) { throw { message: 'Couldn\'t reach the sign-in service. Check your connection and try again.' }; }
+    const { r, b } = res;
+    if (r.ok && b.access_token) return this.keep(b);
+    throw { message: r.status === 429 ? 'Too many tries. Wait a minute, then ask for a new code.' : r.status >= 500 ? 'The sign-in service had a problem (HTTP ' + r.status + '). Try again shortly.' : 'That code isn\'t right, or it has expired. Check the latest email, or send a new code.' };
   },
   async signInPassword(email, password) {
     const { r, b } = await this.post('token?grant_type=password', { email, password });
@@ -3138,6 +3265,14 @@ const sbDb = {
     const got = await sb.api(`settings?key=eq.${sbEnc(key)}&select=row_id`);
     if (got.length) await sbWrite(`settings?row_id=eq.${got[0].row_id}`, { method: 'PATCH', body: { value: v }, prefer: 'return=minimal' });
     else await sbWrite('settings', { method: 'POST', body: { key, value: v }, prefer: 'return=minimal' });
+  },
+  // ----- profile (family.members): my own name and colour, nothing else -----
+  async profileSave({ display_name, colour }) {
+    const uid = jwtClaims(await sb.token()).sub;
+    const body = {}; if (display_name !== undefined) body.display_name = display_name; if (colour) body.colour = colour;
+    const got = await sbWrite(`members?user_id=eq.${sbEnc(uid)}`, { method: 'PATCH', schema: 'family', body, prefer: 'return=representation' });
+    if (!got || got.length !== 1) throw { code: 'tool_error', message: 'you have no profile yet. Ask Josh to add you.' };
+    return true;
   },
   // ----- Wishlist -----
   async wishUpdate(id, fields) {
@@ -3554,7 +3689,7 @@ function renderLibrary() {
     }
     box.appendChild(sec);
   }
-  if (!box.children.length) box.innerHTML = '<p class="empty">No books match these filters.</p>';
+  if (!box.children.length) box.innerHTML = '<p class="empty">' + noBooksMsg() + '</p>';
   $('libCount').textContent = `${fmt(rows.length)} book${rows.length === 1 ? '' : 's'}${filtering ? ' match' : ''}`;
   $('libSheetOrder').hidden = L.sort === 'sheet';
 }
@@ -3624,7 +3759,7 @@ function renderShelves(rows, filtering) {
     const ds = defs.filter(d => d.grp === g); if (!ds.length) return '';
     return (h ? `<div class="shelf-sec">${h}</div>` : '') + `<div class="sgrid${g === 'series' ? ' s3' : ''}">` + ds.map(d => { const i = defs.indexOf(d);
       return `<section class="panel shelf" aria-label="${escapeText(d.label)}"><div class="panel-head"><h2>${escapeText(d.label)}<span class="cnt tnum">${fmt(d.books.length)}</span></h2><button type="button" class="linkbtn" data-seeall="${i}">See all</button></div><div class="shelf-row" data-i="${i}" role="group" aria-label="${escapeText(d.label)} books"></div></section>`; }).join('') + '</div>';
-  }).join('') : '<div class="panel empty" style="padding:18px;text-align:center">No books match these filters.</div>';
+  }).join('') : '<div class="panel empty" style="padding:18px;text-align:center">' + noBooksMsg() + '</div>';
   layoutShelves();
 }
 /* Spine geometry and title fitting. Title text is measured on one offscreen canvas. One line from 12px down to 7px, then two lines
@@ -5840,9 +5975,26 @@ function wishPaint() {
   const y = window.scrollY; body.innerHTML = h;
   if (window.scrollY !== y) window.scrollTo({ top: y, behavior: 'instant' });
 }
+/* The kind sticker and "not checked" tag sit with the controls, not between title and author, so dragging title + author copies only those. */
+function wishKindTag(w, av) {
+  const k = wishKind(w);
+  return `<span class="wl-ks"><button type="button" class="wl-kind${k ? '' : ' none'}" data-kind="${k}" aria-haspopup="true" aria-label="Kind: ${k || 'not set'}. Change" title="${k ? 'Change kind' : 'Set kind'}">${k || 'Set kind'}</button>${av.guess ? '<span class="wl-tag">not checked</span>' : ''}</span>`;
+}
+const WL_COPY = '<button type="button" class="wl-cp" data-copy aria-label="Copy title and author" title="Copy title and author"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5"/><path d="M10.5 5.5v-2a1.5 1.5 0 0 0-1.5-1.5H4A1.5 1.5 0 0 0 2.5 3.500V9A1.5 1.5 0 0 0 4 10.500h1.500"/></svg></button>';
+async function wishCopy(w, btn) {
+  const txt = w.author ? `${w.title} — ${w.author}` : w.title;
+  let ok = false;
+  try { await navigator.clipboard.writeText(txt); ok = true; } catch (e) {}
+  if (!ok) {   // fall back to selecting the title and author so the person can copy by hand
+    const row = btn.closest('.wl-row'), a = row.querySelector('.wl-t'), m = row.querySelector('.wl-m > span');
+    try { const r = document.createRange(); r.setStartBefore(a); r.setEndAfter(m || a); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); ok = document.execCommand && document.execCommand('copy'); } catch (e) {}
+  }
+  wlToast(ok ? 'Copied' : 'Selected: press copy', null, null, 1500);
+}
 function wishMeta(w, av) {
-  const k = wishKind(w), p = [`<button type="button" class="wl-kind${k ? '' : ' none'}" data-kind="${k}" aria-haspopup="true" aria-label="Kind: ${k || 'not set'}. Change" title="${k ? 'Change kind' : 'Set kind'}">${k || 'Set kind'}</button>`];
+  const p = [];
   if (w.author) p.push(`<span>${escapeText(w.author)}</span>`);
+  p.push(WL_COPY);
   if (w.series) p.push(`<span>${escapeText(w.series + (w.number ? ' #' + w.number : ''))}</span>`);
   if (w.gift === 'TRUE') p.push(WL_GIFT);
   if (/^https?:\/\//i.test(w.link)) p.push(WL_LINK(w.link));
@@ -5850,18 +6002,17 @@ function wishMeta(w, av) {
     const n = isoDate(w.release) ? wlDays(w.release) : null;
     p.push(n == null ? `<span class="wl-rel">${escapeText(w.release)}</span>` : `<span class="wl-rel${n < 0 ? ' late' : ''}">${wlDate(w.release)} · ${n < 0 ? 'should be out' : n === 0 ? 'today' : n === 1 ? 'tomorrow' : 'in ' + n + ' days'}</span>`);
   }
-  if (av.guess) p.push('<span class="wl-tag">not checked</span>');
   return `<div class="wl-m">${p.join('')}</div>`;
 }
 const wishTitle = (w, lib) => `<button class="wl-t" type="button" data-edit>${escapeText(w.title)}</button>${lib.has(wishKey(w.title)) ? ' <span class="wl-tag" title="This title is already in your library">in library</span>' : ''}`;
 function wishInboxRow(w, lib) {
   return `<div class="wl-row wl-ibx" data-id="${escapeText(w.id)}"><div>${wishTitle(w, lib)}${wishMeta(w, { v: 'Available' })}${w.notes ? `<div class="wl-note">${escapeText(w.notes)}</div>` : ''}</div>
-<div class="wl-acts">${['Download', 'Buy', 'Borrow'].map(h => `<button class="btn" type="button" data-mv="${h}">${h}</button>`).join('')}<button class="wl-ib" type="button" data-rm aria-label="Remove ${escapeText(w.title)}" title="Remove">✕</button></div></div>`;
+<div class="wl-acts">${wishKindTag(w, { v: 'Available' })}${['Download', 'Buy', 'Borrow'].map(h => `<button class="btn" type="button" data-mv="${h}">${h}</button>`).join('')}<button class="wl-ib" type="button" data-rm aria-label="Remove ${escapeText(w.title)}" title="Remove">✕</button></div></div>`;
 }
 function wishRow(w, lib) {
   const av = wishAvail(w), soon = av.v === 'Coming soon';
   return `<div class="wl-row${soon ? ' hasdate' : ''}" data-id="${escapeText(w.id)}"><div>${wishTitle(w, lib)}${wishMeta(w, av)}${w.notes ? `<div class="wl-note">${escapeText(w.notes)}</div>` : ''}</div>
-<div class="wl-av" role="group" aria-label="Availability">${WL_AVS.map(a => `<button type="button" data-a="${a}" aria-pressed="${av.v === a}">${a}</button>`).join('')}</div>
+<div class="wl-ctl">${wishKindTag(w, av)}<div class="wl-av" role="group" aria-label="Availability">${WL_AVS.map(a => `<button type="button" data-a="${a}" aria-pressed="${av.v === a}">${a}</button>`).join('')}</div></div>
 <div class="wl-acts">${av.v === 'Available' ? '<button class="btn btn-primary" type="button" data-got>Got it</button>' : ''}<button class="wl-ib" type="button" data-more aria-label="More actions for ${escapeText(w.title)}" aria-haspopup="true">⋯</button></div>
 ${soon ? `<div class="wl-datebox">Release date <input type="date" value="${isoDate(w.release) ? w.release : ''}" data-date aria-label="Release date"></div>` : ''}</div>`;
 }
@@ -7287,7 +7438,7 @@ $('bookForm').addEventListener('change', updateDlgLog);
 $('dlgClose').addEventListener('click', () => $('bookDlg').close());
 $('drillClose').addEventListener('click', () => $('drillDlg').close());
 
-$('refreshBtn').addEventListener('click', () => state.sb ? (sb.signedIn() ? refresh() : openDataDlg('Sign in to Supabase below.')) : state.google && !google_.valid() ? googleConnect() : refresh());
+$('refreshBtn').addEventListener('click', () => state.sb ? (sb.signedIn() ? refresh() : sbSignedOut()) : state.google && !google_.valid() ? googleConnect() : refresh());
 document.querySelectorAll('.logday button').forEach(b => b.addEventListener('click', () => setLogDay(addDays(today(), Number(b.dataset.day)))));
 $('logDate').addEventListener('change', e => setLogDay(toDate(e.target.value)));
 setLogDay(null);
@@ -7304,7 +7455,8 @@ $('wlBody').addEventListener('click', e => {
   const sh = q('.wl-sec-head');
   if (sh) { const k = sh.closest('.wl-sec').dataset.sec; wl.closed[k] = !wl.closed[k]; wishPaint(); return; }
   if (!w || q('.wl-datebox') || q('.wl-m a')) return;
-  if (q('[data-kind]')) wishKindMenu(w, q('[data-kind]'));
+  if (q('[data-copy]')) wishCopy(w, q('[data-copy]'));
+  else if (q('[data-kind]')) wishKindMenu(w, q('[data-kind]'));
   else if (q('[data-mv]')) wishMove(w, q('[data-mv]').dataset.mv);
   else if (q('[data-rm]')) wishRemove(w);
   else if (q('[data-edit]')) openWishDlg(w);
@@ -7473,8 +7625,9 @@ function sbSignedOut(msg) {
   rt.stop(); state.live = false;
   setStatus('error', 'Signed out of Supabase');
   $('refreshBtn').textContent = 'Connect'; $('refreshBtn').disabled = false;
-  notice(msg || explain({ code: 'sb_signin' }), 'error');
-  drawSb();
+  drawSb(); drawMe();
+  if ($('dataDlg').open) $('dataDlg').close();
+  showSignCard(msg);
 }
 function openDataDlg(msg) {
   $('dSource').value = useSb() ? 'supabase' : 'sheets';
@@ -7496,7 +7649,7 @@ function startPages() {
   if (useSb()) {
     state.sb = true; state.google = false; state.mcp = sb;
     if (sb.signedIn()) { refresh(); return; }
-    sbSignedOut('Press Connect to sign in to Supabase and load your library.'); openDataDlg('Sign in to Supabase below.');
+    sbSignedOut();
   } else {
     rt.stop(); state.sb = false; googleBoot();
   }
@@ -7504,7 +7657,7 @@ function startPages() {
 function pagesBoot() {
   $('dataPg').hidden = false;
   const back = sb.fromRedirect();
-  if (back && !back.ok) { startPages(); openDataDlg('Couldn\'t sign in: ' + back.message); return; }
+  if (back && !back.ok) { startPages(); if (state.sb && !sb.signedIn()) scMsg('Couldn\'t sign in: ' + back.message); else openDataDlg('Couldn\'t sign in: ' + back.message); return; }
   startPages();
   if (back && back.ok) { drawSb(); if (!useSb()) openDataDlg('Signed in to Supabase as ' + back.email + '. To use it on this device, pick Supabase in "Where your data lives" and press Save & connect.'); }
 }
@@ -7547,11 +7700,163 @@ $('sbSetPw').addEventListener('click', async () => {
   $('sbSetPw').disabled = false;
 });
 $('sbOut').addEventListener('click', async () => {
-  await sb.signOut(); drawSb(); $('sbMsg').textContent = 'Signed out of Supabase on this device.'; if (state.sb) sbSignedOut();
+  await sb.signOut(); drawSb(); $('sbMsg').textContent = 'Signed out of Supabase on this device.'; if (state.sb) location.reload();
 });
 /* Enter inside these boxes does that box's job, not "Save & connect". */
 [['sbPw', 'sbPwIn'], ['sbNewPw', 'sbSetPw']].forEach(([i, b]) => $(i).addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); $(b).click(); } }));
 $('sbEmail').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); $($('sbPw').value ? 'sbPwIn' : 'sbMail').click(); } });
+
+/* ---------- Email-code sign-in card ----------
+   Supabase mode with nobody signed in shows this card instead of the app, so a signed-out visitor never sees any data.
+   POST /auth/v1/otp (invite-only) emails a code; POST /auth/v1/verify returns the session, which goes through the same
+   sb.keep() (jcm-sb-session) as the password path, so everything downstream is unchanged. */
+const sc = { email: '', step: 'email', until: 0, tm: 0, busy: false };
+function scMsg(t, ok) { const m = $('scMsg'); m.textContent = t || ''; m.dataset.kind = t && !ok ? 'err' : ''; }
+function scStep(s) {
+  sc.step = s;
+  $('scEmailForm').hidden = s !== 'email'; $('scCodeForm').hidden = s !== 'code'; $('scPwForm').hidden = s !== 'pw';
+  $('scTitle').textContent = s === 'pw' ? 'Sign in with your password' : s === 'code' ? 'Check your email' : 'Sign in with your email';
+  $('scAlt').hidden = s === 'code'; $('scAlt').textContent = s === 'pw' ? 'Use an email code instead' : 'Use a password instead';
+  scMsg('');
+  if (s === 'pw') $('scPwEmail').value = sc.email || $('scEmail').value;
+}
+function scBusy(on) { sc.busy = on; for (const id of ['scSend', 'scGo', 'scPwGo']) $(id).disabled = on; }
+function scTick() {
+  const left = Math.ceil((sc.until - Date.now()) / 1000), b = $('scResend');
+  if (left <= 0) { clearInterval(sc.tm); sc.tm = 0; b.disabled = false; b.textContent = 'Resend code'; }
+  else { b.disabled = true; b.textContent = 'Resend code in ' + left + 's'; }
+}
+function scCountdown() { clearInterval(sc.tm); sc.until = Date.now() + 60000; scTick(); sc.tm = setInterval(scTick, 1000); }
+function showSignCard(msg) {
+  document.body.classList.add('signed-out'); $('signCard').hidden = false;
+  if (!$('scLogo').firstChild) $('scLogo').appendChild(document.querySelector('.lockup').cloneNode(true));
+  $('scLogo').querySelectorAll('[id]').forEach(n => n.removeAttribute('id'));
+  if (!$('scEmail').value) $('scEmail').value = google_.cfg().sbEmail || '';
+  scStep('email'); if (msg) scMsg(msg, false);
+}
+function hideSignCard() {
+  clearInterval(sc.tm); sc.tm = 0;
+  document.body.classList.remove('signed-out'); $('signCard').hidden = true;
+  for (const id of ['scCode', 'scPw']) $(id).value = '';
+}
+async function scSend(resend) {
+  if (sc.busy) return;
+  const em = (resend ? sc.email : $('scEmail').value.trim());
+  if (!okEmail(em)) { scMsg('Type your email address first.'); return; }
+  scBusy(true); scMsg(resend ? 'Sending a new code…' : 'Sending…', true);
+  try {
+    await sb.sendCode(em); sc.email = em; google_.saveCfg({ sbEmail: em });
+    $('scSentTo').textContent = em; $('scCode').value = '';
+    scStep('code'); scCountdown(); if (resend) scMsg('A new code is on its way.', true);
+    $('scCode').focus();
+  } catch (err) { scMsg(err.message || 'Couldn\'t send the code.'); }
+  scBusy(false);
+}
+async function scFinish(promise, msgBusy) {
+  scBusy(true); scMsg(msgBusy, true);
+  try { await promise; } catch (err) { scMsg(err.message || 'Couldn\'t sign in.'); scBusy(false); return; }
+  scBusy(false); hideSignCard();
+  state.live = false; notice(''); state.me = null; refresh();
+}
+$('scEmailForm').addEventListener('submit', e => { e.preventDefault(); scSend(false); });
+$('scResend').addEventListener('click', () => scSend(true));
+$('scBack').addEventListener('click', () => { clearInterval(sc.tm); scStep('email'); $('scEmail').focus(); });
+$('scCodeForm').addEventListener('submit', e => {
+  e.preventDefault(); if (sc.busy) return;
+  const code = $('scCode').value.replace(/\s+/g, '');
+  if (!/^\d{6,8}$/.test(code)) { scMsg('Type the 6-digit code from the email.'); return; }
+  scFinish(sb.verifyCode(sc.email, code), 'Signing in…');
+});
+$('scPwForm').addEventListener('submit', e => {
+  e.preventDefault(); if (sc.busy) return;
+  const em = $('scPwEmail').value.trim(), pw = $('scPw').value;
+  if (!okEmail(em)) { scMsg('Type your email address first.'); return; }
+  if (!pw) { scMsg('Type your password.'); return; }
+  sc.email = em; google_.saveCfg({ sbEmail: em });
+  scFinish(sb.signInPassword(em, pw).catch(err => { throw { message: /didn.t match/.test(err.message || '') ? 'That email and password didn\'t match. Try an email code instead.' : err.message }; }), 'Signing in…');
+});
+$('scAlt').addEventListener('click', () => { if (sc.step === 'pw') { scStep('email'); $('scEmail').focus(); } else { sc.email = sc.email || $('scEmail').value.trim(); scStep('pw'); $('scPw').focus(); } });
+$('scCode').addEventListener('input', () => { const c = $('scCode').value.replace(/\D/g, ''); if (c !== $('scCode').value) $('scCode').value = c; });
+
+/* ---------- Who am I: family membership, avatar, member mode, first run ---------- */
+const COLOURS = ['#e07a5f', '#f2a65a', '#e9c46a', '#81b29a', '#4fb0c6', '#6d8fe0', '#9b7fd1', '#d77fa1'];
+/* My row in family.members (role, name, colour). If the family schema isn't there or the call fails, I'm the owner as before:
+   nothing is hidden, and the console says so once. A failure that may be temporary is tried again on the next load. */
+async function loadMe() {
+  let uid = ''; try { uid = jwtClaims(await sb.token()).sub || ''; } catch (e) { return; }
+  if (state.me && state.me.uid === uid && !state.me.retry) return;
+  const me = { uid, role: 'owner', name: '', colour: '', hasRow: false, retry: false };
+  try {
+    const got = await sb.api(`members?select=role,display_name,colour&user_id=eq.${sbEnc(uid)}&order=joined_at&limit=1`, { schema: 'family' });
+    if (Array.isArray(got) && got[0]) { me.hasRow = true; me.role = got[0].role === 'member' ? 'member' : 'owner'; me.name = got[0].display_name || ''; me.colour = got[0].colour || ''; }
+  } catch (err) {
+    me.retry = !(err && (err.status === 404 || err.status === 406));
+    if (!loadMe.warned) { loadMe.warned = true; console.info('Family membership not available (' + ((err && err.message) || err) + '); carrying on as owner.'); }
+  }
+  state.me = me; drawMe();
+}
+function meName() { return (state.me && state.me.name) || (sb.email() || '').split('@')[0] || ''; }
+function avatarInitials(n) { const w = String(n).trim().split(/[\s._-]+/).filter(Boolean); return ((w[0] || '?')[0] + (w.length > 1 ? w[w.length - 1][0] : '')).toUpperCase(); }
+function drawMe() {
+  const show = !!(state.sb && sb.signedIn());
+  document.body.dataset.role = state.sb && state.me && state.me.role === 'member' ? 'member' : 'owner';
+  $('meWrap').hidden = !show;
+  if (!show) return;
+  const nm = meName();
+  $('meAv').textContent = avatarInitials(nm); $('meName').textContent = nm;
+  $('meAv').style.setProperty('--av', (state.me && state.me.colour) || 'var(--accent)');
+  $('meWho').textContent = sb.email() || '';
+  $('meProf').hidden = !(state.me && state.me.hasRow);
+  profSync($('wlProf')); profSync($('profBody'));
+}
+/* Profile form: name and colour, written through DB().profileSave (the two columns the "edit my own name and colour" rule allows) */
+function profMount(root) {
+  if (root.dataset.built) return; root.dataset.built = '1';
+  const inp = document.createElement('input'); inp.type = 'text'; inp.maxLength = 40; inp.placeholder = 'Your name'; inp.setAttribute('aria-label', 'Your name'); inp.autocomplete = 'given-name';
+  const sw = document.createElement('div'); sw.className = 'swatches'; sw.setAttribute('role', 'group'); sw.setAttribute('aria-label', 'Your colour');
+  COLOURS.forEach(c => { const b = document.createElement('button'); b.type = 'button'; b.className = 'swatch'; b.style.setProperty('--c', c); b.dataset.c = c; b.setAttribute('aria-label', 'Colour ' + c); b.setAttribute('aria-pressed', 'false'); sw.appendChild(b); });
+  const go = document.createElement('button'); go.type = 'button'; go.className = 'btn'; go.textContent = 'Save';
+  const msg = document.createElement('span'); msg.className = 'prof-msg'; msg.setAttribute('role', 'status');
+  root.append(inp, sw, go, msg);
+  sw.addEventListener('click', e => { const b = e.target.closest('.swatch'); if (b) profPick(root, b.dataset.c); });
+  inp.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); go.click(); } });
+  go.addEventListener('click', async () => {
+    const name = inp.value.trim(), colour = root.dataset.colour || '';
+    if (!name) { msg.textContent = 'Type your name.'; return; }
+    go.disabled = true; msg.textContent = 'Saving…';
+    try {
+      await DB().profileSave({ display_name: name, colour });
+      state.me.name = name; if (colour) state.me.colour = colour; msg.textContent = 'Saved.'; drawMe(); renderWelcome();
+    } catch (err) { msg.textContent = 'Couldn\'t save: ' + (err.message || explain(err)); }
+    go.disabled = false;
+  });
+}
+function profPick(root, c) { root.dataset.colour = c || ''; root.querySelectorAll('.swatch').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.c === c))); }
+function profSync(root) {
+  if (!root || !root.dataset.built || !state.me) return;
+  const inp = root.querySelector('input'); if (document.activeElement !== inp) inp.value = state.me.name || '';
+  if (!root.dataset.touched) profPick(root, state.me.colour || '');
+}
+$('wlProf').addEventListener('click', e => { if (e.target.closest('.swatch')) e.currentTarget.dataset.touched = '1'; });
+$('profBody').addEventListener('click', e => { if (e.target.closest('.swatch')) e.currentTarget.dataset.touched = '1'; });
+profMount($('wlProf')); profMount($('profBody'));
+$('meBtn').addEventListener('click', () => togglePop('mePop', 'meBtn'));
+$('meProf').addEventListener('click', () => { closePops(); delete $('profBody').dataset.touched; profSync($('profBody')); $('profBody').querySelector('.prof-msg').textContent = ''; $('profDlg').showModal(); });
+$('profClose').addEventListener('click', () => $('profDlg').close());
+async function doSignOut() { await sb.signOut(); location.reload(); }
+$('meOut').addEventListener('click', doSignOut);
+$('toolOut').addEventListener('click', doSignOut);
+
+/* First run: a signed-in account with no books and no reading log gets a welcome panel at the top of Now */
+function isBlankAccount() { return !!(state.sb && state.live && state.libLoaded && !state.allBooks.length && !state.removedBooks.length && !state.entries.length); }
+function renderWelcome() {
+  const w = $('welcome'), on = isBlankAccount(); w.hidden = !on; document.body.classList.toggle('is-blank', on);
+  if (!on) return;
+  const nm = state.me && state.me.name; $('wlHello').textContent = 'Welcome to Our Library' + (nm ? ', ' + nm : '');
+  $('wlProf').hidden = !(state.me && state.me.hasRow); profSync($('wlProf'));
+}
+$('wlPaste').addEventListener('click', () => qaOpen('paste'));
+$('wlOne').addEventListener('click', () => qaOpen('one'));
 
 $('gClose').addEventListener('click', () => $('gDlg').close());
 $('gForm').addEventListener('submit', e => {
@@ -7908,7 +8213,7 @@ $('sbTools').addEventListener('click', e => {
 });
 
 /* ---------- popovers (Toolbox, Filter): close on outside click or Escape ---------- */
-const POPS = [['toolboxPop', 'toolboxBtn'], ['filterPop', 'filterBtn']];
+const POPS = [['toolboxPop', 'toolboxBtn'], ['filterPop', 'filterBtn'], ['mePop', 'meBtn']];
 function closePops(except) { for (const [p, b] of POPS) if (p !== except) { $(p).hidden = true; $(b).setAttribute('aria-expanded', 'false'); } }
 function togglePop(p, b) { const open = $(p).hidden; closePops(open ? p : null); $(p).hidden = !open; $(b).setAttribute('aria-expanded', String(open)); }
 $('toolboxBtn').addEventListener('click', () => togglePop('toolboxPop', 'toolboxBtn'));
@@ -8004,6 +8309,7 @@ $('toolboxPop').addEventListener('click', e => {
 })();
 $('toolBack').addEventListener('click', () => showTab(nav.last || 'now'));
 
+if (ON_PAGES && useSb()) { state.entries = []; state.books = []; state.settings = { streakStartDate: '', streakMinPages: 1, dailyGoalPages: 100 }; }   // Supabase mode: never show the built-in 9 Oct snapshot (someone else's data to a new member)
 renderAll();
 try { const t = TAB_ALIAS[localStorage.getItem('mbl-tab')] || localStorage.getItem('mbl-tab'); if (['library', 'next', 'insights'].includes(t)) showTab(t); } catch (e) {}
 renderLinks();

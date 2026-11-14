@@ -56,6 +56,7 @@ async function install(page, w) {
 
 // ---- scenario runner ----
 async function scenario(browser, name, { init = {}, session = 'live', vp = { width: 1280, height: 900 }, url = ORIGIN + '/', world: wopts, setup, claude, run }) {
+  if (process.env.ONLY && !new RegExp(process.env.ONLY).test(name)) return;   // debugging: ONLY=otp node tests/supabase.js out
   const ctx = await browser.newContext({ viewport: vp, deviceScaleFactor: 1, reducedMotion: 'reduce' });
   const page = await ctx.newPage();
   page.on('pageerror', e => errors.push(name + ': ' + e.message));
@@ -425,6 +426,24 @@ const step = async (name, fn) => { try { await fn(); } catch (e) { check(name + 
     const ins = writesSince(w, n).find(c => c.method === 'POST' && c.table === 'books');
     check('floor: the next new book gets 104 (floor 100 + 4)', !!ins && [].concat(ins.body)[0].id === 104, ins && ins.body);
   } });
+  // ===== Wishlist: kind sticker next to the controls, Copy button =====
+  await scenario(browser, 'wishlist-copy', { init: SB_CFG, run: async (page, w) => {
+    await live(page);
+    await page.evaluate(() => { window.__clip = []; Object.defineProperty(navigator, 'clipboard', { value: { writeText: async t => { window.__clip.push(t); } }, configurable: true }); document.querySelector('.lib-mode [data-mode="wish"]').click(); });
+    await page.waitForSelector('.wl-row');
+    const n0 = w.calls.length;
+    const info = await page.evaluate(() => { const r = document.querySelector('.wl-row'); return { kindInMeta: !!r.querySelector('.wl-m .wl-kind'), kindInCtl: !!r.querySelector('.wl-ctl .wl-ks .wl-kind, .wl-acts .wl-ks .wl-kind'), us: getComputedStyle(r.querySelector('.wl-kind')).userSelect, tagInMeta: !!r.querySelector('.wl-m .wl-tag:not([title])'), t: r.querySelector('.wl-t').textContent, a: (r.querySelector('.wl-m > span') || {}).textContent || '' }; });
+    check('wishlist row: kind sticker is with the controls (not between title and author), not selectable', !info.kindInMeta && info.kindInCtl && info.us === 'none' && !info.tagInMeta, info);
+    await page.click('.wl-row .wl-cp');
+    const clip = await page.evaluate(() => window.__clip);
+    check('Copy button: writes exactly "Title — Author"', clip.length === 1 && clip[0] === (info.a ? info.t + ' — ' + info.a : info.t), [clip, info]);
+    check('Copy button: shows "Copied" briefly, writes nothing', /Copied/.test(await page.locator('#wlToasts').innerText()) && w.calls.length === n0 && w.calls.every(c => c.method === 'GET'));
+    await page.evaluate(() => { Object.defineProperty(navigator, 'clipboard', { value: { writeText: async () => { throw new Error('no'); } }, configurable: true }); });
+    await page.click('.wl-row .wl-cp');
+    check('Copy button: on clipboard failure the title and author get selected', /\S/.test(await page.evaluate(() => String(getSelection())).catch(() => '')));
+    await page.evaluate(() => { document.querySelector('.wl-row [data-kind]').click(); });
+    check('kind sticker still opens its menu', await page.locator('.wl-pop').count() > 0);
+  } });
   // ===== Wishlist (Next Up): bar add, move, Coming soon, Got it, edit, remove + Undo =====
   await scenario(browser, 'wishlist-ui', { init: SB_CFG, run: async (page, w) => {
     await live(page);
@@ -533,10 +552,9 @@ const step = async (name, fn) => { try { await fn(); } catch (e) { check(name + 
   } });
   await scenario(browser, 'refresh-400', { init: SB_CFG, session: 'expired', setup: w => { w.refreshFail = 400; }, run: async (page, w) => {
     await page.waitForFunction(() => document.getElementById('status').dataset.state === 'error', null, { timeout: 8000 });
-    check('refresh 400: signed-out prompt (notice, Connect button, status)', /sign-in has expired/.test(await page.locator('#notice').innerText()) && (await page.locator('#refreshBtn').innerText()) === 'Connect' && (await page.locator('#statusText').innerText()) === 'Signed out of Supabase', await page.locator('#notice').innerText());
+    check('refresh 400: signed-out prompt (card message, Connect button, status)', /sign-in has expired/.test(await page.locator('#scMsg').innerText()) && (await page.locator('#refreshBtn').innerText()) === 'Connect' && (await page.locator('#statusText').innerText()) === 'Signed out of Supabase', await page.locator('#scMsg').innerText());
     check('refresh 400: stored session cleared, no data calls', !(await page.evaluate(() => localStorage.getItem('jcm-sb-session'))) && w.calls.length === 0 && w.refreshes === 1);
-    await page.click('#refreshBtn'); await page.waitForSelector('#dataDlg[open]');
-    check('refresh 400: Connect opens the sign-in dialog', /Sign in to Supabase below/.test(await page.locator('#dataMsg').innerText()) && await page.locator('#sbPw').isVisible());
+    check('refresh 400: the sign-in card replaces the app', await page.locator('#signCard').isVisible() && !(await page.locator('.wrap').isVisible()) && !(await page.isVisible('#dataDlg[open]')));
   } });
   await scenario(browser, 'concurrent-refresh', { init: SB_CFG, run: async (page, w) => {
     await live(page); w.refreshes = 0; w.refreshDelay = 300;
@@ -546,30 +564,36 @@ const step = async (name, fn) => { try { await fn(); } catch (e) { check(name + 
 
   // ===== sign-in dialog =====
   await scenario(browser, 'password', { init: SB_CFG, session: null, run: async (page, w) => {
-    await page.waitForSelector('#dataDlg[open]');
-    check('signed out at start: dialog opens with "Sign in to Supabase below."', (await page.locator('#dataMsg').innerText()) === 'Sign in to Supabase below.' && (await page.locator('#refreshBtn').innerText()) === 'Connect' && w.calls.length === 0);
-    check('signed out: sign-in rows shown, set-password and sign-out hidden', await page.locator('#sbPw').isVisible() && await page.locator('#sbEmail').isVisible() && !(await page.locator('#sbNewPw').isVisible()) && !(await page.locator('#sbOut').isVisible()));
-    check('dialog: has the empty #sbTools slot', await page.evaluate(() => { const t = document.getElementById('sbTools'); return !!t && t.children.length === 0; }));
-    await page.click('#sbPwIn'); check('password: asks for the email first', (await page.locator('#sbMsg').innerText()).includes('Type your email'));
-    await page.fill('#sbEmail', 'me@example.com'); await page.click('#sbPwIn'); check('password: then the password', (await page.locator('#sbMsg').innerText()).includes('Type your password'));
-    await page.fill('#sbPw', 'nope'); await page.click('#sbPwIn'); await page.waitForFunction(() => document.getElementById('sbMsg').textContent.includes('Couldn'));
-    check('password: wrong password explained, still signed out', (await page.locator('#sbMsg').innerText()).includes("didn't match") && !(await page.evaluate(() => localStorage.getItem('jcm-sb-session'))));
-    await page.fill('#sbPw', 'correct horse battery staple'); await page.click('#sbPwIn');
+    await page.waitForSelector('#signCard', { state: 'visible' });
+    check('signed out at start: the sign-in card shows, Connect button, no data calls, no dialog', (await page.locator('#refreshBtn').innerText()) === 'Connect' && w.calls.length === 0 && !(await page.isVisible('#dataDlg[open]')));
+    await page.click('#scAlt'); check('"Use a password instead" opens the password form', await page.locator('#scPw').isVisible() && !(await page.locator('#scEmail').isVisible()));
+    await page.click('#scPwGo'); check('password: asks for the email first', (await page.locator('#scMsg').innerText()).includes('Type your email'));
+    await page.fill('#scPwEmail', 'me@example.com'); await page.click('#scPwGo'); check('password: then the password', (await page.locator('#scMsg').innerText()).includes('Type your password'));
+    await page.fill('#scPw', 'nope'); await page.click('#scPwGo'); await page.waitForFunction(() => document.getElementById('scMsg').textContent.includes('match'));
+    check('password: wrong password explained, still on the card and signed out', (await page.locator('#scMsg').innerText()).includes("didn't match") && await page.locator('#signCard').isVisible() && !(await page.evaluate(() => localStorage.getItem('jcm-sb-session'))));
+    await page.fill('#scPw', 'correct horse battery staple'); await page.click('#scPwGo');
     await page.waitForFunction(() => !!localStorage.getItem('jcm-sb-session'), null, { timeout: 5000 });
     const s = await page.evaluate(() => JSON.parse(localStorage.getItem('jcm-sb-session')));
     check('password sign-in stores jcm-sb-session (token, refresh token, email, expiry)', s.at === GOOD && s.rt === 'rtP' && s.email === 'me@example.com' && s.exp > 0, s);
-    check('password: the password is not kept in the browser', !(await page.evaluate(() => JSON.stringify({ ...localStorage, ...sessionStorage }))).includes('correct horse') && (await page.inputValue('#sbPw')) === '');
+    check('password: the password is not kept in the browser', !(await page.evaluate(() => JSON.stringify({ ...localStorage, ...sessionStorage }))).includes('correct horse') && (await page.inputValue('#scPw')) === '');
     await live(page);
+    check('password: the card is gone once signed in', !(await page.locator('#signCard').isVisible()) && await page.locator('.wrap').isVisible());
     check('password: data then loads from Supabase', (await page.evaluate(() => state.allBooks.length)) === 16 && (await page.locator('#refreshBtn').innerText()) === 'Refresh');
+    await page.click('#toolboxBtn'); await page.click('#dataBtn'); await page.waitForSelector('#dataDlg[open]');
     check('password: signed-in line, set-password and sign-out shown', (await page.locator('#sbState').innerText()).includes('signed in as me@example.com') && await page.locator('#sbNewPw').isVisible() && await page.locator('#sbOut').isVisible() && !(await page.locator('#sbPw').isVisible()));
     await page.fill('#sbNewPw', 'short'); await page.click('#sbSetPw');
     check('set password: under 12 characters refused locally', (await page.locator('#sbMsg').innerText()).includes('at least 12') && !w.pwSet);
     await page.fill('#sbNewPw', 'four random words here'); await page.press('#sbNewPw', 'Enter');
     await page.waitForFunction(() => document.getElementById('sbMsg').textContent.includes('Password set'));
     check('set password: PUT with the session token; Enter did not close the dialog', !!w.pwSet && w.pwSet.auth === 'Bearer ' + GOOD && w.pwSet.body.password === 'four random words here' && await page.isVisible('#dataDlg[open]'), w.pwSet);
-    await page.click('#sbOut'); await page.waitForFunction(() => !localStorage.getItem('jcm-sb-session') && document.getElementById('statusText').textContent === 'Signed out of Supabase', null, { timeout: 5000 }); await page.waitForTimeout(200);
-    check('sign out: calls logout, clears the session, shows the signed-out prompt', w.logouts === 1 && (await page.locator('#refreshBtn').innerText()) === 'Connect' && (await page.locator('#statusText').innerText()) === 'Signed out of Supabase' && w.rt.socks.length === 0 && await page.locator('#sbPw').isVisible());
+    await page.click('#sbOut'); await page.waitForSelector('#signCard', { state: 'visible', timeout: 8000 }); await page.waitForTimeout(200);
+    check('sign out (Data & sign-in): calls logout, clears the session, reloads to the sign-in card', w.logouts === 1 && !(await page.evaluate(() => localStorage.getItem('jcm-sb-session'))) && (await page.locator('#refreshBtn').innerText()) === 'Connect' && w.rt.socks.length === 0 && !(await page.locator('.wrap').isVisible()));
     check('sign out: the dialog says it signs out every jcm-book-library app', /every jcm-book-library app on this device/.test(await page.evaluate(() => document.getElementById('dataDlg').textContent)));
+  } });
+  // The emailed-link sign-in is still in Data & sign-in for a device that uses the Sheet
+  await scenario(browser, 'email-link-sheet-mode', { init: { mbl_config: { backend: 'sheets', clientId: 'abc.apps.googleusercontent.com' } }, session: null, run: async (page, w) => {
+    await page.waitForSelector('#notice:not([hidden])'); await page.click('#toolboxBtn'); await page.click('#dataBtn'); await page.waitForSelector('#dataDlg[open]');
+    check('Sheet mode signed out: no sign-in card, Data & sign-in has the sign-in rows and an empty #sbTools slot', !(await page.locator('#signCard').isVisible()) && await page.locator('#sbPw').isVisible() && await page.locator('#sbEmail').isVisible() && !(await page.locator('#sbOut').isVisible()) && await page.evaluate(() => { const t = document.getElementById('sbTools'); return !!t && t.children.length === 0; }));
     await page.fill('#sbEmail', 'me@example.com'); await page.click('#sbMail');
     await page.waitForFunction(() => document.getElementById('sbMsg').textContent.includes('Check your email'));
     const o = w.otp[0], ou = o && new URL(o.url);
@@ -623,11 +647,143 @@ const step = async (name, fn) => { try { await fn(); } catch (e) { check(name + 
     check('realtime: the echo of our own save is ignored', w.calls.filter(c => c.method === 'GET').length === g1);
   } });
 
+  // ===== email-code sign-in (the default way in) =====
+  const me = { user_id: 'u1', role: 'member', display_name: 'Sam Lee', colour: '#6d8fe0', joined_at: '2026-11-27' };
+  const noData = w => w.calls.length === 0 && w.famCalls.length === 0;
+  await scenario(browser, 'signed-out-card', { init: SB_CFG, session: null, run: async (page, w) => {
+    await page.waitForSelector('#signCard', { state: 'visible' });
+    const t = await page.evaluate(() => document.body.innerText);
+    check('signed out (Supabase mode): the sign-in card replaces the app, no data on screen', /Sign in with your email/.test(t) && !/Reading now|Pages per day|Insights|Add book/.test(t) && (await page.evaluate(() => getComputedStyle(document.querySelector('.wrap')).display)) === 'none', t.slice(0, 200));
+    check('signed out: no data requests at all, no dialog, no avatar', noData(w) && !(await page.isVisible('#dataDlg[open]')) && !(await page.locator('#meWrap').isVisible()) && w.otp.length === 0);
+    check('signed out: nothing from the built-in snapshot is held in memory', await page.evaluate(() => state.entries.length === 0 && state.books.length === 0 && state.allBooks.length === 0));
+    const f = await page.evaluate(() => ({ code: 'x', em: document.getElementById('scEmail').type, id: document.getElementById('scTitle').textContent, scroll: document.documentElement.scrollWidth <= innerWidth }));
+    check('card: email step is "Sign in with your email" with an email field and Send code', f.id === 'Sign in with your email' && f.em === 'email' && (await page.locator('#scSend').innerText()) === 'Send code' && f.scroll);
+  } });
+  await scenario(browser, 'otp', { init: SB_CFG, session: null, setup: w => { w.invited = ['me@example.com']; w.fam = { members: [me] }; }, run: async (page, w) => {
+    await page.waitForSelector('#signCard', { state: 'visible' });
+    await page.fill('#scEmail', 'nobody@example.com'); await page.click('#scSend');
+    await page.waitForFunction(() => /invited/.test(document.getElementById('scMsg').textContent));
+    check('uninvited email: clear message, still on the email step, no code step', (await page.locator('#scMsg').innerText()) === "This email hasn't been invited yet — ask Josh." && await page.locator('#scEmailForm').isVisible() && !(await page.locator('#scCodeForm').isVisible()) && await page.evaluate(() => document.getElementById('scMsg').dataset.kind === 'err'));
+    check('otp request: POST /auth/v1/otp with exactly { email, create_user: false }', w.otp.length === 1 && new URL(w.otp[0].url).pathname === '/auth/v1/otp' && JSON.stringify(w.otp[0].body) === JSON.stringify({ email: 'nobody@example.com', create_user: false }) && w.otp[0].headers.apikey && !w.otp[0].headers.authorization, w.otp[0]);
+    await page.fill('#scEmail', 'me@example.com'); await page.press('#scEmail', 'Enter');
+    await page.waitForSelector('#scCodeForm', { state: 'visible' });
+    const at = await page.evaluate(() => { const c = document.getElementById('scCode'); return { im: c.inputMode, ac: c.autocomplete, to: document.getElementById('scSentTo').textContent }; });
+    check('code step: numeric keypad, one-time-code autocomplete, shows the address', at.im === 'numeric' && at.ac === 'one-time-code' && at.to === 'me@example.com' && w.otp.length === 2, at);
+    check('code step: Resend is disabled with a countdown', (await page.locator('#scResend').isDisabled()) && /Resend code in \d+s/.test(await page.locator('#scResend').innerText()), await page.locator('#scResend').innerText());
+    await page.fill('#scCode', '000000'); await page.click('#scGo');
+    await page.waitForFunction(() => /isn't right/.test(document.getElementById('scMsg').textContent));
+    check('wrong code: error shown, card stays, nothing stored, no data calls', await page.locator('#scCodeForm').isVisible() && await page.locator('#signCard').isVisible() && !(await page.evaluate(() => localStorage.getItem('jcm-sb-session'))) && noData(w) && w.verifies.length === 1, w.verifies);
+    await page.fill('#scCode', '123'); await page.click('#scGo');
+    check('short code: asked for the 6 digits, no request', /6-digit/.test(await page.locator('#scMsg').innerText()) && w.verifies.length === 1);
+    await page.clock.runFor(61000);
+    check('after 60 s Resend code is available and sends another code', !(await page.locator('#scResend').isDisabled()) && (await page.locator('#scResend').innerText()) === 'Resend code');
+    await page.click('#scResend'); await page.waitForFunction(() => /on its way/.test(document.getElementById('scMsg').textContent));
+    check('resend: a second otp request for the same address', w.otp.length === 3 && w.otp[2].body.email === 'me@example.com' && await page.locator('#scResend').isDisabled(), [w.otp.length, w.otp.map(o => o.body.email), await page.locator('#scResend').innerText()]);
+    await page.fill('#scCode', '123456'); await page.click('#scGo');
+    await live(page);
+    const s = await page.evaluate(() => JSON.parse(localStorage.getItem('jcm-sb-session')));
+    check('verify: POST /auth/v1/verify with { type: email, email, token }', w.verifies.length === 2 && new URL(w.verifies[1].url).pathname === '/auth/v1/verify' && JSON.stringify(w.verifies[1].body) === JSON.stringify({ type: 'email', email: 'me@example.com', token: '123456' }) && !w.verifies[1].headers.authorization, w.verifies[1]);
+    check('verify: the session is stored in jcm-sb-session like every other sign-in', s.at === GOOD && s.rt === 'rtC' && s.email === 'me@example.com' && s.exp > 0, s);
+    check('verify: the card is gone, the app loads from Supabase, the avatar shows', !(await page.locator('#signCard').isVisible()) && (await page.evaluate(() => state.allBooks.length)) === 16 && (await page.locator('#meAv').innerText()) === 'SL' && (await page.locator('#meName').innerText()) === 'Sam Lee');
+    check('verify: data calls carry the new token and the books schema; family read is in schema family', w.calls.length > 0 && w.calls.every(c => c.headers.authorization === 'Bearer ' + GOOD && c.headers['accept-profile'] === 'books') && w.famCalls.length === 1 && w.famCalls[0].headers['accept-profile'] === 'family' && w.famCalls[0].method === 'GET' && /user_id=eq\.u1/.test(w.famCalls[0].query), w.famCalls);
+    check('verify: no password or code kept in the browser', !(await page.evaluate(() => JSON.stringify({ ...localStorage, ...sessionStorage }))).includes('123456'));
+  } });
+  await scenario(browser, 'otp-rate-limit', { init: SB_CFG, session: null, setup: w => { w.otpStatus = 429; }, run: async (page, w) => {
+    await page.waitForSelector('#signCard', { state: 'visible' });
+    await page.fill('#scEmail', 'me@example.com'); await page.click('#scSend');
+    await page.waitForFunction(() => /Too many/.test(document.getElementById('scMsg').textContent));
+    check('rate limit on send: plain message, stays on the email step', await page.locator('#scEmailForm').isVisible() && !(await page.locator('#scSend').isDisabled()));
+  } });
+  await scenario(browser, 'verify-rate-limit', { init: SB_CFG, session: null, setup: w => { w.verifyStatus = 429; }, run: async (page, w) => {
+    await page.waitForSelector('#signCard', { state: 'visible' });
+    await page.fill('#scEmail', 'me@example.com'); await page.click('#scSend'); await page.waitForSelector('#scCodeForm', { state: 'visible' });
+    await page.fill('#scCode', '123456'); await page.click('#scGo'); await page.waitForFunction(() => /Too many/.test(document.getElementById('scMsg').textContent));
+    check('rate limit on verify: plain message, card stays', await page.locator('#scCodeForm').isVisible() && noData(w));
+  } });
+
+  // ===== who am I: owner, member, no family schema =====
+  const visiblePgs = page => page.evaluate(() => [...document.querySelectorAll('#toolboxPop .pg')].filter(g => g.offsetParent !== null).map(g => g.querySelector('.pg-label').textContent));
+  await scenario(browser, 'role-owner', { init: SB_CFG, setup: w => { w.fam = { members: [{ ...me, role: 'owner', display_name: 'Josh' }] }; }, run: async (page, w) => {
+    await live(page); await page.click('#toolboxBtn');
+    const g = await visiblePgs(page);
+    check('owner role: the Toolbox is unchanged (Books, Plan, Look, Data, Links)', g.join() === 'Books,Plan,Look,Data,Links' && await page.locator('#dataBtn').isVisible() && await page.locator('[data-tool="fill"]').first().isVisible() && !(await page.locator('#toolOut').isVisible()), g);
+    check('owner role: avatar shows the name from family.members', (await page.locator('#meName').innerText()) === 'Josh' && (await page.evaluate(() => document.body.dataset.role)) === 'owner');
+  } });
+  await scenario(browser, 'role-no-family', { init: SB_CFG, run: async (page, w) => {
+    await live(page); await page.click('#toolboxBtn');
+    const g = await visiblePgs(page);
+    check('family schema not exposed: behaves as owner, silently (Toolbox unchanged, no error notice)', g.join() === 'Books,Plan,Look,Data,Links' && (await page.locator('#notice').isHidden()) && (await page.evaluate(() => state.me.role === 'owner' && state.me.hasRow === false)), g);
+    check('family schema not exposed: name falls back to the email, profile menu entry hidden, the read is not retried', (await page.locator('#meName').innerText()) === 'me' && await page.evaluate(() => document.getElementById('meProf').hidden && state.me.retry === false));
+  } });
+  await scenario(browser, 'role-member', { init: SB_CFG, setup: w => { w.fam = { members: [me] }; }, run: async (page, w) => {
+    await live(page); await page.click('#toolboxBtn');
+    const g = await visiblePgs(page);
+    check('member: Toolbox shows only Look and Sign out', g.join() === 'Look,Account' && await page.locator('#toolOut').isVisible(), g);
+    check('member: no data tools, Fill details, covers, goal planner, Data & sign-in or links', await page.evaluate(() => ['dataBtn', 'discLinks'].every(i => !document.getElementById(i).offsetParent) && [...document.querySelectorAll('#toolboxPop [data-tool]')].every(b => !b.offsetParent)));
+    check('member: Look is there (theme grid, dyslexia font, background, spine colours)', await page.locator('#themeGrid').isVisible() && await page.locator('[data-dys]').first().isVisible() && await page.locator('[data-bg]').first().isVisible() && await page.locator('[data-cm]').first().isVisible());
+    check('member: no Sheet wording anywhere on screen', !/Sheet|Google/.test(await page.evaluate(() => document.getElementById('toolboxPop').innerText + document.querySelector('header').innerText)));
+    await page.click('#toolOut'); await page.waitForSelector('#signCard', { state: 'visible', timeout: 8000 });
+    check('member: Sign out in the Toolbox calls logout and returns to the card', w.logouts === 1 && !(await page.evaluate(() => localStorage.getItem('jcm-sb-session'))));
+  } });
+  await scenario(browser, 'avatar-menu', { init: SB_CFG, setup: w => { w.fam = { members: [me] }; }, run: async (page, w) => {
+    await live(page);
+    check('avatar: initials and colour from the member row', (await page.locator('#meAv').innerText()) === 'SL' && (await page.evaluate(() => getComputedStyle(document.getElementById('meAv')).backgroundColor)) === 'rgb(109, 143, 224)');
+    await page.click('#meBtn');
+    check('avatar menu: Profile and Sign out', await page.locator('#mePop').isVisible() && await page.locator('#meProf').isVisible() && await page.locator('#meOut').isVisible());
+    await page.click('#meProf'); await page.waitForSelector('#profDlg[open]');
+    check('profile dialog: name filled, current colour picked', (await page.inputValue('#profBody input')) === 'Sam Lee' && (await page.locator('#profBody .swatch[aria-pressed="true"]').getAttribute('data-c')) === '#6d8fe0' && (await page.locator('#profBody .swatch').count()) === 8);
+    await page.keyboard.press('Escape');
+    await page.click('#meBtn'); await page.click('#meOut'); await page.waitForSelector('#signCard', { state: 'visible', timeout: 8000 });
+    check('avatar menu: Sign out calls logout once and shows the sign-in card', w.logouts === 1 && !(await page.locator('.wrap').isVisible()));
+  } });
+
+  // ===== first run: empty account =====
+  await scenario(browser, 'empty-account', { init: SB_CFG, world: { empty: true }, setup: w => { w.fam = { members: [me] }; }, run: async (page, w) => {
+    await page.waitForSelector('#welcome:not([hidden])', { timeout: 10000 });
+    check('empty account: welcome panel names the member', (await page.locator('#wlHello').innerText()) === 'Welcome to Our Library, Sam Lee');
+    const cards = await page.locator('.wl-card h3').allInnerTexts();
+    check('welcome: three cards in order', cards.join('|') === 'Import from StoryGraph or Goodreads|Paste a list|Add one at a time', cards);
+    check('welcome: Import is disabled and says "Coming next"', await page.locator('#wlImport').isDisabled() && (await page.locator('#wlImport').innerText()) === 'Coming next');
+    check('empty account: no error notice (stale-sign-in warning is for owners with no profile)', await page.locator('#notice').isHidden());
+    await page.click('#wlPaste'); await page.waitForSelector('#quickDlg[open]');
+    check('Paste a list opens Quick add on the Paste tab', await page.locator('#qPaste').isVisible() && !(await page.locator('#qOne').isVisible()));
+    await page.click('#qClose'); await page.click('#wlOne'); await page.waitForSelector('#quickDlg[open]');
+    check('Add one at a time opens Quick add on One at a time', await page.locator('#qOne').isVisible()); await page.click('#qClose');
+    // empty states elsewhere: no NaN / undefined / Infinity, no page errors, nothing that looks broken
+    const bad = [];
+    for (const tab of ['now', 'library', 'next', 'insights']) {
+      await page.click('#tab-' + tab); await page.waitForTimeout(250);
+      const t = await page.evaluate(() => document.querySelector('[role=tabpanel]:not([hidden])').innerText);
+      if (/NaN|undefined|Infinity|\[object/.test(t)) bad.push(tab + ': ' + (t.match(/.{0,30}(NaN|undefined|Infinity|\[object).{0,30}/) || [''])[0]);
+    }
+    check('empty account: Now, Library, Next Up and Insights show no NaN/undefined/Infinity', bad.length === 0, bad);
+    await page.click('#tab-now');
+    // profileSave: exactly one PATCH, to family.members, only the two columns, filtered to me
+    const n0 = w.famCalls.length, b0 = w.calls.length;
+    await page.fill('#wlProf input', 'Sammy'); await page.click('#wlProf .swatch[data-c="#d77fa1"]'); await page.click('#wlProf .btn');
+    await page.waitForFunction(() => /Saved/.test(document.querySelector('#wlProf .prof-msg').textContent));
+    const patches = w.famCalls.slice(n0).filter(c => c.method !== 'GET');
+    check('profileSave: exactly one PATCH to family.members, user_id filter, only display_name and colour', patches.length === 1 && patches[0].table === 'members' && patches[0].method === 'PATCH' && patches[0].headers['content-profile'] === 'family' && /^\?user_id=eq\.u1$/.test(patches[0].query) && keysOf(patches[0].body) === 'colour,display_name' && patches[0].body.display_name === 'Sammy' && patches[0].body.colour === '#d77fa1', patches);
+    check('profileSave: nothing written to the books schema; the row changed; avatar and greeting follow', w.calls.length === b0 && w.fam.members[0].display_name === 'Sammy' && w.fam.members[0].colour === '#d77fa1' && (await page.locator('#meAv').innerText()) === 'S' && (await page.locator('#wlHello').innerText()) === 'Welcome to Our Library, Sammy');
+    await page.fill('#wlProf input', '   '); await page.click('#wlProf .btn');
+    check('profileSave: a blank name is refused locally (no request)', w.famCalls.filter(c => c.method !== 'GET').length === 1 && /Type your name/.test(await page.locator('#wlProf .prof-msg').innerText()));
+  } });
+  await scenario(browser, 'welcome-goes-away', { init: SB_CFG, world: { empty: true }, setup: w => { w.fam = { members: [me] }; }, run: async (page, w) => {
+    await page.waitForSelector('#welcome:not([hidden])', { timeout: 10000 });
+    w.insert('books', { id: 1, title: 'First Book', author: 'A. Writer', status: 'TBR' });
+    await page.click('#refreshBtn'); await page.waitForFunction(() => document.getElementById('welcome').hidden, null, { timeout: 8000 });
+    check('welcome: gone once the account has a book', await page.locator('#welcome').isHidden());
+  } });
+  await scenario(browser, 'populated-no-welcome', { init: SB_CFG, setup: w => { w.fam = { members: [me] }; }, run: async (page, w) => {
+    await live(page);
+    check('an account with books never shows the welcome panel', await page.locator('#welcome').isHidden());
+  } });
+
   // ===== layout at 390px =====
-  for (const [label, session] of [['signed-in', 'live'], ['signed-out', null]]) {
-    await scenario(browser, 'layout-390-' + label, { init: SB_CFG, session, vp: { width: 390, height: 800 }, run: async (page, w) => {
-      if (session) await live(page); else await page.waitForSelector('#dataDlg[open]');
-      if (session) { await page.click('#toolboxBtn'); await page.click('#dataBtn'); await page.waitForSelector('#dataDlg[open]'); }
+  for (const [label, session] of [['signed-in', 'live'], ['sheet-signed-out', null]]) {
+    await scenario(browser, 'layout-390-' + label, { init: session ? SB_CFG : { mbl_config: { backend: 'sheets', clientId: 'abc.apps.googleusercontent.com' } }, session, vp: { width: 390, height: 800 }, run: async (page, w) => {
+      if (session) await live(page); else await page.waitForSelector('#notice:not([hidden])');
+      await page.click('#toolboxBtn'); await page.click('#dataBtn'); await page.waitForSelector('#dataDlg[open]');
       await page.fill('#sbEmail', 'a.very.long.email.address.for.testing@example.com').catch(() => {});
       await page.evaluate(() => { document.getElementById('sbMsg').textContent = 'Check your email and click the sign-in link. Open it on this device, in this browser: it brings you back here signed in.'; });
       const m = await page.evaluate(() => { const d = document.getElementById('dataDlg'), r = d.getBoundingClientRect(); return { sw: document.documentElement.scrollWidth, iw: window.innerWidth, dsw: d.scrollWidth, dcw: d.clientWidth, l: r.left, r: r.right }; });
