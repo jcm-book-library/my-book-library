@@ -2562,6 +2562,7 @@ async function readRange(range, spreadsheetId = SHEET_ID) {
 
 async function refresh() {
   if (!state.mcp) return;
+  if (state.live) scrollSave();   // a data reload redraws everything; come back to the same place afterwards (on first load, keep the remembered spot)
   setStatus('loading', state.sb ? 'Loading from Supabase…' : 'Loading from your sheet…');
   $('refreshBtn').disabled = true;
   try {
@@ -2612,7 +2613,8 @@ async function refresh() {
     $('refreshBtn').textContent = 'Refresh';
     disc.loaded = false;
     renderAll();
-    loadDiscover().then(autoMoveWish).then(() => { if (state.lib.mode === 'wish' && !$('view-next').hidden) renderWish(); });
+    scrollRestore();
+    loadDiscover().then(autoMoveWish).then(() => { if (state.lib.mode === 'wish' && !$('view-next').hidden) { renderWish(); scrollRestore(); } });
   } catch (err) {
     if (state.sb && err && err.code === 'sb_signin') { sbSignedOut('Your sign-in has expired. Please sign in again.'); return; }
     setStatus('error', state.live ? 'Showing the last data loaded' : 'Showing the 9 Oct snapshot');
@@ -7301,21 +7303,29 @@ const nav = { tab: 'now', last: 'now', tool: null };
 const TOOL_PANELS = { rate: 'Rate a book', fill: 'Fill details', covers: 'Find covers', goal: 'Goal planner', dip: 'Lucky dip', own: 'Do I own this?', removed: 'Removed books' };
 const isPlanMode = m => m === 'plan' || m === 'wish';
 // Scroll position per view (kept in memory): leaving a view stores it, coming back restores it after the render; a first visit starts at the top
-const scrollMem = {}; let scrollTok = 0;
+// Also kept in localStorage for 30 minutes, so the iPhone home-screen app (which the phone may restart) comes back to the same place.
+const scrollMem = (() => { try { const o = JSON.parse(localStorage.getItem('mbl_scroll') || 'null'); return o && Date.now() - o.t < 30 * 60000 ? o.m || {} : {}; } catch (e) { return {}; } })();
+let scrollTok = 0, scrollSaveT = 0;
+const scrollPersist = () => { clearTimeout(scrollSaveT); scrollSaveT = setTimeout(() => { try { localStorage.setItem('mbl_scroll', JSON.stringify({ t: Date.now(), m: scrollMem })); } catch (e) { } }, 400); };
 function viewKey() {
   const L = state.lib;
   if (nav.tab === 'library') return 'library/' + (L.mode || 'books') + (L.mode === 'books' || !L.mode ? '/' + (L.view || 'list') : '');
   if (nav.tab === 'next') return 'next/' + (L.mode === 'wish' ? 'wish/' + wl.tab : 'plan');
   return nav.tab;
 }
-const scrollSave = () => { scrollMem[viewKey()] = window.scrollY; };
+const scrollSave = () => { scrollMem[viewKey()] = window.scrollY; scrollPersist(); };
+// Keep it current while scrolling (not only when leaving a view), so a reload or a data refresh can put you back
+addEventListener('scroll', () => { if (scrollIdle) { scrollMem[viewKey()] = window.scrollY; scrollPersist(); } }, { passive: true });
+let scrollIdle = true;
 function scrollRestore() {
   const key = viewKey(), want = scrollMem[key] || 0, tok = ++scrollTok;
+  scrollIdle = false;   // while restoring, the scroll events we cause must not overwrite the remembered spot
   const apply = n => {
     if (tok !== scrollTok) return;
     const max = Math.max(0, document.documentElement.scrollHeight - innerHeight);
     window.scrollTo({ top: Math.min(want, max), behavior: 'instant' });
-    if (want > max + 1 && n < 6) setTimeout(() => apply(n + 1), 120);   // content still loading: try again shortly
+    if (want > max + 1 && n < 20) { setTimeout(() => apply(n + 1), 150); return; }   // content still loading: try again (up to 3 s)
+    setTimeout(() => { if (tok === scrollTok) scrollIdle = true; }, 60);
   };
   requestAnimationFrame(() => apply(0));
 }
