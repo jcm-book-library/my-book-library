@@ -481,6 +481,23 @@ const step = async (name, fn) => { try { await fn(); } catch (e) { check(name + 
     });
   } });
   // ===== prune =====
+  // An id already in the archive (from when Wishlist ids could be reused) must not stop Got it, and new ids skip archived ones
+  await scenario(browser, 'archive-collision', { init: SB_CFG, setup: w => { w.insert('wishlist_archive', { id: 'WL0003', title: 'Older Book' }); w.insert('wishlist_archive', { id: 'WL0050', title: 'Long Gone' }); }, run: async (page, w) => {
+    await live(page);
+    await page.evaluate(() => { document.querySelector('.lib-mode [data-mode="wish"]').click(); });
+    await saved(page, 800);
+    let n = w.calls.length;
+    await page.click('#wlTabs [data-wv="Download"]');
+    await page.click('.wl-row[data-id="WL0003"] [data-got]'); await page.click('.wl-pop [data-g="copy"][data-v="Kobo"]'); await page.click('.wl-pop [data-ok]'); await saved(page, 1000);
+    const ws = writesSince(w, n), arch = ws.find(c => c.table === 'wishlist_archive');
+    check('archive clash: Got it still finishes (Books, archive, Wishlist delete)', ws.map(c => c.method + ' ' + c.table).join() === 'POST books,POST wishlist_archive,DELETE wishlist', ws.map(c => c.method + ' ' + c.table));
+    check('archive clash: the history row is saved as WL0003-2, the older WL0003 row untouched', !!arch && arch.body[0].id === 'WL0003-2' && w.db.wishlist_archive.some(r => r.id === 'WL0003' && r.title === 'Older Book'), arch && arch.body);
+    check('archive clash: no error shown', !/Couldn't move/.test(await page.locator('#notice').innerText()));
+    n = w.calls.length;
+    await fill(page, '#%', { wlAddT: 'After Clash', wlAddA: 'Cal Clash' }); await page.click('#wlHow [data-h="Buy"]'); await page.click('#wlAddBtn'); await saved(page, 800);
+    const add = writesSince(w, n).find(c => c.method === 'POST' && c.table === 'wishlist');
+    check('new Wishlist id skips archived ids (highest archived WL0050 -> WL0051)', !!add && [].concat(add.body)[0].id === 'WL0051', add && add.body);
+  } });
   await scenario(browser, 'prune', { init: SB_CFG, setup: w => { w.insert('series_tracker', { series: 'Ghost Series', author: 'Gus Ghost', kind: 'Novel', status: 'Ongoing' }); w.insert('series_tracker', { series: 'Phantom Run', kind: 'Comic', status: 'Following' }); }, run: async (page, w) => {
     await live(page);
     await page.evaluate(() => { document.querySelector('.lib-mode [data-mode="wish"]').click(); });

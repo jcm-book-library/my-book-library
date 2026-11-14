@@ -2754,7 +2754,10 @@ const sheetDb = {
     const c = header.indexOf('id');
     const used = await readRange(`Wishlist!A2:${colLetter(Math.max(c, header.indexOf('title')))}3000`);
     const ids = used.map(r => Number(String(r[c] || '').replace(/\D/g, '')) || 0);
-    let next = Math.max(0, ...ids, ...otherIds.map(id => Number(String(id).replace(/\D/g, '')) || 0));
+    // Ids already in the Wishlist archive count too, so a moved book's id is never handed out again
+    const ah = ((await readRange("'Wishlist archive'!A1:Z1"))[0] || []).map(h => String(h).trim()), ac = ah.indexOf('id');
+    const archived = ac < 0 ? [] : (await readRange(`'Wishlist archive'!${colLetter(ac)}2:${colLetter(ac)}5000`)).map(r => Number(String(r[0] || '').split('-')[0].replace(/\D/g, '')) || 0);
+    let next = Math.max(0, ...ids, ...archived, ...otherIds.map(id => Number(String(id).replace(/\D/g, '')) || 0));
     const rows = items.map(f => ({ stage: 'Inbox', gift: 'FALSE', ...f, id: 'WL' + String(++next).padStart(4, '0'), added: today() }));
     const values = rows.map(f => header.map(h => h === 'id' ? f.id : h === 'added' ? f.added : wishCell(h, f[h] || '')));
     await addRowsBelowLast('Wishlist', header, values, used);
@@ -3127,14 +3130,25 @@ const sbDb = {
   async wishAdd(items, otherIds = []) {
     const header = sbHeader('Wishlist');
     for (let attempt = 0; ; attempt++) {
-      const used = await sbAllIds('wishlist');
-      let next = Math.max(0, ...used.map(r => sbNum(r.id)), ...otherIds.map(sbNum));
+      const used = await sbAllIds('wishlist'), archived = await sbAllIds('wishlist_archive');
+      // Archive ids count too (only the WL number, not any -2 suffix), so a moved book's id is never reused
+      let next = Math.max(0, ...used.map(r => sbNum(r.id)), ...archived.map(r => sbNum(String(r.id || '').split('-')[0])), ...otherIds.map(sbNum));
       const rows = items.map(f => ({ stage: 'Inbox', gift: 'FALSE', ...f, id: 'WL' + String(++next).padStart(4, '0'), added: today() }));
       try { await sbWrite('wishlist', { method: 'POST', body: rows.map(f => sbFullObj('Wishlist', f, (h, v) => h === 'id' || h === 'added' ? v : wishCell(h, v || ''))), prefer: 'return=minimal' }); return { header, rows }; }
       catch (err) { if (!(err && err.status === 409 && attempt === 0)) throw err; }
     }
   },
-  async archiveAdd(rows) { await sbWrite('wishlist_archive', { method: 'POST', body: rows.map(r => sbRowToObj('Wishlist archive', r)), prefer: 'return=minimal' }); },
+  async archiveAdd(rows) {
+    // The archive keeps one row per id; an id archived before (ids were once reused) gets a -2, -3… suffix instead of failing the move
+    const have = new Set((await sbAllIds('wishlist_archive')).map(r => String(r.id)));
+    const objs = rows.map(r => sbRowToObj('Wishlist archive', r));
+    for (const o of objs) {
+      const base = String(o.id ?? ''); if (!base || !have.has(base)) { have.add(base); continue; }
+      let k = 2; while (have.has(`${base}-${k}`)) k++;
+      o.id = `${base}-${k}`; have.add(o.id);
+    }
+    await sbWrite('wishlist_archive', { method: 'POST', body: objs, prefer: 'return=minimal' });
+  },
   // ----- Series Tracker (matched by name in JS, like the Sheet version) -----
   async seriesSave(f, matchName) {
     const recs = await sbReadRecs('Series Tracker'), key = normQ(matchName);
