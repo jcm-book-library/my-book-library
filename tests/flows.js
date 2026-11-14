@@ -458,13 +458,31 @@ flow('t6-wish-remove-undo', async ({ page }) => {
   must(!!(await wishRow(page, 'WL0001')), 'Undo should bring WL0001 back');
 }, { mutate: fresh() });
 
+// (u) Themes: loading writes nothing; changing the theme writes only the `theme` setting row, the dyslexia toggle only `dyslexiaFont`;
+// a reload (browser storage cleared) takes the saved theme from the settings without writing
+flow('u-theme-settings', async ({ page, writes }) => {
+  must(writes.length === 0, 'loading the app must not write anything: ' + JSON.stringify(writes));
+  must(await page.evaluate(() => document.documentElement.dataset.theme) === 'default', 'default theme expected');
+  await page.evaluate(() => document.querySelector('button[data-theme="night"]').click());
+  await settle(page, 800);
+  must(await page.evaluate(() => document.documentElement.dataset.theme) === 'night', 'night should apply at once');
+  must(writes.length === 1 && /App Settings/.test(JSON.stringify(writes[0])) && /theme/.test(JSON.stringify(writes[0])) && /night/.test(JSON.stringify(writes[0])), 'one theme row expected: ' + JSON.stringify(writes));
+  await page.evaluate(() => document.querySelector('button[data-dys="on"]').click());
+  await settle(page, 800);
+  must(writes.length === 2 && /dyslexiaFont/.test(JSON.stringify(writes[1])), 'one dyslexiaFont row expected: ' + JSON.stringify(writes.slice(1)));
+  const n = writes.length;
+  await page.reload(); await page.waitForFunction(() => state.live && state.libLoaded); await settle(page, 800);
+  must(await page.evaluate(() => document.documentElement.dataset.theme + '/' + document.documentElement.dataset.dys) === 'night/1', 'saved theme should win after reload');
+  must(writes.length === n, 'reload must not write');
+});
+
 (async () => {
   const browser = await launch();
   const only = process.argv[4] ? new Set(process.argv[4].split(',')) : null;
   const summary = [];
   for (const [name, { fn, opts }] of Object.entries(flows)) {
     if (only && !only.has(name)) continue;
-    const app = await openApp(browser, appFile, { width: 1280, ...(opts || {}), keepLoadWrites: name === 'k-series-prune' });
+    const app = await openApp(browser, appFile, { width: 1280, ...(opts || {}), keepLoadWrites: name === 'k-series-prune' || name === 'u-theme-settings' });
     let failure = '';
     try { await fn(app); } catch (e) { failure = e.message.split('\n')[0].slice(0, 200); }
     const tabs = [...new Set(app.writes.map(w => String(w.input.range).match(/^(?:'([^']+)'|([^!]+))!/)).filter(Boolean).map(m => m[1] || m[2]))];
