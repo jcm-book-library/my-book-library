@@ -13,17 +13,18 @@ const UNIQUE = { books: ['id'], wishlist: ['id'], series_tracker: ['series'], re
 const DEFAULTS = { books: { favourite: false, loaned: false }, wishlist: { gift: false } };
 
 const b64u = o => Buffer.from(JSON.stringify(o)).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-const jwt = (email = 'me@example.com') => 'x.' + b64u({ email, sub: 'u1' }) + '.y';
+const jwt = (email = 'me@example.com', sub = 'u1') => 'x.' + b64u({ email, sub }) + '.y';
 const GOOD = jwt(), EXPIRED = 'EXPIRED_TOKEN', FRESH = jwt() + 'f';
 
 // ---- fake Supabase ----
 // A fresh in-memory database (one array per table) plus the counters the routes use.
 function sbWorld() {
-  const w = { db: {}, calls: [], nextId: 1, refreshes: 0, logouts: 0, forced401: 0, otp: [], pwTries: [], pwSet: null, refreshFail: 0, race: 0, rt: null };
+  const w = { db: {}, calls: [], nextId: 1, refreshes: 0, logouts: 0, forced401: 0, otp: [], verifies: [], famCalls: [], invited: null, code: '123456', otpStatus: 0, verifyStatus: 0, fam: null, pwTries: [], pwSet: null, refreshFail: 0, race: 0, rt: null };
   Object.values(RT_TABLE).forEach(t => { w.db[t] = []; });
   w.insert = (t, o) => { const row = { row_id: w.nextId++, user_id: 'u1', ...(DEFAULTS[t] || {}), ...o }; w.db[t].push(row); return row; };
   return w;
 }
+const jwtSub = a => { try { return JSON.parse(Buffer.from(String(a).split('.')[1].replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString()).sub; } catch (e) { return ''; } };
 const FILTER_SKIP = new Set(['select', 'order', 'limit', 'offset']);
 function applyFilters(rows, q) {
   for (const [k, v] of q.entries()) {
@@ -71,7 +72,34 @@ async function sbRoute(r, w) {
     return json({ access_token: FRESH, refresh_token: 'rt2', expires_in: 3600 });
   }
   if (u.pathname === '/auth/v1/logout') { w.logouts++; return r.fulfill({ status: 204, body: '' }); }
-  if (u.pathname === '/auth/v1/otp') { w.otp.push({ url: req.url(), body: body() }); return json({}); }
+  if (u.pathname === '/auth/v1/otp') {
+    const b = body(); w.otp.push({ url: req.url(), body: b, headers: h });
+    if (w.otpStatus === 429) return json({ error_code: 'over_email_send_rate_limit', msg: 'For security purposes, you can only request this after 60 seconds.' }, 429);
+    if (w.invited && !w.invited.includes(b.email)) return json({ error_code: 'otp_disabled', msg: 'Signups not allowed for otp' }, 422);   // create_user false and no such user
+    return json({});
+  }
+  if (u.pathname === '/auth/v1/verify') {
+    const b = body(); w.verifies.push({ url: req.url(), body: b, headers: h });
+    if (w.verifyStatus === 429) return json({ error_code: 'over_request_rate_limit', msg: 'Request rate limit reached' }, 429);
+    if (b && b.type === 'email' && b.token === w.code && (!w.invited || w.invited.includes(b.email))) return json({ access_token: jwt(b.email, w.uid || 'u1'), refresh_token: 'rtC', expires_in: 3600, token_type: 'bearer', user: { id: w.uid || 'u1', email: b.email } });
+    return json({ error_code: 'otp_expired', msg: 'Token has expired or is invalid' }, 403);
+  }
+  if (h['accept-profile'] === 'family' || h['content-profile'] === 'family') {   // schema family: only what the app uses (members)
+    if (!w.fam) return json({ code: 'PGRST106', message: 'The schema must be one of the following: books' }, 406);
+    const fm = u.pathname.match(/^\/rest\/v1\/(\w+)$/), t = fm && w.fam[fm[1]];
+    if (!t) return json({ message: 'no such table' }, 404);
+    const call = { method, table: fm[1], query: u.search, body: body(), headers: h }; w.famCalls.push(call);
+    if (!/^Bearer x\./.test(h.authorization || '')) return json({ message: 'JWT' }, 401);
+    const uid = jwtSub(h.authorization), q = u.searchParams, mine = t.filter(x => x.user_id === uid || fm[1] !== 'members');
+    if (method === 'GET') { let rows = applyOrder(applyFilters(mine, q), q); const sel = q.get('select'); if (sel && sel !== '*') rows = rows.map(x => Object.fromEntries(sel.split(',').map(c => [c, x[c]]))); return json(rows.slice(0, Number(q.get('limit') || 1000))); }
+    if (method === 'PATCH') {
+      const b = call.body || {}, bad = Object.keys(b).filter(k => !['display_name', 'colour'].includes(k));
+      if (bad.length) return json({ code: '42501', message: 'permission denied for table members' }, 403);
+      const hit = applyFilters(mine, q); hit.forEach(x => Object.assign(x, b));
+      return (h.prefer || '').includes('return=representation') ? json(hit) : r.fulfill({ status: 204, body: '' });
+    }
+    return json({}, 405);
+  }
   const m = u.pathname.match(/^\/rest\/v1\/(\w+)$/);
   if (!m || !w.db[m[1]]) return json({ message: 'no such table' }, 404);
   const t = m[1], q = u.searchParams;
