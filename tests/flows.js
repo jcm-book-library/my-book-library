@@ -81,11 +81,11 @@ flow('f-log-edit-delete', async ({ page }) => {
 // (g) Wishlist adds: quick add, add dialog, paste list
 flow('g-wish-add', async ({ page }) => {
   await page.evaluate(() => { document.querySelector('.lib-mode [data-mode="wish"]').click(); });
-  await fill(page, '#%', { wlQuick: 'Quick Title by Quinn Quick' });
-  await page.evaluate(() => document.getElementById('wlQuickBtn').click());
+  await fill(page, '#%', { wlAddT: 'Quick Title', wlAddA: 'Quinn Quick' });   // the sticky add bar, How = Inbox
+  await submit(page, '#wlAddForm');
   await settle(page, 800);
   await page.evaluate(() => openWishDlg(null));
-  await fill(page, '#wd-%', { title: 'Dialog Title', author: 'Dee Dialog', series: 'Dialogs', number: '2', type: 'Comic', format: 'Issues', stage: 'To buy', price: '9.5', release: '2026-12-25', notes: 'n' });
+  await fill(page, '#wd-%', { title: 'Dialog Title', author: 'Dee Dialog', series: 'Dialogs', number: '2', type: 'Comic', format: 'Issues', stage: 'Buy', price: '9.5', release: '2026-12-25', notes: 'n' });
   await page.evaluate(() => { document.getElementById('wd-gift').checked = true; });
   await submit(page, '#wishDlg form');
   await settle(page, 800);
@@ -105,19 +105,23 @@ flow('h-wish-got-it', async ({ page }) => {
   await settle(page, 800);
 });
 // (i) clear a Wishlist row (Drop), one before the blank middle row and one after
+// Removing is the Wishlist's x / ⋯ > Remove: the row is cleared once the Undo toast has run out
+const rmDone = page => page.waitForFunction(() => !wl.rm, null, { timeout: 12000 });
 flow('i-wish-clear', async ({ page }) => {
   await page.evaluate(() => { document.querySelector('.lib-mode [data-mode="wish"]').click(); });
-  await page.evaluate(() => { dropWish(disc.wish.find(w => w.id === 'WL0007')); });
-  await yes(page); await settle(page, 600);
-  await page.evaluate(() => { dropWish(disc.wish.find(w => w.id === 'WL0002')); });
-  await yes(page); await settle(page, 600);
+  await page.click('#wlTabs [data-wv="Borrow"]');
+  await page.click('.wl-row[data-id="WL0007"] [data-more]'); await page.click('.wl-menu [data-m="rm"]');
+  await rmDone(page); await settle(page, 600);
+  await page.click('#wlTabs [data-wv="Inbox"]');
+  await page.click('.wl-row[data-id="WL0002"] [data-rm]');
+  await rmDone(page); await settle(page, 600);
   // then a field edit on a row below the cleared ones
   await page.evaluate(() => setWishFields(disc.wish.find(w => w.id === 'WL0005'), { checked: 'Available', checkedOn: '2026-10-31', wantAs: 'PDF' }));
   await settle(page, 600);
 });
 // (j) add a series (goes below the last used row) and edit an existing one
 flow('j-series-add-edit', async ({ page }) => {
-  await page.evaluate(() => { document.querySelector('.lib-mode [data-mode="wish"]').click(); document.querySelector('[data-wv="series"]').click(); openSeriesDlg(null); });
+  await page.evaluate(() => { document.querySelector('.lib-mode [data-mode="wish"]').click(); openSeriesDlg(null); });
   await fill(page, '#sd-%', { series: 'Akira', author: 'Sam Series', publisher: 'Pub', kind: 'Comic', status: 'Following', soldAs: 'Issues', notes: 'fresh' });
   await submit(page, '#seriesDlg form'); await settle(page, 800);
   await page.evaluate(() => openSeriesDlg(disc.series.find(s => s.series === 'Spawn')));
@@ -127,9 +131,9 @@ flow('j-series-add-edit', async ({ page }) => {
   await fill(page, '#sd-%', { series: 'Stardust' });
   await submit(page, '#seriesDlg form'); await settle(page, 800);
 });
-// (k) prune: a tracked series with no books is cleared from the Series Tracker
+// (k) no auto-prune: visiting the Wishlist never clears a tracked series, even one with no books
 flow('k-series-prune', async ({ page }) => {
-  await page.evaluate(() => { document.querySelector('.lib-mode [data-mode="wish"]').click(); document.querySelector('[data-wv="series"]').click(); });
+  await page.evaluate(() => { document.querySelector('.lib-mode [data-mode="wish"]').click(); });
   await settle(page, 1000);
 }, { mutate: s => { s['Series Tracker'].push(['Ghost Series', 'Gus Ghost', '', 'Novel', 'Ongoing', '', '', '', ''], ['Phantom Run', '', '', 'Comic', 'Following', '', '', '', '']); } });
 // (l) Reading List: add (below the blank middle row), edit, remove
@@ -374,6 +378,85 @@ flow('s8-delete-highest-then-add', async ({ page }) => {
   await settle(page);
   must(await page.evaluate(() => state.allBooks[state.allBooks.length - 1].id) === '65', 'new id should be 65, not the deleted 61');
 }, { mutate: fresh(setBook('61', { status: 'Removed' })) });
+
+// ===== Wishlist (Next Up): sticky add bar, Inbox/Download/Buy/Borrow, availability, Got it popover, edit dialog =====
+const wishMode = page => page.evaluate(() => { document.querySelector('.lib-mode [data-mode="wish"]').click(); });
+const wishRow = (page, id) => page.evaluate(id => { const w = disc.wish.find(x => x.id === id); return w && { ...w }; }, id);
+// (t1) the sticky add bar: Title, Author, How = Download, Add (stage "Download", new row below the last used one)
+flow('t1-wish-bar-add-download', async ({ page }) => {
+  await wishMode(page);
+  await fill(page, '#%', { wlAddT: 'Bar Download Title', wlAddA: 'Bea Bar' });
+  await page.click('#wlHow [data-h="Download"]');
+  await page.click('#wlAddBtn');
+  await settle(page, 800);
+  must(await page.evaluate(() => wl.tab) === 'Download', 'the Download tab should open after adding to it');
+}, { mutate: fresh() });
+// (t2) Inbox > Buy: one tap writes only the stage cell
+flow('t2-wish-inbox-to-buy', async ({ page }) => {
+  await wishMode(page);
+  await page.click('.wl-row[data-id="WL0001"] [data-mv="Buy"]');
+  await settle(page, 800);
+  must((await wishRow(page, 'WL0001')).stage === 'Buy', 'WL0001 should be Buy');
+}, { mutate: fresh() });
+// (t3) Coming soon with a release date on an old-style row ("To download"): the stage moves to "Download" with it, then the date is written
+flow('t3-wish-coming-soon-date', async ({ page }) => {
+  await wishMode(page);
+  await page.click('#wlTabs [data-wv="Download"]');
+  await page.click('.wl-row[data-id="WL0005"] [data-a="Coming soon"]');
+  await settle(page, 600);
+  await page.fill('.wl-row[data-id="WL0005"] [data-date]', '2027-03-01');
+  await settle(page, 800);
+  const w = await wishRow(page, 'WL0005');
+  must(w.checked === 'Coming soon' && w.release === '2027-03-01' && w.stage === 'Download', 'WL0005 should be Download, Coming soon, 2027-03-01: ' + JSON.stringify(w));
+}, { mutate: fresh() });
+// (t4) Got it (Download, Kobo, Up next): Books row with tier, triaged, upNextOrder (3, after the two Up next books) and copies Kobo; archive row; Wishlist row cleared
+flow('t4-wish-got-it-up-next-kobo', async ({ page }) => {
+  await wishMode(page);
+  await page.click('#wlTabs [data-wv="Download"]');
+  await page.click('.wl-row[data-id="WL0003"] [data-got]');
+  await page.click('.wl-pop [data-g="copy"][data-v="Kobo"]');
+  await page.click('.wl-pop [data-ok]');
+  await settle(page, 1200);
+  const b = await page.evaluate(() => state.allBooks.find(x => x.title === 'Kobo Find'));
+  must(b && b.tier === 'Up next' && String(b.upNextOrder) === '3' && b.copies === 'Kobo' && b.status === 'TBR', 'new book should be TBR, Up next #3, Kobo: ' + JSON.stringify(b));
+  must(!(await wishRow(page, 'WL0003')), 'WL0003 should be off the Wishlist');
+  must(/in your TBR · Up next/.test(await page.evaluate(() => document.getElementById('wlToasts').textContent)), 'toast missing');
+}, { mutate: fresh() });
+// (t4b) Got it on a Buy row (from the ⋯ menu) as Someday, Physical; and on a Borrow row as Soon (no copy, notes say Library)
+flow('t4b-wish-got-it-buy-borrow', async ({ page }) => {
+  await wishMode(page);
+  await page.click('#wlTabs [data-wv="Buy"]');
+  await page.click('.wl-row[data-id="WL0006"] [data-more]'); await page.click('.wl-menu [data-m="got"]');   // Coming soon by its release date: Got it is in the ⋯ menu
+  await page.click('.wl-pop [data-g="tier"][data-v="Someday"]');
+  await page.click('.wl-pop [data-ok]');
+  await settle(page, 1200);
+  await page.click('#wlTabs [data-wv="Borrow"]');
+  await page.click('.wl-row[data-id="WL0007"] [data-got]');
+  await page.click('.wl-pop [data-g="tier"][data-v="Soon"]');
+  await page.click('.wl-pop [data-ok]');
+  await settle(page, 1200);
+}, { mutate: fresh() });
+// (t5) Edit: change author and note only. Price, release, format, publisher, series and the rest stay exactly as they were
+flow('t5-wish-edit-keeps-hidden-columns', async ({ page }) => {
+  await wishMode(page);
+  await page.click('#wlTabs [data-wv="Buy"]');
+  await page.click('.wl-row[data-id="WL0006"] [data-edit]');
+  await page.waitForSelector('#wishEditDlg[open]');
+  await fill(page, '#%', { 'we-author': 'Uma Pen (ed.)', 'we-note': 'edited from the new dialog' });
+  await submit(page, '#wishEditForm');
+  await settle(page, 800);
+  const w = await wishRow(page, 'WL0006');
+  must(w.price === '45' && w.release === '2026-12-01' && w.format === 'Deluxe' && w.type === 'Comic' && w.gift === 'TRUE' && w.added === '2026-09-03' && w.author === 'Uma Pen (ed.)' && w.notes === 'edited from the new dialog', 'hidden columns changed: ' + JSON.stringify(w));
+}, { mutate: fresh() });
+// (t6) Remove, then Undo inside the toast: nothing is written and the row is back
+flow('t6-wish-remove-undo', async ({ page }) => {
+  await wishMode(page);
+  await page.click('.wl-row[data-id="WL0001"] [data-rm]');
+  must(!(await wishRow(page, 'WL0001')), 'the row should leave the list at once');
+  await page.click('.wl-toast:last-child .linkbtn');
+  await rmDone(page); await settle(page, 600);
+  must(!!(await wishRow(page, 'WL0001')), 'Undo should bring WL0001 back');
+}, { mutate: fresh() });
 
 (async () => {
   const browser = await launch();

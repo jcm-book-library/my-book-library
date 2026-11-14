@@ -189,23 +189,24 @@ const step = async (name, fn) => { try { await fn(); } catch (e) { check(name + 
     await step('wishlist add, edit, remove', async () => {
       const n = w.calls.length;
       await page.evaluate(() => { document.querySelector('.lib-mode [data-mode="wish"]').click(); });
-      await fill(page, '#%', { wlQuick: 'Quick Title by Quinn Quick' });
-      await page.evaluate(() => document.getElementById('wlQuickBtn').click()); await saved(page, 800);
+      await fill(page, '#%', { wlAddT: 'Quick Title', wlAddA: 'Quinn Quick' });   // the sticky add bar, How = Inbox
+      await submit(page, '#wlAddForm'); await saved(page, 800);
       let p = writesSince(w, n).find(c => c.method === 'POST' && c.table === 'wishlist');
       check('wishlist add: POST with next WL id (WL0011), Inbox, gift false', !!p && p.body.length === 1 && p.body[0].id === 'WL0011' && p.body[0].title === 'Quick Title' && p.body[0].author === 'Quinn Quick' && p.body[0].stage === 'Inbox' && p.body[0].gift === false && p.body[0].added === TODAY && p.body[0].price === '', p && p.body);
       const m = w.calls.length;
       await page.evaluate(() => openWishDlg(null));
-      await fill(page, '#wd-%', { title: 'Dialog Title', author: 'Dee Dialog', series: 'Dialogs', number: '2', type: 'Comic', format: 'Issues', stage: 'To buy', price: '9.5', release: '2026-12-25', notes: 'n' });
+      await fill(page, '#wd-%', { title: 'Dialog Title', author: 'Dee Dialog', series: 'Dialogs', number: '2', type: 'Comic', format: 'Issues', stage: 'Buy', price: '9.5', release: '2026-12-25', notes: 'n' });
       await page.evaluate(() => { document.getElementById('wd-gift').checked = true; });
       await submit(page, '#wishDlg form'); await saved(page, 800);
       p = writesSince(w, m).find(c => c.method === 'POST' && c.table === 'wishlist');
-      check('wishlist add dialog: free-text number and price, gift typed (number "2", price "9.5", gift true, id WL0012)', !!p && p.body[0].id === 'WL0012' && p.body[0].number === '2' && p.body[0].price === '9.5' && p.body[0].gift === true && p.body[0].release === '2026-12-25' && p.body[0].stage === 'To buy', p && p.body);
+      check('wishlist add dialog: free-text number and price, gift typed (number "2", price "9.5", gift true, id WL0012)', !!p && p.body[0].id === 'WL0012' && p.body[0].number === '2' && p.body[0].price === '9.5' && p.body[0].gift === true && p.body[0].release === '2026-12-25' && p.body[0].stage === 'Buy', p && p.body);
       const e0 = w.calls.length;
       await page.evaluate(() => setWishFields(disc.wish.find(x => x.id === 'WL0005'), { checked: 'Available', checkedOn: '2026-10-31', wantAs: 'PDF' })); await saved(page, 600);
       const pe = writesSince(w, e0);
       check('wishlist edit: one PATCH by id with only the changed columns', pe.length === 1 && pe[0].method === 'PATCH' && pe[0].query.startsWith('?id=eq.WL0005') && keysOf(pe[0].body) === 'checked,checked_on,want_as' && pe[0].body.checked_on === '2026-10-31', pe.map(c => [c.query, c.body]));
       const d0 = w.calls.length;
-      await page.evaluate(() => { dropWish(disc.wish.find(x => x.id === 'WL0007')); }); await yes(page); await saved(page, 600);
+      await page.click('#wlTabs [data-wv="Borrow"]'); await page.click('.wl-row[data-id="WL0007"] [data-more]'); await page.click('.wl-menu [data-m="rm"]');   // ⋯ > Remove; the row is cleared once the Undo toast runs out
+      await page.waitForFunction(() => !wl.rm, null, { timeout: 12000 }); await saved(page, 600);
       const pd = writesSince(w, d0);
       check('wishlist remove: the row is deleted (not blanked)', pd.length === 1 && pd[0].method === 'DELETE' && pd[0].query.startsWith('?id=eq.WL0007') && !w.db.wishlist.some(x => x.id === 'WL0007'), pd.map(c => [c.method, c.query]));
       check('wishlist remove: gone from the page too', await page.evaluate(() => !disc.wish.some(x => x.id === 'WL0007')));
@@ -225,7 +226,7 @@ const step = async (name, fn) => { try { await fn(); } catch (e) { check(name + 
 
     await step('series', async () => {
       const n = w.calls.length;
-      await page.evaluate(() => { document.querySelector('.lib-mode [data-mode="wish"]').click(); document.querySelector('[data-wv="series"]').click(); openSeriesDlg(null); });
+      await page.evaluate(() => { document.querySelector('.lib-mode [data-mode="wish"]').click(); openSeriesDlg(null); });
       await fill(page, '#sd-%', { series: 'Akira', author: 'Sam Series', publisher: 'Pub', kind: 'Comic run', status: 'Ongoing', soldAs: 'Issues', notes: 'fresh' });
       await submit(page, '#seriesDlg form'); await saved(page, 800);
       const ws = writesSince(w, n), p = ws.find(c => c.method === 'POST' && c.table === 'series_tracker');
@@ -424,14 +425,68 @@ const step = async (name, fn) => { try { await fn(); } catch (e) { check(name + 
     const ins = writesSince(w, n).find(c => c.method === 'POST' && c.table === 'books');
     check('floor: the next new book gets 104 (floor 100 + 4)', !!ins && [].concat(ins.body)[0].id === 104, ins && ins.body);
   } });
+  // ===== Wishlist (Next Up): bar add, move, Coming soon, Got it, edit, remove + Undo =====
+  await scenario(browser, 'wishlist-ui', { init: SB_CFG, run: async (page, w) => {
+    await live(page);
+    const rowOfW = id => w.db.wishlist.find(x => x.id === id);
+    await page.evaluate(() => { document.querySelector('.lib-mode [data-mode="wish"]').click(); });
+    await step('bar add to Download', async () => {
+      const n = w.calls.length;
+      await fill(page, '#%', { wlAddT: 'Bar Download Title', wlAddA: 'Bea Bar' }); await page.click('#wlHow [data-h="Download"]'); await page.click('#wlAddBtn'); await saved(page, 800);
+      const p = writesSince(w, n).find(c => c.method === 'POST' && c.table === 'wishlist');
+      check('bar add: POST id WL0011, stage Download, gift false', !!p && p.body.length === 1 && p.body[0].id === 'WL0011' && p.body[0].title === 'Bar Download Title' && p.body[0].author === 'Bea Bar' && p.body[0].stage === 'Download' && p.body[0].gift === false && p.body[0].added === TODAY, p && p.body);
+    });
+    await step('Inbox to Buy', async () => {
+      const n = w.calls.length;
+      await page.click('#wlTabs [data-wv="Inbox"]'); await page.click('.wl-row[data-id="WL0001"] [data-mv="Buy"]'); await saved(page, 600);
+      const ws = writesSince(w, n);
+      check('Inbox > Buy: one PATCH by id, only the stage', ws.length === 1 && ws[0].method === 'PATCH' && ws[0].query.startsWith('?id=eq.WL0001') && keysOf(ws[0].body) === 'stage' && ws[0].body.stage === 'Buy' && rowOfW('WL0001').stage === 'Buy', ws.map(c => [c.query, c.body]));
+    });
+    await step('Coming soon with a date', async () => {
+      const n = w.calls.length;
+      await page.click('#wlTabs [data-wv="Download"]'); await page.click('.wl-row[data-id="WL0005"] [data-a="Coming soon"]'); await saved(page, 500);
+      await page.fill('.wl-row[data-id="WL0005"] [data-date]', '2027-03-01'); await saved(page, 800);
+      const ws = writesSince(w, n), r = rowOfW('WL0005');
+      check('Coming soon: two PATCHes on WL0005; the old stage "To download" becomes Download with checked and its date, then the release date', ws.length === 2 && ws.every(c => c.method === 'PATCH' && c.query.startsWith('?id=eq.WL0005')) && keysOf(ws[0].body) === 'checked,checked_on,stage' && ws[0].body.stage === 'Download' && ws[0].body.checked === 'Coming soon' && ws[0].body.checked_on === TODAY && keysOf(ws[1].body) === 'release' && ws[1].body.release === '2027-03-01' && r.release === '2027-03-01' && r.want_as === 'Kobo', ws.map(c => c.body));
+    });
+    await step('Got it, Up next, Kobo', async () => {
+      const n = w.calls.length, ups = w.db.books.filter(b => b.tier === 'Up next').length;
+      await page.click('.wl-row[data-id="WL0003"] [data-got]'); await page.click('.wl-pop [data-g="copy"][data-v="Kobo"]'); await page.click('.wl-pop [data-ok]'); await saved(page, 1000);
+      const ws = writesSince(w, n), seq = ws.map(c => c.method + ' ' + c.table);
+      check('Got it: Books insert, archive insert, Wishlist delete', seq.join() === 'POST books,POST wishlist_archive,DELETE wishlist', seq);
+      const nb = [].concat(ws[0].body)[0];
+      check('Got it: the new book is TBR, Up next at the end of the list, triaged today, copies Kobo', nb.title === 'Kobo Find' && nb.status === 'TBR' && nb.tier === 'Up next' && nb.up_next_order === ups + 1 && nb.triaged === TODAY && nb.copies === 'Kobo', nb);
+      check('Got it: archive row kept and the Wishlist row deleted', ws[1].body[0].id === 'WL0003' && ws[1].body[0].status === 'Downloaded' && !rowOfW('WL0003'), ws[1].body);
+    });
+    await step('Got it, Buy, Someday', async () => {
+      const n = w.calls.length;
+      await page.click('#wlTabs [data-wv="Buy"]'); await page.click('.wl-row[data-id="WL0006"] [data-more]'); await page.click('.wl-menu [data-m="got"]');
+      await page.click('.wl-pop [data-g="tier"][data-v="Someday"]'); await page.click('.wl-pop [data-ok]'); await saved(page, 1000);
+      const ws = writesSince(w, n), nb = [].concat(ws[0].body)[0];
+      check('Got it from Buy: copies Physical, tier Someday with no Up next number, archived as Bought', nb.title === 'Buy Me Deluxe' && nb.copies === 'Physical' && nb.tier === 'Someday' && nb.up_next_order == null && ws[1].body[0].status === 'Bought', [nb, ws[1].body]);
+    });
+    await step('edit keeps hidden columns', async () => {
+      const n = w.calls.length, before = { ...rowOfW('WL0009') };
+      await page.click('#wlTabs [data-wv="Download"]'); await page.click('.wl-row[data-id="WL0009"] [data-edit]'); await page.waitForSelector('#wishEditDlg[open]');
+      await fill(page, '#%', { 'we-author': 'Rae Rune (ed.)', 'we-note': 'edited' }); await submit(page, '#wishEditForm'); await saved(page, 600);
+      const ws = writesSince(w, n), after = rowOfW('WL0009');
+      check('edit: one PATCH with only author, notes and the new stage word', ws.length === 1 && ws[0].method === 'PATCH' && ws[0].query.startsWith('?id=eq.WL0009') && keysOf(ws[0].body) === 'author,notes,stage' && ws[0].body.stage === 'Download', ws.map(c => c.body));
+      check('edit: every other column is unchanged', Object.keys(before).every(k => ['author', 'notes', 'stage'].includes(k) || JSON.stringify(before[k]) === JSON.stringify(after[k])), [before, after]);
+    });
+    await step('remove then Undo writes nothing', async () => {
+      const n = w.calls.length;
+      await page.click('#wlTabs [data-wv="Inbox"]'); await page.click('.wl-row[data-id="WL0002"] [data-rm]'); await page.click('.wl-toast:last-child .linkbtn');
+      await page.waitForFunction(() => !wl.rm); await saved(page, 400);
+      check('remove + Undo: no writes, row still there', writesSince(w, n).length === 0 && !!rowOfW('WL0002') && await page.evaluate(() => !!disc.wish.find(x => x.id === 'WL0002')), writesSince(w, n).map(c => c.method + ' ' + c.table));
+    });
+  } });
   // ===== prune =====
   await scenario(browser, 'prune', { init: SB_CFG, setup: w => { w.insert('series_tracker', { series: 'Ghost Series', author: 'Gus Ghost', kind: 'Novel', status: 'Ongoing' }); w.insert('series_tracker', { series: 'Phantom Run', kind: 'Comic', status: 'Following' }); }, run: async (page, w) => {
     await live(page);
-    await page.evaluate(() => { document.querySelector('.lib-mode [data-mode="wish"]').click(); document.querySelector('[data-wv="series"]').click(); });
+    await page.evaluate(() => { document.querySelector('.lib-mode [data-mode="wish"]').click(); });
     await saved(page, 1200);
     const ds = w.calls.filter(c => c.method === 'DELETE' && c.table === 'series_tracker');
-    check('prune: tracked series with no books are deleted, others kept', ds.length === 2 && ['Ghost Series', 'Phantom Run'].every(s => !w.db.series_tracker.some(r => r.series === s)) && w.db.series_tracker.some(r => r.series === 'Spawn'), [ds.map(c => c.query), w.db.series_tracker.map(r => r.series)]);
-    check('prune: tells the user', /Removed 2 empty series/.test(await page.locator('#notice').innerText()), await page.locator('#notice').innerText());
+    check('no prune: visiting the Wishlist deletes no tracked series (Library > Series shows empty ones on purpose)', ds.length === 0 && ['Ghost Series', 'Phantom Run', 'Spawn'].every(x => w.db.series_tracker.some(r => r.series === x)), ds.map(c => c.query));
   } });
 
   // ===== tokens =====
