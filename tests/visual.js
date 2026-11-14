@@ -23,6 +23,7 @@ fs.mkdirSync(outDir, { recursive: true });
     await closeAll(page);
     await ev(page,()=>{document.querySelector('.lib-mode [data-mode="plan"]').click()}); await shot('lib-plan');
     await ev(page,()=>{document.querySelector('.lib-mode [data-mode="wish"]').click()}); await shot('wish-inbox');
+    await ev(page,()=>{const b=document.querySelector('#wlKind [data-k="Comic"]');b&&b.click()}); await shot('wish-toolbar'); await ev(page,()=>{const b=document.querySelector('#wlKind [data-k="Comic"]');b&&b.click()});
     for(const h of ['Download','Buy','Borrow']){ await ev(page,h=>{const b=document.querySelector('#wlTabs [data-wv="'+h+'"]');b&&b.click()},h); await shot('wish-'+h.toLowerCase()); }
     await ev(page,()=>{const b=document.querySelector('#wlTabs [data-wv="Download"]');b&&b.click();const g=document.querySelector('.wl-row [data-got]');g&&g.click()}); await shot('wish-gotit');
     await ev(page,()=>{document.querySelectorAll('.wl-pop').forEach(p=>p.remove())});
