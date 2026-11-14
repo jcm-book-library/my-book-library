@@ -65,6 +65,8 @@ button{font:inherit;cursor:pointer}
 .stat{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:4px;min-width:0}
 .stat .num{font-size:clamp(28px,4vw,40px);font-weight:700;line-height:1.05;letter-spacing:-.02em}
 .stat .sub{font-size:13px;color:var(--muted)}
+.stat .sub2{color:color-mix(in srgb,var(--muted) 55%,var(--fg));font-weight:500}
+.stat .sub2:empty{display:none}
 .stat.streak{background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 20%,var(--surface)),color-mix(in srgb,var(--accent-next) 8%,var(--surface)) 75%);border-color:color-mix(in srgb,var(--accent) 45%,var(--line))}
 .stat.streak .num{color:color-mix(in srgb,var(--accent) 70%,#fff)}
 .goalbar{height:6px;border-radius:3px;background:var(--raise);overflow:hidden;margin-top:6px}
@@ -193,6 +195,11 @@ input[type="number"]:focus{border-color:var(--accent);outline:none}
 .plan-list .acts .rm{padding:0;width:26px;height:26px;margin:0}
 .undo-bar{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:60;max-width:calc(100vw - 32px);display:flex;align-items:center;gap:8px;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--fg);box-shadow:0 6px 24px rgba(0,0,0,.4);font-size:14px}
 .undo-bar[hidden]{display:none}
+.totop{position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:max(16px,env(safe-area-inset-bottom,0px));z-index:29;width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--raise);color:var(--fg);font:inherit;font-size:18px;line-height:1;display:grid;place-items:center;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.45);opacity:0;transform:translateY(8px);pointer-events:none;visibility:hidden;transition:opacity .18s,transform .18s,visibility .18s}
+.totop.on{opacity:1;transform:none;pointer-events:auto;visibility:visible}
+.totop:hover{border-color:var(--accent)}
+body:has(#undoBar:not([hidden])) .totop{bottom:calc(max(16px,env(safe-area-inset-bottom,0px)) + 56px)}
+@media (prefers-reduced-motion:reduce){.totop{transition:none}}
 .undo-bar span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .undo-bar button{font:inherit;font-weight:700;border:0;background:transparent;color:var(--accent);cursor:pointer;padding:4px 6px;border-radius:6px}
 .rm-list{list-style:none;margin:0;padding:0}
@@ -201,7 +208,7 @@ input[type="number"]:focus{border-color:var(--accent);outline:none}
 .rm-t{min-width:0;flex:1 1 200px}.rm-t .t{font-weight:500}.rm-t .m{font-size:12px;color:var(--muted)}
 .rm-acts{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .fav.static{pointer-events:none;width:auto;height:auto;margin:0 0 0 2px;opacity:1;vertical-align:-2px}
-.fy{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;margin-top:20px;align-items:stretch}
+.fy{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;margin-top:20px;align-items:stretch}
 .fy .panel+.panel{margin-top:0}
 .fy-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
 .fy-list li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;padding:7px 0;border-top:1px solid var(--line);cursor:pointer;align-items:center}
@@ -505,9 +512,12 @@ table.lib{width:100%;border-collapse:collapse;font-size:14px;table-layout:fixed;
 .ins-tbox table{border-collapse:collapse;width:100%;font-size:12px}
 .ins-tbox th,.ins-tbox td{padding:5px 9px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
 .ins-tbox th{position:sticky;top:0;background:var(--raise);color:var(--muted);font-weight:500}
-.ins-foot{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-top:10px;padding-top:8px;border-top:1px solid var(--line)}
-.ins-why{font-size:12px;color:var(--muted);margin:0;line-height:1.45}
-.ins-why b{font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-size:10.5px;margin-right:6px}
+.ins-foot{display:flex;justify-content:flex-end;align-items:flex-start;gap:10px;margin-top:10px;padding-top:8px;border-top:1px solid var(--line)}
+.ins-ph-head{position:relative}
+.ins-q{margin-left:auto;flex:none;width:24px;height:24px;border-radius:50%;border:1px solid var(--line);background:transparent;color:var(--muted);font:inherit;font-size:12px;font-weight:700;line-height:1;cursor:pointer;padding:0;display:grid;place-items:center}
+.ins-q:hover,.ins-q[aria-expanded="true"]{color:var(--fg);border-color:var(--accent)}
+.ins-pop{position:absolute;z-index:20;top:calc(100% + 6px);right:0;width:min(300px,calc(100vw - 48px));padding:10px 12px;background:var(--raise);border:1px solid var(--line);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.5);font-size:12.5px;line-height:1.5;color:var(--fg)}
+.ins-pop[hidden]{display:none}
 .ins-tbtn{flex:none;font:inherit;font-size:11px;font-weight:500;color:var(--muted);background:transparent;border:1px solid var(--line);border-radius:999px;padding:3px 10px;cursor:pointer}
 .ins-tbtn:hover{border-color:var(--muted)}
 .ins-tbtn[aria-pressed="true"]{color:var(--fg);border-color:var(--accent)}
@@ -689,6 +699,13 @@ table.lib{width:100%;border-collapse:collapse;font-size:14px;table-layout:fixed;
 /* discover */
 .dog-btn{padding:6px 8px;line-height:0}
 .dog-btn svg{width:16px;height:16px}
+.ins-dog{padding:12px 16px}
+.ins-dog .panel-head{margin-bottom:8px}
+.ins-dog .dog-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.ins-dog .dog{padding:8px 24px 8px 12px}
+.ins-dog .dog p{font-size:13.5px;line-height:1.4}
+.ins-dog .dog-list>li.empty,.ins-dog .dog-list>li:has(.linkbtn){grid-column:1/-1}
+@media (max-width:700px){.ins-dog .dog-list{grid-template-columns:minmax(0,1fr)}}
 .dog-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
 .dog{position:relative;padding:12px 26px 12px 14px;background:var(--raise);border-radius:10px 0 10px 10px}
 .dog::after{content:"";position:absolute;top:0;right:0;width:16px;height:16px;border-bottom-left-radius:4px;background:linear-gradient(225deg,var(--surface) 50%,color-mix(in srgb,var(--accent) 60%,var(--raise)) 50%)}
@@ -700,6 +717,23 @@ table.lib{width:100%;border-collapse:collapse;font-size:14px;table-layout:fixed;
 .quote{margin:0 0 12px;padding:4px 0 4px 16px;border-left:3px solid var(--accent)}
 .quote p{margin:0;font-size:17px;line-height:1.55;white-space:pre-line}
 .quote footer{margin-top:10px;font-size:13px;color:var(--muted)}
+.t5-h{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px}
+.t5-nav{display:flex;align-items:center;gap:4px;flex:none}
+.t5-nav>button{width:26px;height:26px;border-radius:50%;border:1px solid var(--line);background:var(--raise);color:var(--fg);font:inherit;font-size:15px;line-height:1;cursor:pointer;padding:0}
+.t5-nav>button:hover{border-color:var(--accent)}
+#t5Dots{display:flex;gap:2px}
+#t5Dots button{width:18px;height:26px;border:0;background:transparent;cursor:pointer;padding:0;position:relative}
+#t5Dots button::after{content:"";position:absolute;left:5px;top:10px;width:8px;height:8px;border-radius:50%;background:var(--line)}
+#t5Dots button[aria-pressed="true"]::after{background:var(--accent)}
+@media (min-width:700px){
+ .aw-panel .aw-list{gap:10px}
+ .aw-panel .aw{display:grid;grid-template-columns:minmax(0,230px) minmax(0,1fr) 90px minmax(0,230px);align-items:center;gap:14px}
+ .aw-panel .aw-top{display:contents}
+ .aw-panel .aw-top a{grid-column:1;grid-row:1}
+ .aw-panel .aw-top .tnum{grid-column:3;grid-row:1;text-align:right}
+ .aw-panel .aw .track{grid-column:2;grid-row:1;margin:0}
+ .aw-panel .aw-when{grid-column:4;grid-row:1}
+}
 .aw-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px}
 .aw-top{display:flex;justify-content:space-between;gap:10px;font-size:14px}
 .aw-top a{color:var(--fg);font-weight:500;text-decoration:none}
@@ -880,6 +914,10 @@ body[data-bg="plain"] .ground{display:none}
 .au-card:hover,.au-card:focus-visible{border-color:var(--accent)}
 .au-av{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:13px;background:color-mix(in srgb,var(--accent) 32%,var(--raise));color:var(--fg);flex:none}
 .au-tx{display:flex;flex-direction:column;min-width:0;flex:1}
+.au-rank{flex:none;width:18px;text-align:center;font-size:13px;font-weight:700;color:var(--muted)}
+.au-grid.au-top{grid-template-columns:repeat(5,minmax(0,1fr))}
+.au-top .au-card:nth-child(-n+3) .au-rank{color:var(--accent)}
+#auList .shelf-sec{margin:8px 0 0}
 .au-name{font-weight:500;font-size:13px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .au-sub{font-size:12px;color:var(--muted);line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ap-head{display:flex;align-items:center;gap:14px}
@@ -932,6 +970,8 @@ body[data-bg="plain"] .ground{display:none}
 @media (max-width:1279px){.au-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media (max-width:860px){.au-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (max-width:519px){.au-grid{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:1279px){.au-grid.au-top{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:519px){.au-grid.au-top{grid-template-columns:minmax(0,1fr)}}
 @media (max-width:640px){.se-chips{flex-wrap:nowrap;gap:5px}.se-chips .chip{padding:4px 8px;font-size:12px;white-space:nowrap;flex:1 1 auto;text-align:center}.se-chips .chip .n{margin-left:3px}}
 @media (max-width:640px){
   .ap-tiles{gap:6px}.ap-tile{padding:8px 4px;text-align:center}.ap-tile b{font-size:16px}.ap-tile span{font-size:10px}
@@ -982,6 +1022,17 @@ body[data-bg="plain"] .ground{display:none}
 .spine .mk-rd{left:22%;width:9px;height:10px;border-radius:2px 2px 0 0;background:linear-gradient(90deg,#8b7440,#cdb26e 50%,#8b7440)}
 .shelf-more{flex:none;width:40px;align-self:stretch;display:grid;place-items:center;color:var(--muted);font:inherit;font-size:13px;font-weight:500;border:1px dashed var(--line);border-radius:6px;background:transparent;cursor:pointer}
 .shelf-more:hover{color:var(--fg);border-color:var(--accent)}
+/* Devices that stand at the end of the Reading now shelf: a generic e-reader and a tablet. Matte, like the leather. */
+.dev{flex:none;position:relative;border:0;padding:0;margin:0 0 0 4px;background:none;cursor:pointer;display:block;transition:transform .12s;filter:drop-shadow(2px 0 3px rgba(0,0,0,.5)) saturate(.85)}
+.dev.first{margin-left:auto}
+.dev:hover{transform:translateY(-5px)}
+.dev:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
+.dev svg{display:block;width:100%;height:100%}
+.dev .dcnt{position:absolute;top:-6px;right:-6px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--accent);color:var(--accent-ink);font-size:11px;font-weight:700;line-height:18px;text-align:center;box-shadow:0 1px 2px rgba(0,0,0,.5)}
+.ground .row i.gdev{border-radius:5px 5px 0 0;background-color:#17151a;background-repeat:no-repeat;box-shadow:none;margin:0 6px}
+.ground .row i.gdev::before,.ground .row i.gdev::after{content:none}
+.ground .row i.gdev.k{width:40px;height:62px;background-image:linear-gradient(#bdbbb3,#bdbbb3),linear-gradient(#5a5852,#5a5852);background-size:82% 70%,24% 3px;background-position:50% 8%,50% 90%}
+.ground .row i.gdev.t{width:38px;height:74px;background-image:linear-gradient(#cfcdc5,#cfcdc5),linear-gradient(#7a3a3a,#7a3a3a);background-size:88% 90%,60% 10%;background-position:50% 50%,50% 14%}
 @media (max-width:640px){
   .lib-tools.has-seg{grid-template-columns:minmax(0,1fr) auto}
   .lib-tools.has-seg input[type="search"]{grid-column:1/-1}
@@ -1013,7 +1064,7 @@ body[data-bg="plain"] .ground{display:none}
     <nav class="tabs" role="tablist" aria-label="Sections">
       <button class="tab" role="tab" id="tab-now" aria-selected="true" aria-controls="view-now" type="button">Now</button>
       <button class="tab" role="tab" id="tab-library" aria-selected="false" aria-controls="view-library" type="button">Library</button>
-      <button class="tab" role="tab" id="tab-next" aria-selected="false" aria-controls="view-next" type="button">Next</button>
+      <button class="tab" role="tab" id="tab-next" aria-selected="false" aria-controls="view-next" type="button">Next Up</button>
       <button class="tab" role="tab" id="tab-insights" aria-selected="false" aria-controls="view-insights" type="button">Insights</button>
       <span class="sep"></span>
       <button class="tab tb" id="toolboxBtn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="toolboxPop"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg>Toolbox</button>
@@ -1036,22 +1087,26 @@ body[data-bg="plain"] .ground{display:none}
       <span class="eyebrow">Reading streak</span>
       <span class="num tnum" id="sStreak">–</span>
       <span class="sub" id="sStreakSub">days</span>
+      <span class="sub sub2" id="sStreakSub2"></span>
     </div>
     <div class="stat">
       <span class="eyebrow">Today</span>
       <span class="num tnum" id="sToday">0</span>
       <span class="sub" id="sTodaySub">of 100 pages</span>
+      <span class="sub sub2" id="sTodaySub2"></span>
       <div class="goalbar" aria-hidden="true"><i id="sTodayBar" style="width:0"></i></div>
     </div>
     <div class="stat">
       <span class="eyebrow" id="sMonthLabel">This month</span>
       <span class="num tnum" id="sMonth">–</span>
       <span class="sub" id="sMonthSub"></span>
+      <span class="sub sub2" id="sMonthSub2"></span>
     </div>
     <div class="stat">
       <span class="eyebrow" id="sYearLabel">This year</span>
       <span class="num tnum" id="sYear">–</span>
       <span class="sub" id="sYearSub"></span>
+      <span class="sub sub2" id="sYearSub2"></span>
     </div>
   </section>
   <section class="panel reading-now" aria-labelledby="logH">
@@ -1077,12 +1132,14 @@ body[data-bg="plain"] .ground{display:none}
     <section class="panel" aria-labelledby="fyRecH"><div class="panel-head"><h2 id="fyRecH">Read next</h2><span class="muted small">From your TBR</span></div><div class="fy-rec" id="fyRec"></div></section>
     <section class="panel" aria-labelledby="fyLastH"><div class="panel-head"><h2 id="fyLastH">Last five finished</h2></div><ul class="fy-list" id="fyLast"></ul></section>
     <section class="panel" aria-labelledby="fyFavH"><div class="panel-head"><h2 id="fyFavH">Favourites</h2><span class="muted small" id="fyFavNote"></span></div><ul class="fy-list" id="fyFav"></ul></section>
+    <section class="panel" aria-labelledby="odH"><div class="panel-head"><h2 id="odH">On this day</h2><span class="muted small">Finished around this date in past years</span></div><ul class="fy-list" id="discOnDay"></ul></section>
   </div>
   <div class="dash-2">
     <section class="panel" aria-labelledby="dailyH">
         <div class="panel-head">
           <h2 id="dailyH">Pages per day</h2>
           <div class="range-tabs" role="group" aria-label="Range">
+            <button type="button" data-range="7" aria-pressed="false">7 days</button>
             <button type="button" data-range="30" aria-pressed="false">30 days</button>
             <button type="button" data-range="90" aria-pressed="false">90 days</button>
             <button type="button" data-range="ytd" aria-pressed="true">This year</button>
@@ -1128,7 +1185,10 @@ body[data-bg="plain"] .ground{display:none}
     <div id="authorsView" hidden>
       <div id="auList">
         <div class="se-tools"><input type="search" id="auSearch" placeholder="Search author, title or series" aria-label="Search authors"><select id="auSort" aria-label="Sort authors"><option value="read">Most read</option><option value="az">A–Z</option><option value="rated">Highest rated</option><option value="toread">Most to read</option></select></div>
+        <div id="auTop"></div>
+        <div class="shelf-sec" id="auAllH">All authors</div>
         <div class="au-grid" id="auGrid"></div>
+        <button type="button" class="btn" id="auMore" hidden style="align-self:center"></button>
         <p class="muted small" id="auCount" style="margin:12px 0 0"></p>
       </div>
       <div id="auPage" hidden></div>
@@ -1157,11 +1217,12 @@ body[data-bg="plain"] .ground{display:none}
       </section>
       <section class="panel" aria-labelledby="tbrH">
     <div class="panel-head"><h2 id="tbrH">Your TBR</h2><span class="muted" id="tbrNote" style="font-size:13px"></span></div>
-    <div class="dash-2" style="margin-bottom:0">
-      <div><div class="eyebrow" style="margin-bottom:4px">Digital or physical</div><div id="ownSplit"></div><div class="eyebrow" style="margin:18px 0 8px">Quick wins · shortest on your TBR</div><ul class="mini-list" id="quickList"></ul></div>
-      <div><div class="eyebrow" style="margin-bottom:8px;display:flex;justify-content:space-between">Up next <button type="button" class="linkbtn" id="planLink">Plan</button></div><ol class="mini-list up-mini" id="spotList"></ol></div>
+    <div class="dash-2 tbr-2" style="margin-bottom:0">
+      <div><div class="eyebrow" style="margin-bottom:4px">Digital or physical</div><div id="ownSplit"></div></div>
+      <div class="t5"><div class="t5-h"><div><div class="eyebrow">Top 5 · <span id="t5Title"></span></div><div class="muted small" id="t5Sub"></div></div><div class="t5-nav" role="group" aria-label="Browse the Top 5 lists"><button type="button" data-t5="-1" aria-label="Previous list">‹</button><span id="t5Dots"></span><button type="button" data-t5="1" aria-label="Next list">›</button></div></div><ul class="mini-list" id="quickList"></ul></div>
     </div>
   </section>
+      <section class="panel aw-panel" aria-labelledby="awwH"><div class="panel-head"><h2 id="awwH">Award watch</h2><span class="muted small">Your progress · roughly when each is announced</span></div><ul class="aw-list" id="discAwards"></ul></section>
       <section class="panel" aria-labelledby="recH">
     <div class="panel-head"><h2 id="recH">What to read next</h2><span class="muted small">From your ratings, themes, genres, authors and series</span></div>
     <div class="lib-bar">
@@ -1213,10 +1274,8 @@ body[data-bg="plain"] .ground{display:none}
         <div class="wish-bar" id="wishBar" hidden><span id="wishBarText"></span><button class="btn btn-primary" type="button" id="wishMoveBtn">Move to TBR now</button></div>
       </section>
       <section class="panel" id="wlSeries" aria-labelledby="wlSerH" hidden><div class="panel-head"><h2 id="wlSerH">Series you're following</h2><button class="btn" type="button" id="wlSerAdd">Add a series</button></div><div id="wlSerList"></div></section>
-      <div class="dash-3">
-        <section class="panel" aria-labelledby="csH"><div class="panel-head"><h2 id="csH">Coming soon</h2><span class="muted small">From your Wishlist</span></div><ul class="mini-list" id="discSoon"></ul><div class="why" id="discPipe" style="margin-top:14px"></div></section>
-        <section class="panel" aria-labelledby="awwH"><div class="panel-head"><h2 id="awwH">Award watch</h2><span class="muted small">Your progress · roughly when each is announced</span></div><ul class="aw-list" id="discAwards"></ul></section>
-        <section class="panel" aria-labelledby="odH"><div class="panel-head"><h2 id="odH">On this day</h2><span class="muted small">Finished around this date in past years</span></div><ul class="mini-list" id="discOnDay"></ul></section>
+      <div class="dash-2">
+        <section class="panel" style="grid-column:1/-1" aria-labelledby="csH"><div class="panel-head"><h2 id="csH">Coming soon</h2><span class="muted small">From your Wishlist</span></div><ul class="mini-list" id="discSoon"></ul><div class="why" id="discPipe" style="margin-top:14px"></div></section>
       </div>
     </div>
   </div>
@@ -1224,17 +1283,17 @@ body[data-bg="plain"] .ground{display:none}
   <div id="view-insights" class="vstack" role="tabpanel" aria-labelledby="tab-insights" hidden>
     <div class="periods" id="dashPeriods" role="group" aria-label="Period"></div>
     <nav class="ins-idx" id="insIdx" aria-label="Chapters"><a href="#insC1" data-c="insC1" id="insNav1"><b>1</b>This year</a><a href="#insC2" data-c="insC2"><b>2</b>What I love</a><a href="#insC3" data-c="insC3"><b>3</b>How I read</a><a href="#insC4" data-c="insC4"><b>4</b>What I read</a><a href="#insC5" data-c="insC5"><b>5</b>My pile</a></nav>
+    <section class="panel ins-dog" aria-labelledby="dogH">
+      <div class="panel-head"><h2 id="dogH">Dog-ear quotes</h2><button class="btn" type="button" id="dogAdd">Dog-ear a quote</button></div>
+      <ul class="dog-list" id="dogList"></ul>
+    </section>
     <section class="ins-chap" id="insC1" aria-labelledby="insC1h"><div class="ins-chap-h"><span>01</span><h2 id="insC1h">This year at a glance</h2></div>
-      <section class="dash-tiles" id="dashTiles" aria-label="Totals"></section><div id="insG1"></div></section>
+      <section class="dash-tiles" id="dashTiles" aria-label="Totals"></section><div id="insG1"></div><div id="insG1b"></div></section>
     <section class="ins-chap" id="insC2" aria-labelledby="insC2h"><div class="ins-chap-h"><span>02</span><h2 id="insC2h">What do I love?</h2></div><div id="insG2a"></div><div id="insG2b"></div></section>
     <section class="ins-chap" id="insC3" aria-labelledby="insC3h"><div class="ins-chap-h"><span>03</span><h2 id="insC3h">How do I read?</h2></div><div id="insG3a"></div><div id="insG3b"></div><div id="insG3c"></div></section>
     <section class="ins-chap" id="insC4" aria-labelledby="insC4h"><div class="ins-chap-h"><span>04</span><h2 id="insC4h">What do I read?</h2></div><div id="insG4a"></div><div id="insG4b"></div><div id="insG4c"></div></section>
     <section class="ins-chap" id="insC5" aria-labelledby="insC5h"><div class="ins-chap-h"><span>05</span><h2 id="insC5h">What&rsquo;s on my pile?</h2></div><div id="insG5"></div></section>
     <section class="panel" aria-labelledby="yirH"><div class="panel-head"><h2 id="yirH">Year in review</h2><select id="yirYear" aria-label="Year"></select></div><div id="yirBox"></div></section>
-    <section class="panel" aria-labelledby="dogH">
-      <div class="panel-head"><h2 id="dogH">Dog-ear quotes</h2><button class="btn" type="button" id="dogAdd">Dog-ear a quote</button></div>
-      <ul class="dog-list" id="dogList"></ul>
-    </section>
   </div>
 
   <div id="view-toolbox" class="vstack" role="tabpanel" aria-label="Toolbox" hidden>
@@ -1380,6 +1439,7 @@ body[data-bg="plain"] .ground{display:none}
 </dialog>
 
 <aside id="bookCard" class="bcard" role="dialog" aria-label="Book details" hidden></aside>
+<button type="button" class="totop" id="toTop" aria-label="Back to top" title="Back to top">↑</button>
 <div id="undoBar" class="undo-bar" role="status" hidden><span></span><button type="button" id="undoBtn">Undo</button></div>
 
 <dialog id="coverDlg" aria-labelledby="cvTitle" style="width:min(760px,calc(100vw - 32px))">
@@ -1569,6 +1629,7 @@ function buildGround() {
     e.style.backgroundColor = `var(--g${Math.floor(rnd() * 5)})`;
     if (i % 17 === 9) e.className = 'lean';
     row.appendChild(e);
+    if (i === 23 || i === 51) { const g = document.createElement('i'); g.className = 'gdev ' + (i === 23 ? 'k' : 't'); row.appendChild(g); }   // a quiet e-reader and tablet among the spines
   }
 }
 buildGround();
@@ -1614,11 +1675,13 @@ function renderStats(totals) {
   const t = today(), goal = state.settings.dailyGoalPages || 100;
   const { count, todayDone } = streakInfo(totals);
   $('sStreak').textContent = fmt(count);
+  { let s7 = 0; for (let i = 0; i < 7; i++) s7 += totals.get(addDays(t, -i)) || 0; $('sStreakSub2').textContent = `7-day avg ${fmt(Math.round(s7 / 7))} pages`; }
   $('sStreakSub').textContent = count === 0 ? 'Log a page to start a new streak'
     : todayDone ? 'days, including today' : `days. Log today to make it ${fmt(count + 1)}`;
   const tp = totals.get(t) || 0;
   $('sToday').textContent = fmt(tp);
   $('sTodaySub').textContent = tp >= goal ? `Goal of ${goal} reached` : `of ${goal} pages · ${goal - tp} to go`;
+  $('sTodaySub2').textContent = state.libLoaded ? (n => `${fmt(n)} ${n === 1 ? 'book' : 'books'} on the go`)(state.allBooks.filter(b => b.status === 'Reading').length) : '';
   $('sTodayBar').style.width = Math.min(100, tp / goal * 100) + '%';
 
   const ym = t.slice(0, 7), y = t.slice(0, 4);
@@ -1631,6 +1694,7 @@ function renderStats(totals) {
   $('sMonthLabel').textContent = MONTHS[Number(t.slice(5, 7)) - 1] + ' so far';
   $('sMonth').textContent = fmt(mTot);
   $('sMonthSub').textContent = `${mHit} of ${dayOfMonth} days at goal`;
+  $('sMonthSub2').textContent = state.libLoaded ? (n => `${fmt(n)} ${n === 1 ? 'book' : 'books'} finished`)(state.allBooks.filter(b => b.status === 'Finished' && (b.finishDate || '').startsWith(ym)).length) : '';
   $('sYearLabel').textContent = y + ' so far';
   if (state.libLoaded) {
     const fin = state.allBooks.filter(b => b.status === 'Finished' && (b.finishDate || '').startsWith(y));
@@ -1639,9 +1703,11 @@ function renderStats(totals) {
     const rp = reading.reduce((a, b) => a + (toNum(b.pages) ? Math.min(toNum(b.currentPage), toNum(b.pages)) : toNum(b.currentPage)), 0);
     const fp = fin.reduce((a, b) => a + toNum(b.pages), 0) + rp, doy = daysBetween(y + '-01-01', t) + 1;
     $('sYear').textContent = fmt(fp);
-    $('sYearSub').textContent = `pages in ${fmt(fin.length)} finished books${reading.length ? ` + ${fmt(reading.length)} in progress` : ''} · ${fmt(Math.round(fp / doy))} a day`;
+    $('sYearSub').textContent = `pages${reading.length ? `, ${fmt(reading.length)} in progress` : ''} · ${fmt(Math.round(fp / doy))} a day`;
+    $('sYearSub2').textContent = `${fmt(fin.length)} ${fin.length === 1 ? 'book' : 'books'} finished`;
   } else {
     $('sYear').textContent = fmt(yTot);
+    $('sYearSub2').textContent = '';
     $('sYearSub').textContent = yDays ? `${fmt(Math.round(yTot / yDays))} a day on average` : '';
   }
   $('todayLabel').textContent = new Date().toLocaleDateString('en-AU', { weekday: 'long', day: 'numeric', month: 'long' }) + ' · ' + SEASON[Number(t.slice(5, 7)) - 1];
@@ -1791,7 +1857,7 @@ function renderBooks() {
       bars.innerHTML = vals.map(v => v ? `<span style="height:${Math.max(8, Math.min(100, v / mx * 100)).toFixed(0)}%"></span>` : '<span class="z"></span>').join('');
       const ab0 = state.allBooks.find(x => x.id === b.id) || {};
       const dayEl = el.querySelector('.nb-day');
-      if (ab0.startDate && ab0.startDate <= today()) dayEl.textContent = `Day ${daysBetween(ab0.startDate, today()) + 1} of reading`; else dayEl.remove();
+      if (ab0.startDate && ab0.startDate <= today()) { const dn = daysBetween(ab0.startDate, today()); dayEl.textContent = dn === 0 ? 'Started today' : `${dn} ${dn === 1 ? 'day' : 'days'} since started`; } else dayEl.remove();
     }
     { const ab = state.allBooks.find(x => x.id === b.id) || {}; const sr = document.createElement('span');
       sr.className = 'sr' + (ab.series ? '' : ' na'); sr.textContent = ab.series ? ab.series + (ab.seriesNum ? ' #' + ab.seriesNum : '') : 'Standalone'; el.querySelector('.nb-meta').appendChild(sr); }
@@ -1922,9 +1988,9 @@ function renderDaily(totals) {
     labels.push(d);
     data.push(totals.get(d) || 0);
   }
-  data.forEach((_, i) => {
-    const w = data.slice(Math.max(0, i - 6), i + 1);
-    avg.push(Math.round(w.reduce((a, b) => a + b, 0) / w.length));
+  labels.forEach(d => {   // days before the range still count, so even 7 days has a full average
+    let a = 0; for (let k = 0; k < 7; k++) a += totals.get(addDays(d, -k)) || 0;
+    avg.push(Math.round(a / 7));
   });
   const avgC = LIME, muted = css('--muted');
   const cfg = {
@@ -2133,15 +2199,15 @@ function renderForYou() {
   box.hidden = false;
   const open = id => openInLibrary(id);
   const row = (b, right) => { const li = document.createElement('li'); li.innerHTML = '<span class="t"></span><span class="r"></span><span class="m"></span>'; li.querySelector('.t').textContent = b.title; li.querySelector('.m').textContent = b.author || ''; li.querySelector('.r').textContent = right || ''; if (isFav(b)) li.querySelector('.t').insertAdjacentHTML('beforeend', ` <span class="fav static" aria-label="Favourite" style="color:#f5c85a">${BOOKMARK}</span>`); li.addEventListener('click', () => open(b.id)); return li; };
-  // Read next: best-scoring TBR book that isn't already finished; "Another" steps down the top five
+  // Read next: one of the seven best-scoring TBR books that aren't already finished, a different one each day; "Another" steps on to the next
   const norm = t => String(t || '').toLowerCase().replace(/^(the|a|an) /, '').replace(/[^a-z0-9]/g, '');
   const done = new Set(state.allBooks.filter(b => b.status === 'Finished' || b.status === 'DNF').map(b => norm(b.title)));
   const P = buildProfile();
-  const top = state.allBooks.filter(b => b.status === 'TBR' && !done.has(norm(b.title))).map(b => scoreBook(b, P, null)).sort((a, b) => b.s - a.s).slice(0, 5);
+  const top = state.allBooks.filter(b => b.status === 'TBR' && !done.has(norm(b.title))).map(b => scoreBook(b, P, null)).sort((a, b) => b.s - a.s).slice(0, 7);
   const rec = $('fyRec'); rec.textContent = '';
   if (!top.length) rec.innerHTML = '<p class="empty">Nothing on your TBR to suggest yet.</p>';
   else {
-    const { b, why } = top[fyPick % top.length];
+    const { b, why } = top[(daysBetween('2020-01-01', today()) + fyPick) % top.length];   // a different one of the top seven each day
     rec.innerHTML = '<div><div class="top"><div><h3></h3><div class="m"></div></div></div><div class="chips"></div><p class="syn"></p></div><div class="btns"><button class="btn btn-primary" type="button" data-o>Open</button><button class="btn" type="button" data-n>Another</button></div>';
     rec.querySelector('h3').textContent = b.title;
     if (coverUrl(b)) rec.querySelector('.top').insertAdjacentHTML('afterbegin', coverImg(b, 'cov-l', 'M'));
@@ -2166,6 +2232,12 @@ function renderForYou() {
   $('fyFavNote').textContent = favs.length ? `${fmt(favs.length)} marked${favs.length < 5 ? ' · filled with five-star reads' : ''}` : 'five-star reads for now';
   if (!picks.length) fl.innerHTML = '<li class="empty" style="display:block;cursor:default">Tap the bookmark next to a book in the Library to make it a favourite.</li>';
   for (const b of picks) fl.appendChild(row(b, starStr(b.rating)));
+  // On this day: books finished within a week of today's date in earlier years
+  const t = today(), od = $('discOnDay'); od.textContent = '';
+  const near = state.allBooks.filter(b => b.status === 'Finished' && b.finishDate && b.finishDate.slice(0, 4) < t.slice(0, 4))
+    .map(b => ({ b, gap: Math.abs(daysBetween(t.slice(0, 4) + '-' + b.finishDate.slice(5), t)) })).filter(x => x.gap <= 7).sort((a, b) => a.gap - b.gap).slice(0, 5);
+  if (!near.length) od.innerHTML = '<li class="empty" style="display:block;cursor:default">Nothing finished around this date in earlier years yet.</li>';
+  for (const { b } of near) od.appendChild(row(b, `${starStr(b.rating)}${b.rating ? '\n' : ''}${fromIso(b.finishDate).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' })}`));
 }
 function renderAll() {
   readCache.map = null;
@@ -3319,11 +3391,23 @@ function recTop(set, n) {
     return state.allBooks.filter(b => b.status === 'TBR' && set.has(b) && !done.has(normT(b.title))).map(b => scoreBook(b, P, null)).sort((a, b) => b.s - a.s).slice(0, n).map(x => x.b);
   } finally { recState.mode = saved; }
 }
+const DEV_H = { k: 104, t: 120 };   // standing height in px; widths follow the e-reader's 0.72 and the tablet's 0.62
+const DEVS = {
+  k: { label: 'E-reader books', name: 'E-reader (Kobo)', w: 75, re: /kobo/i,
+    svg: '<svg viewBox="0 0 72 100" aria-hidden="true"><defs><linearGradient id="dkB" x1="0" x2="1"><stop offset="0" stop-color="#2a272d"/><stop offset=".5" stop-color="#1c1a1f"/><stop offset="1" stop-color="#141216"/></linearGradient></defs><rect x="1" y="1" width="70" height="99" rx="6" fill="url(#dkB)"/><rect x="5" y="6" width="62" height="72" rx="2" fill="#bfbdb5"/><g fill="#5f5d57"><rect x="10" y="13" width="34" height="3.4" rx="1"/><rect x="10" y="22" width="52" height="2.2" rx="1"/><rect x="10" y="28" width="48" height="2.2" rx="1"/><rect x="10" y="34" width="52" height="2.2" rx="1"/><rect x="10" y="40" width="40" height="2.2" rx="1"/><rect x="10" y="50" width="52" height="2.2" rx="1"/><rect x="10" y="56" width="46" height="2.2" rx="1"/><rect x="10" y="62" width="50" height="2.2" rx="1"/></g><rect x="27" y="86" width="18" height="3.6" rx="1.8" fill="#4a4750"/></svg>' },
+  t: { label: 'Tablet / PDF books', name: 'Tablet (PDF)', w: 74, re: /pdf/i,
+    svg: '<svg viewBox="0 0 62 100" aria-hidden="true"><rect x="1" y="1" width="60" height="99" rx="5" fill="#0c0b0e"/><rect x="1.8" y="1.8" width="58.4" height="97.4" rx="4.4" fill="none" stroke="#2a272d" stroke-width=".8"/><rect x="4" y="5" width="54" height="90" rx="1.6" fill="#dcdad2"/><rect x="4" y="5" width="54" height="11" fill="#6e3a3a"/><rect x="9" y="9" width="26" height="3.2" rx="1" fill="#e9dfd3"/><g fill="#8a8882"><rect x="9" y="22" width="44" height="2" rx="1"/><rect x="9" y="27" width="40" height="2" rx="1"/><rect x="9" y="32" width="44" height="2" rx="1"/><rect x="9" y="37" width="36" height="2" rx="1"/></g><rect x="9" y="46" width="44" height="18" rx="1" fill="#b9b6ad"/><g fill="#8a8882"><rect x="9" y="70" width="44" height="2" rx="1"/><rect x="9" y="75" width="42" height="2" rx="1"/><rect x="9" y="80" width="44" height="2" rx="1"/><rect x="9" y="85" width="30" height="2" rx="1"/></g></svg>' }
+};
+const devBooks = (rows, k) => dedupeReads(rows.filter(b => DEVS[k].re.test(b.copies || '')));
+function devHtml(k, n, first) {
+  const d = DEVS[k], h = DEV_H[k];
+  return `<button type="button" class="dev${first ? ' first' : ''}" data-dev="${k}" style="width:${d.w}px;height:${h}px" title="${escapeText(d.label)}" aria-label="${escapeText(d.label)}, ${n}">${d.svg}<span class="dcnt tnum">${fmt(n)}</span></button>`;
+}
 function renderShelves(rows, filtering) {
   const box = $('libShelves'), set = new Set(rows), defs = [];
   const add = (grp, label, books) => { if (books.length) defs.push({ grp, label, books }); };
   const byFin = (a, b) => (b.finishDate || '').localeCompare(a.finishDate || '');
-  add('top', 'Reading now', rows.filter(b => b.status === 'Reading'));
+  { const rn = rows.filter(b => b.status === 'Reading'); if (rn.length || rows.length) defs.push({ grp: 'top', label: 'Reading now', books: rn }); }
   add('top', 'Last 10 finished', rows.filter(b => b.status === 'Finished').sort(byFin).slice(0, 10));
   add('top', 'Favourites', dedupeReads(rows.filter(isFav)));
   add('top', 'Recommended for you', recTop(set, 10));
@@ -3343,7 +3427,7 @@ function renderShelves(rows, filtering) {
     if (books.length) prog.push({ label: g[0].series, books, last: sn.last || '' });
   }
   prog.sort((a, b) => b.last.localeCompare(a.last)).slice(0, 12).forEach(p => add('series', p.label, p.books));
-  shelfDefs = defs;
+  shelfDefs = defs; shelfDevs = { k: devBooks(rows, 'k'), t: devBooks(rows, 't') };
   const groups = [['top', ''], ['lists', 'Your shelves'], ['series', 'Series in progress']];
   box.innerHTML = defs.length ? groups.map(([g, h]) => {
     const ds = defs.filter(d => d.grp === g); if (!ds.length) return '';
@@ -3393,18 +3477,21 @@ function spineHtml(b, pal, inReading) {
   const H = spineH(b), tall = H >= 118, f = fitTitle(b.title, H - (tall ? 44 : 34)), fav = isFav(b), rd = !inReading && b.status === 'Reading';
   return `<button type="button" class="spine${tall ? ' tall' : ''}${fav ? ' sfav' : ''}${rd ? ' rd' : ''}" data-spine="${escapeText(b.id)}" style="width:${spineW(b)}px;height:${H}px;background-color:${col}" title="${escapeText(b.title + (b.author ? ' · ' + b.author : ''))}" aria-label="${escapeText(b.title)}">${rd ? '<u class="mk mk-rd"></u>' : ''}${fav ? '<u class="mk mk-fav"></u>' : ''}<span style="font-size:${f.px}px">${escapeText(f.text)}</span></button>`;
 }
+let shelfDevs = { k: [], t: [] };
 function layoutShelves() {
   const box = $('libShelves'); if (!box || box.hidden || !box.offsetWidth) return;
   const pal = spinePalette(look.spines, today()).map(c => leather(c));
   box.querySelectorAll('.shelf-row').forEach(row => {
     const d = shelfDefs[+row.dataset.i]; if (!d) return;
-    const W = row.clientWidth - 8, list = d.books;
+    const reading = d.label === 'Reading now' && d.grp === 'top', devW = reading ? DEVS.k.w + DEVS.t.w + 16 : 0;
+    const W = row.clientWidth - 8 - devW, list = d.books;
     let used = 0, n = 0;
     for (const b of list) { const need = spineW(b) + 4; if (used + need > W) break; used += need; n++; }
     if (n < list.length) while (n > 0 && used + 44 > W) { n--; used -= spineW(list[n]) + 4; }
     const shown = list.slice(0, n);
-    row.innerHTML = shown.map(b => spineHtml(b, pal, d.label === 'Reading now')).join('') + (n < list.length ? `<button type="button" class="shelf-more" data-seeall="${row.dataset.i}" title="${list.length - n} more" aria-label="${list.length - n} more books. See all">+${list.length - n}</button>` : '');
-    row.style.height = (Math.max(52, ...shown.map(spineH)) + 16) + 'px';
+    row.innerHTML = shown.map(b => spineHtml(b, pal, d.label === 'Reading now')).join('') + (n < list.length ? `<button type="button" class="shelf-more" data-seeall="${row.dataset.i}" title="${list.length - n} more" aria-label="${list.length - n} more books. See all">+${list.length - n}</button>` : '')
+      + (reading ? devHtml('k', shelfDevs.k.length, true) + devHtml('t', shelfDevs.t.length, false) : '');
+    row.style.height = (Math.max(52, ...shown.map(spineH), ...(reading ? [DEV_H.k, DEV_H.t] : [])) + 16) + 'px';
   });
 }
 {
@@ -3415,6 +3502,8 @@ function layoutShelves() {
 }
 $('libShelves').addEventListener('click', e => {
   const sp = e.target.closest('[data-spine]'); if (sp) { showCard(sp.dataset.spine); return; }
+  const dv = e.target.closest('[data-dev]');
+  if (dv) { const k = dv.dataset.dev; Object.assign(state.lib, { view: 'list', shelf: { label: DEVS[k].label, ids: new Set(shelfDevs[k].map(b => b.id)) }, sec: {}, lim: {}, open: null }); renderLibrary(); window.scrollTo(0, 0); return; }
   const sa = e.target.closest('[data-seeall]'); if (!sa) return;
   const d = shelfDefs[+sa.dataset.seeall]; if (!d) return;
   Object.assign(state.lib, { view: 'list', shelf: { label: d.label, ids: new Set(d.books.map(b => b.id)) }, sec: {}, lim: {}, open: null });
@@ -3701,7 +3790,16 @@ function spread(items, gap, lo, hi) {   // nudge label y positions apart: items 
 
 /* ---- tooltip, hover and keyboard stepping ---- */
 let tipEl = null, ACTIVE = null;
+// "?" popovers: one open at a time; a click elsewhere or Escape closes it
+function closePops(except) { document.querySelectorAll('.ins-pop').forEach(n => { if (n !== except && !n.hidden) { n.hidden = true; const b = n.parentNode.querySelector('.ins-q'); if (b) b.setAttribute('aria-expanded', 'false'); } }); }
+let popWired = false;
+function wirePops() {
+  if (popWired) return; popWired = true;
+  document.addEventListener('click', e => { if (!(e.target.closest && e.target.closest('.ins-pop'))) closePops(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') { const o = document.querySelector('.ins-pop:not([hidden])'); if (o) { const b = o.parentNode.querySelector('.ins-q'); closePops(); if (b) b.focus(); } } });
+}
 function tipInit() {
+  wirePops();
   if (tipEl) return;
   tipEl = h('div', 'ins-tip', document.body); tipEl.setAttribute('role', 'status'); tipEl.setAttribute('aria-live', 'polite');
   document.addEventListener('pointerdown', e => { if (ACTIVE && !(e.target.closest && e.target.closest('.ins-cbox svg'))) ACTIVE(); });
@@ -3796,15 +3894,17 @@ function fillTable(tb, t) { tb.replaceChildren(); if (!t) return; const tbl = h(
 function panel(grid, o) {
   const p = h('section', 'panel ins-panel' + (o.cls ? ' ' + o.cls : ''), grid);
   const hd = h('div', 'ins-ph-head', p); h('h3', null, hd, o.title);
+  let whyBtn = null; if (o.why) { whyBtn = h('button', 'ins-q', hd, '?'); whyBtn.type = 'button'; whyBtn.setAttribute('aria-label', 'Why this chart'); whyBtn.setAttribute('aria-expanded', 'false'); }
   const tk = h('p', 'ins-take', p); if (o.take) rich(tk, o.take); else tk.hidden = true;
   const P = { root: p, take(s) { tk.textContent = ''; tk.hidden = !s; if (s) rich(tk, s); } };
-  if (o.empty) { ph(p, o.empty); return p; }
+  const addWhy = () => { if (!whyBtn) return; hd.appendChild(whyBtn); const note = h('div', 'ins-pop', hd, o.why); note.hidden = true; note.setAttribute('role', 'note'); whyBtn.addEventListener('click', e => { e.stopPropagation(); const on = note.hidden; closePops(on ? note : null); note.hidden = !on; whyBtn.setAttribute('aria-expanded', String(on)); }); };
+  if (o.empty) { addWhy(); ph(p, o.empty); return p; }
   let r = null;
   if (o.controls) o.controls(hd, () => { if (r) { tipHide(); drawR(r); } });
+  addWhy();
   if (o.legend) legend(p, o.legend);
   if (o.note) h('p', 'ins-note', p, o.note);
-  const box = h('div', 'ins-cbox', p), tb = h('div', 'ins-tbox', p), ft = h('div', 'ins-foot', p), w = h('p', 'ins-why', ft);
-  h('b', null, w, 'Why this chart'); w.appendChild(document.createTextNode(o.why || ''));
+  const box = h('div', 'ins-cbox', p), tb = h('div', 'ins-tbox', p), ft = h('div', 'ins-foot', p);
   const btn = h('button', 'ins-tbtn', ft, 'Table'); btn.type = 'button'; btn.setAttribute('aria-pressed', 'false');
   mount(box, o.render, P, o.fixed); r = REG[REG.length - 1];
   r.after = () => { btn.hidden = !r.table; if (p.classList.contains('show-table')) fillTable(tb, r.table); };
@@ -3957,6 +4057,67 @@ function chOnTrack(g) {
       });
       const rows = []; for (let k = 0; k < 12; k++) { const e = Math.min(nd, d0(y, k + 2, 1) - jan1); rows.push([MON[k], e <= last ? cy[e] : '–', ...(goal ? [f1(goalAt(e))] : []), ...(hasPrev ? [cp[e]] : [])]); }
       return { head: ['Month end', String(y), ...(goal ? ['Goal pace'] : []), ...(hasPrev ? [String(y - 1)] : [])], rows };
+    } });
+}
+
+// Month window shared by the two monthly charts: the 12 months of the chosen year, or the last 12 months for All time
+function monthWindow() {
+  const y = D.y, cur = y == null || String(y) === D.curY, out = [];
+  if (y != null) for (let m = 0; m < 12; m++) out.push({ y, m, future: String(y) === D.curY && m > mo0(TODAY) });
+  else for (let i = 11; i >= 0; i--) { let yy = yr(TODAY), m = mo0(TODAY) - i; while (m < 0) { m += 12; yy--; } out.push({ y: yy, m, future: false }); }
+  out.forEach(q => { q.cur = q.y === yr(TODAY) && q.m === mo0(TODAY); q.books = D.recs.filter(r => r.f != null && yr(r.f) === q.y && mo0(r.f) === q.m); });
+  return { ms: out, cur };
+}
+function chMonthPages(g) {
+  const title = 'How much did I read each month?', { ms } = monthWindow();
+  ms.forEach(q => { q.pages = sum(q.books.map(r => r.pages)); });
+  const act = ms.filter(q => !q.future && q.pages > 0);
+  if (act.length < 2) return panel(g, { title, empty: `Needs finished books with pages and dates in at least 2 different months${D.y ? ' of ' + D.y : ' of the last 12'}.` });
+  const hasCur = ms.some(q => q.cur), best = act.reduce((a, q) => q.pages > a.pages ? q : a), mean = avg(ms.filter(q => !q.future).map(q => q.pages)), hiQ = hasCur ? ms.find(q => q.cur) : best;
+  const ml = q => MON[q.m] + (D.y == null ? ' ' + q.y : '');
+  const take = `**${fmt(best.pages)} pages** in ${ml(best)} was your biggest month, against a typical ${fmt(Math.round(mean))}.` + (hasCur ? ` ${MON[hiQ.m]} so far: ${fmt(hiQ.pages)}.` : '');
+  return panel(g, { title, take, legend: [{ k: 'box', c: C.accent, l: hasCur ? 'This month' : 'Biggest month' }, { k: 'box', c: C.grey, l: 'Other months' }],
+    why: 'One column per month on a zero baseline: pages are a magnitude over time, so lengths compare directly. Only one month is highlighted; the rest share one hue. Pages are the length of the books you finished that month.',
+    render: (box, W) => {
+      const H = W < 500 ? 230 : 270, m = { l: 36, r: 6, t: 16, b: 26 }, pw = W - m.l - m.r, ph0 = H - m.t - m.b, svg = mkSvg(box, W, H, 'Pages of books finished in each month');
+      const mx = Math.max(...ms.map(q => q.pages)), tk = ticks(mx * 1.05, 4), Y = lin(0, tk[tk.length - 1] || 1, m.t + ph0, m.t), band = pw / 12, cw = Math.min(34, band * .66), pts = [];
+      tk.forEach(v => { el('line', { x1: m.l, x2: m.l + pw, y1: Y(v), y2: Y(v), stroke: C.grid }, svg); T(svg, m.l - 6, Y(v) + 4, fmt(v), { a: 'end' }); });
+      ms.forEach((q, i) => {
+        const x = m.l + band * i + (band - cw) / 2, hi = q === hiQ;
+        if (q.pages > 0) el('path', { d: colPath(x, cw, Y(0), Y(q.pages), 4), fill: hi ? C.accent : C.grey, 'fill-opacity': hi ? 1 : .8 }, svg);
+        T(svg, x + cw / 2, H - 8, W < 500 ? MON[q.m][0] : MON[q.m], { a: 'middle', c: q.future ? C.dim : C.muted });
+        if (hi && q.pages > 0) T(svg, x + cw / 2, Y(q.pages) - 5, fmt(q.pages), { a: 'middle', c: C.fg, w: 700 });
+        if (!q.future) pts.push({ x: m.l + band * i, y: m.t, w: band, h: ph0, row: 1, tip: { head: MON[q.m] + ' ' + q.y, rows: [{ k: 'dot', c: hi ? C.accent : C.grey, l: 'Pages', v: fmt(q.pages) }, { l: 'Books finished', v: String(q.books.length) }] } });
+      });
+      hover(svg, pts, { tol: 0 });
+      return { head: ['Month', 'Pages', 'Books finished'], rows: ms.filter(q => !q.future).map(q => [MON[q.m] + ' ' + q.y, fmt(q.pages), q.books.length]) };
+    } });
+}
+function chMonthRatings(g) {
+  const title = "How did I rate each month's books?", { ms } = monthWindow();
+  ms.forEach(q => { q.rated = q.books.filter(r => r.rating > 0); q.avg = q.rated.length ? avg(q.rated.map(r => r.rating)) : null; });
+  const all = ms.flatMap(q => q.rated), NEED = 6;
+  if (all.length < NEED) return panel(g, { title, empty: `Needs at least ${NEED} rated finished books${D.y ? ' in ' + D.y : ' in the last 12 months'} (you have ${all.length}).` });
+  const pool = ms.filter(q => q.avg != null && q.rated.length >= 2), pl = pool.length >= 2 ? pool : ms.filter(q => q.avg != null);
+  const top = pl.reduce((a, q) => q.avg > a.avg ? q : a), low = pl.reduce((a, q) => q.avg < a.avg ? q : a), ml = q => MON[q.m] + (D.y == null ? ' ' + q.y : '');
+  const take = top === low ? `Your **${ml(top)}** books averaged **${f1(top.avg)}★**.` : `**${ml(top)}** was your best-rated month (**${f1(top.avg)}★** across ${top.rated.length}) and ${ml(low)} the lowest (${f1(low.avg)}★ across ${low.rated.length}).`;
+  return panel(g, { title, take, legend: [{ k: 'dot', c: C.grey, l: 'One book' }, { k: 'line', c: C.accent, l: 'Average for the month' }],
+    why: 'A dot per finished book in each month, with the month average marked: a few books a month is a spread, and a bar would hide it. One shared 1–5 axis, so months compare directly.',
+    render: (box, W) => {
+      const H = W < 500 ? 250 : 270, m = { l: 26, r: 6, t: 14, b: 26 }, pw = W - m.l - m.r, ph0 = H - m.t - m.b, svg = mkSvg(box, W, H, 'Rating of each finished book, by month'), Y = lin(.5, 5.5, m.t + ph0, m.t), cw = pw / 12, rr = W < 500 ? 3 : 3.8;
+      [1, 2, 3, 4, 5].forEach(v => { el('line', { x1: m.l, x2: m.l + pw, y1: Y(v), y2: Y(v), stroke: C.grid }, svg); T(svg, m.l - 7, Y(v) + 4, v, { a: 'end' }); });
+      const pts = [];
+      ms.forEach((q, i) => {
+        const cx = m.l + cw * i + cw / 2, bs = [...q.rated].sort((a, b) => a.rating - b.rating);
+        T(svg, cx, H - 8, W < 500 ? MON[q.m][0] : MON[q.m], { a: 'middle', c: q.future ? C.dim : C.muted });
+        const off = swarm(bs.map(r => Y(r.rating)), rr), lim = cw / 2 - rr - 1;
+        bs.forEach((r, k) => { const x = cx + Math.max(-lim, Math.min(lim, off[k])), y = Y(r.rating); el('circle', { cx: x, cy: y, r: rr, fill: C.grey, 'fill-opacity': .85, stroke: C.surface, 'stroke-width': 1 }, svg);
+          pts.push({ x, y, r: rr, i, tip: { head: r.title, sub: r.author, rows: [{ k: 'dot', c: C.grey, l: 'Rating', v: stars(r.rating) }, { l: 'Finished', v: fd(r.f) }, { l: 'Month average', v: f1(q.avg) + '★' }] } }); });
+        if (q.avg != null) el('line', { x1: cx - cw * .38, x2: cx + cw * .38, y1: Y(q.avg), y2: Y(q.avg), stroke: C.accent, 'stroke-width': 2.4, 'stroke-linecap': 'round' }, svg);
+      });
+      if (top !== low) [top, low].forEach(q => T(svg, m.l + cw * ms.indexOf(q) + cw / 2, Y(q.avg) - 7, f1(q.avg), { a: 'middle', c: C.fg, w: 700, halo: 1 }));
+      pts.sort((a, b) => a.i - b.i || a.y - b.y); hover(svg, pts, { tol: 10 });
+      return { head: ['Month', 'Books rated', 'Average', 'Ratings'], rows: ms.filter(q => !q.future).map(q => [MON[q.m] + ' ' + q.y, q.rated.length, q.avg != null ? f1(q.avg) + '★' : '–', q.rated.map(r => f1(r.rating)).join(', ')]) };
     } });
 }
 
@@ -4514,6 +4675,7 @@ function render(period) {
   document.getElementById('insC1h').textContent = label; document.getElementById('insNav1').lastChild.textContent = P === 'all' ? 'Overview' : P === D.curY ? 'This year' : P;
   tiles(mountPoint('dashTiles'));
   chOnTrack(grid('insG1', false));
+  { const g1 = grid('insG1b', true); chMonthPages(g1); chMonthRatings(g1); }
   let g = grid('insG2a', true); chScatter(g); chGenreMultiples(g);
   g = grid('insG2b', true); chRanked(g); chRereads(g);
   chRiver(grid('insG3a', false));
@@ -4535,6 +4697,35 @@ function renderDashboard() {
   INS.render(dashPeriod); insDirty = false;
 }
 
+// Top 5 on the TBR: one of four lists, a different one each ISO week; the arrows and dots browse the others
+const T5 = [
+  { name: 'Quick wins', sub: 'The shortest books on your TBR', pick: tbr => tbr.filter(b => toNum(b.pages) >= 40).sort((a, b) => toNum(a.pages) - toNum(b.pages)) },
+  { name: 'Non-fiction picks', sub: 'TBR non-fiction that best fits your ratings', pick: tbr => { const P = buildProfile(); return tbr.filter(b => categoryOf(b) === 'Non-fiction').map(b => scoreBook(b, P, null)).sort((a, b) => b.s - a.s || (toNum(a.b.pages) || 1e6) - (toNum(b.b.pages) || 1e6)).map(x => x.b); } },
+  { name: 'Longest books', sub: 'The biggest books on your TBR', pick: tbr => tbr.filter(b => toNum(b.pages) > 0).sort((a, b) => toNum(b.pages) - toNum(a.pages)), },
+  { name: 'Waiting longest', sub: 'On your TBR the longest, oldest first', pick: tbr => tbr.filter(b => toDate(b.added)).sort((a, b) => toDate(a.added).localeCompare(toDate(b.added)) || a._row - b._row), when: true }
+];
+let t5Off = 0;
+const t5Week = () => Math.floor(daysBetween('2020-01-06', today()) / 7);   // whole Monday-to-Sunday weeks since 6 Jan 2020, so it turns over with the ISO week
+function renderTop5(tbr) {
+  const i = (((t5Week() + t5Off) % T5.length) + T5.length) % T5.length, d = T5[i];
+  $('t5Title').textContent = d.name;
+  $('t5Sub').textContent = d.sub + (t5Off === 0 ? ' · this week\'s list' : '');
+  $('t5Dots').innerHTML = T5.map((x, k) => `<button type="button" data-t5to="${k}" aria-pressed="${k === i}" aria-label="${escapeText(x.name)}" title="${escapeText(x.name)}"></button>`).join('');
+  const ul = $('quickList'); ul.textContent = '';
+  const list = d.pick(tbr).slice(0, 5);
+  if (!list.length) ul.innerHTML = '<li class="empty">Nothing on your TBR fits this list yet.</li>';
+  for (const b of list) {
+    const li = document.createElement('li'); li.innerHTML = '<span></span><span class="r"></span>'; li.firstChild.textContent = b.title;
+    li.lastChild.textContent = d.when ? fromIso(toDate(b.added)).toLocaleDateString('en-AU', { month: 'short', year: 'numeric' }) : toNum(b.pages) ? fmt(toNum(b.pages)) + ' pp' : '';
+    makeDrill(li, b.title, [b]); li.onclick = null; li.addEventListener('click', e => { e.stopImmediatePropagation(); openInLibrary(b.id); }, true); ul.appendChild(li);
+  }
+}
+document.addEventListener('click', e => {
+  const n = e.target.closest('[data-t5]'), to = e.target.closest('[data-t5to]'); if (!n && !to) return;
+  const cur = (((t5Week() + t5Off) % T5.length) + T5.length) % T5.length;
+  t5Off += n ? Number(n.dataset.t5) : Number(to.dataset.t5to) - cur;
+  renderTop5(state.allBooks.filter(b => b.status === 'TBR'));
+});
 function renderTBR() {
   const all = state.allBooks, accent = css('--accent');
   const tbr = all.filter(b => b.status === 'TBR');
@@ -4543,20 +4734,7 @@ function renderTBR() {
   $('tbrNote').textContent = `${fmt(tbr.length)} books · ${fmt(tbrPages)} known pages${avgDaily ? ` · about ${fmt(Math.round(tbrPages / avgDaily / 365 * 10) / 10)} years at your current pace` : ''}`;
   const om = countBy(tbr, ownedOf);
   split($('ownSplit'), [{ label: 'Digital', value: om.get('Digital') || 0 }, { label: 'Physical', value: om.get('Physical') || 0 }], [accent, MC[(+today().slice(5, 7) + 5) % 12]]);
-  const quick = tbr.filter(b => toNum(b.pages) >= 40).sort((a, b) => toNum(a.pages) - toNum(b.pages)).slice(0, Math.max(5, Math.min(10, upNext().slice(0, 10).length - 2)));
-  $('quickList').textContent = '';
-  for (const b of quick) { const li = document.createElement('li'); li.innerHTML = '<span></span><span class="r"></span>'; li.firstChild.textContent = b.title; li.lastChild.textContent = fmt(toNum(b.pages)) + ' pp'; makeDrill(li, b.title, [b]); li.onclick = null; li.addEventListener('click', e => { e.stopImmediatePropagation(); openInLibrary(b.id); }, true); $('quickList').appendChild(li); }
-  const ups = upNext().slice(0, 10);
-  $('spotList').innerHTML = ups.length ? '' : '<li class="empty">Nothing lined up yet. Pick your next 10 in Library → Plan your TBR.</li>';
-  ups.forEach((b, i) => {
-    const li = document.createElement('li');
-    li.innerHTML = `<span class="n">${i + 1}</span><span><span class="t"></span> <span class="muted small"></span></span><span class="why"></span>`;
-    li.querySelector('.t').textContent = b.title;
-    li.querySelector('.muted').textContent = [b.author, toNum(b.pages) ? fmt(toNum(b.pages)) + ' pp' : ''].filter(Boolean).join(' · ');
-    li.querySelector('.why').textContent = b.why || '';
-    li.addEventListener('click', () => openInLibrary(b.id));
-    $('spotList').appendChild(li);
-  });
+  renderTop5(tbr);
 }
 
 
@@ -6285,7 +6463,7 @@ function renderNextInSeries() {
 }
 
 /* ---------- Library: Authors and Series (read-only views; every action reuses an existing card or dialog) ---------- */
-const AU = { q: '', sort: 'read', sel: null, quotesAll: false };
+const AU = { q: '', sort: 'read', sel: null, quotesAll: false, all: false };
 const SE = { q: '', filter: 'all', sort: 'recent', focus: null };
 const dateShort = d => d ? fromIso(d).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
 const copiesOf = b => String(b.copies || '').split('|').map(x => x.trim()).filter(Boolean).join(' · ');
@@ -6362,8 +6540,23 @@ function renderAuthors() {
   const shown = list.filter(a => !q || normQ(a.name).includes(q) || a.titles.some(t => normQ(t.rep.title + ' ' + t.rep.series).includes(q)) || a.wishItems.some(w => normQ(w.title + ' ' + w.series).includes(q)))
     .sort((x, y) => (AU_SORTS[AU.sort] || AU_SORTS.read)(x, y) || x.name.localeCompare(y.name, undefined, { sensitivity: 'base' }));
   $('auSort').value = AU.sort;
-  $('auGrid').innerHTML = shown.map(a => `<button type="button" class="au-card" data-k="${escapeText(a.key)}"><span class="au-av" aria-hidden="true">${escapeText(initialsOf(a.name))}</span><span class="au-tx"><span class="au-name">${escapeText(a.name)}</span><span class="au-sub">${a.wishOnly ? `Wishlist only · ${a.wishItems.length}` : `${a.nBooks} book${a.nBooks === 1 ? '' : 's'} · ${a.nRead} read${a.avg ? ' · ★' + a.avg.toFixed(1) : ''}`}</span></span></button>`).join('');
-  $('auCount').textContent = shown.length ? `${fmt(shown.length)} author${shown.length === 1 ? '' : 's'}${q ? ' match' : ''}` : '';
+  const sub = a => a.wishOnly ? `Wishlist only · ${a.wishItems.length}` : `${a.nBooks} book${a.nBooks === 1 ? '' : 's'} · ${a.nRead} read${a.avg ? ' · ★' + a.avg.toFixed(1) : ''}`;
+  const card = (a, rank, subTxt) => `<button type="button" class="au-card" data-k="${escapeText(a.key)}">${rank ? `<span class="au-rank tnum" aria-label="Number ${rank}">${rank}</span>` : ''}<span class="au-av" aria-hidden="true">${escapeText(initialsOf(a.name))}</span><span class="au-tx"><span class="au-name">${escapeText(a.name)}</span><span class="au-sub">${escapeText(subTxt || sub(a))}</span></span></button>`;
+  const byName = (x, y) => x.name.localeCompare(y.name, undefined, { sensitivity: 'base' });
+  // Two top-10 sections (hidden while searching), then every author
+  const tops = [];
+  if (!q) {
+    const rd = list.filter(a => a.nRead > 0).sort((x, y) => y.nRead - x.nRead || y.pages - x.pages || byName(x, y)).slice(0, 10);
+    const tbrN = a => a.titles.filter(t => t.rep.status === 'TBR').length;
+    const tb = list.filter(a => tbrN(a) > 0).sort((x, y) => tbrN(y) - tbrN(x) || y.nRead - x.nRead || byName(x, y)).slice(0, 10);
+    if (rd.length) tops.push(`<div class="shelf-sec">Top 10 authors you've read</div><div class="au-grid au-top">${rd.map((a, i) => card(a, i + 1, `${a.nRead} read · ${fmt(a.pages)} pages${a.avg ? ' · ★' + a.avg.toFixed(1) : ''}`)).join('')}</div>`);
+    if (tb.length) tops.push(`<div class="shelf-sec">Top 10 on your TBR</div><div class="au-grid au-top">${tb.map((a, i) => card(a, i + 1, `${tbrN(a)} on your TBR · ${a.nRead} read`)).join('')}</div>`);
+  }
+  $('auTop').innerHTML = tops.join('');
+  const cap = AU.all ? shown.length : 50, vis = shown.slice(0, cap);
+  $('auGrid').innerHTML = vis.map(a => card(a)).join('');
+  $('auMore').hidden = shown.length <= cap; $('auMore').textContent = `Show all ${fmt(shown.length)}`;
+  $('auCount').textContent = shown.length ? `${shown.length > cap ? `Showing ${fmt(cap)} of ` : ''}${fmt(shown.length)} author${shown.length === 1 ? '' : 's'}${q ? ' match' : ''}` : '';
   if (!shown.length) $('auGrid').innerHTML = `<p class="empty" style="grid-column:1/-1">${list.length ? 'No authors match that search.' : 'No authors yet.'}</p>`;
 }
 function renderAuthorPage(a) {
@@ -6487,6 +6680,7 @@ function slotClick(row, x) {
 }
 
 let auT; $('auSearch').addEventListener('input', e => { clearTimeout(auT); auT = setTimeout(() => { AU.q = e.target.value; renderAuthors(); }, 120); });
+$('auMore').addEventListener('click', () => { AU.all = true; renderAuthors(); });
 $('auSort').addEventListener('change', e => { AU.sort = e.target.value; renderAuthors(); });
 $('authorsView').addEventListener('click', e => {
   const t = e.target;
@@ -6766,13 +6960,6 @@ async function saveQuote(e) {
 async function renderDiscover() {
   if (!isLive()) { $('discOnDay').innerHTML = '<li class="empty">Discover reads your sheets live. ' + connectHint() + '</li>'; return; }
   if (!disc.loaded) { $('discOnDay').innerHTML = '<li class="empty">Loading…</li>'; await loadDiscover(); }
-  // On this day
-  const t = today(), md = t.slice(5), list = $('discOnDay'); list.textContent = '';
-  const near = state.allBooks.filter(b => b.status === 'Finished' && b.finishDate && b.finishDate.slice(0, 4) < t.slice(0, 4))
-    .map(b => ({ b, gap: Math.abs(daysBetween(t.slice(0, 4) + '-' + b.finishDate.slice(5), t)) })).filter(x => x.gap <= 7).sort((a, b) => a.gap - b.gap).slice(0, 5);
-  if (!near.length) list.innerHTML = '<li class="empty">Nothing finished around this date in earlier years yet.</li>';
-  for (const { b } of near) { const li = document.createElement('li'); li.innerHTML = '<span></span><span class="r"></span>'; li.firstChild.textContent = b.title; li.lastChild.textContent = `${b.finishDate}${toNum(b.rating) ? ' · ' + b.rating + '★' : ''}`; makeDrill(li, b.title, [b]); li.addEventListener('click', e => { e.stopImmediatePropagation(); openInLibrary(b.id); }, true); list.appendChild(li); }
-  void md;
   // Coming soon from the Wishlist
   const cs = $('discSoon'); cs.textContent = '';
   const soon = disc.wish.filter(x => x.stage === 'Waiting').sort((a, b) => (a.release || '9999').localeCompare(b.release || '9999'));
@@ -6877,6 +7064,12 @@ $('libSecs').addEventListener('click', e => {
   renderLibrary();
 });
 $('undoBtn').addEventListener('click', undoRemove);
+{ // Back to top: shows after scrolling down about 600px, on every tab
+  const tt = $('toTop'); let tick = false;
+  const sync = () => { tick = false; tt.classList.toggle('on', window.scrollY > 600); };
+  window.addEventListener('scroll', () => { if (!tick) { tick = true; requestAnimationFrame(sync); } }, { passive: true });
+  tt.addEventListener('click', () => { const calm = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches; window.scrollTo({ top: 0, behavior: calm ? 'auto' : 'smooth' }); });
+}
 $('stallList').addEventListener('click', e => { const rm = e.target.closest('[data-rm]'); if (rm) removeBook(rm.dataset.rm); });
 $('addBookBtn').addEventListener('click', () => { if (!state.libLoaded) return; qaOpen('one'); });
 $('bookForm').addEventListener('submit', saveBookDialog);
@@ -6938,7 +7131,6 @@ drawTimer();
 document.querySelectorAll('.lib-mode').forEach(g => g.addEventListener('click', e => { const m = e.target.closest('button[data-mode]'); if (m) setLibMode(m.dataset.mode); }));
 $('soonMore').addEventListener('click', () => { planUI.soonAll = !planUI.soonAll; renderPlan(); });
 $('sheetMore').addEventListener('click', () => { planUI.limit += 50; renderPlan(); });
-$('planLink').addEventListener('click', () => setLibMode('plan'));
 $('quoteForm').addEventListener('submit', saveQuote);
 $('qdClose').addEventListener('click', () => $('quoteDlg').close());
 $('dlgQuote').addEventListener('click', () => openQuoteDlg(editing));
