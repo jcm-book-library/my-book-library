@@ -46,7 +46,7 @@ function applyOrder(rows, q) {
 
 // Realtime: accept the join, record what the page sends, and let a test push a change
 async function routeRealtime(page, w) {
-  w.rt = { socks: [], joins: [], tokens: [], push(rec) { this.socks.forEach(ws => ws.send(JSON.stringify({ topic: 'realtime:books', event: 'postgres_changes', payload: { data: rec }, ref: null }))); } };
+  w.rt = { socks: [], joins: [], tokens: [], push(rec, topic = 'realtime:books') { this.socks.forEach(ws => ws.send(JSON.stringify({ topic, event: 'postgres_changes', payload: { data: rec }, ref: null }))); } };
   await page.routeWebSocket(/\/realtime\/v1\/websocket/, ws => {
     w.rt.socks.push(ws); w.rt.url = ws.url();
     ws.onMessage(m => { let o; try { o = JSON.parse(m); } catch (e) { return; }
@@ -55,6 +55,84 @@ async function routeRealtime(page, w) {
       else if (o.event === 'heartbeat') ws.send(JSON.stringify({ topic: 'phoenix', event: 'phx_reply', payload: { status: 'ok', response: {} }, ref: o.ref })); });
     ws.onClose(() => { w.rt.socks = w.rt.socks.filter(x => x !== ws); });
   });
+}
+// ---- fake schema family: members, reviews, recommendations and the three functions, with the RLS rules of supabase/04-family.sql ----
+// w.fam = { members: [{ user_id, role, display_name, colour, family_id? }], reviews: [], recommendations: [],
+//           books: [other people's rows as family.books() returns them, plus hidden: true to mark a hidden one],
+//           month: [{ user_id, day, pages }], streaks: [{ user_id, streak, today_done }] }  (unset tables start empty; unset w.fam = schema not exposed)
+// The functions return only what the real ones would: no hidden or Removed books, this month only, people in the caller's family only.
+async function famRoute(r, w, req, u, method, h, json, body) {
+  if (!w.fam) return json({ code: 'PGRST106', message: 'The schema must be one of the following: books' }, 406);
+  for (const k of ['reviews', 'recommendations', 'books', 'month', 'streaks']) w.fam[k] = w.fam[k] || [];
+  const rpc = u.pathname.match(/^\/rest\/v1\/rpc\/(\w+)$/), fm = u.pathname.match(/^\/rest\/v1\/(\w+)$/), name = rpc ? rpc[1] : fm && fm[1];
+  const t = rpc ? null : fm && w.fam[fm[1]];
+  if (!rpc && !t) return json({ message: 'no such table' }, 404);
+  const call = { method, table: name, rpc: !!rpc, query: u.search, body: body(), headers: h }; w.famCalls.push(call);
+  if (!/^Bearer x\./.test(h.authorization || '')) return json({ message: 'JWT' }, 401);
+  const uid = jwtSub(h.authorization), q = u.searchParams, rep = (h.prefer || '').includes('return=representation');
+  const famOf = x => (w.fam.members.find(m => m.user_id === x) || {}).family_id || 1;
+  const mine = w.fam.members.some(m => m.user_id === uid);
+  const inFam = other => mine && w.fam.members.some(m => m.user_id === other) && famOf(other) === famOf(uid);
+  const out = rows => { rows = applyOrder(applyFilters(rows, q), q); const off = Number(q.get('offset') || 0), lim = Math.min(Number(q.get('limit') || 1000), 1000); rows = rows.slice(off, off + lim);
+    const sel = q.get('select'); if (sel && sel !== '*') rows = rows.map(x => Object.fromEntries(sel.split(',').map(c => [c, x[c]]))); return json(rows); };
+  const ownBooks = () => w.db.books.map(b => ({ ...b, user_id: uid }));
+  const allBooks = () => [...ownBooks(), ...w.fam.books];
+  const hiddenBook = (user, book) => { const b = allBooks().find(x => x.user_id === user && x.id === book); return !!(b && b.hidden === true); };
+  const err = (status, message, code) => json({ code: code || '42501', message }, status);
+  if (rpc) {
+    if (!mine) return err(403, 'permission denied for function ' + name);
+    const b = call.body || {};
+    if (name === 'books') return out(allBooks().filter(x => x.hidden !== true && x.status !== 'Removed' && inFam(x.user_id) && (!b.member || x.user_id === b.member)));
+    if (name === 'this_month') { const t0 = (w.today || '2026-10-31'), ms = t0.slice(0, 8) + '01'; return out(w.fam.month.filter(x => inFam(x.user_id) && String(x.day) >= ms && String(x.day) <= t0)); }
+    if (name === 'streaks') return out(w.fam.streaks.filter(x => inFam(x.user_id)));
+    return json({ message: 'no such function' }, 404);
+  }
+  const day = () => new Date().toISOString();
+  if (name === 'members') {
+    if (method === 'GET') return out(t.filter(x => inFam(x.user_id)));
+    if (method === 'PATCH') {
+      const bad = Object.keys(call.body || {}).filter(k => !['display_name', 'colour'].includes(k));
+      if (bad.length) return err(403, 'permission denied for table members');
+      const hit = applyFilters(t.filter(x => x.user_id === uid), q); hit.forEach(x => Object.assign(x, call.body));
+      return rep ? json(hit) : r.fulfill({ status: 204, body: '' });
+    }
+    return json({}, 405);
+  }
+  if (name === 'reviews') {
+    const visible = t.filter(x => x.user_id === uid || (inFam(x.user_id) && !hiddenBook(x.user_id, x.book_id)));
+    if (method === 'GET') return out(visible);
+    if (method === 'POST') {
+      const b = call.body || {};
+      if (b.user_id && b.user_id !== uid) return err(403, 'new row violates row-level security policy for table "reviews"');
+      if (!b.body || b.body.length > 5000) return err(400, 'new row for relation "reviews" violates check constraint "reviews_body_check"', '23514');
+      if (b.stars != null && (b.stars < 0.5 || b.stars > 5)) return err(400, 'violates check constraint "reviews_stars_check"', '23514');
+      if (t.some(x => x.user_id === uid && x.book_id === b.book_id)) return err(409, 'duplicate key value violates unique constraint "reviews_user_id_book_id_key"', '23505');
+      const row = { row_id: w.nextId++, user_id: uid, ...b, created_at: day(), updated_at: day() }; t.push(row);
+      return rep ? json([row], 201) : r.fulfill({ status: 201, body: '' });
+    }
+    if (method === 'PATCH') { const hit = applyFilters(t.filter(x => x.user_id === uid), q); hit.forEach(x => Object.assign(x, call.body, { updated_at: day() })); return rep ? json(hit) : r.fulfill({ status: 204, body: '' }); }
+    if (method === 'DELETE') { const hit = applyFilters(t.filter(x => x.user_id === uid), q); w.fam.reviews = t.filter(x => !hit.includes(x)); return rep ? json(hit) : r.fulfill({ status: 204, body: '' }); }
+  }
+  if (name === 'recommendations') {
+    if (method === 'GET') return out(t.filter(x => x.from_user === uid || x.to_user === uid));
+    if (method === 'POST') {
+      const b = call.body || {};
+      if (b.from_user && b.from_user !== uid) return err(403, 'new row violates row-level security policy for table "recommendations"');
+      if (!inFam(b.to_user) || b.to_user === uid) return err(403, 'new row violates row-level security policy for table "recommendations"');
+      if (!b.title || b.title.length > 300) return err(400, 'violates check constraint "recommendations_title_check"', '23514');
+      const row = { row_id: w.nextId++, from_user: uid, author: null, isbn: null, note: null, status: 'new', ...b, created_at: day(), updated_at: day() }; t.push(row);
+      return rep ? json([row], 201) : r.fulfill({ status: 201, body: '' });
+    }
+    if (method === 'PATCH') {   // only the recipient, and only the status column
+      const b = call.body || {}, bad = Object.keys(b).filter(k => k !== 'status');
+      if (bad.length) return err(403, 'permission denied for table recommendations');
+      if (b.status && !['new', 'added', 'dismissed'].includes(b.status)) return err(400, 'violates check constraint "recommendations_status_check"', '23514');
+      const hit = applyFilters(t.filter(x => x.to_user === uid), q); hit.forEach(x => Object.assign(x, b, { updated_at: day() }));
+      return rep ? json(hit) : r.fulfill({ status: 204, body: '' });
+    }
+    if (method === 'DELETE') { const hit = applyFilters(t.filter(x => x.from_user === uid), q); w.fam.recommendations = t.filter(x => !hit.includes(x)); return rep ? json(hit) : r.fulfill({ status: 204, body: '' }); }
+  }
+  return json({}, 405);
 }
 async function sbRoute(r, w) {
   const req = r.request(), u = new URL(req.url()), method = req.method(), h = req.headers();
@@ -84,22 +162,7 @@ async function sbRoute(r, w) {
     if (b && b.type === 'email' && b.token === w.code && (!w.invited || w.invited.includes(b.email))) return json({ access_token: jwt(b.email, w.uid || 'u1'), refresh_token: 'rtC', expires_in: 3600, token_type: 'bearer', user: { id: w.uid || 'u1', email: b.email } });
     return json({ error_code: 'otp_expired', msg: 'Token has expired or is invalid' }, 403);
   }
-  if (h['accept-profile'] === 'family' || h['content-profile'] === 'family') {   // schema family: only what the app uses (members)
-    if (!w.fam) return json({ code: 'PGRST106', message: 'The schema must be one of the following: books' }, 406);
-    const fm = u.pathname.match(/^\/rest\/v1\/(\w+)$/), t = fm && w.fam[fm[1]];
-    if (!t) return json({ message: 'no such table' }, 404);
-    const call = { method, table: fm[1], query: u.search, body: body(), headers: h }; w.famCalls.push(call);
-    if (!/^Bearer x\./.test(h.authorization || '')) return json({ message: 'JWT' }, 401);
-    const uid = jwtSub(h.authorization), q = u.searchParams, mine = t.filter(x => x.user_id === uid || fm[1] !== 'members');
-    if (method === 'GET') { let rows = applyOrder(applyFilters(mine, q), q); const sel = q.get('select'); if (sel && sel !== '*') rows = rows.map(x => Object.fromEntries(sel.split(',').map(c => [c, x[c]]))); return json(rows.slice(0, Number(q.get('limit') || 1000))); }
-    if (method === 'PATCH') {
-      const b = call.body || {}, bad = Object.keys(b).filter(k => !['display_name', 'colour'].includes(k));
-      if (bad.length) return json({ code: '42501', message: 'permission denied for table members' }, 403);
-      const hit = applyFilters(mine, q); hit.forEach(x => Object.assign(x, b));
-      return (h.prefer || '').includes('return=representation') ? json(hit) : r.fulfill({ status: 204, body: '' });
-    }
-    return json({}, 405);
-  }
+  if (h['accept-profile'] === 'family' || h['content-profile'] === 'family') return famRoute(r, w, req, u, method, h, json, body);
   const m = u.pathname.match(/^\/rest\/v1\/(\w+)$/);
   if (!m || !w.db[m[1]]) return json({ message: 'no such table' }, 404);
   const t = m[1], q = u.searchParams;
