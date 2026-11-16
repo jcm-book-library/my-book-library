@@ -1200,6 +1200,58 @@ body[data-role="member"] .member-only{display:block}
 .prof input[type=text]{font:inherit;font-size:14px;background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:7px 10px;width:min(220px,100%);min-width:0}
 .prof input[type=text]:focus{border-color:var(--accent);outline:none}
 .swatches{display:flex;gap:8px;flex-wrap:wrap}
+/* Family tab: equal person cards, a small calendar of this month, shared shelves. Tokens only; no ranking anywhere. */
+.fam-grid{display:grid;grid-template-columns:repeat(var(--cols,3),minmax(0,1fr));gap:20px;max-width:calc(var(--cols,3)*400px + (var(--cols,3) - 1)*20px);margin-inline:auto;width:100%}
+.fcard{display:flex;flex-direction:column;gap:12px;text-align:left;font:inherit;color:var(--fg);cursor:pointer;min-width:0;width:100%}
+.fcard:hover{border-color:var(--accent)}
+.panel.fcard + .panel.fcard{margin-top:0}
+.fc-head{display:flex;align-items:center;gap:10px;min-width:0}
+.fc-av{width:34px;height:34px;font-size:13px}
+.fc-name{font-family:var(--display);font-weight:700;font-size:17px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.fc-sec{font-size:11px;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);font-weight:500;margin-bottom:3px}
+.fc-reads{display:grid;gap:3px;min-height:calc(var(--rl,3)*1.45em + 3px*(var(--rl,3) - 1));align-content:start}
+.fc-read{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 8px;font-size:13px;align-items:baseline}
+.fc-read b{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fc-read span{color:var(--muted);font-size:12px}
+.fc-none{font-size:13px;color:var(--muted)}
+.fc-cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px;max-width:210px}
+.fc-cal i{font-style:normal;font-size:10px;color:var(--muted);text-align:center}
+.fc-cal b{display:block;aspect-ratio:1;border-radius:4px;background:transparent;min-width:0}
+.fc-cal b.d{background:color-mix(in srgb,var(--raise) 70%,var(--surface))}
+.fc-cal b.l1{background:color-mix(in srgb,var(--pc,var(--accent)) 26%,var(--surface))}
+.fc-cal b.l2{background:color-mix(in srgb,var(--pc,var(--accent)) 48%,var(--surface))}
+.fc-cal b.l3{background:color-mix(in srgb,var(--pc,var(--accent)) 72%,var(--surface))}
+.fc-cal b.l4{background:var(--pc,var(--accent))}
+.fc-cal b.td{outline:2px solid var(--fg);outline-offset:-1px}
+.fc-stats{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--muted);margin-top:auto}
+.fc-stats b{color:var(--fg);font-weight:700;margin-right:3px}
+.fam-top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.fam-top .fc-av{width:44px;height:44px;font-size:16px}
+.fam-top h2{font-size:22px}
+.fam-top .fc-stats{margin:0 0 0 auto}
+.fam-note{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:13px;color:var(--muted);margin:0 0 14px}
+.fam-sent{margin-top:20px;max-width:calc(var(--cols,3)*400px + (var(--cols,3) - 1)*20px);margin-inline:auto}
+.fam-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 12px;padding:6px 0;border-top:1px solid var(--line);font-size:13px;align-items:baseline}
+.fam-row:first-child{border-top:0}
+.fam-row b{font-weight:500}
+.fam-row .muted{font-size:12px}
+.fam-rev{padding:8px 0;border-top:1px solid var(--line)}
+.fam-rev:first-child{border-top:0}
+.fam-rev .rt{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.fam-rev .rt b{font-weight:500}
+.fam-rev p{margin:3px 0 0;font-size:13px;white-space:pre-wrap;overflow-wrap:anywhere}
+.shelf-row.exp{flex-wrap:wrap;height:auto!important;overflow:visible;padding-bottom:16px}
+.bc-rev{font-size:13px;margin:0;white-space:pre-wrap;overflow-wrap:anywhere;border-left:2px solid var(--line);padding-left:8px}
+.bc-hide{display:flex;gap:8px;align-items:center;font-size:13px;color:var(--muted)}
+.bc-hide input{accent-color:var(--accent);width:16px;height:16px}
+.wl-rec{background:color-mix(in srgb,var(--accent) 8%,transparent)}
+.rec-pick{display:flex;gap:6px;flex-wrap:wrap}
+.rec-pick .chip[aria-pressed="true"]{color:var(--fg);border-color:var(--accent);background:color-mix(in srgb,var(--accent) 24%,var(--surface))}
+#revDlg,#recDlg{width:min(480px,calc(100vw - 24px))}
+.dlg-form{padding:14px 20px;display:grid;gap:12px}
+.dlg-form .count{font-size:12px;color:var(--muted);text-align:right}
+@media (max-width:820px){.fam-grid{grid-template-columns:repeat(min(var(--cols,3),2),minmax(0,1fr))}}
+@media (max-width:560px){.fam-grid{grid-template-columns:minmax(0,1fr)}.fc-reads{min-height:0}.fam-top .fc-stats{margin-left:0}.tabs.five .tab{font-size:12.5px}.tabs.five .tab.tb{padding:8px 8px}.tabs.five .tab .badge{margin-left:3px!important;min-width:16px;height:16px;font-size:10px;padding:0 4px}}
 .swatch{width:26px;height:26px;border-radius:50%;border:2px solid transparent;background:var(--c);padding:0;cursor:pointer}
 .swatch[aria-pressed="true"]{border-color:var(--fg);box-shadow:0 0 0 2px var(--surface) inset}
 .prof-msg{font-size:13px;color:var(--muted)}
@@ -1262,10 +1314,11 @@ body.is-blank #view-now :is(.stats,.dash-2){display:none}
   <div class="notice" id="notice" hidden></div>
 
   <div class="bar pop-wrap">
-    <nav class="tabs" role="tablist" aria-label="Sections">
+    <nav class="tabs" id="tabsNav" role="tablist" aria-label="Sections">
       <button class="tab" role="tab" id="tab-now" aria-selected="true" aria-controls="view-now" type="button">Now</button>
       <button class="tab" role="tab" id="tab-library" aria-selected="false" aria-controls="view-library" type="button">Library</button>
       <button class="tab" role="tab" id="tab-next" aria-selected="false" aria-controls="view-next" type="button">Next Up</button>
+      <button class="tab" role="tab" id="tab-family" aria-selected="false" aria-controls="view-family" type="button" hidden>Family<span class="badge" id="famBadge" hidden style="margin-left:5px"></span></button>
       <button class="tab" role="tab" id="tab-insights" aria-selected="false" aria-controls="view-insights" type="button">Insights</button>
       <span class="sep"></span>
       <button class="tab tb" id="toolboxBtn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="toolboxPop"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg>Toolbox</button>
@@ -1483,6 +1536,10 @@ body.is-blank #view-now :is(.stats,.dash-2){display:none}
     </div>
   </div>
 
+  <div id="view-family" class="vstack" role="tabpanel" aria-labelledby="tab-family" hidden>
+    <div id="famBody" class="vstack"></div>
+  </div>
+
   <div id="view-insights" class="vstack" role="tabpanel" aria-labelledby="tab-insights" hidden>
     <div class="periods" id="dashPeriods" role="group" aria-label="Period"></div>
     <nav class="ins-idx" id="insIdx" aria-label="Chapters"><a href="#insC1" data-c="insC1" id="insNav1"><b>1</b>This year</a><a href="#insC2" data-c="insC2"><b>2</b>What I love</a><a href="#insC3" data-c="insC3"><b>3</b>How I read</a><a href="#insC4" data-c="insC4"><b>4</b>What I read</a><a href="#insC5" data-c="insC5"><b>5</b>My pile</a></nav>
@@ -1625,6 +1682,31 @@ body.is-blank #view-now :is(.stats,.dash-2){display:none}
   <div class="dlg-head"><h2 id="profH">Your profile</h2><button class="x" type="button" id="profClose" aria-label="Close">×</button></div>
   <div class="prof" id="profBody"></div>
 </dialog>
+<dialog id="revDlg" aria-labelledby="revH">
+  <form id="revForm" novalidate>
+    <div class="dlg-head"><h2 id="revH">Write a review</h2><button class="x" type="button" id="revClose" aria-label="Close">×</button></div>
+    <div class="dlg-form">
+      <div class="muted" id="revBook" style="font-size:14px"></div>
+      <div class="field"><label for="revStars">Stars (optional)</label><select id="revStars"></select></div>
+      <div class="field"><label for="revBody">Your review</label><textarea id="revBody" rows="7" maxlength="5000"></textarea><div class="count tnum" id="revCount">0 / 5000</div></div>
+      <div class="q-err" id="revErr" role="alert"></div>
+    </div>
+    <div class="dlg-foot"><span class="muted" style="font-size:13px;align-self:center">Your family can read this. It is hidden if you hide the book.</span><span class="dlg-actions"><button class="btn" type="button" id="revCancel">Cancel</button><button class="btn btn-primary" type="submit" id="revSave">Save</button></span></div>
+  </form>
+</dialog>
+<dialog id="recDlg" aria-labelledby="recH">
+  <form id="recForm" novalidate>
+    <div class="dlg-head"><h2 id="recH">Recommend to…</h2><button class="x" type="button" id="recClose" aria-label="Close">×</button></div>
+    <div class="dlg-form">
+      <div class="muted" id="recBook" style="font-size:14px"></div>
+      <div class="field"><label id="recToL">Who for</label><div class="rec-pick" id="recTo" role="group" aria-labelledby="recToL"></div></div>
+      <div class="field"><label for="recNote">Note (optional)</label><textarea id="recNote" rows="3" maxlength="1000"></textarea></div>
+      <div class="q-err" id="recErr" role="alert"></div>
+    </div>
+    <div class="dlg-foot"><span></span><span class="dlg-actions"><button class="btn" type="button" id="recCancel">Cancel</button><button class="btn btn-primary" type="submit" id="recSend">Send</button></span></div>
+  </form>
+</dialog>
+
 <dialog id="quickDlg" aria-labelledby="qdHead">
   <form id="quickForm" novalidate>
     <div class="dlg-head"><h2 id="qdHead">Add a book</h2><button class="x" type="button" id="qClose" aria-label="Close">×</button></div>
@@ -2435,6 +2517,7 @@ function renderCovers() {
 const card = { id: null };
 function hideCard() { card.id = null; $('bookCard').hidden = true; }
 function showCard(id) {
+  if (String(id).startsWith('fam:')) { famShowCard(id); return; }
   const b = state.allBooks.find(x => x.id === id); if (!b) { hideCard(); return; }
   card.id = id;
   const el = $('bookCard');
@@ -2467,6 +2550,7 @@ function showCard(id) {
   const cb = el.querySelector('[data-a="cover"]');
   cb.textContent = coverId(b) ? 'Change cover' : String(b.cover || '').trim() === 'none' ? 'Look for a cover again' : 'Find cover';
   cb.addEventListener('click', () => openCoverFinder([b.id], [coverId(b) ? 'Changing the cover' : b.status]));
+  if (famOn()) famCardExtras(el, b);
   el.hidden = false;
 }
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && card.id && !document.querySelector('dialog[open]') && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) { hideCard(); state.lib.open = null; if (!$('view-library').hidden) renderLibrary(); } });
@@ -2627,6 +2711,7 @@ async function refresh() {
     disc.loaded = false;
     renderAll();
     scrollRestore();
+    if (famOn()) famLoadRecs();
     loadDiscover().then(autoMoveWish).then(() => { if (state.lib.mode === 'wish' && !$('view-next').hidden) { renderWish(); scrollRestore(); } });
   } catch (err) {
     if (state.sb && err && err.code === 'sb_signin') { sbSignedOut('Your sign-in has expired. Please sign in again.'); return; }
@@ -3175,6 +3260,7 @@ const sbDb = {
   async _read(tab) {
     const recs = await sbReadRecs(tab);
     this._ids[tab] = recs.map(r => r.row_id);
+    if (tab === 'Books') this.hidden = new Set(recs.filter(r => r.hidden === true).map(r => String(r.id)));   // books.books.hidden is not a Sheet column: kept aside for the family switch
     return [sbHeader(tab), ...recs.map(r => sbRecToRow(tab, r))];
   },
   // ----- reads -----
@@ -3207,9 +3293,11 @@ const sbDb = {
   // ----- Books -----
   async bookUpdate(id, fields) {
     const body = sbFieldsToObj('Books', fields, cellValue, ['id']);
+    if ('hidden' in fields) body.hidden = fields.hidden === true || fields.hidden === 'true';   // Hide from family (Supabase only)
     if (!Object.keys(body).length) return;
     const got = await sbWrite(`books?id=eq.${sbEnc(id)}`, { method: 'PATCH', body, prefer: 'return=representation' });
     if (got.length !== 1) throw { code: 'tool_error', message: got.length ? `ID ${id} appears ${got.length} times in Books` : `ID ${id} isn't in Books any more` };
+    if ('hidden' in body) { this.hidden = this.hidden || new Set(); body.hidden ? this.hidden.add(String(id)) : this.hidden.delete(String(id)); }
   },
   // Delete for good: only the signed-in user's row with this id; refuses (and says so) unless exactly one row went. The copy back clears the Sheet row.
   async bookDelete(id) {
@@ -3275,6 +3363,47 @@ const sbDb = {
     const got = await sbWrite(`members?user_id=eq.${sbEnc(uid)}`, { method: 'PATCH', schema: 'family', body, prefer: 'return=representation' });
     if (!got || got.length !== 1) throw { code: 'tool_error', message: 'you have no profile yet. Ask Josh to add you.' };
     return true;
+  },
+  // ----- family (schema family). Other people's books, pages and streaks come only from the security-definer functions; the only writes are reviews, recommendations and (existing path) my own Wishlist -----
+  _fam(path, opts = {}) { return sb.api(path, { schema: 'family', ...opts }); },
+  async famRecs() { return this._fam('recommendations?select=*&order=created_at.desc&limit=300'); },
+  async famCards(monthStart) {
+    const rpc = (fn, q = '', body = {}) => this._fam(`rpc/${fn}${q}`, { method: 'POST', body });
+    const [members, month, streaks, reading, fin, reviews, recs] = await Promise.all([
+      this._fam('members?select=user_id,display_name,colour,role&order=display_name'),
+      rpc('this_month'), rpc('streaks'),
+      rpc('books', '?status=eq.Reading&select=user_id,id,title,author,status,pages,current_page&order=id&limit=1000'),
+      rpc('books', `?finish_date=gte.${monthStart}&select=user_id,id,title,status,finish_date&order=id&limit=1000`),
+      this._fam('reviews?select=row_id,user_id,book_id,body,stars,updated_at&order=updated_at.desc&limit=1000'),
+      this.famRecs()]);
+    return { members, month, streaks, reading, fin, reviews, recs };
+  },
+  // One person's shareable books (hidden ones are already left out by family.books), a page of 1000 at a time
+  async famBooks(member) {
+    const out = [];
+    for (let from = 0; ; from += 1000) {
+      const got = await this._fam(`rpc/books?order=id&limit=1000&offset=${from}`, { method: 'POST', body: { member } });
+      out.push(...got); if (got.length < 1000) return out;
+    }
+  },
+  // One review per person and book: insert, or change the one that is there (only body and stars)
+  async reviewSave({ book_id, body, stars, row_id }) {
+    const patch = async rid => (await sbWrite(`reviews?row_id=eq.${sbEnc(rid)}`, { method: 'PATCH', schema: 'family', body: { body, stars }, prefer: 'return=representation' }))[0];
+    if (row_id) return patch(row_id);
+    try { return (await sbWrite('reviews', { method: 'POST', schema: 'family', body: { book_id, body, stars }, prefer: 'return=representation' }))[0]; }
+    catch (err) {   // already reviewed on another device: find it and change that one
+      if (!(err && err.status === 409)) throw err;
+      const uid = jwtClaims(await sb.token()).sub, got = await this._fam(`reviews?user_id=eq.${sbEnc(uid)}&book_id=eq.${sbEnc(book_id)}&select=row_id`);
+      if (!got.length) throw err; return patch(got[0].row_id);
+    }
+  },
+  async recSend(r) {
+    const body = { to_user: r.to_user, title: r.title }; if (r.author) body.author = r.author; if (r.isbn) body.isbn = r.isbn; if (r.note) body.note = r.note;
+    return (await sbWrite('recommendations', { method: 'POST', schema: 'family', body, prefer: 'return=representation' }))[0];
+  },
+  async recStatus(row_id, status) {
+    const got = await sbWrite(`recommendations?row_id=eq.${sbEnc(row_id)}`, { method: 'PATCH', schema: 'family', body: { status }, prefer: 'return=representation' });
+    if (!got || got.length !== 1) throw { code: 'tool_error', message: "that recommendation isn't there any more" };
   },
   // ----- Wishlist -----
   async wishUpdate(id, fields) {
@@ -3378,6 +3507,7 @@ const rt = {
     const ws = this.ws = new WebSocket(this.url());
     ws.onopen = () => {
       this.send('realtime:books', 'phx_join', { config: { broadcast: { self: false }, presence: { key: '' }, postgres_changes: [{ event: '*', schema: SB.schema }] }, access_token: at });
+      if (famOn()) this.send('realtime:family', 'phx_join', { config: { broadcast: { self: false }, presence: { key: '' }, postgres_changes: [{ event: '*', schema: 'family', table: 'recommendations' }] }, access_token: at });   // live badge for new recommendations
       clearInterval(this.hb); this.hb = setInterval(() => { this.send('phoenix', 'heartbeat', {}); this.keepToken(); }, 25000);
     };
     ws.onmessage = e => { let m; try { m = JSON.parse(e.data); } catch (x) { return; }
@@ -3385,6 +3515,7 @@ const rt = {
         if (m.payload.status === 'ok') { if (!this.joined) { this.joined = true; this.retry = 0; this.show(); } }
         else if (m.payload.status === 'error') { this.joined = false; this.show(); }
       }
+      if (m.topic === 'realtime:family') { if (m.event === 'postgres_changes') famLoadRecs(); return; }   // only the recommendations badge; never a full reload
       if (m.event === 'system' && m.payload && m.payload.status === 'error') { this.joined = false; this.show(); }
       if (m.event === 'postgres_changes') this.changed();
     };
@@ -3394,7 +3525,7 @@ const rt = {
   },
   stop() { this.want = false; clearTimeout(this.timer); clearTimeout(this.pend); clearInterval(this.hb); if (this.ws) { const w = this.ws; this.ws = null; try { w.close(); } catch (e) {} } this.joined = false; this.show(); },
   /* hand the socket a fresh token before the old one runs out */
-  async keepToken() { try { const at = await sb.token(); if (at !== this._at) { this._at = at; this.send('realtime:books', 'access_token', { access_token: at }); } } catch (e) {} },
+  async keepToken() { try { const at = await sb.token(); if (at !== this._at) { this._at = at; this.send('realtime:books', 'access_token', { access_token: at }); if (famOn()) this.send('realtime:family', 'access_token', { access_token: at }); } } catch (e) {} },
   changed() {
     if (Date.now() - this.lastSave < 2500) return;
     clearTimeout(this.pend); this.pend = setTimeout(() => this.pull(), 800);
@@ -5959,12 +6090,12 @@ function wishPaint() {
   const body = $('wlBody'), by = Object.fromEntries(WL_HOWS.map(h => [h, []]));
   for (const w of disc.wish || []) if (!wl.kinds.size || wl.kinds.has(wishKind(w))) by[wishHow(w)].push(w);
   $('wlKind').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(wl.kinds.has(b.dataset.k))));
-  $('wlTabs').innerHTML = WL_HOWS.map(h => `<button type="button" data-wv="${h}" aria-pressed="${wl.tab === h}">${h}<span class="n">${by[h].length}</span></button>`).join('');
+  $('wlTabs').innerHTML = WL_HOWS.map(h => `<button type="button" data-wv="${h}" aria-pressed="${wl.tab === h}">${h}<span class="n">${by[h].length + (h === 'Inbox' ? famInbox().length : 0)}</span></button>`).join('');
   const list = by[wl.tab], lib = libByTitle();
   const rows = (arr, key, mk) => arr.slice(0, wl.lim[key] || 100).map(w => mk(w, lib)).join('') + (arr.length > (wl.lim[key] || 100) ? `<button class="btn" type="button" data-more-rows="${key}" style="margin-top:8px">Show ${Math.min(100, arr.length - (wl.lim[key] || 100))} more</button>` : '');
   let h = '';
   if (wl.tab === 'Inbox') {
-    h = `<section class="panel wl-sec"><div class="panel-head" style="margin:0"><h2>New ideas to sort</h2><span class="muted small">${list.length} to sort</span></div><div class="wl-rows">${list.length ? rows(list, 'Inbox', wishInboxRow) : '<div class="wl-empty">Inbox is clear. New ideas from the add bar land here.</div>'}</div></section>`;
+    h = `<section class="panel wl-sec"><div class="panel-head" style="margin:0"><h2>New ideas to sort</h2><span class="muted small">${list.length + famInbox().length} to sort</span></div><div class="wl-rows">${famInboxRows(lib)}${list.length ? rows(list, 'Inbox', wishInboxRow) : famInbox().length ? '' : '<div class="wl-empty">Inbox is clear. New ideas from the add bar land here.</div>'}</div></section>`;
   } else {
     const info = list.map(w => [w, wishAvail(w)]);
     for (const [v, hint] of [['Available', 'Ready now'], ['Coming soon', 'Soonest first'], ['Not available', '']]) {
@@ -7310,7 +7441,7 @@ function renderLinks() {
 }
 
 /* ---------- wiring ---------- */
-const TABS = ['now', 'library', 'next', 'insights', 'toolbox'];
+const TABS = ['now', 'library', 'next', 'family', 'insights', 'toolbox'];
 const TAB_ALIAS = { log: 'now', dashboard: 'insights', discover: 'next', tools: 'toolbox' };   // the old tab names still work (saved tab, tests)
 const nav = { tab: 'now', last: 'now', tool: null };
 const TOOL_PANELS = { rate: 'Rate a book', fill: 'Fill details', covers: 'Find covers', goal: 'Goal planner', dip: 'Lucky dip', own: 'Do I own this?', removed: 'Removed books' };
@@ -7344,6 +7475,7 @@ function scrollRestore() {
 }
 function showTab(name, tool) {
   name = TAB_ALIAS[name] || name; if (!TABS.includes(name)) name = 'now';
+  if (name === 'family' && !famOn()) name = 'now';
   const sameView = name === nav.tab; if (!sameView) scrollSave();
   hideCard(); closePops();
   const L = state.lib;
@@ -7366,6 +7498,7 @@ function showTab(name, tool) {
   if (name === 'now') redraw();
   if (name === 'next') { renderRecs(); renderDiscover(); }
   if (name === 'insights') { if (insDirty) renderDashboard(); renderAnalysis(); }
+  if (name === 'family') famOpen();
   if (name === 'toolbox') renderTools();
   if (name !== 'toolbox') { try { localStorage.setItem('mbl-tab', name); } catch (e) {} }
   if (!sameView) scrollRestore();
@@ -7396,7 +7529,7 @@ function setLibMode(mode) {
   L.mode = mode; L[tab === 'next' ? 'nextMode' : 'libMode'] = mode;
   if (nav.tab !== tab) showTab(tab); else { renderLibrary(); scrollRestore(); }
 }
-for (const t of TABS.slice(0, 4)) $('tab-' + t).addEventListener('click', () => showTab(t));
+for (const t of TABS.slice(0, 5)) $('tab-' + t).addEventListener('click', () => showTab(t));
 $('recModes').addEventListener('click', e => { const c = e.target.closest('.chip'); if (!c) return; recState.mode = c.dataset.m; $('recModes').querySelectorAll('.chip').forEach(x => x.setAttribute('aria-pressed', String(x === c))); renderRecs(); });
 $('recKind').addEventListener('change', e => { recState.kind = e.target.value; renderRecs(); });
 $('recOwned').addEventListener('change', e => { recState.owned = e.target.value; renderRecs(); });
@@ -7788,6 +7921,253 @@ $('scPwForm').addEventListener('submit', e => {
 $('scAlt').addEventListener('click', () => { if (sc.step === 'pw') { scStep('email'); $('scEmail').focus(); } else { sc.email = sc.email || $('scEmail').value.trim(); scStep('pw'); $('scPw').focus(); } });
 $('scCode').addEventListener('input', () => { const c = $('scCode').value.replace(/\D/g, ''); if (c !== $('scCode').value) $('scCode').value = c; });
 
+/* ---------- Family tab (Supabase only) ----------
+   Shown only to someone with a family.members row. Other people's books, pages and streaks come from the three
+   security-definer functions (family.books / this_month / streaks), so hidden books never reach the app. Person cards are
+   sorted A to Z by name and never ranked; nothing older than this month is shown. The only writes are reviews, recommendations
+   and the recipient's own Wishlist (appendWishRows), all through sbDb. */
+const fam = { loaded: false, loading: null, err: '', members: [], month: [], streaks: [], reading: [], fin: [], reviews: [], recs: [], view: null, rows: {}, rowsFor: '', defs: [], exp: {} };
+const famOn = () => !!(state.sb && !state.readOnly && state.me && state.me.hasRow && sb.signedIn());
+const famMe = () => (state.me && state.me.uid) || '';
+const famName = uid => { const m = fam.members.find(x => x.user_id === uid); return m ? m.display_name : 'Someone'; };
+const famInbox = () => famOn() ? fam.recs.filter(r => r.to_user === famMe() && r.status === 'new') : [];
+function famBadge() { const n = famInbox().length, b = $('famBadge'); b.hidden = !n; b.textContent = n; b.setAttribute('aria-label', n + ' new recommendation' + (n === 1 ? '' : 's')); }
+function famDraw() {
+  const on = famOn(); $('tab-family').hidden = !on; $('tabsNav').classList.toggle('five', on);
+  if (!on) { fam.recs = []; fam.loaded = false; if (nav.tab === 'family') showTab('now'); }
+  famBadge();
+}
+async function famLoadRecs() {
+  if (!famOn()) return;
+  try { fam.recs = await DB().famRecs(); } catch (err) { return; }
+  famBadge();
+  if (!$('wishView').hidden && wl.tab === 'Inbox') wishPaint();
+  if (nav.tab === 'family' && !fam.view && fam.loaded) famRender();
+}
+function famLoad() {
+  if (fam.loading) return fam.loading;
+  return fam.loading = (async () => {
+    try { Object.assign(fam, await DB().famCards(today().slice(0, 8) + '01'), { err: '', loaded: true }); }
+    catch (err) { fam.err = (err && err.message) || explain(err); }
+    finally { fam.loading = null; }
+    famBadge();
+  })();
+}
+async function famOpen() {
+  famRender();
+  await famLoad();
+  if (fam.loaded && fam.view) await famPersonLoad(fam.view);
+  if (nav.tab === 'family') famRender();
+}
+async function famPersonLoad(uid) {
+  try { fam.rows[uid] = (await DB().famBooks(uid)).map(famBook); fam.rowsFor = uid; fam.err = ''; } catch (err) { fam.err = (err && err.message) || explain(err); }
+}
+// A family.books() row in the shape the shelf code expects
+const famBook = r => ({ id: String(r.id), title: r.title || '', author: r.author || '', status: r.status || '', rating: r.rating == null ? '' : String(r.rating), favourite: r.favourite ? 'Yes' : '',
+  cover: r.cover || '', pages: r.pages == null ? '' : String(r.pages), currentPage: r.current_page == null ? '' : String(r.current_page), startDate: String(r.start_date || '').slice(0, 10), finishDate: String(r.finish_date || '').slice(0, 10),
+  series: r.series || '', seriesNum: r.series_num == null ? '' : String(r.series_num), genre: r.genre || '', synopsis: r.synopsis || '', isbn: r.isbn || '', _uid: r.user_id });
+const famColour = uid => (fam.members.find(m => m.user_id === uid) || {}).colour || '';
+const famStatusWord = s => s === 'added' ? 'Added to their Wishlist' : s === 'dismissed' ? 'Passed' : 'Sent';
+const famMonthStats = uid => {
+  const ms = today().slice(0, 8) + '01', pages = fam.month.filter(r => r.user_id === uid && String(r.day).slice(0, 10) >= ms).reduce((a, r) => a + (Number(r.pages) || 0), 0);
+  const books = new Set(fam.fin.filter(r => r.user_id === uid && r.status === 'Finished' && String(r.finish_date).slice(0, 10) >= ms).map(r => r.id)).size;
+  const st = fam.streaks.find(x => x.user_id === uid);
+  return { pages, books, streak: st ? Number(st.streak) || 0 : 0 };
+};
+const famStatsHtml = uid => { const s = famMonthStats(uid);
+  return `<span class="fc-stats"><span><b class="tnum">${fmt(s.pages)}</b>pages this month</span><span><b class="tnum">${fmt(s.books)}</b>${s.books === 1 ? 'book' : 'books'} finished</span><span><b class="tnum">${fmt(s.streak)}</b>${s.streak === 1 ? 'day' : 'days'} streak</span></span>`; };
+function famCalendar(uid) {
+  const t = today(), y = +t.slice(0, 4), mo = +t.slice(5, 7) - 1, dim = new Date(y, mo + 1, 0).getDate(), off = (new Date(y, mo, 1).getDay() + 6) % 7;
+  const by = new Map(); for (const r of fam.month) if (r.user_id === uid) by.set(String(r.day).slice(0, 10), Number(r.pages) || 0);
+  const max = Math.max(1, ...by.values());
+  let h = 'MTWTFSS'.split('').map(c => `<i aria-hidden="true">${c}</i>`).join('') + '<b></b>'.repeat(off);
+  const last = Math.min(dim, +t.slice(8) + (6 - (new Date(y, mo, +t.slice(8)).getDay() + 6) % 7));   // the rest of this week stays as blanks; later weeks are not drawn
+  for (let d = 1; d <= last; d++) {
+    const key = `${t.slice(0, 8)}${pad(d)}`, p = by.get(key) || 0, fut = key > t, cls = fut ? '' : p > 0 ? 'l' + Math.min(4, Math.max(1, Math.ceil(p / max * 4))) : 'd';
+    h += `<b class="${cls}${key === t ? ' td' : ''}" title="${d} ${new Date(y, mo, 1).toLocaleDateString('en-AU', { month: 'short' })}${fut ? '' : ' · ' + fmt(p) + ' pages'}"></b>`;
+  }
+  return `<div class="fc-cal" role="img" aria-label="Pages read each day this month" style="--pc:${escapeText(famColour(uid) || 'var(--accent)')}">${h}</div>`;
+}
+function famHead(m) { return `<span class="avatar fc-av" aria-hidden="true" style="--av:${escapeText(m.colour || 'var(--accent)')}">${escapeText(avatarInitials(m.display_name))}</span><span class="fc-name">${escapeText(m.display_name)}</span>${m.user_id === famMe() ? '<span class="pill">You</span>' : ''}`; }
+function famRender() {
+  const box = $('famBody');
+  if (!famOn()) { box.innerHTML = ''; return; }
+  if (!fam.loaded) { box.innerHTML = fam.err ? `<p class="empty">Couldn't load your family: ${escapeText(fam.err)} <button type="button" class="linkbtn" data-fam-retry>Try again</button></p>` : '<p class="empty">Loading your family…</p>'; return; }
+  if (fam.view) { famPerson(box, fam.view); return; }
+  const ms = [...fam.members].sort((a, b) => a.display_name.localeCompare(b.display_name, undefined, { sensitivity: 'base' })), n = Math.max(1, Math.min(3, ms.length));
+  const rl = Math.max(1, ...ms.map(m => { const k = fam.reading.filter(r => r.user_id === m.user_id).length; return Math.min(3, k) + (k > 3 ? 1 : 0); }));
+  const inbox = famInbox(), sent = fam.recs.filter(r => r.from_user === famMe()).slice(0, 8), mine = fam.month.length;
+  box.innerHTML = (inbox.length ? `<p class="fam-note"><span>${inbox.length} recommendation${inbox.length === 1 ? '' : 's'} waiting for you.</span><button type="button" class="linkbtn" data-fam-inbox>Open the Wishlist Inbox</button></p>` : '')
+    + `<div class="fam-grid" style="--cols:${n};--rl:${rl}">` + ms.map(m => {
+      const rd = fam.reading.filter(r => r.user_id === m.user_id);
+      const reads = rd.length ? rd.slice(0, 3).map(r => { const pc = Number(r.pages) > 0 ? Math.min(100, Math.round((Number(r.current_page) || 0) / Number(r.pages) * 100)) : null;
+        return `<span class="fc-read"><b title="${escapeText(r.title)}">${escapeText(r.title)}${r.author ? ` <span>${escapeText(r.author)}</span>` : ''}</b><span class="tnum">${pc == null ? '' : pc + '%'}</span></span>`; }).join('') + (rd.length > 3 ? `<span class="fc-none">+${rd.length - 3} more</span>` : '') : '<span class="fc-none">Not reading anything right now</span>';
+      return `<button type="button" class="panel fcard" data-fam-p="${escapeText(m.user_id)}" aria-label="${escapeText(m.display_name)}${m.user_id === famMe() ? ' (you)' : ''}: open"><span class="fc-head">${famHead(m)}</span>
+        <span><span class="fc-sec" style="display:block">Reading now</span><span class="fc-reads">${reads}</span></span>
+        <span><span class="fc-sec" style="display:block">${escapeText(new Date().toLocaleDateString('en-AU', { month: 'long' }))}</span>${famCalendar(m.user_id)}</span>${famStatsHtml(m.user_id)}</button>`;
+    }).join('') + '</div>'
+    + (sent.length ? `<section class="panel fam-sent" style="--cols:${n}"><div class="panel-head"><h2>Your recommendations</h2><span class="muted small">Most recent</span></div>${sent.map(r => `<div class="fam-row"><span><b>${escapeText(r.title)}</b> <span class="muted">for ${escapeText(famName(r.to_user))}</span></span><span class="muted">${famStatusWord(r.status)}</span></div>`).join('')}</section>` : '');
+}
+function famPerson(box, uid) {
+  const m = fam.members.find(x => x.user_id === uid);
+  if (!m) { fam.view = null; famRender(); return; }
+  const rows = fam.rows[uid], mineP = uid === famMe();
+  box.innerHTML = `<div class="fam-top"><button type="button" class="linkbtn" data-fam-back>← Family</button><span class="avatar fc-av" aria-hidden="true" style="--av:${escapeText(m.colour || 'var(--accent)')}">${escapeText(avatarInitials(m.display_name))}</span><h2>${escapeText(m.display_name)}</h2>${mineP ? '<span class="pill">You</span>' : ''}${famStatsHtml(uid)}</div>`
+    + (rows ? '<div id="famShelves"></div><section class="panel" id="famRevs" style="margin-top:20px"></section>' : fam.err ? `<p class="empty">Couldn't load their shelves: ${escapeText(fam.err)}</p>` : '<p class="empty">Loading their shelves…</p>');
+  if (!rows) return;
+  const byFin = (a, b) => (b.finishDate || '').localeCompare(a.finishDate || ''), defs = [];
+  const add = (label, books) => defs.push({ label, books });
+  add('Reading now', rows.filter(b => b.status === 'Reading'));
+  add('Last 10 finished', rows.filter(b => b.status === 'Finished').sort(byFin).slice(0, 10));
+  add('Favourites', dedupeReads(rows.filter(isFav)));
+  add('Rated 4★+', dedupeReads(rows.filter(b => toNum(b.rating) >= 4)).sort((a, b) => toNum(b.rating) - toNum(a.rating) || byFin(a, b)));
+  fam.defs = defs;
+  $('famShelves').innerHTML = '<div class="sgrid">' + defs.map((d, i) => `<section class="panel shelf" aria-label="${escapeText(d.label)}"><div class="panel-head"><h2>${escapeText(d.label)}<span class="cnt tnum">${fmt(d.books.length)}</span></h2></div><div class="shelf-row" data-i="${i}"></div></section>`).join('') + '</div>';
+  famLayout();
+  const revs = fam.reviews.filter(r => r.user_id === uid).map(r => ({ r, b: rows.find(x => x.id === String(r.book_id)) })).filter(x => x.b);   // a hidden book's review is left out, mine included: this page is what the family sees
+  $('famRevs').innerHTML = `<div class="panel-head"><h2>Reviews</h2><span class="muted small tnum">${fmt(revs.length)}</span></div>` + (revs.length ? revs.map(({ r, b }) => `<div class="fam-rev"><div class="rt"><b>${escapeText(b.title)}</b>${b.author ? `<span class="muted">${escapeText(b.author)}</span>` : ''}<span class="stars">${escapeText(starStr(r.stars))}</span></div><p>${escapeText(r.body)}</p></div>`).join('') : `<p class="muted" style="margin:0;font-size:13px">${mineP ? 'You have not written any reviews yet. Open one of your books and choose Write a review.' : 'No reviews yet.'}</p>`);
+}
+// The spine rows on a person's page: same spines as the Library shelves, no device boxes (copies are never shared)
+function famLayout() {
+  const box = $('famShelves'); if (!box || !box.offsetWidth) return;
+  const pal = spinePalette(look.spines, today()).map(c => leather(c));
+  box.querySelectorAll('.shelf-row').forEach(row => {
+    const d = fam.defs[+row.dataset.i]; if (!d) return;
+    const W = row.clientWidth - 8, list = d.books, open = !!fam.exp[d.label];
+    let used = 0, n = 0;
+    for (const b of list) { const need = spineW(b) + 4; if (!open && used + need > W) break; used += need; n++; }
+    if (!open && n < list.length) while (n > 0 && used + 44 > W) { n--; used -= spineW(list[n]) + 4; }
+    const shown = list.slice(0, n);
+    row.classList.toggle('exp', open && list.length > 0);
+    row.innerHTML = shown.map(b => spineHtml(b, pal, d.label === 'Reading now')).join('') + (n < list.length ? `<button type="button" class="shelf-more" data-fam-more="${escapeText(d.label)}" title="${list.length - n} more" aria-label="${list.length - n} more books. Show all">+${list.length - n}</button>` : '');
+    if (!open) row.style.height = (Math.max(52, ...shown.map(spineH)) + 16) + 'px'; else row.style.height = '';
+  });
+}
+$('famBody').addEventListener('click', async e => {
+  const t = e.target, q = s => t.closest(s);
+  if (q('[data-fam-retry]')) { famOpen(); return; }
+  if (q('[data-fam-inbox]')) { wl.tab = 'Inbox'; setLibMode('wish'); return; }
+  if (q('[data-fam-back]')) { fam.view = null; famRender(); window.scrollTo(0, 0); return; }
+  const p = q('[data-fam-p]');
+  if (p) { fam.view = p.dataset.famP; famRender(); window.scrollTo(0, 0); await famPersonLoad(fam.view); if (nav.tab === 'family') famRender(); return; }
+  const mo = q('[data-fam-more]'); if (mo) { fam.exp[mo.dataset.famMore] = true; famLayout(); return; }
+  const sp = q('[data-spine]'); if (sp) showCard('fam:' + sp.dataset.spine);
+});
+{ let w = 0, tm; new ResizeObserver(() => { const nw = $('famBody').offsetWidth; if (nw === w) return; w = nw; clearTimeout(tm); tm = setTimeout(famLayout, 120); }).observe($('famBody')); }
+
+/* A family member's book, in the same floating card: read-only, with their review and Recommend to… */
+function famShowCard(id) {
+  const raw = id.slice(4), b = (fam.rows[fam.view] || []).find(x => x.id === raw); if (!b) { hideCard(); return; }
+  card.id = id;
+  const el = $('bookCard'), rev = fam.reviews.find(r => r.user_id === b._uid && String(r.book_id) === b.id);
+  const kv = [['Series', b.series ? `${b.series}${b.seriesNum ? ' #' + b.seriesNum : ''}` : ''], ['Genre', b.genre], ['Pages', toNum(b.pages) ? fmt(toNum(b.pages)) : ''], ['Started', b.startDate], ['Finished', b.finishDate]].filter(([, v]) => v);
+  el.innerHTML = `<button type="button" class="bc-x" aria-label="Close">×</button><div class="bc-top">${coverUrl(b) ? coverImg(b, 'bc-cov', 'M') : '<div class="bc-cov" aria-hidden="true"></div>'}<div style="min-width:0"><h3></h3><div class="bc-by"></div>
+    <div class="bc-row"><span class="pill"></span><span class="stars"></span></div></div></div><dl></dl><p class="bc-syn"></p>${rev ? `<p class="bc-rev"><span class="stars">${escapeText(starStr(rev.stars))}</span> ${escapeText(rev.body)}</p>` : ''}
+    <div class="bc-acts"><button class="btn btn-primary" type="button" data-a="rec">Recommend to…</button></div>`;
+  const ph = el.querySelector('div.bc-cov'); if (ph) ph.textContent = 'No cover yet';
+  el.querySelector('h3').textContent = b.title; el.querySelector('.bc-by').textContent = b.author;
+  el.querySelector('.pill').textContent = b.status; el.querySelector('.stars').textContent = starStr(b.rating);
+  const dl = el.querySelector('dl'); for (const [k, v] of kv) { const dt = document.createElement('dt'), dd = document.createElement('dd'); dt.textContent = k; dd.textContent = v; dl.append(dt, dd); }
+  el.querySelector('.bc-syn').textContent = b.synopsis;
+  el.querySelector('.bc-x').addEventListener('click', hideCard);
+  el.querySelector('[data-a="rec"]').addEventListener('click', () => famRecOpen(b));
+  el.hidden = false;
+}
+/* My own book's card: review, recommend and the Hide from family switch (added after the usual card is built) */
+function famCardExtras(el, b) {
+  if (!fam.loaded) famLoad().then(() => { if (card.id === b.id && fam.loaded) showCard(b.id); });
+  const rev = fam.reviews.find(r => r.user_id === famMe() && String(r.book_id) === b.id), acts = el.querySelector('.bc-acts');
+  if (rev) { const p = document.createElement('p'); p.className = 'bc-rev'; p.textContent = (starStr(rev.stars) ? starStr(rev.stars) + ' ' : '') + rev.body; acts.before(p); }
+  const rb = document.createElement('button'); rb.type = 'button'; rb.className = 'btn'; rb.textContent = rev ? 'Edit review' : 'Write a review'; rb.dataset.a = 'review';
+  const cb = document.createElement('button'); cb.type = 'button'; cb.className = 'btn'; cb.textContent = 'Recommend to…'; cb.dataset.a = 'rec';
+  acts.append(rb, cb);
+  rb.addEventListener('click', () => famReviewOpen(b)); cb.addEventListener('click', () => famRecOpen(b));
+  const lab = document.createElement('label'); lab.className = 'bc-hide'; lab.innerHTML = '<input type="checkbox" data-a="hide"> Hide from family';
+  const inp = lab.querySelector('input'); inp.checked = !!(sbDb.hidden && sbDb.hidden.has(b.id)); lab.title = 'A hidden book is left out of what your family sees, including its review';
+  acts.after(lab);
+  inp.addEventListener('change', async () => {
+    const want = inp.checked; inp.disabled = true;
+    try { await writeBookFields(b.id, { hidden: want }); setStatus('live', want ? `“${b.title}” is hidden from your family` : `“${b.title}” is visible to your family again`); fam.rows = {}; }
+    catch (err) { inp.checked = !want; notice('Couldn\'t change that: ' + (err.message || explain(err)), 'error'); }
+    inp.disabled = false;
+  });
+}
+/* Review dialog */
+const revSt = { b: null, row: null };
+(function () { $('revStars').innerHTML = '<option value="">No stars</option>' + Array.from({ length: 10 }, (_, i) => (i + 1) / 2).map(v => `<option value="${v}">${v} ${v === 1 ? 'star' : 'stars'}  ${starStr(v)}</option>`).join(''); })();
+function famReviewOpen(b) {
+  revSt.b = b; revSt.row = fam.reviews.find(r => r.user_id === famMe() && String(r.book_id) === b.id) || null;
+  $('revH').textContent = revSt.row ? 'Edit your review' : 'Write a review';
+  $('revBook').textContent = b.title + (b.author ? ' · ' + b.author : '');
+  $('revStars').value = revSt.row && revSt.row.stars != null ? String(Number(revSt.row.stars)) : '';
+  $('revBody').value = revSt.row ? revSt.row.body : ''; $('revCount').textContent = $('revBody').value.length + ' / 5000'; $('revErr').textContent = '';
+  $('revDlg').showModal(); $('revBody').focus();
+}
+$('revBody').addEventListener('input', () => { $('revCount').textContent = $('revBody').value.length + ' / 5000'; });
+$('revClose').addEventListener('click', () => $('revDlg').close()); $('revCancel').addEventListener('click', () => $('revDlg').close());
+$('revForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const body = $('revBody').value.trim(), stars = $('revStars').value === '' ? null : Number($('revStars').value);
+  if (!body) { $('revErr').textContent = 'Write a few words first.'; return; }
+  if (body.length > 5000) { $('revErr').textContent = 'That is over 5000 characters.'; return; }
+  $('revSave').disabled = true; $('revErr').textContent = '';
+  try {
+    const got = await DB().reviewSave({ book_id: Number(revSt.b.id), body, stars, row_id: revSt.row && revSt.row.row_id });
+    const i = fam.reviews.findIndex(r => r.user_id === famMe() && String(r.book_id) === revSt.b.id), rec = { ...(i >= 0 ? fam.reviews[i] : {}), ...(got || {}), user_id: famMe(), book_id: Number(revSt.b.id), body, stars };
+    if (i >= 0) fam.reviews[i] = rec; else fam.reviews.unshift(rec);
+    $('revDlg').close(); wlToast('Review saved');
+    if (card.id === revSt.b.id) showCard(card.id);
+    if (nav.tab === 'family') famRender();
+  } catch (err) { $('revErr').textContent = 'Couldn\'t save it: ' + (err.message || explain(err)); }
+  $('revSave').disabled = false;
+});
+/* Recommend to… dialog */
+const recSt = { b: null, to: '' };
+async function famRecOpen(b) {
+  if (!fam.loaded) await famLoad();
+  recSt.b = b; recSt.to = '';
+  const others = fam.members.filter(m => m.user_id !== famMe()).sort((a, c) => a.display_name.localeCompare(c.display_name, undefined, { sensitivity: 'base' }));
+  $('recBook').textContent = b.title + (b.author ? ' · ' + b.author : ''); $('recNote').value = ''; $('recErr').textContent = '';
+  $('recTo').innerHTML = others.length ? others.map(m => `<button type="button" class="chip" data-to="${escapeText(m.user_id)}" aria-pressed="false">${escapeText(m.display_name)}</button>`).join('') : '<span class="muted small">There is nobody else in your family yet.</span>';
+  $('recSend').disabled = !others.length;
+  $('recDlg').showModal();
+}
+$('recTo').addEventListener('click', e => { const c = e.target.closest('[data-to]'); if (!c) return; recSt.to = c.dataset.to; $('recTo').querySelectorAll('.chip').forEach(x => x.setAttribute('aria-pressed', String(x === c))); $('recErr').textContent = ''; });
+$('recClose').addEventListener('click', () => $('recDlg').close()); $('recCancel').addEventListener('click', () => $('recDlg').close());
+$('recForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  if (!recSt.to) { $('recErr').textContent = 'Pick who it is for.'; return; }
+  $('recSend').disabled = true; $('recErr').textContent = '';
+  try {
+    const got = await DB().recSend({ to_user: recSt.to, title: recSt.b.title, author: recSt.b.author, isbn: recSt.b.isbn, note: $('recNote').value.trim() });
+    fam.recs.unshift({ status: 'new', from_user: famMe(), to_user: recSt.to, title: recSt.b.title, ...(got || {}) });
+    $('recDlg').close(); wlToast(`Recommended to ${escapeText(famName(recSt.to))}`);
+    if (nav.tab === 'family' && !fam.view) famRender();
+  } catch (err) { $('recErr').textContent = 'Couldn\'t send it: ' + (err.message || explain(err)); }
+  $('recSend').disabled = false;
+});
+/* Incoming recommendations: special rows at the top of Wishlist > Inbox */
+function famInboxRows(lib) {
+  return famInbox().map(r => `<div class="wl-row wl-ibx wl-rec" data-rec="${escapeText(r.row_id)}"><div><span class="wl-t" style="cursor:default">${escapeText(r.title)}</span>${lib.has(wishKey(r.title)) ? ' <span class="wl-tag" title="This title is already in your library">in library</span>' : ''}<div class="wl-m">${r.author ? `<span>${escapeText(r.author)}</span>` : ''}</div>
+    <div class="wl-note">Recommended by ${escapeText(famName(r.from_user))}${r.note ? ': ' + escapeText(r.note) : ''}</div></div>
+    <div class="wl-acts"><button class="btn btn-primary" type="button" data-rec-add>Add to Wishlist</button><button class="btn" type="button" data-rec-no>Dismiss</button></div></div>`).join('');
+}
+$('wlBody').addEventListener('click', async e => {
+  const row = e.target.closest('[data-rec]'); if (!row) return;
+  const r = fam.recs.find(x => String(x.row_id) === row.dataset.rec); if (!r) return;
+  const add = e.target.closest('[data-rec-add]'), no = e.target.closest('[data-rec-no]'); if (!add && !no) return;
+  row.querySelectorAll('button').forEach(b => { b.disabled = true; });
+  try {
+    if (add) {
+      if (!disc.loaded) await loadDiscover();
+      await appendWishRows([{ title: r.title, author: r.author || '', notes: 'Recommended by ' + famName(r.from_user) + (r.note ? ': ' + r.note : '') }]);
+      try { await DB().recStatus(r.row_id, 'added'); } catch (err) { notice('Added to your Wishlist, but couldn\'t mark the recommendation as done: ' + (err.message || explain(err)), 'error'); }
+      r.status = 'added'; wlToast('Added to Wishlist · Inbox');
+    } else { await DB().recStatus(r.row_id, 'dismissed'); r.status = 'dismissed'; }
+  } catch (err) { notice('Couldn\'t update that recommendation: ' + (err.message || explain(err)), 'error'); }
+  famBadge(); wishPaint(); if (nav.tab === 'family') famRender();
+});
+
 /* ---------- Who am I: family membership, avatar, member mode, first run ---------- */
 const COLOURS = ['#e07a5f', '#f2a65a', '#e9c46a', '#81b29a', '#4fb0c6', '#6d8fe0', '#9b7fd1', '#d77fa1'];
 /* My row in family.members (role, name, colour). If the family schema isn't there or the call fails, I'm the owner as before:
@@ -7809,6 +8189,7 @@ function meName() { return (state.me && state.me.name) || (sb.email() || '').spl
 function avatarInitials(n) { const w = String(n).trim().split(/[\s._-]+/).filter(Boolean); return ((w[0] || '?')[0] + (w.length > 1 ? w[w.length - 1][0] : '')).toUpperCase(); }
 function drawMe() {
   const show = !!(state.sb && sb.signedIn());
+  if (!show) famDraw();
   document.body.dataset.role = state.sb && state.me && state.me.role === 'member' ? 'member' : 'owner';
   $('meWrap').hidden = !show;
   if (!show) return;
@@ -7818,6 +8199,7 @@ function drawMe() {
   $('meWho').textContent = sb.email() || '';
   $('meProf').hidden = !(state.me && state.me.hasRow);
   profSync($('wlProf')); profSync($('profBody'));
+  famDraw();
 }
 /* Profile form: name and colour, written through DB().profileSave (the two columns the "edit my own name and colour" rule allows) */
 function profMount(root) {

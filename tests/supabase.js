@@ -55,14 +55,14 @@ async function install(page, w) {
 }
 
 // ---- scenario runner ----
-async function scenario(browser, name, { init = {}, session = 'live', vp = { width: 1280, height: 900 }, url = ORIGIN + '/', world: wopts, setup, claude, run }) {
+async function scenario(browser, name, { init = {}, session = 'live', vp = { width: 1280, height: 900 }, url = ORIGIN + '/', world: wopts, setup, claude, run, now = FIXED }) {
   if (process.env.ONLY && !new RegExp(process.env.ONLY).test(name)) return;   // debugging: ONLY=otp node tests/supabase.js out
   const ctx = await browser.newContext({ viewport: vp, deviceScaleFactor: 1, reducedMotion: 'reduce' });
   const page = await ctx.newPage();
   page.on('pageerror', e => errors.push(name + ': ' + e.message));
   page.on('console', m => { if (m.type() === 'error' && !/Failed to load resource/.test(m.text())) errors.push(name + ': ' + m.text()); });
-  const w = world(wopts); if (setup) setup(w);
-  await page.clock.install({ time: new Date(FIXED) });
+  const w = world(wopts); w.today = now.slice(0, 10); if (setup) setup(w);
+  await page.clock.install({ time: new Date(now) });
   await install(page, w);
   if (claude) { w.writes = []; const call = makeStore(makeSheets(), w.writes); await page.exposeFunction('__call', (tool, input) => call(tool, input)); }
   const sess = { live: { at: GOOD, rt: 'rt1', exp: 'NOW+1h', email: 'me@example.com' }, expired: { at: EXPIRED, rt: 'rt1', exp: 'NOW-1s', email: 'me@example.com' }, stale401: { at: EXPIRED, rt: 'rt1', exp: 'NOW+1h', email: 'me@example.com' } }[session];
@@ -685,7 +685,7 @@ const step = async (name, fn) => { try { await fn(); } catch (e) { check(name + 
     check('verify: POST /auth/v1/verify with { type: email, email, token }', w.verifies.length === 2 && new URL(w.verifies[1].url).pathname === '/auth/v1/verify' && JSON.stringify(w.verifies[1].body) === JSON.stringify({ type: 'email', email: 'me@example.com', token: '123456' }) && !w.verifies[1].headers.authorization, w.verifies[1]);
     check('verify: the session is stored in jcm-sb-session like every other sign-in', s.at === GOOD && s.rt === 'rtC' && s.email === 'me@example.com' && s.exp > 0, s);
     check('verify: the card is gone, the app loads from Supabase, the avatar shows', !(await page.locator('#signCard').isVisible()) && (await page.evaluate(() => state.allBooks.length)) === 16 && (await page.locator('#meAv').innerText()) === 'SL' && (await page.locator('#meName').innerText()) === 'Sam Lee');
-    check('verify: data calls carry the new token and the books schema; family read is in schema family', w.calls.length > 0 && w.calls.every(c => c.headers.authorization === 'Bearer ' + GOOD && c.headers['accept-profile'] === 'books') && w.famCalls.length === 1 && w.famCalls[0].headers['accept-profile'] === 'family' && w.famCalls[0].method === 'GET' && /user_id=eq\.u1/.test(w.famCalls[0].query), w.famCalls);
+    check('verify: data calls carry the new token and the books schema; family read is in schema family', w.calls.length > 0 && w.calls.every(c => c.headers.authorization === 'Bearer ' + GOOD && c.headers['accept-profile'] === 'books') && w.famCalls.length >= 1 && w.famCalls[0].headers['accept-profile'] === 'family' && w.famCalls[0].method === 'GET' && /user_id=eq\.u1/.test(w.famCalls[0].query) && w.famCalls.slice(1).every(c => c.method === 'GET' && c.table === 'recommendations'), w.famCalls);   // after the membership read, only the recommendations badge read
     check('verify: no password or code kept in the browser', !(await page.evaluate(() => JSON.stringify({ ...localStorage, ...sessionStorage }))).includes('123456'));
   } });
   await scenario(browser, 'otp-rate-limit', { init: SB_CFG, session: null, setup: w => { w.otpStatus = 429; }, run: async (page, w) => {
@@ -791,6 +791,228 @@ const step = async (name, fn) => { try { await fn(); } catch (e) { check(name + 
       await page.screenshot({ path: path.join(OUT, `dialog-390-${label}.png`) });
     } });
   }
+
+  // ===== Family tab: person cards, person pages, reviews, recommendations, hide from family =====
+  const FAM_NOW = '2026-11-14T10:00:00';   // a Saturday; November has 30 days, so 16 days are still to come
+  const SHOTS = process.env.FAMSHOTS || path.join(OUT, 'fam'); fs.mkdirSync(SHOTS, { recursive: true });
+  const fb = (uid, id, title, extra = {}) => ({ user_id: uid, id, title, author: 'A. Writer', status: 'Finished', rating: null, favourite: false, cover: null, pages: 300, current_page: 300, start_date: null, finish_date: null, series: null, series_num: null, type: null, format: null, genre: null, theme1: null, theme2: null, theme3: null, year: null, isbn: null, synopsis: null, ...extra });
+  const famWorld = (o = {}) => w => {
+    w.fam = {
+      members: [{ user_id: 'u1', role: 'owner', display_name: 'Zoe', colour: '#e07a5f', joined_at: '2026-11-01' }, { user_id: 'u2', role: 'member', display_name: 'Ann', colour: '#4fb0c6', joined_at: '2026-11-02' }, { user_id: 'u3', role: 'member', display_name: 'Mia', colour: '#9b7fd1', joined_at: '2026-11-03' }],
+      books: [
+        fb('u2', 501, 'Dune Messiah', { status: 'Reading', pages: 300, current_page: 150, author: 'Frank Herbert' }),
+        fb('u2', 502, 'The Hobbit', { finish_date: '2026-11-03', rating: 4.5, favourite: true, author: 'J. R. R. Tolkien' }),
+        fb('u2', 503, 'Old Favourite', { finish_date: '2026-09-10', rating: 5, favourite: true }),
+        fb('u2', 504, 'Secret Diary Of Ann', { status: 'Reading', hidden: true }),
+        fb('u3', 601, 'Mia One', { status: 'Reading', pages: 200, current_page: 20 }), fb('u3', 602, 'Mia Two', { status: 'Reading' }), fb('u3', 603, 'Mia Three', { status: 'Reading' }), fb('u3', 604, 'Mia Four', { status: 'Reading' }),
+        fb('u3', 605, 'Mia Five', { finish_date: '2026-11-09' })],
+      month: [{ user_id: 'u2', day: '2026-11-02', pages: 40 }, { user_id: 'u2', day: '2026-11-03', pages: 100 }, { user_id: 'u2', day: '2026-11-14', pages: 20 }, { user_id: 'u2', day: '2026-10-30', pages: 500 },
+        { user_id: 'u3', day: '2026-11-05', pages: 10 }, { user_id: 'u1', day: '2026-11-14', pages: 25 }],
+      streaks: [{ user_id: 'u1', streak: 1, today_done: true }, { user_id: 'u2', streak: 3, today_done: true }, { user_id: 'u3', streak: 0, today_done: false }],
+      reviews: [{ row_id: 800, user_id: 'u2', book_id: 502, body: 'A cosy adventure that I keep coming back to.', stars: 4.5, updated_at: '2026-11-04' }, { row_id: 801, user_id: 'u2', book_id: 504, body: 'Never show this review.', stars: 1, updated_at: '2026-11-05' }],
+      recommendations: [], ...o };
+  };
+  const tabNames = page => page.evaluate(() => [...document.querySelectorAll('.tabs .tab:not(.tb)')].filter(b => !b.hidden).map(b => b.textContent.replace(/\d+$/, '')));
+  const famWrites = (w, n = 0) => w.famCalls.slice(n).filter(c => c.method !== 'GET' && !c.rpc);   // the three functions are POST calls but read-only
+  const noScroll = page => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth);
+
+  await scenario(browser, 'family-hidden-without-membership', { init: SB_CFG, setup: w => { w.fam = { members: [] }; }, run: async (page, w) => {
+    await live(page);
+    check('family: no membership row -> no Family tab', await page.locator('#tab-family').isHidden() && (await tabNames(page)).join() === 'Now,Library,Next Up,Insights', await tabNames(page));
+    check('family: no membership -> no review, recommend or hide controls on a book card', await page.evaluate(() => { showCard('1'); return !document.querySelector('#bookCard [data-a="review"], #bookCard [data-a="rec"], #bookCard [data-a="hide"]'); }));
+    check('family: no membership -> no family reads beyond the membership check', w.famCalls.every(c => c.table === 'members'), w.famCalls.map(c => c.table));
+  } });
+  await scenario(browser, 'family-hidden-schema-missing', { init: SB_CFG, run: async (page, w) => {
+    await live(page);
+    check('family: schema not exposed -> no Family tab and no error notice', await page.locator('#tab-family').isHidden() && await page.locator('#notice').isHidden());
+  } });
+  await scenario(browser, 'family-hidden-in-sheet-mode', { init: {}, session: null, claude: true, run: async (page, w) => {
+    await page.waitForFunction(() => state.live && state.libLoaded, null, { timeout: 10000 });
+    check('family: Sheet mode -> no Family tab, no family request', await page.locator('#tab-family').isHidden() && !w.famCalls.length && await page.evaluate(() => showTab('family') || nav.tab !== 'family'));
+  } });
+
+  await scenario(browser, 'family-cards', { init: SB_CFG, now: FAM_NOW, setup: famWorld(), run: async (page, w) => {
+    await live(page);
+    check('family: tabs are Now, Library, Next Up, Family, Insights', (await tabNames(page)).join() === 'Now,Library,Next Up,Family,Insights', await tabNames(page));
+    check('family: no badge when nothing is waiting', await page.locator('#famBadge').isHidden());
+    await page.click('#tab-family'); await page.waitForSelector('.fcard');
+    const cards = await page.evaluate(() => [...document.querySelectorAll('.fcard')].map(c => ({ name: c.querySelector('.fc-name').textContent, you: !!c.querySelector('.pill'), w: Math.round(c.getBoundingClientRect().width), top: Math.round(c.getBoundingClientRect().top), text: c.innerText, cells: c.querySelectorAll('.fc-cal b').length, lit: [...c.querySelectorAll('.fc-cal b')].map(b => b.className).join('|') })));
+    check('family: person cards are sorted A to Z by name (Ann, Mia, Zoe)', cards.map(c => c.name).join() === 'Ann,Mia,Zoe', cards.map(c => c.name));
+    check('family: the cards are equal width and on one row', new Set(cards.map(c => c.w)).size === 1 && new Set(cards.map(c => c.top)).size === 1, cards.map(c => [c.w, c.top]));
+    check('family: only my own card says You', cards.map(c => c.you).join() === 'false,false,true');
+    const ann = cards[0], mia = cards[1], zoe = cards[2];
+    check('family: Ann card: current read with title, author and 50%', /Dune Messiah/.test(ann.text) && /Frank Herbert/.test(ann.text) && /50%/.test(ann.text), ann.text);
+    check('family: Ann card: this month only (160 pages, 1 book finished, 3 day streak); October pages and older books are not counted', /160\s*pages this month/.test(ann.text) && /1\s*book finished/.test(ann.text) && /3\s*days streak/.test(ann.text) && !/660/.test(ann.text), ann.text);
+    check('family: Mia card: three reads then +1 more; a streak of 0', /Mia One/.test(mia.text) && /Mia Three/.test(mia.text) && !/Mia Four/.test(mia.text) && /\+1 more/.test(mia.text) && /0\s*days streak/.test(mia.text), mia.text);
+    check('family: Zoe (me) card: 25 pages this month, 1 day streak', /25\s*pages this month/.test(zoe.text) && /1\s*day streak/.test(zoe.text), zoe.text);
+    const lit = ann.lit.split('|');   // 7 weekday headings are <i>, not <b>: 30 days plus the blanks before Sunday-start offset (1 Nov 2026 is a Sunday: 6 blanks)
+    check('family: calendar has one cell per day up to the end of this week (6 leading blanks: 1 Nov is a Sunday), today outlined, future days blank, lit days follow the pages', ann.cells === 21 && lit.filter(x => /\btd\b/.test(x)).length === 1 && lit[6 + 13].includes('td') && lit[6 + 14] === '' && /l\d/.test(lit[6 + 1]) && /l4/.test(lit[6 + 2]) && lit[6 + 3] === 'd', lit.join('|'));
+    const t = await page.evaluate(() => document.body.innerText);
+    check('family: no hidden book on screen and no table read for other people', !/Secret Diary/.test(t) && w.famCalls.every(c => c.rpc || ['members', 'reviews', 'recommendations'].includes(c.table)) && w.famCalls.filter(c => c.rpc && c.table === 'books').every(c => c.method === 'POST'), w.famCalls.map(c => c.table));
+    check('family: no ranking or leaderboard wording', !/leaderboard|\brank|winner|top reader|most pages/i.test(await page.locator('#view-family').innerText()), await page.locator('#view-family').innerText());
+    check('family: no data older than this month asked for (finished books limited to this month; one RPC each)', w.famCalls.filter(c => c.rpc && c.table === 'books').some(c => /finish_date=gte\.2026-11-01/.test(c.query)) && w.famCalls.filter(c => c.rpc && c.table === 'this_month').length === 1);
+    check('family: no horizontal scroll at 1280', await noScroll(page));
+    await page.screenshot({ path: path.join(SHOTS, '1-family-1280.png') });
+    check('family: opening the tab writes nothing', famWrites(w).length === 0 && w.calls.every(c => c.method === 'GET'), [famWrites(w), w.calls.filter(c => c.method !== 'GET')]);
+  } });
+
+  await scenario(browser, 'family-person-page', { init: SB_CFG, now: FAM_NOW, setup: famWorld(), run: async (page, w) => {
+    await live(page); await page.click('#tab-family'); await page.waitForSelector('.fcard');
+    await page.click('.fcard[data-fam-p="u2"]'); await page.waitForSelector('#famShelves .spine');
+    const t = await page.locator('#famBody').innerText();
+    check('person page: Back link, name, shelves Reading now / Last 10 finished / Favourites / Rated 4★+', /← Family/.test(t) && /Ann/.test(t) && ['Reading now', 'Last 10 finished', 'Favourites', 'Rated 4★\+'].every(x => new RegExp(x).test(t)), t.slice(0, 300));
+    const sp = await page.evaluate(() => [...document.querySelectorAll('#famShelves .shelf')].map(s => [s.getAttribute('aria-label'), [...s.querySelectorAll('.spine')].map(b => b.getAttribute('aria-label'))]));
+    check('person page: shelves hold the right books (Reading Dune Messiah; finished Hobbit and Old Favourite; favourites; rated 4+)', JSON.stringify(sp) === JSON.stringify([['Reading now', ['Dune Messiah']], ['Last 10 finished', ['The Hobbit', 'Old Favourite']], ['Favourites', ['The Hobbit', 'Old Favourite']], ['Rated 4★+', ['Old Favourite', 'The Hobbit']]]), sp);
+    check('person page: their hidden book and its review never appear', !/Secret Diary|Never show this review/.test(t));
+    check('person page: their review shows with stars', /A cosy adventure/.test(t) && /★★★★½/.test(t));
+    check('person page: no horizontal scroll', await noScroll(page));
+    await page.screenshot({ path: path.join(SHOTS, '2-person-1280.png'), fullPage: true });
+    await page.click('#famShelves .spine[data-spine="502"]'); await page.waitForSelector('#bookCard:not([hidden])');
+    const c = await page.evaluate(() => ({ t: document.querySelector('#bookCard h3').textContent, btns: [...document.querySelectorAll('#bookCard button')].map(b => b.textContent.trim()), sel: !!document.querySelector('#bookCard select'), rev: (document.querySelector('#bookCard .bc-rev') || {}).textContent }));
+    check('person page: their book card is read-only (no status select, edit, hide or review button) with Recommend to… and their review', c.t === 'The Hobbit' && !c.sel && c.btns.includes('Recommend to…') && !c.btns.some(b => /Edit|Remove|review|Hide/i.test(b)) && /cosy adventure/.test(c.rev || ''), c);
+    await page.screenshot({ path: path.join(SHOTS, '2-person-card-1280.png') });
+    await page.click('#bookCard .bc-x'); await page.click('[data-fam-back]');
+    check('person page: Back returns to the cards', await page.locator('.fcard').count() === 3);
+    check('person page: everything read-only (no writes)', famWrites(w).length === 0 && w.calls.every(c => c.method === 'GET'));
+    await page.click('.fcard[data-fam-p="u1"]'); await page.waitForSelector('#famShelves .spine');
+    check('own page: marked You, shows my own shelves, no hidden books', /You/.test(await page.locator('.fam-top').innerText()));
+  } });
+
+  await scenario(browser, 'family-review-and-hide', { init: SB_CFG, now: FAM_NOW, setup: famWorld(), run: async (page, w) => {
+    await live(page);
+    const bid = await page.evaluate(() => state.allBooks.find(b => b.status === 'Finished').id), bt = await page.evaluate(id => state.allBooks.find(b => b.id === id).title, bid);
+    await page.evaluate(id => { showTab('library'); showCard(id); }, bid);
+    await page.waitForSelector('#bookCard [data-a="review"]');
+    check('card: own book has Write a review, Recommend to… and Hide from family', (await page.locator('#bookCard [data-a="review"]').innerText()) === 'Write a review' && await page.locator('#bookCard [data-a="rec"]').isVisible() && await page.locator('#bookCard [data-a="hide"]').isVisible() && !(await page.locator('#bookCard [data-a="hide"]').isChecked()));
+    // --- write ---
+    await page.click('#bookCard [data-a="review"]'); await page.waitForSelector('#revDlg[open]');
+    await page.screenshot({ path: path.join(SHOTS, '4-review-dialog-1280.png') });
+    await page.click('#revSave');
+    check('review: an empty review is refused locally', /few words/.test(await page.locator('#revErr').innerText()) && famWrites(w).length === 0, [await page.locator('#revErr').innerText(), famWrites(w)]);
+    await page.selectOption('#revStars', '4.5'); await page.fill('#revBody', 'Loved the slow build.');
+    const n0 = w.famCalls.length;
+    await page.click('#revSave'); await page.waitForFunction(() => !document.getElementById('revDlg').open); await page.waitForTimeout(200);
+    let wr = famWrites(w, n0);
+    check('review: first save is exactly one POST to family.reviews with book_id, body and stars (no user_id)', wr.length === 1 && wr[0].method === 'POST' && wr[0].table === 'reviews' && wr[0].headers['content-profile'] === 'family' && keysOf(wr[0].body) === 'body,book_id,stars' && wr[0].body.book_id === Number(bid) && wr[0].body.stars === 4.5 && wr[0].body.body === 'Loved the slow build.', wr);
+    check('review: the card now says Edit review and shows the review', (await page.locator('#bookCard [data-a="review"]').innerText()) === 'Edit review' && /Loved the slow build/.test(await page.locator('#bookCard .bc-rev').innerText()));
+    // --- edit ---
+    const n1 = w.famCalls.length;
+    await page.click('#bookCard [data-a="review"]'); await page.waitForSelector('#revDlg[open]');
+    check('review: the dialog opens filled with the saved review', (await page.inputValue('#revBody')) === 'Loved the slow build.' && (await page.inputValue('#revStars')) === '4.5');
+    await page.fill('#revBody', 'Loved the slow build. Second read was better.'); await page.selectOption('#revStars', '5');
+    await page.click('#revSave'); await page.waitForFunction(() => !document.getElementById('revDlg').open); await page.waitForTimeout(200);
+    wr = famWrites(w, n1);
+    const row = w.fam.reviews.find(r => r.user_id === 'u1');
+    check('review: editing is exactly one PATCH, only body and stars, on that row (no second POST)', wr.length === 1 && wr[0].method === 'PATCH' && wr[0].table === 'reviews' && keysOf(wr[0].body) === 'body,stars' && wr[0].query.includes('row_id=eq.' + row.row_id) && wr[0].body.stars === 5 && w.fam.reviews.filter(r => r.user_id === 'u1').length === 1, wr);
+    // --- my page shows it; others' reviews show on theirs ---
+    await page.click('#bookCard .bc-x'); await page.click('#tab-family'); await page.waitForSelector('.fcard', { timeout: 5000 }).catch(async () => check('debug', false, [await page.locator('#famBody').innerText(), await page.evaluate(() => nav.tab + '|' + fam.view + '|' + fam.err)])); await page.click('.fcard[data-fam-p="u1"]'); await page.waitForSelector('#famRevs .fam-rev');
+    const mine = await page.locator('#famRevs').innerText();
+    check('review: my review shows on my person page with the title, stars and text', mine.includes(bt) && /Second read was better/.test(mine) && /★★★★★/.test(mine), mine);
+    // --- hide from family ---
+    const b0 = w.calls.length;
+    await page.evaluate(id => { showTab('library'); showCard(id); }, bid); await page.waitForSelector('#bookCard [data-a="hide"]');
+    await page.check('#bookCard [data-a="hide"]'); await saved(page, 300);
+    let bw = writesSince(w, b0);
+    check('hide: one PATCH to books with just hidden true; nothing else written', bw.length === 1 && bw[0].method === 'PATCH' && bw[0].table === 'books' && bw[0].query.includes('id=eq.' + bid) && JSON.stringify(bw[0].body) === '{"hidden":true}' && famWrites(w, n1 + 1).length === 0, bw);
+    check('hide: the row is hidden in the database', w.db.books.find(b => String(b.id) === bid).hidden === true);
+    await page.evaluate(id => { hideCard(); showCard(id); }, bid);
+    check('hide: after a reload of the card the switch is on', await page.locator('#bookCard [data-a="hide"]').isChecked());
+    await page.click('#tab-family'); await page.waitForSelector('#famShelves .spine, #famShelves .shelf');   // the tab stays on the person page I left
+    check('hide: the hidden book is gone from my own family page, and so is its review', !(await page.evaluate(() => [...document.querySelectorAll('#famShelves [data-spine]')].map(b => b.dataset.spine))).includes(bid) && (await page.locator('#famShelves [data-spine]').count()) > 0 && !/Second read was better/.test(await page.locator('#famBody').innerText()));
+    const b1 = w.calls.length;
+    await page.evaluate(id => { showTab('library'); showCard(id); }, bid); await page.waitForSelector('#bookCard [data-a="hide"]');
+    await page.uncheck('#bookCard [data-a="hide"]'); await saved(page, 300);
+    bw = writesSince(w, b1);
+    check('hide: switching it off is one PATCH hidden false', bw.length === 1 && JSON.stringify(bw[0].body) === '{"hidden":false}' && w.db.books.find(b => String(b.id) === bid).hidden === false, bw);
+  } });
+
+  await scenario(browser, 'family-recommend', { init: SB_CFG, now: FAM_NOW, setup: famWorld(), run: async (page, w) => {
+    await live(page); await page.click('#tab-family'); await page.waitForSelector('.fcard');
+    await page.click('.fcard[data-fam-p="u2"]'); await page.waitForSelector('#famShelves .spine');
+    await page.click('#famShelves .spine[data-spine="501"]'); await page.click('#bookCard [data-a="rec"]'); await page.waitForSelector('#recDlg[open]');
+    const who = await page.locator('#recTo .chip').allInnerTexts();
+    check('recommend: choose from the other family members, never myself', who.join() === 'Ann,Mia', who);
+    await page.click('#recSend');
+    check('recommend: nobody chosen is refused locally', /Pick who/.test(await page.locator('#recErr').innerText()) && famWrites(w).length === 0);
+    await page.click('#recTo [data-to="u3"]'); await page.fill('#recNote', 'Right up your street.');
+    await page.screenshot({ path: path.join(SHOTS, '5-recommend-dialog-1280.png') });
+    const n0 = w.famCalls.length;
+    await page.click('#recSend'); await page.waitForFunction(() => !document.getElementById('recDlg').open); await page.waitForTimeout(200);
+    const wr = famWrites(w, n0), row = w.fam.recommendations[0];
+    check('recommend: one POST to family.recommendations with to_user, title, author and note; from_user is not sent', wr.length === 1 && wr[0].method === 'POST' && wr[0].table === 'recommendations' && keysOf(wr[0].body) === 'author,note,title,to_user' && wr[0].body.to_user === 'u3' && wr[0].body.title === 'Dune Messiah' && wr[0].body.author === 'Frank Herbert' && wr[0].body.note === 'Right up your street.', wr);
+    check('recommend: the row says it is from me and new', row && row.from_user === 'u1' && row.status === 'new');
+    await page.click('#bookCard .bc-x'); await page.click('[data-fam-back]');
+    const sent = await page.locator('.fam-sent').innerText();
+    check('recommend: the sender sees it in a small list with its status', /Dune Messiah/.test(sent) && /for Mia/.test(sent) && /Sent/.test(sent), sent);
+    // own book -> recommend works too (isbn is sent when the book has one)
+    await page.evaluate(() => { showTab('library'); const b = state.allBooks[0]; b.isbn = '9780000000001'; showCard(b.id); }); await page.click('#bookCard [data-a="rec"]'); await page.waitForSelector('#recDlg[open]');
+    const n1 = w.famCalls.length; await page.click('#recTo [data-to="u2"]'); await page.click('#recSend'); await page.waitForFunction(() => !document.getElementById('recDlg').open); await page.waitForTimeout(200);
+    const w2 = famWrites(w, n1);
+    check('recommend: from my own book card it is one POST, with the isbn', w2.length === 1 && w2[0].method === 'POST' && /isbn/.test(keysOf(w2[0].body)) && !('from_user' in w2[0].body), w2);
+  } });
+
+  await scenario(browser, 'family-inbox', { init: SB_CFG, now: FAM_NOW, setup: famWorld({ recommendations: [
+    { row_id: 900, from_user: 'u2', to_user: 'u1', title: 'Piranesi', author: 'Susanna Clarke', isbn: null, note: 'You will love this.', status: 'new', created_at: '2026-11-13' },
+    { row_id: 901, from_user: 'u3', to_user: 'u1', title: 'Circe', author: 'Madeline Miller', isbn: null, note: null, status: 'new', created_at: '2026-11-12' },
+    { row_id: 902, from_user: 'u3', to_user: 'u1', title: 'Old News', author: null, isbn: null, note: null, status: 'dismissed', created_at: '2026-11-01' },
+    { row_id: 903, from_user: 'u2', to_user: 'u3', title: 'Not For Me', author: null, isbn: null, note: null, status: 'new', created_at: '2026-11-01' }] }), run: async (page, w) => {
+    await live(page);
+    check('inbox: the Family tab shows a badge of 2 for new recommendations', (await page.locator('#famBadge').innerText()) === '2' && await page.locator('#famBadge').isVisible());
+    check('inbox: the rt socket also joins realtime:family for family.recommendations', w.rt.joins.length === 2 && w.rt.joins.some(j => JSON.stringify(j.config.postgres_changes) === JSON.stringify([{ event: '*', schema: 'family', table: 'recommendations' }])), w.rt.joins.map(j => j.config.postgres_changes));
+    await page.click('#tab-family'); await page.waitForSelector('.fcard');
+    check('inbox: the Family tab says two are waiting', /2 recommendations waiting/.test(await page.locator('.fam-note').innerText()));
+    await page.click('[data-fam-inbox]'); await page.waitForSelector('.wl-rec');
+    const rows = await page.evaluate(() => [...document.querySelectorAll('#wlBody .wl-row')].map(r => ({ rec: r.classList.contains('wl-rec'), t: r.innerText })));
+    check('inbox: recommendations are the first rows, newest first: "Recommended by Ann: note" with Add to Wishlist and Dismiss', rows[0].rec && rows[1].rec && /Piranesi/.test(rows[0].t) && /Recommended by Ann: You will love this\./.test(rows[0].t) && /Add to Wishlist/.test(rows[0].t) && /Dismiss/.test(rows[0].t) && /Circe/.test(rows[1].t) && /Recommended by Mia/.test(rows[1].t), rows.slice(0, 3));
+    check('inbox: other people\'s and dismissed recommendations are not here', !/Not For Me|Old News/.test(await page.locator('#wlBody').innerText()));
+    await page.screenshot({ path: path.join(SHOTS, '6-inbox-1280.png') });
+    const c0 = w.calls.length, f0 = w.famCalls.length;
+    await page.click('.wl-rec[data-rec="900"] [data-rec-add]'); await saved(page, 500);
+    const wl = writesSince(w, c0), fw = famWrites(w, f0);
+    check('add: one wishlist POST (Inbox, title, author, note "Recommended by Ann…") and one PATCH of status added', wl.length === 1 && wl[0].method === 'POST' && wl[0].table === 'wishlist' && wl[0].body.length === 1 && wl[0].body[0].title === 'Piranesi' && wl[0].body[0].author === 'Susanna Clarke' && wl[0].body[0].stage === 'Inbox' && /^Recommended by Ann/.test(wl[0].body[0].notes) && fw.length === 1 && fw[0].method === 'PATCH' && fw[0].table === 'recommendations' && fw[0].query.includes('row_id=eq.900') && JSON.stringify(fw[0].body) === '{"status":"added"}', { wl, fw });
+    check('add: it left the recommendations, joined the Inbox as a normal row, the badge is 1', !(await page.locator('.wl-rec[data-rec="900"]').count()) && /Piranesi/.test(await page.locator('#wlBody').innerText()) && (await page.locator('#famBadge').innerText()) === '1' && w.fam.recommendations.find(r => r.row_id === 900).status === 'added');
+    const f1 = w.famCalls.length, c1 = w.calls.length;
+    await page.click('.wl-rec[data-rec="901"] [data-rec-no]'); await saved(page, 400);
+    const fw2 = famWrites(w, f1);
+    check('dismiss: one PATCH of status dismissed and nothing added to the wishlist', fw2.length === 1 && fw2[0].method === 'PATCH' && fw2[0].query.includes('row_id=eq.901') && JSON.stringify(fw2[0].body) === '{"status":"dismissed"}' && writesSince(w, c1).length === 0, fw2);
+    check('dismiss: the row is gone and the badge too', !(await page.locator('.wl-rec').count()) && await page.locator('#famBadge').isHidden());
+    // realtime: a new recommendation lands while the app is open
+    w.fam.recommendations.push({ row_id: 910, from_user: 'u2', to_user: 'u1', title: 'Live One', author: 'X', isbn: null, note: null, status: 'new', created_at: '2026-11-14' });
+    const g0 = w.calls.filter(c => c.method === 'GET').length;
+    w.rt.push({ table: 'recommendations', type: 'INSERT', schema: 'family' }, 'realtime:family');
+    await page.waitForFunction(() => document.getElementById('famBadge').textContent === '1' && !document.getElementById('famBadge').hidden, null, { timeout: 5000 });
+    check('realtime: a family.recommendations change updates the badge and the Inbox without reloading the library', w.calls.filter(c => c.method === 'GET').length === g0 && /Live One/.test(await page.locator('#wlBody').innerText()));
+  } });
+
+  await scenario(browser, 'family-member-role', { init: SB_CFG, now: FAM_NOW, setup: w => { famWorld()(w); w.fam.members[0].role = 'member'; }, run: async (page, w) => {
+    await live(page);
+    check('member: sees the Family tab the same way (cards A to Z, You on mine)', (await tabNames(page)).join() === 'Now,Library,Next Up,Family,Insights' && await page.evaluate(() => document.body.dataset.role) === 'member');
+    await page.click('#tab-family'); await page.waitForSelector('.fcard');
+    check('member: three cards, sorted', (await page.locator('.fc-name').allInnerTexts()).join() === 'Ann,Mia,Zoe');
+  } });
+
+  await scenario(browser, 'family-mobile', { init: SB_CFG, now: FAM_NOW, vp: { width: 390, height: 844 }, setup: famWorld({ recommendations: [{ row_id: 900, from_user: 'u2', to_user: 'u1', title: 'Piranesi', author: 'Susanna Clarke', isbn: null, note: 'You will love this.', status: 'new', created_at: '2026-11-13' }] }), run: async (page, w) => {
+    await live(page);
+    check('mobile: five tabs fit without horizontal scroll', await noScroll(page) && await page.evaluate(() => [...document.querySelectorAll('.tabs .tab')].every(t => t.scrollWidth <= t.clientWidth + 1)));
+    await page.click('#tab-family'); await page.waitForSelector('.fcard');
+    const ws = await page.evaluate(() => [...document.querySelectorAll('.fcard')].map(c => Math.round(c.getBoundingClientRect().width)));
+    check('mobile: cards are one column, equal width, no horizontal scroll', new Set(ws).size === 1 && await noScroll(page), ws);
+    await page.screenshot({ path: path.join(SHOTS, '1-family-390.png'), fullPage: false });
+    await page.click('.fcard[data-fam-p="u2"]'); await page.waitForSelector('#famShelves .spine');
+    check('mobile: person page has no horizontal scroll', await noScroll(page));
+    await page.screenshot({ path: path.join(SHOTS, '2-person-390.png'), fullPage: true });
+    await page.click('#famShelves .spine[data-spine="502"]'); await page.waitForSelector('#bookCard:not([hidden])');
+    await page.screenshot({ path: path.join(SHOTS, '3-person-card-390.png') });
+    await page.click('#bookCard [data-a="rec"]'); await page.waitForSelector('#recDlg[open]');
+    await page.screenshot({ path: path.join(SHOTS, '5-recommend-dialog-390.png') });
+    check('mobile: recommend dialog fits', await noScroll(page)); await page.click('#recCancel');
+    await page.evaluate(() => { showTab('library'); showCard(state.allBooks.find(b => b.status === 'Finished').id); }); await page.click('#bookCard [data-a="review"]'); await page.waitForSelector('#revDlg[open]');
+    await page.screenshot({ path: path.join(SHOTS, '4-review-dialog-390.png') });
+    check('mobile: review dialog fits', await noScroll(page)); await page.click('#revCancel');
+    await page.evaluate(() => { hideCard(); setLibMode('wish'); }); await page.waitForSelector('.wl-rec');
+    await page.screenshot({ path: path.join(SHOTS, '6-inbox-390.png') });
+    check('mobile: Inbox with a recommendation has no horizontal scroll', await noScroll(page));
+  } });
 
   // ===== claude.ai artifact: read-only =====
   await scenario(browser, 'artifact', { init: {}, session: null, claude: true, run: async (page, w) => {
