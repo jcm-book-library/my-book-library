@@ -1,96 +1,172 @@
 # Our Library: handover
 
-Read this after `CLAUDE.md` and the house rules. It records how the app and its sheet fit together as of 2026-10-31 (app Version 34: the claude.ai artifact version; the app itself shows no version number), so a fresh session can carry on without the old conversation.
+Read this after `CLAUDE.md` and the house rules. Updated 17 Nov 2026, at the end of the session that took the app from the 31 Oct audit to a family-ready trial build. A fresh session should be able to carry on from here without the old conversation.
 
-## What it is
-- A personal reading tracker. One file, `app.html`, is both the private claude.ai artifact and (built by `python3 tools/build-pages.py` into `index.html`) the GitHub Pages site.
-- The app is called **Our Library** (renamed from "The Library" on 12 Nov 2026, to match the domain `ourlibrary.au`).
-- **Live address: https://ourlibrary.au/** (GitHub Pages custom domain via the `CNAME` file; DNS at VentraIP: four GitHub A records and `www` CNAME to `jcm-book-library.github.io`). The old `jcm-book-library.github.io/my-book-library/` address forwards to it. Sign-in storage is per address, so the owner signs in once on the new one; other jcm apps keep the old shared session. "Jackets & Manuscripts" is retired. It survives only in the old branch notes (`v3/brand`, `v3/STARTER-PROMPT.md` on `claude/keen-sagan-yf9rqf`) and the house rules' "Look" line in `control-room`. The repo name stays `my-book-library`.
-- The data lives in the **Entertainment Tracker** Google Sheet. The app reads and writes it through the `Google Sheets` connector (claude.ai) or a small REST adapter with the owner's Google sign-in (Pages).
-- Look: Proton Seasons month colours, dark, Roboto everywhere with tabular figures on every element.
+## Where we are
+- **Live:** https://ourlibrary.au/ (GitHub Pages, `CNAME` file; DNS at VentraIP: four GitHub A records and a `www` CNAME to `jcm-book-library.github.io`; the old `jcm-book-library.github.io/my-book-library/` address forwards). `main` holds everything up to PR #19.
+- **Data:** Supabase project `jcm-apps`, schema `books` (the owner's library) plus schema `family` (sharing). The Google Sheet "Entertainment Tracker" is now a backup the owner refreshes weekly with Copy Supabase → Sheet.
+- **Family trial:** everything for the owner's sister to join is built and merged: email-code sign-in, the family-member version of the app, the welcome panel, the Family tab, reviews, Recommend to, Hide from family. She has **not been invited yet** (trial around 27 Nov 2026, during a trip together).
+- **Not built yet:** the StoryGraph/Goodreads import (waiting for the sister's real CSV), family chat, family challenges, themes round 2.
 
-## Working rules the owner has set
-- **Work on a branch and open a pull request into `main`; the owner merges** (owner's choice, 8 Nov 2026; direct pushes to `main` are no longer used here). Routine for each change: edit `app.html`, `python3 tools/build-pages.py`, run `bash tests/run-all.sh` (all three suites), commit and push the branch, open the PR. After it merges, copy `app.html` to `v3/reading-log.html` on branch `claude/keen-sagan-yf9rqf`, commit and push.
-- **The owner uses only the live GitHub Pages site**, not the claude.ai artifact. Don't spend effort on the artifact; claude.ai-only limits (no outside images, `confirm()`) matter less, though the connector code still works there.
-- **Never read anything from the `Brain tester` sheet beyond its Date and Pages columns.** It holds mood, meds and fitness data. The diary is sensitive.
-- Never touch other apps' tabs (those starting with an emoji, plus their Log, Settings and backup tabs).
-- Back up a tab (duplicate it, name it with the date) before any column or bulk change. Ask the owner before deleting a backup; they like to keep it a few days.
-- Show the plan before the first sheet write of a session. Check every bulk write by reading it back and comparing with a script. Never hand-type long arrays.
+## What changed this session (31 Oct to 17 Nov 2026, PRs #4–#19)
+- **Plans written:** `plans/FAMILY.md` (family roadmap) and `plans/THEMES.md` (theme ideas).
+- **Look:**
+  - Reading now cards: "Slate raised" design with a progress ring, Pages to go / Ave a day / Days to go / Approx finish, weekday chips, 14-day bars, "N days since started", and On page / Log / Dog-ear centred on the ring.
+  - Leather-bound shelves with an e-reader and a tablet on the Reading now shelf.
+  - Library list boxes open with 10 books each.
+- **Insights:** rebuilt as five chapters. Every chart opens with its question and a computed takeaway, and a "?" button holds "why this chart". There are pages-per-month and ratings-per-month charts, Dog-ear quotes are at the top, and the old bar charts are gone. Built with the data-viz method (validated palette, no dual axes).
+- **Now tab:**
+  - Tiles: 7-day avg, books on the go, books finished this month and this year.
+  - Read next and Favourites rotate daily, and On this day is in a 2×2 row.
+  - Pages per day has 7 / 30 / 90 days, This year and Last 12 months.
+- **Ave a day** is each book's own pace: pages read ÷ days since starting, days off included, with long reads counting only the last 14 days, from page numbers. "2026 so far" counts finished books plus the current page of each book being read.
+- **Library:**
+  - Authors: Top 10 read, Top 10 on TBR, all authors (50 then Show all).
+  - A back-to-top button on every tab, and the scroll position is remembered per view, after data refreshes and across iPhone app restarts.
+- **Next Up** (renamed from Next):
+  - Your TBR has a weekly rotating Top 5 (Quick wins, Non-fiction, Longest, Waiting longest), and Award watch is in Plan.
+  - **Wishlist redesign:**
+    - Sticky add bar, Inbox / Download / Buy / Borrow tabs, and Available / Coming soon / Not available sections.
+    - Got it → Up next / Soon / Someday plus copies.
+    - Book / Graphic novel / Comic stickers and an optional filter, a Copy button for "Title — Author", and edits stay on the current tab.
+- **Remove books:** a ✕ on TBR / Paused / DNF sets status `Removed`, with a 10 s Undo. Toolbox → Removed books offers Restore or Delete for good.
+- **Themes round 1:** Default, Day, Night and Easy on the eyes, plus a dyslexia-friendly font toggle. Toolbox → Look, saved per account.
+- **Renamed** to Our Library, with new shelf-of-spines icons.
+- **Family:** `supabase/04-family.sql`, sign-in by emailed code, member mode, welcome panel, avatar menu, Family tab.
+- **Tests:** `tests/run-all.sh` now runs four suites (see Gotchas).
 
-## Supabase (from 8 Nov 2026)
-- The data is moving to Supabase project `jcm-apps`, schema `books` (10 tables, one per tab, plus the Quotes sheet). The plan is `plans/SUPABASE.md` in control-room. SQL lives in `supabase/` (`01-schema.sql` tables and RLS, `02-check.sql` row counts, `03-shared.sql` the `shared.activity` view The Brain reads). Schema changes go in a new numbered file the owner pastes into the SQL Editor; Claude can't reach the project from the sandbox.
-- Each device picks where its data lives (Toolbox > Data & sign-in). All Sheet and Supabase I/O goes through the data layer: `sheetDb` and `sbDb` have the same methods, and `DB()` picks one. Screens never call either backend directly. `sbDb` returns Sheet-shaped arrays, so screen code is the same in both modes. Books `remain` and `%` are worked out on load, never stored.
-- Sign-in is shared by every jcm-book-library app (`jcm-sb-session`, refresh guarded by a Web Lock). Phones use email and password; the laptop can use the emailed link. Never ask for or use the `service_role` key or the database password.
-- Data tools in the same dialog: Copy Sheet → Supabase (pre-checks, replaces Supabase, verifies, switches the device), Check (read-only), Copy Supabase → Sheet (the weekly backup: preview, hidden dated backup tab per changed tab, changed cells only, cleared rather than deleted rows, never the formula columns, read-back). These are the app's only bulk writes; change them with care and keep `tests/copyback.js` passing.
-- The claude.ai artifact is read-only (`ARTIFACT_READ_ONLY`): it shows the Sheet and points to the live site.
-- **Family layer (`supabase/04-family.sql`, schema `family`):** families and members (added only from the SQL Editor with `family.add_member`), `books.books.hidden`, reviews, recommendations, chat messages and challenges. Members never read each other's `books` tables directly. Shared data comes only through the security-definer functions `family.books()` (shared columns only, never notes/why/plan/copies/loans, never hidden books), `family.this_month()` (this month's pages per day, Melbourne time) and `family.streaks()` (same rule as the app). `bash tests/sql/family.sh` checks all of this on a local Postgres and is part of `run-all.sh`. The `family` schema must be in Exposed schemas.
-- **Sign-in (from 14 Nov 2026): email code first.** In Supabase mode with nobody signed in, the app shows only a sign-in card (`#signCard`; the app and the built-in snapshot are not shown or kept in memory). Email → `POST /auth/v1/otp {email, create_user:false}` (invite-only) → 6-digit code → `POST /auth/v1/verify {type:'email', email, token}`, whose reply goes through `sb.keep()` (`jcm-sb-session`, Web Lock refresh), so everything after sign-in is unchanged. "Use a password instead" is the owner's password path on the same card. The emailed link and password rows stay in Toolbox > Data & sign-in for a device on Sheet mode. Sign out (avatar menu, member Toolbox, or Data & sign-in) calls logout and reloads. Default mode on the live site is Supabase unless the device saved Sheet mode. Supabase side: Magic Link email template must show `{{ .Token }}`; Resend is the sender; sign-ups stay off.
-- **Family tab (from 15 Nov 2026, trial build; `plans/FAMILY.md` weeks 3 and 4):** tabs are Now · Library · Next Up · Family · Insights; Family shows only in Supabase mode for someone with a `family.members` row (owner and member alike). Person cards are sorted A–Z and never ranked: current reads, a this-month calendar (`family.this_month()`), month pages, books finished this month, streak (`family.streaks()`); tap a card for that person's shelves (Reading now, Last 10 finished, Favourites, Rated 4★+; `family.books(member)` paged by 1000) and reviews. Nothing is read from another person's tables. The only new writes: `family.reviews` (one POST, then a PATCH of just `body, stars` on `row_id`), `family.recommendations` (POST `to_user, title, author, isbn?, note?`; recipient PATCHes only `status`), and the recipient's own Wishlist through `appendWishRows` (note "Recommended by <name>: note"). **Hide from family** on your own book card writes `books.books.hidden` through `writeBookFields(id, {hidden: true|false})`; `hidden` is not a Sheet column, so `sbDb._read('Books')` keeps the hidden ids in `sbDb.hidden` and `bookUpdate` maps the field. Incoming recommendations show as a badge on the Family tab and as top rows in Next Up > Wishlist > Inbox. Live badge: the Realtime socket also joins `realtime:family` for `family.recommendations` (only when you have a membership; it refreshes just the recommendations, never the library). The fake in `tests/fakes.js` serves the family tables and RPCs with the RLS rules of `04-family.sql` (`w.fam`, see `tests/README.md`). Not built yet: chat, challenges, Goodreads import.
-- **Who am I:** after loading, `loadMe()` reads `family.members` for my `user_id` (role, display_name, colour). If the `family` schema isn't exposed or the call fails (or there is no row), I am the owner and nothing is hidden (console.info once). `role = member` sets `body[data-role=member]`: Toolbox shows only Look and Sign out; Data & sign-in, Books/Plan tools and Links are hidden. The header avatar (initials, colour) opens Profile / Sign out. `sbDb.profileSave({display_name, colour})` is the only family write: one PATCH to `family.members?user_id=eq.<me>` with just those two columns (the "edit my own name and colour" policy). An account with zero books, zero removed books and zero log rows gets a welcome panel at the top of Now (import card disabled "Coming next" until the import task; Paste a list and Add one open Quick add; name and colour row).
-- If the app shows no books but `02-check.sql` shows rows: stale sign-in. Sign out of Supabase and sign in again.
+## Decisions (owner's, keep to them)
+- **Process:** branch and PR into `main` for every change; the owner merges. Run `bash tests/run-all.sh` before every push.
+- **The owner uses only the live site,** not the claude.ai artifact, which is read-only now.
+- **Page logging stays manual** (no Kobo sync). No spending stats. Loans get a "Lent out" popup, not reminders.
+- **Family:** about 5 people (up to 7), adults.
+  - **Invite-only** email-code sign-in; Google sign-in later, with notifications.
+  - **Shared:** shelves, ratings, reviews, current reads, and **this month only** of pages and streak. No history and no ranking (cards sorted A–Z). Notes are never shared. Hide from family is per book.
+  - **Members** get a simpler Toolbox (Look and Sign out) for the first three months.
+- **Wishlist:** "Got it" fills copies (Download: Kobo or PDF; Buy: Physical; Borrow: a library note). Gift kept, Waiting dropped, fields cut down (add back only what's missed). Series tracking lives in Library → Series, not the Wishlist.
+- **Remove = option A** (recoverable status `Removed`); Delete for good only from Toolbox, after a confirm.
+- **Themes:**
+  - Round 1 is Default / Day / Night / Easy.
+  - Round 2 (Library, E-book with a DOS variant, Classical, Morning) is a surprise for later.
+  - Layout never changes between themes.
+- **Charts:** every chart must answer a question; not everything a bar chart; the "Why this chart" note sits behind "?".
+- **Spine titles never show "…":** shrink, then two lines, then cut after a whole word. The same rule applies to card titles.
+- **Domain:** `ourlibrary.au` (plain .au, Citizen/Resident). The free `.online` add-on was declined.
 
-## Sheet safety conventions (the app follows these, except where noted)
-- Find the row by its `id` immediately before every write and write only the changed cells. Never rewrite whole tabs, never sort from code, never delete and re-add rows (removing an item clears its cells; the empty row stays). The app clears rows in Wishlist, Reading Lists and Series Tracker; it clears a Books row only for Toolbox > Removed books > Delete for good (`bookDelete`: every cell except the `remain` / `%` formulas; the empty row stays). Removing a TBR, Paused or DNF book just sets its status to `Removed` (and clears tier and Up next); the app splits those rows into `state.removedBooks` on load, and new ids still count them. Copy Supabase → Sheet clears the Sheet row of a book deleted in Supabase (the preview says "1 row cleared"; the tab is backed up first). Deleting a Reading Log entry is a soft delete: `pages` set to 0 and `source` to `deleted`.
-- New rows go **below the last used row** with an explicit range, not `append_values` (append fills gaps left by cleared rows and can overrun them). Wishlist, Reading Lists and Series Tracker do this. Books, Reading Log, Ratings, Wishlist archive, App Settings, Contents and the Quotes sheet still use `append_values`, which is safe only because the app never clears rows in those tabs. If a tab gains a "remove" that clears rows, move its adds to below-last-row first.
-- Formula columns (`remain`, `%` in Books) are never written by edits. The app writes them once, on a newly added Books row (add a book, or a Wishlist "Got it" move). The formulas are `=IF(N(pages)>0,pages-currentPage,"")` and `=IF(N(pages)>0,currentPage/pages*100,"")`.
-- The app reads columns **by header name**, so column order can change freely. Text is written with a leading `'`, numbers as numbers, dates as `yyyy-mm-dd`. Plain (unquoted) values: Wishlist `gift` (TRUE/FALSE), `release` and `checkedOn`; Series Tracker `released`; Reading Lists `order`; Reading Log `pages`, `pageReached`, `minutes` and `loggedAt`; the Contents timestamp.
-- Read ranges have caps: Books `A:AZ` to row 5000, Wishlist `A:Z` to 3000, Series Tracker `A:I` to 500 (**a 10th Series Tracker column would not be read**), Reading Lists `A:G` to 2000, Reading Log `A:H` to 20000.
-- Dropdown changes keep the chip style (`customUiMode: CHIP` and the `dropdownStyle` colours spelled out), or both are lost.
-- Sheets API quirks met so far: `update_values` is USER_ENTERED (formulas and dates are parsed) and refuses a write bigger than its range; `repeatCell` and `copyPaste` skip rows hidden by a basic filter; large `get_values` results are saved to a file and need parsing with Python; write a formula and `PASTE_VALUES` it rather than transcribing.
+## Next steps
+1. **Sister's trial (~27 Nov):**
+   1. The owner invites her: Supabase → Authentication → Users → Invite user.
+   2. She signs in once with the emailed code.
+   3. The owner runs `select family.add_member('<her email>', '<her name>');`.
+2. **StoryGraph import:** build it as soon as her CSV arrives. Check her real file first; tests use a made-up file with the same columns. Match by column name: Title, Authors, ISBN/UID, Format, Read Status, Star Rating, Last Date Read, Read Count, Tags… Goodreads columns too.
+   - **Mapping:** read → Finished, currently-reading → Reading, to-read → TBR, did-not-finish → DNF, paused → Paused. Shelves/tags become reading lists.
+   - **Behaviour:** preview before saving, spot duplicates of books already in the account, and offer "Undo import" for a day (a deliberate one-off bulk insert into the member's own rows). The welcome panel's import card is waiting for it.
+3. **After the trip:** fixes from her feedback, then family chat (one reading room plus challenge threads; `family.messages` and `family.challenges` already exist with RLS), then challenges, then invites for the rest of the family. Launch target about 20 Dec.
+4. **Later:** themes round 2; barcode scanning (iPhone, needs a scanning library); Google Drive covers for books Open Library lacks; fill the ~220 blank page counts with Fill details.
 
-## Tabs and columns
-**Books** (one row per copy or read; `id` is the last column; formulas in `remain` and `%`; new ids are the highest id **+4**, a convention since the first version)
-`title, author, status, rating, favourite, cover, currentPage, pages, remain, %, startDate, finishDate, series, seriesNum, type, format, publisher, genre, theme1, theme2, theme3, setting, year, awards, tier, upNextOrder, why, triaged, added, copies, isbn, loaned, loanee, synopsis, notes, id`
-- `status`: Reading, TBR, Re-read, Finished (was "Read"), Paused, DNF. Every read keeps its own row and rating; later reads of the same title and first author are grouped for badges and the Re-reads panel.
-- `favourite`: `Yes` or blank. `cover`: `ol:<Open Library cover id>`, `none`, or blank (a reference, never a picture). `publisher` is mainly for comics. `copies` is `Kobo | PDF | Physical` (replaces the old `owned`). `seriesNum` accepts halves (1.5).
-- `tier`: Up next / Soon / Someday, with `upNextOrder` 1..n for Up next. Starting a book (status to Reading) clears both and renumbers Up next; the app also tidies Reading books that still carry a tier.
-- Removed in October: `spotlight`, `owned`, `ambition`, `fatalFlaw`.
+## Gotchas
+- **Tests:** `bash tests/run-all.sh` runs four suites:
+  - `check.sh`: Sheet-mode screens plus recorded write flows, compared with git HEAD.
+  - `supabase.js`: against a fake Supabase in `tests/fakes.js`, including family RLS-like rules.
+  - `copyback.js`.
+  - `sql/family.sh`: the real `04-family.sql` on a throwaway local Postgres 16.
 
-**Wishlist** (`id` WL0001…, cleared rows are left empty)
-`id, added, title, author, series, number, type, format, publisher, stage, waiting, wantAs, checked, checkedOn, release, price, link, seenIn, interest, gift, notes, bookId`
-- Formats are stored as written in the dialog ("Graphic novel", type "Non-fiction"). Books uses its own spellings ("Graphic Novel", "Non-Fiction", format "Comic"), and the "Got it" move converts them.
-- Next Up > Wishlist has four tabs: Inbox · Download · Buy · Borrow (a sticky add bar above Plan | Wishlist adds to any of them). Stages written now: `Inbox`, `Download`, `Buy`, `Borrow`. Older rows keep their old words and are *read* as the new ones (`wishHow`: "To download" > Download, "To buy" > Buy, "To borrow" > Borrow, "Waiting" > by `wantAs` (Kobo/PDF Download, Physical Buy, Library Borrow, else Inbox), blank > Inbox); a write on such a row also moves its stage to the new word. "Got it" (popover: Up next / Soon / Someday, plus Kobo/PDF for Download, Physical for Buy, none for Borrow) moves the book into Books as TBR with that `tier` (Up next goes to the end of the list), logs it in `Wishlist archive` and clears the row. A stage typed as "Got it" in the Sheet is still moved on refresh.
-- `format`: Book, Comic, Graphic novel, Manga, Issues, Deluxe, Omnibus, Compendium, Box Set, Limited Edition (shown as "Comic book" for Comic). Blank means not set yet.
-- `checked` is the availability: `Available` / `Coming soon` / `Not available`, with `checkedOn` the date it was set (older values: `Unavailable` = Not available; blank = Coming soon when `release` is a future date, otherwise Available shown as "not checked"; a Waiting row is Coming soon). `release` is the date for Coming soon (the date input writes it). `wantAs` is no longer set by the app; on "Got it" it still becomes Books `copies` when present (Kobo / PDF / Physical) and Library goes into `notes`. The edit dialog only touches title, author, stage, checked, release, link, notes and gift; every other column is left as it is. Removing a wish clears its row once the Undo toast (6 s) has run out. A tracked series with no books is still pruned from the Series Tracker whenever the Wishlist is shown.
+  Screens are flaky in the sandbox. One to three screens just over 100 px at a channel diff of 1–3, with every flow byte-identical, is noise; say so in the PR. **Write flows must stay byte-identical** unless a change is intended and explained.
+- **Data layer:** `sheetDb` and `sbDb` have the same methods and `DB()` picks one; screens never call a backend directly. New writes go in both backends (or are clearly Supabase-only, like everything family), and both get tests.
+- **Ids are never reused:**
+  - **Books:** highest id (including Removed) or the `bookIdFloor` App Setting, whichever is higher, + 4. The floor only goes up and is set by Delete for good.
+  - **Wishlist:** highest of the Wishlist **and** the Wishlist archive ids, + 1. An archive row whose id already exists gets a `-2`, `-3` suffix. This fixed a real "duplicate key wishlist_archive_user_id_id_key" bug.
+  - Any new id scheme must count deleted and archived ids.
+- **Supabase delete:** look the row up first, require exactly one, then delete by `row_id`. Never delete by a filter that could match two rows.
+- **Copy Supabase → Sheet:** lists by title any book in the Sheet that isn't in the app and asks before clearing it. The tab is backed up first.
+- **Removed books** are split out on load into `state.removedBooks`, so every screen ignores them automatically; `family.books()` also excludes them.
+- **Wishlist values:**
+  - Stages written now are `Inbox / Download / Buy / Borrow`; availability (`checked`) is `Available / Coming soon / Not available`; `format` is `Book / Graphic novel / Comic`.
+  - Old values are only **read** as new ones (`wishHow`, `wishAvail`, `wishKind`), never bulk-rewritten. A row gets the new word when the user next changes it.
+  - The Sheet's dropdowns still list the old words, so copy-back writes new words into those cells. API writes aren't blocked, but the cells may show a validation flag; update the dropdowns (keep `customUiMode: CHIP`) if the owner minds.
+- **Nothing deletes tracked series automatically.** The old Wishlist "prune" was removed because Library → Series shows empty tracked series on purpose.
+- **Themes:**
+  - Colours are tokens on `:root`, with `[data-theme]` on `<html>`. Default must look exactly as before.
+  - Accent buttons pick dark or white text with `inkFor()`, whichever reads better on the month's colour.
+  - The choice is saved per browser (`mbl_theme`, `mbl_dysfont`) and to settings `theme` / `dyslexiaFont` only when changed; loading writes nothing.
+- **Scroll memory:** kept per view key, also in `localStorage` `mbl_scroll` for 30 minutes. `refresh()` saves before and restores after (and again after the Wishlist reloads).
+- **Sign-in:**
+  - In Supabase mode nobody sees data until signed in.
+  - Auth is `POST /auth/v1/otp {create_user:false}` then `/auth/v1/verify {type:'email'}`; the session is stored by `sb.keep()` (`jcm-sb-session`, Web Lock refresh).
+  - Sign-in storage is per address, so `ourlibrary.au` has its own session separate from the other jcm apps.
+  - Never ask for or use the `service_role` key or the database password.
+- **Supabase setup that must stay in place:**
+  - Magic Link template shows `{{ .Token }}`.
+  - Custom SMTP through Resend (sender `hello@ourlibrary.au`).
+  - Sign-ups off.
+  - Redirect URL `https://ourlibrary.au/**`.
+  - Exposed schemas include `books`, `shared` and `family`.
+  - Google OAuth origin `https://ourlibrary.au` (for the Sheet backup).
+- **Owner-only lock on other apps:** the control-room session added `shared.owners`, `shared.is_owner()` and a restrictive "owner only" policy on every `brain` table (done 15 Nov; the owner's email is in Supabase only, not in any repo). When another app moves to Supabase, its schema must be added to that list (control room owns it). Never add `books`, `family` or `shared`.
+- **SQL changes** go in a new numbered file in `supabase/` that the owner pastes into the SQL Editor (safe to re-run); Claude can't reach the project. `04-family.sql` has been run (15 Nov). If unsure whether that copy already had the change excluding Removed books from `family.books()`, run the current file again; it is safe to re-run.
+- **Built-in snapshot:** the old personal snapshot (`SNAPSHOT`, 9 Oct data) is no longer loaded in Supabase mode, but it is **still in the public `app.html`**. Remove it before the wider family launch (see Open questions).
+- **The claude.ai artifact is read-only** (`ARTIFACT_READ_ONLY`). `confirm()` doesn't work there, so the app uses its own `askOk` dialog.
+- **Covers:** Open Library works on the live site but has limited coverage; the sandbox can't reach it (tests use a stand-in). The same goes for Google Fonts and Google Books in tests.
+- **Never read the `Brain tester` sheet beyond its Date and Pages columns,** and never touch other apps' tabs.
 
-**Series Tracker**: `series, author, publisher, kind, status, released, soldAs, link, notes` (`soldAs` uses the Wishlist format list). The Series view also lists every series with two or more books in Books and Wishlist; a tracked series with no books is kept (Library > Series shows it), and nothing deletes tracked series automatically (the old prune was removed on 14 Nov 2026).
-**Reading Lists**: `list, order, title, author, notes, id, bookId` (ids RL0001…). Items match Books by title and author, or by `bookId` when linked in the edit dialog.
-**Other tabs the app uses:**
-- `Reading Log`: `date, pages, bookId, title, pageReached, loggedAt, source, minutes` (`source` is `app` or `deleted`).
-- `App Settings`: key/value rows `streakStartDate`, `streakMinPages`, `dailyGoalPages`, `yearBookGoal`.
-- `Ratings` (written by position, 10 columns): date, bookId, title, category, gut, criteria, standout, flaw, suggested, final.
-- `Contents` (anthology stories): `bookId, stamp, story, start`; the newest stamp per book wins.
-- `Wishlist archive` (history only, matched by header): `Title, Author, Status` (Bought / Downloaded), `Type, Format, ETA, Cost, Reading List, Notes, id, Series, Link, bookId`.
-- A separate Quotes sheet, tab `QUOTES` (A:G): text, from, who, by, bookId, page, added.
+## Open questions
+- **Remove the `SNAPSHOT` blob and the hard-coded `SHEET_ID` from the public `app.html` before inviting the wider family?** Recommended yes; move the Sheet id into the owner's browser settings.
+- **The old routine of copying `app.html` to `v3/reading-log.html` on `claude/keen-sagan-yf9rqf`** wasn't kept up after early November. Retire that branch copy, or resume it?
+- **Should the Sheet's Wishlist dropdowns be updated to the new words?** (Owner choice; needs a backup tab first.)
+- **The two lighter readers:** invite at launch or after Christmas?
+- **Reviews:** stars plus text (built) — keep, or text only?
+- **Books adds in Sheet mode still use `append_values`.** Delete for good leaves blank Books rows, so a Sheet-mode add could land in a gap. Low risk because the owner is on Supabase, but move Books adds to below-last-row if Sheet mode is ever used for adding again.
 
-## Behaviour worth knowing
-- Library: Reading, Finished (newest first), Re-read, TBR, Paused, DNF as expandable boxes. Rows open a floating card on the left (status, favourite, edit, cover).
-- Log: Reading now (big page number), then Read next / Last five finished / Favourites, then Pages per day (Year by default). "2026 so far" is the pages of books finished this year plus the current page of each book being read (owner's choice, 7 Nov), so it moves as you log; the daily log (inflated by Kobo page counts) still drives streaks and the daily chart.
-- `confirm()` does nothing inside claude.ai, so the page uses its own confirmation dialog (`askOk`).
-- **Covers only work on the GitHub Pages site** (claude.ai blocks outside images). Open Library search and covers were confirmed working on the live site on 1 Nov, but its range of covers is limited. The build environment's network blocks `openlibrary.org`, so tests use a stand-in.
-- Tests: `bash tests/run-all.sh` runs all three suites (Sheet-mode screens and write flows, Supabase mode against a fake Supabase, and the copy tools against fake Sheets and Supabase). Synthetic data only. Screenshots are slightly flaky in the cloud sandbox: 1–2 screens just over 100 px at a channel diff of 2–3, with every flow byte-identical, is noise; rerun once.
+## Reference: Supabase and the data layer
+- `supabase/`:
+  - `01-schema.sql`: `books` tables, own-rows RLS, realtime
+  - `02-check.sql`: row counts
+  - `03-shared.sql`: the `shared.activity` view The Brain reads
+  - `04-family.sql`: the family layer
+- Family layer: schema `family` with `members` (role owner/member, display_name, colour; added only via `family.add_member` in the SQL Editor), `reviews`, `recommendations`, `messages`, `challenges`, plus `books.books.hidden`.
+  - Other people's data is read only through the security-definer functions `family.books()` (shared columns only; never notes/why/plan/copies/loans; never hidden or Removed books), `family.this_month()` (Melbourne time) and `family.streaks()` (the app's rule).
+  - Members never read each other's `books` tables.
+- `loadMe()` reads my `family.members` row. If there's no row or no schema, I'm treated as owner. `role = member` gets the simple Toolbox. `sbDb.profileSave` PATCHes only `display_name, colour`.
+- Family tab writes:
+  - `family.reviews`: POST, then a PATCH of `body, stars`
+  - `family.recommendations`: POST; the recipient PATCHes only `status`
+  - Hide from family: `writeBookFields(id, {hidden})`
+  - Add to Wishlist from a recommendation uses `appendWishRows`
 
-## Known gaps (from the 31 Oct audit)
-- The three find-row-by-id helpers (Books, Wishlist, Reading Lists) and the per-field write loops are near-duplicates. They could be merged into one helper, but they guard every write, so do it with full write-path tests.
-- The Library filter chain is written twice (the Library list and the plan's "rest" pool). It could share one function; keep the tier difference.
+  The Realtime socket joins `realtime:family` for recommendations.
+- Data tools (Toolbox → Data & sign-in, owner only): Copy Sheet → Supabase, Check, Copy Supabase → Sheet (weekly backup: preview, dated hidden backup tab, changed cells only, cleared not deleted, never the formula columns). These are the only bulk writes; keep `tests/copyback.js` passing.
+- If the app shows no books but `02-check.sql` shows rows: stale sign-in. Sign out and back in.
 
-## Agreed plan (1 Nov 2026)
-Order: 1 Foundations (screenshot and write-flow tests in `tests/`, one find-row / write-cells / add-row helper) → 2 Simplify (new layout from the approved mock, shelf logo and background, quick add with paste, Lent out button) → 3 Fill details queue (Google Books + Open Library; barcode scanning later, iPhone so it needs a scanning library) → 4 Authors and Series pages → 5 Shelves with a Shelves / List toggle → 6 Charts redesign (owner brings data-storytelling ideas).
-- **Status:** Stages 1 to 5 are done and live (1 Nov). Next up: Stage 6, the charts redesign, when the owner brings ideas. After that: barcode scanning (iPhone, so it needs a scanning library) and Drive covers.
-- **Built in Stage 5:** Library > Books has a Shelves | List toggle (`mbl_libview`, default Shelves). Shelves are Reading now, Last 10 finished, Favourites, Recommended for you (Best match, TBR, top 10), one per Reading List, and up to 12 Series in progress. "See all" opens List with a removable "Shelf: X" chip. Spine titles go through `fitTitle()`: one line from 12px down to 7px, then two lines from 9px down to 6px, then a cut after a whole word, never "…". With 1,200 synthetic books a render takes about 70 ms.
-- **Built in Stage 4:** Library has Books · Authors · Series · Reading lists. Authors are grouped in code by `authorKeyOf`: case, accents, "Last, First", initials and Jr/Sr are ignored, and only the first author counts, with the rest shown as "with X". There is no alias tab yet; add one only if real data needs it. Re-read grouping (`readKey`) uses the same key. In the Series view, "Complete" means every slot is read; the tracker's own status shows as a pill. A missing slot opens the Wishlist dialog prefilled. Nothing in Stage 4 writes except through the existing Wishlist and Series dialogs.
-- **Built in Stage 3 (Fill details):** Toolbox → Fill details, or the button in the edit dialog. It looks up Google Books (no key) and Open Library, one request at a time. Only blank fields are pre-ticked: Google Books for pages, synopsis, publisher and isbn; Open Library for year. Genre and themes come only as tap-to-add chips. It saves with one `writeBookFields` call and never writes rating, status, dates, favourite, cover, tier, copies or notes. It was tested only against stubbed replies; the owner's first real lookups are the live test.
-- **Built in Stage 2:** Quick add stamps `startDate` today for Reading and `finishDate` today for Finished. Paste a list adds Books one at a time through `addBook` (status TBR) and Wishlist in one `appendWishRows` call. Spine colour and background choices are saved per browser (`mbl_spines`, `mbl_bg`). The old tab names still work as aliases in `showTab`.
-- **Logo:** shelf of spines, with a shelf of spines along the bottom of the screen as the background (a Plain option too).
-- **Layout:** tabs Now · Library · Next · Insights, a Toolbox menu, header buttons "+ Add book" and "Lent out". The owner wants symmetry and condensed rows.
-- **Colour:** the theme keeps the slow monthly drift; spines (logo, background, shelves) rotate faster or use a contrast colour. The mock offers Month / Daily mix / Contrast.
-- **Mock approved 1 Nov** (with changes: softer background spines; Pages per day toggles 30 days / 90 days / This year / Last 12 months, keeping the 7-day average worm).
-- **Spine titles (Shelves stage):** never "…". Shrink the font to fit the spine; if a title still won't fit at the smallest size, cut it after a whole word.
-- **Kept manual on purpose:** logging pages read. Don't automate it (no Kobo sync).
-- **Not wanted for now:** spending stats, loan reminders (a Lent out popup instead), imports (done), family sharing was a future version, now planned for Christmas 2026 in `plans/FAMILY.md`.
-- **Later:** once Open Library has filled what it can, add the remaining covers from Google Drive, as other projects do.
+## Reference: Sheet safety conventions
+- Find the row by `id` right before every write and write only changed cells. Never rewrite whole tabs, never sort from code, never delete and re-add rows; removing an item clears its cells.
+- **New rows:** below the last used row with an explicit range for Wishlist, Reading Lists and Series Tracker. Books, Reading Log, Ratings, Wishlist archive, App Settings, Contents and Quotes still use `append_values` (see Open questions).
+- **Formula columns** `remain` and `%` in Books are written only once, on a new row:
+  - `=IF(N(pages)>0,pages-currentPage,"")`
+  - `=IF(N(pages)>0,currentPage/pages*100,"")`
+- **Columns are read by header name.**
+  - Text is written with a leading `'`, numbers as numbers, dates as `yyyy-mm-dd`.
+  - Written unquoted: Wishlist `gift`, `release`, `checkedOn`; Series `released`; Reading Lists `order`; Reading Log `pages`, `pageReached`, `minutes`, `loggedAt`; the Contents timestamp.
+- **Read caps:**
+  - Books `A:AZ` to row 5000; Wishlist `A:Z` to 3000; Reading Lists `A:G` to 2000; Reading Log `A:H` to 20000.
+  - Series Tracker `A:I` to 500, so a 10th column wouldn't be read.
+- Dropdown changes keep the chip style (`customUiMode: CHIP` with `dropdownStyle`). Back up a tab before any column or bulk change, show the plan before the first Sheet write of a session, and check bulk writes by reading them back.
+- **Sheets API quirks:**
+  - `update_values` is USER_ENTERED and refuses writes bigger than the range.
+  - `repeatCell` and `copyPaste` skip filter-hidden rows.
+  - Large `get_values` results land in a file.
 
-## Open ideas
-- Fill the ~220 blank page counts (Open Library, or Calibre page counts); `added` dates from a Calibre timestamp export.
-- **Family sharing: see `plans/FAMILY.md`** ("Our Library" on `ourlibrary.au`, invite-only email-code sign-in, Family tab, launch about 20 Dec 2026). It replaces `v3/FAMILY-PLAN.md` where they differ.
-- The Music Collection app was sent the bookmark/favourites style; a matching version for books there is its own session's call.
+## Reference: tabs and columns
+- **Books:** `title, author, status, rating, favourite, cover, currentPage, pages, remain, %, startDate, finishDate, series, seriesNum, type, format, publisher, genre, theme1, theme2, theme3, setting, year, awards, tier, upNextOrder, why, triaged, added, copies, isbn, loaned, loanee, synopsis, notes, id`
+  - Supabase adds `hidden`.
+  - `status`: Reading, TBR, Re-read, Finished, Paused, DNF, Removed.
+  - `tier`: Up next / Soon / Someday, with `upNextOrder`.
+  - `copies`: `Kobo | PDF | Physical`.
+  - `cover`: `ol:<id>` or `none`.
+  - Each read is its own row; re-reads are grouped by `readKey` (title + `authorKeyOf` first author).
+- **Wishlist:** `id, added, title, author, series, number, type, format, publisher, stage, waiting, wantAs, checked, checkedOn, release, price, link, seenIn, interest, gift, notes, bookId`. See Gotchas for the stage, availability and kind values.
+- **Wishlist archive:** `Title, Author, Status, Type, Format, ETA, Cost, Reading List, Notes, id, Series, Link, bookId`
+- **Series Tracker:** `series, author, publisher, kind, status, released, soldAs, link, notes`
+- **Reading Lists:** `list, order, title, author, notes, id, bookId`
+- **Reading Log:** `date, pages, bookId, title, pageReached, loggedAt, source, minutes`. A deleted entry is soft-deleted: pages 0, source `deleted`.
+- **App Settings:** `streakStartDate, streakMinPages, dailyGoalPages, yearBookGoal, bookIdFloor, theme, dyslexiaFont`
+- **Ratings** is positional (10 columns). **Contents:** `bookId, stamp, story, start`. A separate Quotes sheet holds `QUOTES` (A:G).
