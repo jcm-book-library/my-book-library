@@ -123,6 +123,7 @@ Read this after `CLAUDE.md` and the house rules. Updated 17 Nov 2026, at the end
   - `02-check.sql`: row counts
   - `03-shared.sql`: the `shared.activity` view The Brain reads
   - `04-family.sql`: the family layer
+  - `05-reading-list-status.sql`: `reading_lists.status` (run in the SQL Editor before using statuses in Supabase mode)
 - Family layer: schema `family` with `members` (role owner/member, display_name, colour; added only via `family.add_member` in the SQL Editor), `reviews`, `recommendations`, `messages`, `challenges`, plus `books.books.hidden`.
   - Other people's data is read only through the security-definer functions `family.books()` (shared columns only; never notes/why/plan/copies/loans; never hidden or Removed books), `family.this_month()` (Melbourne time) and `family.streaks()` (the app's rule).
   - Members never read each other's `books` tables.
@@ -147,7 +148,7 @@ Read this after `CLAUDE.md` and the house rules. Updated 17 Nov 2026, at the end
   - Text is written with a leading `'`, numbers as numbers, dates as `yyyy-mm-dd`.
   - Written unquoted: Wishlist `gift`, `release`, `checkedOn`; Series `released`; Reading Lists `order`; Reading Log `pages`, `pageReached`, `minutes`, `loggedAt`; the Contents timestamp.
 - **Read caps:**
-  - Books `A:AZ` to row 5000; Wishlist `A:Z` to 3000; Reading Lists `A:G` to 2000; Reading Log `A:H` to 20000.
+  - Books `A:AZ` to row 5000; Wishlist `A:Z` to 3000; Reading Lists `A:H` to 2000; Reading Log `A:H` to 20000.
   - Series Tracker `A:I` to 500, so a 10th column wouldn't be read.
 - Dropdown changes keep the chip style (`customUiMode: CHIP` with `dropdownStyle`). Back up a tab before any column or bulk change, show the plan before the first Sheet write of a session, and check bulk writes by reading them back.
 - **Sheets API quirks:**
@@ -166,7 +167,7 @@ Read this after `CLAUDE.md` and the house rules. Updated 17 Nov 2026, at the end
 - **Wishlist:** `id, added, title, author, series, number, type, format, publisher, stage, waiting, wantAs, checked, checkedOn, release, price, link, seenIn, interest, gift, notes, bookId`. See Gotchas for the stage, availability and kind values.
 - **Wishlist archive:** `Title, Author, Status, Type, Format, ETA, Cost, Reading List, Notes, id, Series, Link, bookId`
 - **Series Tracker:** `series, author, publisher, kind, status, released, soldAs, link, notes`
-- **Reading Lists:** `list, order, title, author, notes, id, bookId`
+- **Reading Lists:** `list, order, title, author, notes, id, bookId, status`. Lists are standalone: no matching to Books. `bookId` is legacy (never read or written by the list screens). `status` is To read (or blank) / Reading / Read, per entry. A Sheet tab without a `status` header still reads (blank); writing a status needs the header, and Copy Supabase → Sheet refuses if Supabase has statuses and the header is missing.
 - **Reading Log:** `date, pages, bookId, title, pageReached, loggedAt, source, minutes`. A deleted entry is soft-deleted: pages 0, source `deleted`.
 - **App Settings:** `streakStartDate, streakMinPages, dailyGoalPages, yearBookGoal, bookIdFloor, theme, dyslexiaFont`
 - **Ratings** is positional (10 columns). **Contents:** `bookId, stamp, story, start`. A separate Quotes sheet holds `QUOTES` (A:G).

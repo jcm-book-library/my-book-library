@@ -32,7 +32,7 @@ function world(opts = {}) {
       for (const r of rows.slice(1)) {
         if (!r.some(v => String(v ?? '').trim())) continue;
         const o = {};
-        cols.forEach(([h, c, t]) => { if (t === 'calc') return; const i = header.indexOf(h); o[c] = cellToSb(t, i >= 0 ? r[i] : ''); });
+        cols.forEach(([h, c, t]) => { if (t === 'calc') return; const i = header.indexOf(h); o[c] = cellToSb(t, i >= 0 ? r[i] : ''); if (table === 'reading_lists' && c === 'status' && o[c] === '') o[c] = null; });
         w.insert(table, o);
       }
     }
@@ -99,7 +99,7 @@ const step = async (name, fn) => { try { await fn(); } catch (e) { check(name + 
   check('cellToSb: int truncates; date keeps yyyy-mm-dd or null', cellToSb('int', '2021') === 2021 && cellToSb('int', '1.9') === 1 && cellToSb('date', '2026-10-31') === '2026-10-31' && cellToSb('date', '') === null && cellToSb('date', 'soon') === null && cellToSb('date', '2026-10-31 10:00') === '2026-10-31');
   check('cellToSb: Yes/blank and TRUE/FALSE', cellToSb('bool', 'Yes') === true && cellToSb('bool', '') === false && cellToSb('tf', 'TRUE') === true && cellToSb('tf', 'FALSE') === false && cellToSb('tf', '') === false);
   check('sbToCell: back to Sheet strings', sbToCell('num', 1116) === '1116' && sbToCell('num', null) === '' && sbToCell('num', 4.5) === '4.5' && sbToCell('date', '2026-10-31') === '2026-10-31' && sbToCell('date', null) === '' && sbToCell('bool', true) === 'Yes' && sbToCell('bool', false) === '' && sbToCell('tf', false) === 'FALSE' && sbToCell('tf', true) === 'TRUE' && sbToCell('text', null) === '' && sbToCell('int', 37) === '37');
-  const headerFacts = { Books: 36, 'Reading Log': 8, 'App Settings': 3, Ratings: 10, Contents: 4, Wishlist: 22, 'Series Tracker': 9, 'Reading Lists': 7, 'Wishlist archive': 16, Quotes: 7 };
+  const headerFacts = { Books: 36, 'Reading Log': 8, 'App Settings': 3, Ratings: 10, Contents: 4, Wishlist: 22, 'Series Tracker': 9, 'Reading Lists': 8, 'Wishlist archive': 16, Quotes: 7 };
   check('SBT: ten tabs with the right number of columns', Object.entries(headerFacts).every(([t, n]) => SBT[t] && SBT[t][1].length === n), Object.entries(SBT).map(([t, v]) => [t, v[1].length]));
   check('SBT: Books order starts title,author and ends notes,id; calc columns are remain and %', SBT.Books[1][0][0] === 'title' && SBT.Books[1][35][0] === 'id' && SBT.Books[1].filter(c => c[2] === 'calc').map(c => c[0]).join() === 'remain,%');
 
@@ -254,7 +254,7 @@ const step = async (name, fn) => { try { await fn(); } catch (e) { check(name + 
       await fill(page, '#%', { 'lp-ta': 'Added Classic – Cass Sic' });
       await submit(page, '#listPasteForm'); await saved(page, 800);
       const p = writesSince(w, n).find(c => c.method === 'POST' && c.table === 'reading_lists');
-      check('list add: POST (one row) with next RL id (RL0004), list name, order after the last', !!p && p.body.length === 1 && p.body[0].id === 'RL0004' && p.body[0].list === 'Classics' && p.body[0].title === 'Added Classic' && p.body[0].sort_order === 2 && /return=representation/.test(p.headers.prefer), p && p.body);
+      check('list add: POST (one row, no status column for To read, no book_id) with next RL id (RL0004), list name, order after the last', !!p && p.body.length === 1 && p.body[0].id === 'RL0004' && p.body[0].list === 'Classics' && p.body[0].title === 'Added Classic' && p.body[0].sort_order === 2 && !('status' in p.body[0]) && p.body[0].book_id === null && /return=representation/.test(p.headers.prefer), p && p.body);
       const m = w.calls.length;
       await page.evaluate(() => openListDlg(disc.lists.find(x => x.id === 'RL0002')));
       await fill(page, '#rl-%', { notes: 'edited' });
@@ -274,38 +274,68 @@ const step = async (name, fn) => { try { await fn(); } catch (e) { check(name + 
       w.db.reading_lists = w.db.reading_lists.filter(x => x.id !== 'RL0999');
     });
 
-    await step('reading list: Edit opens the Books editor', async () => {
-      const n = w.calls.length;
+    await step('reading list: status pill, Edit, standalone from the library', async () => {
+      const n = w.calls.length, pill = id => page.evaluate(i => document.querySelector(`li[data-id="${i}"] .rl-st`).textContent, id);
       await page.evaluate(() => { document.querySelector('.lib-mode [data-mode="lists"]').click(); });
-      await page.click('li[data-id="RL0002"] .acts button:has-text("Edit")'); await page.waitForSelector('#bookDlg[open]');
-      check('edit: the Books editor opens for the matched book (ID 17)', (await page.evaluate(() => document.getElementById('f-title').value + '|' + document.getElementById('dlgMsg').textContent)) === 'Quiet Engines|ID 17');
-      await fill(page, '#bookForm [name="%"]', { notes: 'from the list' });
-      await submit(page, '#bookForm'); await saved(page, 900);
-      const ws = writesSince(w, n);
-      check('edit: book PATCH, then the item quietly gets book_id 17 (only that column)', ws.length === 2 && ws[0].table === 'books' && ws[0].method === 'PATCH' && ws[1].table === 'reading_lists' && ws[1].query.startsWith('?id=eq.RL0002') && JSON.stringify(ws[1].body) === '{"book_id":17}', ws.map(c => [c.table, c.method, c.query, c.body]));
-      await page.evaluate(() => { const h = document.querySelector('[data-rl="Classics"]'); if (h.getAttribute('aria-expanded') !== 'true') h.click(); });
+      check('lists: RL0001 and RL0002 share titles (and a bookId) with library books but show their own status, To read', await pill('RL0001') === 'To read' && await pill('RL0002') === 'To read');
+      await page.click('li[data-id="RL0001"] .rl-st'); await saved(page, 700);
+      const p1 = writesSince(w, n);
+      check('pill tap: one PATCH by id with status only, and nothing else written', p1.length === 1 && p1[0].table === 'reading_lists' && p1[0].method === 'PATCH' && p1[0].query.startsWith('?id=eq.RL0001') && JSON.stringify(p1[0].body) === '{"status":"Reading"}' && w.db.reading_lists.find(x => x.id === 'RL0001').book_id === 5, p1.map(c => [c.table, c.query, c.body]));
+      await page.click('li[data-id="RL0001"] .rl-st'); await saved(page, 700); await page.click('li[data-id="RL0001"] .rl-st'); await saved(page, 700);
+      check('pill taps cycle Reading > Read > To read (stored as the word)', await pill('RL0001') === 'To read' && w.db.reading_lists.find(x => x.id === 'RL0001').status === 'To read' && writesSince(w, n).length === 3 && writesSince(w, n).every(c => c.table === 'reading_lists'));
+      await page.click('li[data-id="RL0002"] .rl-st'); await page.click('li[data-id="RL0002"] .rl-st'); await saved(page, 900);
+      check('progress: N of M counts Read entries, Next in List is the first not Read', /^1 of 2/.test(await page.locator('[data-rl="Summer Sci-Fi"] .cnt').innerText()) && /next: Dust of Stars/.test(await page.locator('[data-rl="Summer Sci-Fi"] .sub').innerText()));
+      await page.click('li[data-id="RL0002"] .rl-st'); await saved(page, 700);
       const m = w.calls.length;
-      await page.click('li[data-id="RL0004"] .acts button:has-text("Add to Library")'); await page.waitForSelector('#bookDlg[open]');
-      check('add to library: editor opens with the title, author and TBR filled in', (await page.evaluate(() => ['f-title', 'f-author', 'f-status'].map(i => document.getElementById(i).value).join('|'))) === 'Added Classic|Cass Sic|TBR');
-      await submit(page, '#bookForm'); await saved(page, 900);
-      const wb = writesSince(w, m), nb = wb.find(c => c.table === 'books' && c.method === 'POST'), lk = wb.find(c => c.table === 'reading_lists');
-      check('add to library: book POST, then the item gets the new book id', !!nb && !!lk && lk.method === 'PATCH' && lk.query.startsWith('?id=eq.RL0004') && keysOf(lk.body) === 'book_id' && lk.body.book_id === w.db.books.find(b => b.title === 'Added Classic').id, wb.map(c => [c.table, c.method, c.body]));
-      const m3 = w.calls.length;
-      await page.click('li[data-id="RL0001"] .acts button:has-text("Edit")'); await page.waitForSelector('#bookDlg[open]'); await page.click('#dlgClose');
-      check('edit: closing the editor writes nothing', writesSince(w, m3).length === 0);
+      await page.click('li[data-id="RL0002"] .acts button:has-text("Edit")'); await page.waitForSelector('#listDlg[open]');
+      check('edit: opens the List Entry dialog (not the Books editor) with title, author, status, notes, list', (await page.evaluate(() => !document.getElementById('bookDlg').open && ['rl-title', 'rl-author', 'rl-status', 'rl-notes', 'rl-list'].map(i => document.getElementById(i).value).join('|'))) === 'Quiet Engines|Eli Ramos|To read|edited|Summer Sci-Fi');
+      await fill(page, '#%', { 'rl-status': 'Read', 'rl-title': 'Quiet Engines (2nd)' }); await submit(page, '#listForm'); await saved(page, 800);
+      const pe = writesSince(w, m);
+      check('edit: PATCH by id with only title and status; no Books write', pe.length === 1 && pe[0].table === 'reading_lists' && keysOf(pe[0].body) === 'status,title' && !w.calls.slice(m).some(c => c.table === 'books' && c.method !== 'GET'), pe.map(c => [c.table, c.body]));
+      const m2 = w.calls.length;
+      await page.click('li[data-id="RL0001"] .tt'); await page.waitForTimeout(200);
+      check('the title is not a link into the library', writesSince(w, m2).length === 0 && (await page.evaluate(() => state.lib.mode)) === 'lists');
+      await page.evaluate(() => { document.querySelector('.lib-mode [data-mode="books"]').click(); });
+      check('Library: no reading-list shelves (Your Shelves is gone)', await page.evaluate(() => !document.getElementById('libShelves').textContent.includes('Your Shelves') && !shelfDefs.some(d => d.grp === 'lists')));
+      await page.evaluate(() => { document.querySelector('.lib-mode [data-mode="lists"]').click(); });
+    });
+
+    await step('reading list: status column missing in Supabase', async () => {
+      w.noCols = { reading_lists: ['status'] };
+      await page.evaluate(() => rlReload()); await saved(page, 800);
+      const pillsOk = await page.evaluate(() => [...document.querySelectorAll('.rl-st')].every(b => b.textContent === 'To read') && document.querySelectorAll('.rl-st').length > 0);
+      check('missing column: the lists still load and every entry reads To read', pillsOk);
+      const n = w.calls.length;
+      await page.click('li[data-id="RL0001"] .rl-st'); await saved(page, 900);
+      const msg = await page.locator('#notice').innerText();
+      check('missing column: a pill tap shows "Run supabase/05-reading-list-status.sql in the SQL Editor first." and the pill goes back', /Run supabase\/05-reading-list-status\.sql in the SQL Editor first\./.test(msg) && (await page.evaluate(() => document.querySelector('li[data-id="RL0001"] .rl-st').textContent)) === 'To read', msg);
+      const failed = w.calls.slice(n).filter(c => c.method === 'PATCH');
+      check('missing column: the PATCH was refused (400 PGRST204) and nothing changed', failed.length === 1 && failed[0].status === 400 && w.db.reading_lists.find(x => x.id === 'RL0001').status === 'To read');
+      await page.evaluate(() => { notice(''); openListPaste('Classics'); });
+      await fill(page, '#%', { 'lp-ta': 'Blank Add – B A' });
+      await submit(page, '#listPasteForm'); await saved(page, 800);
+      check('missing column: adding To read rows still works (no status in the POST)', w.db.reading_lists.some(x => x.title === 'Blank Add') && !('status' in w.calls.filter(c => c.method === 'POST' && c.table === 'reading_lists').pop().body[0]));
+      await page.evaluate(() => openListPaste('Classics'));
+      await fill(page, '#%', { 'lp-ta': 'Reading Add' });
+      await page.selectOption('#lpBody tr:nth-child(1) select', 'Reading'); await submit(page, '#listPasteForm'); await saved(page, 800);
+      check('missing column: adding a Reading row shows the same message in the dialog', /Run supabase\/05-reading-list-status\.sql/.test(await page.locator('#lpErr').innerText()) && !w.db.reading_lists.some(x => x.title === 'Reading Add'));
+      await page.evaluate(() => document.getElementById('listPasteDlg').close());
+      w.db.reading_lists = w.db.reading_lists.filter(x => x.title !== 'Blank Add'); w.noCols = null;
+      await page.evaluate(() => { disc.lists = disc.lists.filter(x => x.title !== 'Blank Add'); return rlReload(); }); await saved(page, 800);
     });
 
     await step('reading list: paste a list, reorder, rename, entry, delete', async () => {
       const n = w.calls.length;
       await page.evaluate(() => { document.querySelector('.lib-mode [data-mode="lists"]').click(); openListPaste(''); });
       await fill(page, '#%', { 'lp-list': 'Fresh Picks', 'lp-ta': 'Fresh One – Fay Aldous\nDust of Stars by Ben Okafor\nFresh One - Fay Aldous' });
-      const prev = await page.evaluate(() => ({ rows: document.querySelectorAll('#lpBody tr').length, dup: document.querySelectorAll('#lpBody tr.dup').length, box: document.querySelectorAll('#lpBody input[type=checkbox]').length, add: document.getElementById('lpAdd').textContent, match: [...document.querySelectorAll('#lpBody td.mt')].map(x => x.textContent) }));
-      check('paste: 3 lines, 1 repeated line skipped, Add 2, one Wishlist box, library match shown', prev.rows === 3 && prev.dup === 1 && prev.box === 1 && prev.add === 'Add 2' && /^In library · \w+/.test(prev.match[1]) && /^Skipped/.test(prev.match[2]), prev);
-      await page.click('#lpBody input[type=checkbox]');
+      const prev = await page.evaluate(() => ({ rows: document.querySelectorAll('#lpBody tr').length, dup: document.querySelectorAll('#lpBody tr.dup').length, box: document.querySelectorAll('#lpBody input[type=checkbox]').length, sel: [...document.querySelectorAll('#lpBody select')].map(x => x.value).join(), add: document.getElementById('lpAdd').textContent, lib: /library|Match/i.test(document.getElementById('listPasteDlg').textContent) }));
+      check('paste: 3 lines, 1 repeated line skipped, Add 2, a Wishlist box and a To read status on every row, no library lookup', prev.rows === 3 && prev.dup === 1 && prev.box === 3 && prev.sel === 'To read,To read,To read' && prev.add === 'Add 2' && !prev.lib, prev);
+      await page.selectOption('#lpBody tr:nth-child(2) select', 'Reading');
+      await page.click('#lpBody tr:nth-child(1) input[type=checkbox]');
       await submit(page, '#listPasteForm'); await saved(page, 1000);
       const ws = writesSince(w, n), pl = ws.find(c => c.table === 'reading_lists'), pw = ws.find(c => c.table === 'wishlist');
-      check('paste: one POST for both items, in order, ids RL0005 and RL0006, book_id on the library one', !!pl && pl.method === 'POST' && pl.body.length === 2 && pl.body.map(r => r.id + r.sort_order + r.title).join() === 'RL00051Fresh One,RL00062Dust of Stars' && pl.body[1].book_id === 5 && pl.body[0].book_id === null && pl.body[0].list === 'Fresh Picks', pl && pl.body);
-      check('paste: the ticked book goes to the Wishlist in one POST, seen in the list name; nothing else', !!pw && pw.body.length === 1 && pw.body[0].title === 'Fresh One' && pw.body[0].seen_in === 'Fresh Picks' && pw.body[0].stage === 'Inbox' && ws.length === 2, ws.map(c => [c.table, c.body]));
+      check('paste: one POST for both items, in order, ids RL0005 and RL0006, no book_id even for the title that is in the library, statuses To read (null) and Reading', !!pl && pl.method === 'POST' && pl.body.length === 2 && pl.body.map(r => r.id + r.sort_order + r.title).join() === 'RL00051Fresh One,RL00062Dust of Stars' && pl.body[1].book_id === null && pl.body[0].book_id === null && pl.body[0].status === null && pl.body[1].status === 'Reading' && pl.body[0].list === 'Fresh Picks', pl && pl.body);
+      check('paste: the ticked row goes to the Wishlist in one POST (the unticked one does not), seen in the list name; no Books write', !!pw && pw.body.length === 1 && pw.body[0].title === 'Fresh One' && pw.body[0].seen_in === 'Fresh Picks' && pw.body[0].stage === 'Inbox' && ws.length === 2 && !ws.some(c => c.table === 'books'), ws.map(c => [c.table, c.body]));
       const d1 = await page.evaluate(() => { openListPaste('Fresh Picks'); document.getElementById('lp-ta').value = 'Fresh One\nThird Wave – Cy Zane'; document.getElementById('lp-ta').dispatchEvent(new Event('input', { bubbles: true })); return [document.getElementById('lpAdd').textContent, document.querySelectorAll('#lpBody tr.dup').length, [...document.querySelectorAll('#lpBody td.no')].map(x => x.textContent).join()]; });
       check('paste into an existing list: a title already in it is skipped, the new one is number 3', d1.join('|') === 'Add 1|1|–,3', d1);
       await submit(page, '#listPasteForm'); await saved(page, 800);

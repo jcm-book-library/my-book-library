@@ -152,22 +152,29 @@ flow('l-list-add-remove', async ({ page }) => {
 const pristine = () => { const k = require.resolve('./data.js'), old = require.cache[k]; delete require.cache[k]; const m = require('./data.js').makeSheets(); require.cache[k] = old; return m; };
 const fresh = extra => s => { Object.assign(s, pristine()); if (extra) extra(s); };
 const listsMode = page => page.evaluate(() => { document.querySelector('.lib-mode [data-mode="lists"]').click(); });
-const moreItems = s => { s['Reading Lists'].push(['Summer Sci-Fi', '3', 'Third Wave', 'Cy Zane', '', 'RL0004', ''], ['Summer Sci-Fi', '4', 'Fourth Dawn', 'Di Yarra', '', 'RL0005', '']); };
+const moreItems = s => { s['Reading Lists'].push(['Summer Sci-Fi', '3', 'Third Wave', 'Cy Zane', '', 'RL0004', '', ''], ['Summer Sci-Fi', '4', 'Fourth Dawn', 'Di Yarra', '', 'RL0005', '', '']); };
 const rlTab = (s, id) => s['Reading Lists'].find(r => r[5] === id);
-// (l2) New List from a pasted list: a repeated line is skipped, one book is already in the library, one is ticked for the Wishlist
-flow('l2-list-paste', async ({ page, sheets }) => {
+// (l2) New List from a pasted list: a repeated line is skipped; a title that is also a library book is just a list entry (its own status, no library write);
+// one row gets a status, one is ticked for the Wishlist
+flow('l2-list-paste', async ({ page, sheets, writes }) => {
   await listsMode(page);
   await page.evaluate(() => openListPaste(''));
   await fill(page, '#%', { 'lp-list': 'Fresh Picks', 'lp-ta': 'Fresh One – Fay Aldous\nDust of Stars by Ben Okafor\nFresh One - Fay Aldous' });
   must(await page.evaluate(() => document.querySelectorAll('#lpBody tr').length) === 3, 'three preview rows');
   must(await page.evaluate(() => document.getElementById('lpAdd').textContent) === 'Add 2', 'the button should say Add 2');
   must(await page.evaluate(() => document.querySelectorAll('#lpBody tr.dup').length) === 1, 'the repeated line should be marked');
-  must(await page.evaluate(() => document.querySelectorAll('#lpBody input[type=checkbox]').length) === 1, 'only the not-added row has the Wishlist box');
-  await page.click('#lpBody input[type=checkbox]');
+  must(await page.evaluate(() => document.querySelectorAll('#lpBody input[type=checkbox]').length) === 3 && await page.evaluate(() => [...document.querySelectorAll('#lpBody input[type=checkbox]')].every(c => !c.checked)), 'every row has an unticked Wishlist box');
+  must(await page.evaluate(() => [...document.querySelectorAll('#lpBody select')].map(x => x.value).join()) === 'To read,To read,To read', 'status defaults to To read');
+  must(!(await page.evaluate(() => /library|Match/i.test(document.getElementById('listPasteDlg').textContent))), 'no library lookup text in the dialog');
+  await page.selectOption('#lpBody tr:nth-child(2) select', 'Reading');
+  await page.click('#lpBody tr:nth-child(1) input[type=checkbox]');
   await submit(page, '#listPasteForm'); await settle(page, 1000);
   const rows = sheets['Reading Lists'].filter(r => r[0] === 'Fresh Picks');
-  must(rows.length === 2 && rows[0][2] === 'Fresh One' && rows[0][1] === '1' && rows[1][2] === 'Dust of Stars' && rows[1][1] === '2' && rows[1][6] === '5', 'two items in order, the library one linked: ' + JSON.stringify(rows));
+  must(rows.length === 2 && rows[0][2] === 'Fresh One' && rows[0][1] === '1' && rows[0][6] === '' && rows[0][7] === '' && rows[1][2] === 'Dust of Stars' && rows[1][1] === '2' && rows[1][6] === '' && rows[1][7] === 'Reading', 'two items in order, no library link, the second Reading: ' + JSON.stringify(rows));
   must(sheets['Wishlist'].some(r => r.includes('Fresh One') && r.includes('Fresh Picks')), 'Fresh One should be on the Wishlist, seen in Fresh Picks');
+  must(!sheets['Wishlist'].some(r => r.includes('Dust of Stars')), 'an unticked row is not added to the Wishlist');
+  must(writes.every(w => /Reading Lists|Wishlist/.test(String(w.input.range))) && !writes.some(w => /Books/.test(String(w.input.range))), 'only Reading Lists and Wishlist are written, never Books: ' + JSON.stringify(writes.map(w => w.input.range)));
+  must(await page.evaluate(() => [...document.querySelectorAll('li[data-id] .rl-st')].filter(b => b.closest('li').querySelector('.tt').textContent === 'Dust of Stars').map(b => b.textContent).join()) !== '', 'the entry shows its own status');
 }, { mutate: fresh() });
 // (l2b) Pasting into an existing list adds to its end and skips what is already there
 flow('l2b-list-paste-existing', async ({ page, sheets }) => {
@@ -177,8 +184,20 @@ flow('l2b-list-paste-existing', async ({ page, sheets }) => {
   must(await page.evaluate(() => document.getElementById('lpAdd').textContent) === 'Add 1', 'the duplicate should be skipped');
   await submit(page, '#listPasteForm'); await settle(page, 800);
   const r = sheets['Reading Lists'].find(x => x[2] === 'Late Entry');
-  must(r && r[0] === 'Summer Sci-Fi' && r[1] === '3' && r[5] === 'RL0004', 'Late Entry should be number 3: ' + JSON.stringify(r));
+  must(r && r[0] === 'Summer Sci-Fi' && r[1] === '3' && r[5] === 'RL0004' && r[6] === '' && r[7] === '', 'Late Entry should be number 3: ' + JSON.stringify(r));
   must(!sheets['Wishlist'].some(x => x.includes('Late Entry')), 'nothing goes to the Wishlist unless ticked');
+}, { mutate: fresh() });
+// (l2c) A ticked title that shares its name with a library book still goes to the Wishlist: lists never look at the library,
+// and a same-titled item is only "already there" when it is on the Wishlist with the same (or a blank) author.
+flow('l2c-list-paste-wish-same-title', async ({ page, sheets, writes }) => {
+  await listsMode(page);
+  await page.evaluate(() => openListPaste(''));
+  await fill(page, '#%', { 'lp-list': 'Comics', 'lp-ta': 'Dust of Stars – Kim Comicson' });
+  await page.click('#lpBody tr:nth-child(1) input[type=checkbox]');
+  await submit(page, '#listPasteForm'); await settle(page, 1000);
+  must(sheets['Reading Lists'].some(r => r[0] === 'Comics' && r[2] === 'Dust of Stars'), 'the entry is on the Comics list');
+  must(sheets['Wishlist'].some(r => r.includes('Dust of Stars') && r.includes('Kim Comicson') && r.includes('Comics')), 'the ticked title is on the Wishlist even though a library book has the same title');
+  must(!writes.some(w => /Books/.test(String(w.input.range))), 'Books is never written');
 }, { mutate: fresh() });
 // (l3) Reorder: arrow keys on the handle, then one real pointer drag. Only changed order cells are written
 flow('l3-list-reorder', async ({ page, sheets, writes }) => {
@@ -240,23 +259,59 @@ flow('l6-list-entry-move', async ({ page, sheets }) => {
   const r = rlTab(sheets, 'RL0002');
   must(r[0] === 'Classics' && r[1] === '2' && r[4] === 'moved', 'moved to the end of Classics: ' + JSON.stringify(r));
 }, { mutate: fresh() });
-// (l7) Edit opens the Books editor; saving it quietly links the item to the book. An item not in the library gets Add to Library
-flow('l7-list-edit-book', async ({ page, sheets }) => {
+// (l7) Status pill: tapping cycles To read > Reading > Read > To read and writes only the status cell; progress and Next in List follow it.
+// The entries have the same titles as library books and bookIds, and still show their own status.
+flow('l7-list-status-pill', async ({ page, sheets, writes }) => {
   await listsMode(page);
-  await page.click('li[data-id="RL0002"] .acts button:has-text("Edit")');
-  await page.waitForSelector('#bookDlg[open]');
-  must(await page.evaluate(() => document.getElementById('f-title').value) === 'Quiet Engines' && await page.evaluate(() => document.getElementById('dlgMsg').textContent) === 'ID 17', 'the Books editor for book 17');
-  await fill(page, '#bookForm [name="%"]', { notes: 'from the list' });
-  await submit(page, '#bookForm'); await settle(page, 900);
-  must(rlTab(sheets, 'RL0002')[6] === '17', 'the item is linked to book 17');
-  await page.evaluate(() => { document.querySelector('.lib-mode [data-mode="lists"]').click(); document.querySelector('[data-rl="Classics"]').click(); });
-  await page.click('li[data-id="RL0003"] .acts button:has-text("Add to Library")');
-  await page.waitForSelector('#bookDlg[open]');
-  must(await page.evaluate(() => document.getElementById('f-title').value) === 'Moby Unlisted' && await page.evaluate(() => document.getElementById('f-status').value) === 'TBR', 'prefilled add dialog');
-  await submit(page, '#bookForm'); await settle(page, 900);
-  const id = rlTab(sheets, 'RL0003')[6];
-  must(id && sheets['Books'].some(r => r[r.length - 1] === id && r[0] === 'Moby Unlisted'), 'the new book id is saved on the item: ' + id);
+  const pill = id => page.evaluate(i => document.querySelector(`li[data-id="${i}"] .rl-st`).textContent, id);
+  must(await pill('RL0001') === 'To read' && await pill('RL0002') === 'To read', 'both start as To read, whatever the library holds');
+  must(writes.length === 0, 'showing the lists writes nothing');
+  await page.click('li[data-id="RL0001"] .rl-st'); await settle(page, 600);
+  must(await pill('RL0001') === 'Reading' && rlTab(sheets, 'RL0001')[7] === 'Reading', 'first tap: Reading');
+  await page.click('li[data-id="RL0001"] .rl-st'); await settle(page, 600);
+  must(await pill('RL0001') === 'Read' && rlTab(sheets, 'RL0001')[7] === 'Read', 'second tap: Read');
+  must(/^1 of 2/.test(await page.evaluate(() => document.querySelector('[data-rl="Summer Sci-Fi"] .cnt').textContent)) && /Quiet Engines/.test(await page.evaluate(() => document.querySelector('[data-rl="Summer Sci-Fi"] .sub').textContent)), 'progress counts Read, next is the first not Read');
+  await page.click('li[data-id="RL0002"] .rl-st'); await page.click('li[data-id="RL0002"] .rl-st'); await settle(page, 800);
+  must(/all finished/.test(await page.evaluate(() => document.querySelector('[data-rl="Summer Sci-Fi"] .sub').textContent)), 'all Read: all finished');
+  await page.click('li[data-id="RL0001"] .rl-st'); await settle(page, 600);
+  must(await pill('RL0001') === 'To read' && rlTab(sheets, 'RL0001')[7] === 'To read', 'third tap: back to To read');
+  must(writes.length === 5 && writes.every(w => /Reading Lists/.test(w.input.range) && /!H\d+$/.test(w.input.range)), 'status cells only: ' + JSON.stringify(writes.map(w => w.input.range)));
+  must(rlTab(sheets, 'RL0001')[6] === '5', 'the old bookId value is left alone');
+  await page.click('li[data-id="RL0001"] .tt'); await settle(page, 300);
+  must(writes.length === 5 && await page.evaluate(() => state.lib.mode) === 'lists', 'the title is not a link into the library');
 }, { mutate: fresh() });
+// (l8) Edit opens the List Entry dialog (not the Books editor): title, author, status, notes, list. Only the list entry is written.
+flow('l8-list-edit-entry', async ({ page, sheets, writes }) => {
+  await listsMode(page);
+  must(!(await page.$('li[data-id="RL0002"] .acts button:has-text("Entry")')) && !(await page.$('li[data-id="RL0003"] .acts button:has-text("Add to Library")')), 'one Edit button per row, no Add to Library');
+  await page.click('li[data-id="RL0002"] .acts button:has-text("Edit")');
+  await page.waitForSelector('#listDlg[open]');
+  must(!(await page.$('#bookDlg[open]')) && await page.evaluate(() => document.getElementById('rl-title').value + '|' + document.getElementById('rl-status').value) === 'Quiet Engines|To read', 'the List Entry dialog with its own status');
+  await fill(page, '#%', { 'rl-title': 'Quiet Engines II', 'rl-status': 'Reading', 'rl-notes': 'from the list' });
+  await submit(page, '#listForm'); await settle(page, 900);
+  const r = rlTab(sheets, 'RL0002');
+  must(r[2] === 'Quiet Engines II' && r[4] === 'from the list' && r[7] === 'Reading' && r[6] === '', 'the entry is saved: ' + JSON.stringify(r));
+  must(writes.length === 3 && writes.every(w => /Reading Lists/.test(w.input.range)), 'three Reading Lists cells only: ' + JSON.stringify(writes.map(w => w.input.range)));
+  await page.evaluate(() => { document.querySelector('.lib-mode [data-mode="books"]').click(); });
+  must(await page.evaluate(() => !document.getElementById('libShelves').textContent.includes('Your Shelves') && !shelfDefs.some(d => d.grp === 'lists')), 'the Library shelves have no reading-list shelves');
+}, { mutate: fresh() });
+// (l9) The Reading Lists tab has no status header yet: lists show as To read, a tap says what to add and writes nothing, a paste of To read rows works
+flow('l9-list-no-status-header', async ({ page, sheets, writes }) => {
+  await listsMode(page);
+  must(await page.evaluate(() => [...document.querySelectorAll('.rl-st')].every(b => b.textContent === 'To read')) && writes.length === 0, 'reading works with the column missing');
+  await page.click('li[data-id="RL0001"] .rl-st'); await settle(page, 800);
+  must(/Add a 'status' header to the Reading Lists tab first\./.test(await page.evaluate(() => document.getElementById('notice').textContent)), 'the message names the header');
+  must(writes.length === 0 && await page.evaluate(() => document.querySelector('li[data-id="RL0001"] .rl-st').textContent) === 'To read', 'nothing written and the pill is back to To read');
+  await page.evaluate(() => openListPaste('Classics'));
+  await fill(page, '#%', { 'lp-ta': 'Plain Add – P A' });
+  await submit(page, '#listPasteForm'); await settle(page, 800);
+  must(writes.length === 1 && sheets['Reading Lists'].some(r => r[2] === 'Plain Add' && r.length === 7), 'a To read paste still works, no column added');
+  await page.evaluate(() => openListPaste('Classics'));
+  await fill(page, '#%', { 'lp-ta': 'Reading Add' });
+  await page.selectOption('#lpBody tr:nth-child(1) select', 'Reading');
+  await submit(page, '#listPasteForm'); await settle(page, 800);
+  must(/Add a 'status' header/.test(await page.evaluate(() => document.getElementById('lpErr').textContent)) && writes.length === 1, 'a Reading row is refused with the same message, nothing written');
+}, { mutate: fresh(s => { s['Reading Lists'] = s['Reading Lists'].map(r => r.slice(0, 7)); }) });
 // (m) save a rating (book row + Ratings append)
 flow('m-rating', async ({ page }) => {
   await page.evaluate(async () => {

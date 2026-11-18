@@ -171,11 +171,20 @@ async function sbRoute(r, w) {
   if (h.authorization === 'Bearer ' + EXPIRED) { w.forced401++; call.status = 401; return json({ message: 'JWT expired' }, 401); }
   if (h['accept-profile'] !== 'books' && h['content-profile'] !== 'books') { call.status = 406; return json({ message: 'wrong schema' }, 406); }
   const wantRep = (h.prefer || '').includes('return=representation');
+  // w.noCols = { table: ['column', ...] } pretends those columns don't exist yet (a migration not run): reads leave them out, writes naming them fail like PostgREST
+  const gone = (w.noCols && w.noCols[t]) || [];
+  const rlCheck = x => t === 'reading_lists' && 'status' in x && x.status != null && !['To read', 'Reading', 'Read'].includes(x.status);   // reading_lists_status_check
+  if ((method === 'POST' || method === 'PATCH') && gone.length) {
+    const b0 = body(), bad = (Array.isArray(b0) ? b0 : [b0 || {}]).flatMap(x => Object.keys(x)).find(k => gone.includes(k));
+    if (bad) { call.status = 400; return json({ code: 'PGRST204', details: null, hint: null, message: `Could not find the '${bad}' column of '${t}' in the schema cache` }, 400); }
+  }
+  if ((method === 'POST' || method === 'PATCH') && (Array.isArray(body()) ? body() : [body() || {}]).some(rlCheck)) { call.status = 400; return json({ code: '23514', message: 'new row for relation "reading_lists" violates check constraint "reading_lists_status_check"' }, 400); }
   const unique = (row, skip) => (UNIQUE[t] || []).some(c => w.db[t].some(x => x !== skip && x[c] === row[c]));
   if (method === 'GET') {
     let rows = applyOrder(applyFilters(w.db[t], q), q);
     const off = Number(q.get('offset') || 0), lim = Math.min(Number(q.get('limit') || 1000), 1000);
     rows = rows.slice(off, off + lim);
+    if (gone.length) rows = rows.map(x => Object.fromEntries(Object.entries(x).filter(([k]) => !gone.includes(k))));
     const sel = q.get('select');
     if (sel && sel !== '*') { const cols = sel.split(','); rows = rows.map(x => Object.fromEntries(cols.map(c => [c, x[c]]))); }
     call.status = 200; return json(rows);

@@ -250,16 +250,16 @@ body:has(#undoBar:not([hidden])) .totop{bottom:calc(max(16px,env(safe-area-inset
 .rl-ol li.drop-above{box-shadow:0 -2px 0 0 var(--accent)}
 .rl-ol li.drop-below{box-shadow:0 2px 0 0 var(--accent)}
 .rl-ol.dragging{user-select:none;-webkit-user-select:none}
-.rl-ol .tt{background:none;border:0;padding:0;font:inherit;font-weight:500;color:var(--fg);text-align:left;cursor:pointer}
-.rl-ol .tt:hover{color:var(--accent)}
+.rl-ol .tt{font-weight:500;color:var(--fg);overflow-wrap:anywhere}
+.rl-ol button.rl-st{font-family:inherit;background:transparent;cursor:pointer}
+.rl-ol button.rl-st:disabled{cursor:default;opacity:.7}
+.rl-ol button.rl-st:hover:not(:disabled){border-color:var(--accent)}
 .rl-ol .au{font-size:12px;color:var(--muted)}
 .rl-ol .acts{display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap}
 .rl-ol .acts button{font:inherit;font-size:12px;font-weight:500;border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:999px;padding:2px 10px;cursor:pointer}
 .rl-ol .acts button:hover{color:var(--fg);border-color:var(--accent)}
 .rl-ol li.next{background:color-mix(in srgb,var(--accent) 9%,transparent);margin:0 -16px;padding-left:16px;padding-right:16px}
 .rl-ol .nx{font-size:11px;font-weight:700;color:var(--accent);margin-left:8px;white-space:nowrap}
-.rl-ol .st2{font-size:11px;font-weight:700;padding:2px 10px;border-radius:999px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
-.rl-ol .st2.want{border-color:var(--accent);color:var(--fg)}
 .rl-add{padding:6px 16px 14px;display:flex;gap:8px;flex-wrap:wrap}
 .rl-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 @media (max-width:560px){.rl-ol li{grid-template-columns:auto minmax(0,1fr) auto}.rl-ol .acts{grid-column:2/-1;justify-content:flex-start}}
@@ -270,11 +270,13 @@ body:has(#undoBar:not([hidden])) .totop{bottom:calc(max(16px,env(safe-area-inset
 #listPasteDlg .dlg-foot{align-items:center;padding:10px 16px;flex:none}
 #lp-ta{font:inherit;font-size:12.5px;line-height:1.4;min-height:96px;white-space:pre;overflow:auto}
 #listPasteDlg .q-body{grid-template-columns:minmax(0,1fr)}
-.ptab.lptab th:nth-child(1){width:8%}.ptab.lptab th:nth-child(2){width:30%}.ptab.lptab th:nth-child(3){width:25%}.ptab.lptab th:nth-child(4){width:37%}
+.ptab.lptab th:nth-child(1){width:7%}.ptab.lptab th:nth-child(2){width:31%}.ptab.lptab th:nth-child(3){width:25%}.ptab.lptab th:nth-child(4){width:21%}.ptab.lptab th:nth-child(5){width:16%}
 .lptab td.no{text-align:center;color:var(--muted);font-variant-numeric:tabular-nums}
-.lptab td.mt{font-size:11px;color:var(--muted);line-height:1.3;vertical-align:middle}
-.lptab td.mt label{display:flex;gap:4px;align-items:center;color:var(--fg);cursor:pointer;margin-top:2px}
-.lptab td.mt input{width:14px;min-height:0;height:14px;accent-color:var(--accent)}
+.lptab td.mt{text-align:center;vertical-align:middle}
+.lptab td.mt input{width:16px;min-height:0;height:16px;accent-color:var(--accent)}
+.lptab select{font:inherit;font-size:12px;width:100%;background:var(--bg);color:var(--fg);border:1px solid transparent;border-radius:6px;padding:4px 2px;min-height:28px}
+.lptab select:focus{border-color:var(--accent);outline:none}
+.lptab tr.dup select{opacity:.5}
 .cov-s{width:26px;height:38px;object-fit:cover;border-radius:3px;margin-right:8px;vertical-align:-14px;background:var(--raise)}
 .cov-m{width:46px;height:68px;object-fit:cover;border-radius:4px;flex:none;background:var(--raise)}
 .nb .book-title:hover{color:var(--accent)}
@@ -1773,9 +1775,10 @@ body.is-blank #view-now :is(.stats,.dash-2){display:none}
   <form id="listForm" method="dialog">
     <div class="dlg-head"><h2 id="rlTitleH">List Entry</h2><button class="btn" type="button" id="rlClose">Close</button></div>
     <div class="wd-grid">
-      <div class="field w4"><label for="rl-list">List</label><input id="rl-list" name="list" required list="rlNames" autocomplete="off" placeholder="e.g. Marvel Read List"><datalist id="rlNames"></datalist></div>
-      <div class="field w2" id="rlTitleF"><label for="rl-title">Title</label><input id="rl-title" name="title" required autocomplete="off"></div>
-      <div class="field w2" id="rlAuthorF"><label for="rl-author">Author</label><input id="rl-author" name="author" autocomplete="off"></div>
+      <div class="field w2"><label for="rl-title">Title</label><input id="rl-title" name="title" required autocomplete="off"></div>
+      <div class="field w2"><label for="rl-author">Author</label><input id="rl-author" name="author" autocomplete="off"></div>
+      <div class="field w2"><label for="rl-status">Status</label><select id="rl-status" name="status"><option>To read</option><option>Reading</option><option>Read</option></select></div>
+      <div class="field w2"><label for="rl-list">List</label><input id="rl-list" name="list" required list="rlNames" autocomplete="off" placeholder="e.g. Marvel Read List"><datalist id="rlNames"></datalist></div>
       <div class="field w4"><label for="rl-notes">Notes</label><input id="rl-notes" name="notes" autocomplete="off"></div>
       <p class="muted small w4" id="rlHint" style="margin:0;grid-column:1/-1"></p>
     </div>
@@ -1789,7 +1792,7 @@ body.is-blank #view-now :is(.stats,.dash-2){display:none}
     <div class="q-body">
       <div class="field"><label for="lp-list">List Name</label><input id="lp-list" list="lpNames" autocomplete="off" placeholder="e.g. Marvel Read List"><datalist id="lpNames"></datalist></div>
       <div class="field"><label for="lp-ta">One book per line, in reading order</label><textarea id="lp-ta" spellcheck="false" rows="4" placeholder="Title – Author&#10;Title by Author&#10;or paste columns from a spreadsheet: title, author"></textarea></div>
-      <div id="lpPrev" hidden><span class="q-lab">Preview (edit any cell)</span><table class="ptab lptab"><thead><tr><th>#</th><th>Title</th><th>Author</th><th>Match</th></tr></thead><tbody id="lpBody"></tbody></table></div>
+      <div id="lpPrev" hidden><span class="q-lab">Preview (edit any cell)</span><table class="ptab lptab"><thead><tr><th>#</th><th>Title</th><th>Author</th><th>Status</th><th>Wishlist</th></tr></thead><tbody id="lpBody"></tbody></table></div>
       <div class="q-warn" id="lpWarn"></div>
       <div class="q-err" id="lpErr" role="alert"></div>
     </div>
@@ -2856,13 +2859,15 @@ const rowFromResult = res => {
   return m ? Number(m[1]) : null;
 };
 const wishCell = (k, v) => !v ? (k === 'gift' ? 'FALSE' : '') : k === 'gift' ? (v === 'TRUE' ? 'TRUE' : 'FALSE') : (k === 'release' || k === 'checkedOn') && /^\d{4}-\d\d-\d\d$/.test(v) ? v : "'" + v;
+const RL_NO_STATUS_SHEET = "Add a 'status' header to the Reading Lists tab first.";
+const RL_NO_STATUS_SB = 'Run supabase/05-reading-list-status.sql in the SQL Editor first.';
 const listCell = (k, v) => !String(v ?? '').trim() ? '' : k === 'order' ? toNum(v) : "'" + String(v).trim();
 const sheetPut = (range, values) => state.mcp.callTool(SERVER, 'update_values', { spreadsheetId: SHEET_ID, range, values }, { cache: false });
 const sheetAppend = (range, values, spreadsheetId = SHEET_ID) => state.mcp.callTool(SERVER, 'append_values', { spreadsheetId, range, values }, { cache: false });
 const TAB_RANGES = {
   'Wishlist': 'Wishlist!A1:Z3000',
   'Series Tracker': "'Series Tracker'!A1:I500",
-  'Reading Lists': "'Reading Lists'!A1:G2000",
+  'Reading Lists': "'Reading Lists'!A1:H2000",
   'Contents': "'Contents'!A1:D5000",
   'Wishlist archive header': "'Wishlist archive'!A1:Z1",
   'Books header': 'Books!A1:AZ1'
@@ -3051,6 +3056,7 @@ const sheetDb = {
     dup: (id, n) => `Reading list id ${id} appears ${n} times`, gone: id => `Reading list id ${id} isn't there any more` }),
   async listUpdate(id, fields) {
     const { header, row } = await sheetDb._listRow(id);
+    if ('status' in fields && !header.includes('status')) throw { code: 'tool_error', message: RL_NO_STATUS_SHEET };   // never a silent skip: nothing is written
     await writeCells('Reading Lists', header, row, fields, listCell);
   },
   // Adds several items in one write. otherIds: ids the caller already holds. Ids are the highest existing + 1 for each row.
@@ -3058,6 +3064,7 @@ const sheetDb = {
   async listAddMany(rows, otherIds = []) {
     const header = await readHeader("'Reading Lists'!A1:Z1"), c = header.indexOf('id');
     if (c < 0) throw { code: 'tool_error', message: 'Reading Lists has no id column' };
+    if (!header.includes('status') && rows.some(r => String(r.status ?? '').trim())) throw { code: 'tool_error', message: RL_NO_STATUS_SHEET };
     const used = await readRange(`'Reading Lists'!A2:${colLetter(header.length - 1)}2000`);
     const top = Math.max(0, ...used.map(r => Number(String(r[c] || '').replace(/\D/g, '')) || 0), ...otherIds.map(x => Number(String(x).replace(/\D/g, '')) || 0));
     const ids = rows.map((_, i) => 'RL' + String(top + i + 1).padStart(4, '0'));
@@ -3187,7 +3194,7 @@ const sb = {
     const res = await fetch(`${SB.url}/rest/v1/${path}`, o);
     if (res.status === 401 && !retried) { await this.token(true); return this.api(path, opts, true); }
     const txt = await res.text(), body = txt ? (() => { try { return JSON.parse(txt); } catch (e) { return txt; } })() : null;
-    if (!res.ok) throw { code: 'api', status: res.status, message: (body && (body.message || body.msg)) || 'Supabase HTTP ' + res.status };
+    if (!res.ok) throw { code: 'api', status: res.status, pg: body && body.code, message: (body && (body.message || body.msg)) || 'Supabase HTTP ' + res.status };
     return body;
   }
 };
@@ -3209,7 +3216,7 @@ const SBT = {
   'Contents': ['contents', sbCols('bookId:book_id:int savedAt:saved_at:text story:story:text startPage:start_page:num')],
   'Wishlist': ['wishlist', sbCols('id:id:text added:added:date title:title:text author:author:text series:series:text number:number:text type:type:text format:format:text publisher:publisher:text stage:stage:text waiting:waiting:text wantAs:want_as:text checked:checked:text checkedOn:checked_on:date release:release:text price:price:text link:link:text seenIn:seen_in:text interest:interest:text gift:gift:tf notes:notes:text bookId:book_id:int')],
   'Series Tracker': ['series_tracker', sbCols('series:series:text author:author:text publisher:publisher:text kind:kind:text status:status:text released:released:num soldAs:sold_as:text link:link:text notes:notes:text')],
-  'Reading Lists': ['reading_lists', sbCols('list:list:text order:sort_order:num title:title:text author:author:text notes:notes:text id:id:text bookId:book_id:int')],
+  'Reading Lists': ['reading_lists', sbCols('list:list:text order:sort_order:num title:title:text author:author:text notes:notes:text id:id:text bookId:book_id:int status:status:text')],
   'Wishlist archive': ['wishlist_archive', sbCols('Title:title:text Author:author:text Available:available:text Status:status:text Type:type:text Format:format:text ETA:eta:text Cost:cost:text Pages:pages:num Source:source:text Reading_List:reading_list:text Notes:notes:text id:id:text Series:series:text Link:link:text bookId:book_id:int')],
   'Quotes': ['quotes', sbCols('quote:quote:text from:from_title:text character:character:text by:author:text bookId:book_id:int page:page:num added:added:date')]
 };
@@ -3289,6 +3296,8 @@ async function sbAllIds(table) {
   return out;
 }
 const sbWrite = async (path, opts) => { rt.lastSave = Date.now(); try { return await sb.api(path, opts); } finally { rt.lastSave = Date.now(); } };
+// A write that failed because the table has no status column yet (PostgREST PGRST204) says what to run; any other error passes through
+const sbNoStatus = err => err && err.status === 400 && (err.pg === 'PGRST204' || /column|schema cache/i.test(err.message || '')) && /status/i.test(err.message || '') ? { code: 'tool_error', message: RL_NO_STATUS_SB } : err;
 const sbNum = id => Number(String(id || '').replace(/\D/g, '')) || 0;
 const sbDb = {
   _ids: {},                       // tab -> row_ids in Sheet row order (row n is _ids[tab][n - 2]); deleted rows leave a gap, like a cleared Sheet row
@@ -3507,7 +3516,8 @@ const sbDb = {
   async listUpdate(id, fields) {
     const body = sbFieldsToObj('Reading Lists', fields, listCell, ['id']);
     if (!Object.keys(body).length) return;
-    const got = await sbWrite(`reading_lists?id=eq.${sbEnc(id)}`, { method: 'PATCH', body, prefer: 'return=representation' });
+    if ('status' in body && body.status === '') body.status = null;
+    const got = await sbWrite(`reading_lists?id=eq.${sbEnc(id)}`, { method: 'PATCH', body, prefer: 'return=representation' }).catch(err => { throw 'status' in body ? sbNoStatus(err) : err; });
     if (got.length !== 1) throw { code: 'tool_error', message: got.length ? `Reading list id ${id} appears ${got.length} times` : `Reading list id ${id} isn't there any more` };
   },
   // Adds several items in one POST (ids are the highest existing + 1 for each). Returns { header, items: [{ id, row }] }.
@@ -3518,7 +3528,10 @@ const sbDb = {
       const top = Math.max(0, ...used.map(r => sbNum(r.id)), ...otherIds.map(sbNum));
       const ids = rows.map((_, i) => 'RL' + String(top + i + 1).padStart(4, '0'));
       try {
-        const got = await sbWrite('reading_lists', { method: 'POST', body: rows.map((f, i) => sbFullObj('Reading Lists', { ...f, id: ids[i] }, (h, v) => h === 'id' ? v : listCell(h, v))), prefer: 'return=representation' });
+        // status is sent only when some row has one (blank means To read), so adding to a list works before 05-reading-list-status.sql is run
+        const withStatus = rows.some(f => String(f.status ?? '').trim());
+        const body = rows.map((f, i) => { const o = sbFullObj('Reading Lists', { ...f, id: ids[i] }, (h, v) => h === 'id' ? v : listCell(h, v)); if (withStatus) o.status = o.status || null; else delete o.status; return o; });
+        const got = await sbWrite('reading_lists', { method: 'POST', body, prefer: 'return=representation' }).catch(err => { throw withStatus ? sbNoStatus(err) : err; });
         return { header, items: ids.map((id, i) => ({ id, row: this._no('Reading Lists', got[i].row_id) })) };
       } catch (err) { if (!(err && err.status === 409 && attempt === 0)) throw err; }
     }
@@ -3917,11 +3930,6 @@ function renderShelves(rows, filtering) {
   add('top', 'Last 10 Finished', rows.filter(b => b.status === 'Finished').sort(byFin).slice(0, 10));
   add('top', 'Favourites', dedupeReads(rows.filter(isFav)));
   add('top', 'Recommended for You', recTop(set, 10));
-  for (const name of listNames()) {
-    const seen = new Set(), books = [];
-    for (const it of listItems(name)) { const b = listBook(it); if (b && set.has(b) && !seen.has(b.id)) { seen.add(b.id); books.push(b); } }
-    add('lists', name, books);
-  }
   const bySer = new Map();
   for (const b of state.allBooks) if (b.series) { const k = normQ(b.series); if (!bySer.has(k)) bySer.set(k, []); bySer.get(k).push(b); }
   const prog = [];
@@ -3934,7 +3942,7 @@ function renderShelves(rows, filtering) {
   }
   prog.sort((a, b) => b.last.localeCompare(a.last)).slice(0, 12).forEach(p => add('series', p.label, p.books));
   shelfDefs = defs; shelfDevs = { k: devBooks(rows, 'k'), t: devBooks(rows, 't') };
-  const groups = [['top', ''], ['lists', 'Your Shelves'], ['series', 'Series in Progress']];
+  const groups = [['top', ''], ['series', 'Series in Progress']];
   box.innerHTML = defs.length ? groups.map(([g, h]) => {
     const ds = defs.filter(d => d.grp === g); if (!ds.length) return '';
     return (h ? `<div class="shelf-sec">${h}</div>` : '') + `<div class="sgrid${g === 'series' ? ' s3' : ''}">` + ds.map(d => { const i = defs.indexOf(d);
@@ -4179,7 +4187,6 @@ async function saveBookDialog(e) {
       try { await appendLogRow({ pages: gain, bookId: savedId, title: data.title, pageReached: toNum(data.currentPage) }); }
       catch (err) { notice(`The book was saved, but its ${gain} pages weren't added to today's count: ${err.message || explain(err)}`, 'error'); }
     }
-    if (rl.link) await rlLinkSaved(savedId);   // Edit from a Reading List: keep the item pointing at this book
     $('bookDlg').close();
     renderAll();
   } catch (err) {
@@ -6696,36 +6703,30 @@ async function saveSeries(e) {
   } catch (err) { $('sdMsg').textContent = 'Couldn\'t save it: ' + (err.message || explain(err)); $('sdSave').disabled = false; }
 }
 
-/* Reading lists: each list in order, matched against Books and the Wishlist */
-const rl = { open: {}, editing: null, link: null, drag: null, focus: '', gen: 0, q: Promise.resolve(), renaming: '' };
+/* Reading lists: standalone. Each entry has its own status (To read / Reading / Read), kept on the list entry only; nothing here
+   looks at, matches or changes the library's Books. */
+const rl = { open: {}, editing: null, drag: null, focus: '', gen: 0, q: Promise.resolve(), renaming: '' };
 const rlCan = () => isLive() && !state.readOnly;
 const listNames = () => [...new Set((disc.lists || []).map(x => x.list))];
 const listItems = name => (disc.lists || []).filter(x => x.list === name).sort((a, b) => (toNum(a.order) || 1e6) - (toNum(b.order) || 1e6) || a._row - b._row);
 const listEnd = name => Math.max(0, ...listItems(name).map(x => toNum(x.order)));   // the highest order number in a list
 const listName = v => { v = String(v || '').trim(); return listNames().find(n => normQ(n) === normQ(v)) || v; };   // typing an existing list in other letters means that list
-// An item points at a book you own: the linked book if set, else the same title (and author, when given)
-function listBook(it) {
-  if (it.bookId) { const b = state.allBooks.find(x => x.id === it.bookId); if (b) return b; }
-  const k = wishKey(it.title), au = normQ(it.author).split(' ').filter(w => w.length > 2);
-  let c = state.allBooks.filter(b => wishKey(b.title) === k);
-  if (au.length && c.length) { const m = c.filter(b => { const ba = normQ(b.author); return au.some(w => ba.includes(w)); }); c = m.length ? m : c.filter(b => /read through/i.test(b.series || '')); }
-  if (!c.length) return null;
-  const rank = b => ({ Finished: 0, Reading: 1, Paused: 2, 'Re-read': 3, TBR: 4, DNF: 5 }[b.status] ?? 6);
-  return c.sort((a, b) => rank(a) - rank(b))[0];
-}
+const RL_STATUS = ['To read', 'Reading', 'Read'];
+const rlStatus = it => RL_STATUS.find(x => x.toLowerCase() === String(it.status || '').trim().toLowerCase()) || 'To read';   // blank (or a missing column) means To read
+const RL_PILL = { 'To read': 'TBR', Reading: 'Reading', Read: 'Finished' };   // which pill colours each status borrows
 async function renderLists() {
   const box = $('rlBoxes'), can = rlCan();
   $('rlNew').disabled = !can;
   if (!isLive()) { box.innerHTML = '<p class="empty">Your reading lists load from the sheet. ' + connectHint() + '</p>'; return; }
   if (!state.libLoaded || !disc.loaded) { box.innerHTML = '<p class="empty">Loading your reading lists…</p>'; await loadDiscover(); }
   if (!(disc.lists || []).length) { $('rlNote').textContent = ''; box.innerHTML = '<p class="empty">No reading lists yet. Press New List to start one, for example a suggested reading order.</p>'; return; }
-  const q = normQ(state.lib.q), wish = new Map((disc.wish || []).map(w => [wishKey(w.title), w]));
+  const q = normQ(state.lib.q);
   box.textContent = '';
   const names = listNames(); let shown = 0;
   names.forEach((name, ni) => {
-    const all = listItems(name), rows = all.map(it => ({ it, b: listBook(it), w: wish.get(wishKey(it.title)) }));
-    const done = rows.filter(r => r.b && r.b.status === 'Finished').length;
-    const nextIdx = rows.findIndex(r => !(r.b && r.b.status === 'Finished'));
+    const rows = listItems(name).map(it => ({ it }));
+    const done = rows.filter(r => rlStatus(r.it) === 'Read').length;
+    const nextIdx = rows.findIndex(r => rlStatus(r.it) !== 'Read');
     const list = q ? rows.filter(r => normQ(r.it.title + ' ' + r.it.author).includes(q)) : rows;
     if (q && !list.length) return;
     shown++;
@@ -6737,11 +6738,11 @@ async function renderLists() {
     if (open) {
       const ol = document.createElement('ol'); ol.className = 'rl-ol';
       for (const r of list) {
-        const { it, b, w } = r, li = document.createElement('li');
+        const { it } = r, li = document.createElement('li');
         const isNext = rows[nextIdx] === r;
         if (isNext) li.className = 'next';
         li.dataset.id = it.id;
-        li.innerHTML = '<span class="n tnum"><span class="num"></span></span><span><button type="button" class="tt"></button><span class="nx" hidden>Next in List</span><br><span class="au"></span></span><span class="stc"></span><span class="acts"></span>';
+        li.innerHTML = '<span class="n tnum"><span class="num"></span></span><span><span class="tt"></span><span class="nx" hidden>Next in List</span><br><span class="au"></span></span><span class="stc"></span><span class="acts"></span>';
         li.querySelector('.num').textContent = it.order || '–';
         if (can && !q) {   // no dragging while a search is hiding some of the items
           const dg = document.createElement('button'); dg.type = 'button'; dg.className = 'drag'; dg.textContent = '⠿';
@@ -6750,17 +6751,15 @@ async function renderLists() {
           dg.addEventListener('keydown', e => rlKey(e, name, it.id));
           li.querySelector('.n').prepend(dg);
         }
-        const tt = li.querySelector('.tt'); tt.textContent = it.title;
-        li.querySelector('.au').textContent = [it.author, b && b.title !== it.title ? 'in your library as “' + b.title + '”' : '', it.notes].filter(Boolean).join(' · ');
+        li.querySelector('.tt').textContent = it.title;
+        li.querySelector('.au').textContent = [it.author, it.notes].filter(Boolean).join(' · ');
         if (isNext) li.querySelector('.nx').hidden = false;
-        const stc = li.querySelector('.stc');
-        if (b) { stc.innerHTML = `<span class="pill" data-s="${escapeText(b.status)}">${escapeText(b.status)}</span>`; tt.addEventListener('click', () => { state.lib.mode = 'books'; openInLibrary(b.id); }); }
-        else if (w) stc.innerHTML = `<span class="st2 want">Wishlist · ${escapeText(wishHow(w))}</span>`;
-        else stc.innerHTML = '<span class="st2">Not added</span>';
+        const st = rlStatus(it), pb = document.createElement('button'); pb.type = 'button'; pb.className = 'pill rl-st'; pb.dataset.s = RL_PILL[st]; pb.textContent = st;
+        pb.disabled = !can; pb.title = 'Tap to change: To read, Reading, Read'; pb.setAttribute('aria-label', `Status of ${it.title}: ${st}. Tap to change.`);
+        pb.addEventListener('click', () => rlCycle(it));
+        li.querySelector('.stc').appendChild(pb);
         const acts = li.querySelector('.acts');
-        if (!b && !w) { const a = document.createElement('button'); a.type = 'button'; a.textContent = '+ Wishlist'; a.disabled = !can; a.addEventListener('click', async () => { a.disabled = true; try { await appendWishRows([{ title: it.title, author: it.author, seenIn: name }]); setStatus('live', `Added “${it.title}” to your Inbox`); renderLists(); } catch (err) { a.disabled = false; notice('Couldn\'t add it: ' + (err.message || explain(err)), 'error'); } }); acts.appendChild(a); }
-        const e = document.createElement('button'); e.type = 'button'; e.textContent = b ? 'Edit' : 'Add to Library'; e.addEventListener('click', () => rlEdit(it)); acts.appendChild(e);
-        const en = document.createElement('button'); en.type = 'button'; en.textContent = 'Entry'; en.title = 'List only details: which list, notes, remove'; en.setAttribute('aria-label', 'List entry for ' + it.title); en.addEventListener('click', () => openListDlg(it)); acts.appendChild(en);
+        const e = document.createElement('button'); e.type = 'button'; e.textContent = 'Edit'; e.setAttribute('aria-label', 'Edit ' + it.title); e.addEventListener('click', () => openListDlg(it)); acts.appendChild(e);
         ol.appendChild(li);
       }
       sec.appendChild(ol);
@@ -6784,6 +6783,18 @@ async function writeListFields(id, fields) { await DB().listUpdate(id, fields); 
 async function clearListItem(id) { await DB().listClear(id); }
 // Reload the lists from the data (after a failed save, so the screen shows what is really stored)
 async function rlReload() { disc.loaded = false; try { await loadDiscover(); } catch (err) {} renderLists(); }
+// Tap the status pill: To read -> Reading -> Read -> To read. Shown at once; the write (status only) is queued behind any earlier ones,
+// and if it fails the lists are reloaded so the screen shows what is really stored.
+function rlCycle(it) {
+  if (!rlCan()) return;
+  const next = RL_STATUS[(RL_STATUS.indexOf(rlStatus(it)) + 1) % 3], gen = rl.gen;
+  it.status = next; renderLists();
+  rl.q = rl.q.then(async () => {
+    if (gen !== rl.gen) return;
+    try { await DB().listUpdate(it.id, { status: next }); setStatus('live', `“${it.title}”: ${next}`); }
+    catch (err) { rl.gen++; notice(`Couldn't save the status of “${it.title}”: ${err.message || explain(err)}`, 'error'); await rlReload(); }
+  });
+}
 
 /* Reorder. Drag the ⠿ handle (mouse or touch, Pointer Events) or press the up and down arrow keys on it. The new order shows at once;
    the whole list is renumbered 1..n and only the items whose number changed are written (DB().listReorder), one after another. */
@@ -6848,29 +6859,12 @@ function rlDragScroll() {
   });
 }
 
-/* Edit opens the normal Books editor. A matched book is edited there (and, if the item had no bookId, it is quietly linked when the
-   dialog saves, so a later rename keeps the match). An item that isn't in the library opens the editor to add it, and links the new book. */
-function rlEdit(it) {
-  const b = listBook(it);
-  rl.link = { item: it, bookId: b ? b.id : '' };
-  if (b) openBookDialog(b); else openBookDialog(null, { title: it.title, author: it.author, status: 'TBR' });
-}
-async function rlLinkSaved(bookId) {
-  const l = rl.link; rl.link = null;
-  if (!l || !bookId || l.item.bookId === bookId || (l.bookId && l.bookId !== bookId)) return;
-  try { await writeListFields(l.item.id, { bookId }); l.item.bookId = bookId; }
-  catch (err) { notice(`Saved the book, but couldn't link it to “${l.item.list}”: ${err.message || explain(err)}`, 'error'); }
-}
-$('bookDlg').addEventListener('close', () => { rl.link = null; });
-
-// The small "List Entry" dialog: only what belongs to the list (which list, notes, remove). An item with no matching book can also fix its title and author here.
+// Edit opens the "List Entry" dialog: title, author, status, notes, which list, remove. It only ever touches the list entry.
 function openListDlg(it) {
   rl.editing = it;
-  const b = listBook(it);
   $('rlNames').innerHTML = listNames().map(n => `<option value="${escapeText(n)}">`).join('');
-  $('rl-list').value = it.list; $('rl-title').value = it.title; $('rl-author').value = it.author; $('rl-notes').value = it.notes;
-  $('rlTitleF').hidden = $('rlAuthorF').hidden = !!b; $('rl-title').required = !b;
-  $('rlHint').textContent = b ? 'Title, author and status come from the book: use Edit to change them. Moving the entry puts it at the end of the other list.' : 'This one isn\'t in your library yet. Add to Library makes a book of it. Moving the entry puts it at the end of the other list.';
+  $('rl-list').value = it.list; $('rl-title').value = it.title; $('rl-author').value = it.author; $('rl-status').value = rlStatus(it); $('rl-notes').value = it.notes;
+  $('rlHint').textContent = 'Only this list entry changes. Moving it puts it at the end of the other list.';
   $('rlRemove').disabled = $('rlSave').disabled = !rlCan();
   $('rlMsg').textContent = '';
   $('listDlg').showModal(); $('rl-notes').focus();
@@ -6880,13 +6874,12 @@ $('listForm').addEventListener('submit', async e => {
   e.preventDefault();
   const it = rl.editing; if (!it) return;
   if (!rlCan()) { $('rlMsg').textContent = 'Saving needs the live connection. ' + connectHint(); return; }
-  const f = { list: listName($('rl-list').value), notes: $('rl-notes').value.trim() };
-  if (!$('rlTitleF').hidden) { f.title = $('rl-title').value.trim(); f.author = $('rl-author').value.trim(); }
-  if (!f.list || ('title' in f && !f.title)) { $('rlMsg').textContent = 'A list and a title are needed.'; return; }
+  const f = { list: listName($('rl-list').value), title: $('rl-title').value.trim(), author: $('rl-author').value.trim(), status: $('rl-status').value, notes: $('rl-notes').value.trim() };
+  if (!f.list || !f.title) { $('rlMsg').textContent = 'A list and a title are needed.'; return; }
   if (f.list !== it.list) f.order = String(listEnd(f.list) + 1);   // another list: it goes to the end
   $('rlSave').disabled = true; $('rlMsg').textContent = 'Saving…';
   try {
-    const changed = Object.fromEntries(Object.entries(f).filter(([k, v]) => v !== String(it[k] ?? '')));
+    const changed = Object.fromEntries(Object.entries(f).filter(([k, v]) => v !== (k === 'status' ? rlStatus(it) : String(it[k] ?? ''))));
     if (Object.keys(changed).length) { await writeListFields(it.id, changed); Object.assign(it, changed); }
     rl.open[f.list] = true;
     $('listDlg').close(); setStatus('live', 'list' in changed ? `Moved “${it.title}” to ${f.list}` : `Saved “${it.title}”`); renderLists();
@@ -6895,13 +6888,13 @@ $('listForm').addEventListener('submit', async e => {
 $('rlRemove').addEventListener('click', async () => {
   const it = rl.editing; if (!it) return;
   $('listDlg').close();
-  if (!(await askOk(`Remove “${it.title}” from ${it.list}? The book itself isn't touched.`, 'Remove'))) { $('listDlg').showModal(); return; }
+  if (!(await askOk(`Remove “${it.title}” from ${it.list}? Your library isn't touched.`, 'Remove'))) { $('listDlg').showModal(); return; }
   try { await clearListItem(it.id); disc.lists.splice(disc.lists.indexOf(it), 1); setStatus('live', `Removed “${it.title}”`); renderLists(); }
   catch (err) { notice(`Couldn't remove “${it.title}”: ${err.message || explain(err)}`, 'error'); }
 });
 
 /* New List / Add to This List: paste one book per line (the same line formats as Next Up), check the preview, add them in order.
-   Books already in the list, and lines repeated in the paste, are marked and skipped. Not-added books can be ticked to go on the Wishlist. */
+   Books already in the list, and lines repeated in the paste, are marked and skipped. Any row can be ticked to go on the Wishlist too. Nothing is matched against the library. */
 const lp = { rows: [], busy: false };
 function openListPaste(name) {
   $('lpNames').innerHTML = listNames().map(n => `<option value="${escapeText(n)}">`).join('');
@@ -6911,49 +6904,40 @@ function openListPaste(name) {
   $('listPasteDlg').showModal(); $(name ? 'lp-ta' : 'lp-list').focus();
 }
 function lpParse() {
-  const was = new Map(lp.rows.map(r => [wishKey(r.title), r.wish]));
-  lp.rows = $('lp-ta').value.split('\n').map(parseBookLine).filter(Boolean).map(r => ({ title: r.title, author: r.author, wish: was.get(wishKey(r.title)) || false }));
+  const was = new Map(lp.rows.map(r => [wishKey(r.title), r]));
+  lp.rows = $('lp-ta').value.split('\n').map(parseBookLine).filter(Boolean).map(r => { const o = was.get(wishKey(r.title)); return { title: r.title, author: r.author, status: o ? o.status : 'To read', wish: o ? o.wish : false }; });
   $('lpErr').textContent = ''; lpRender();
 }
 function lpRender() {
   const body = $('lpBody'); body.textContent = '';
   lp.rows.forEach((r, i) => {
-    const tr = document.createElement('tr'); tr.innerHTML = '<td class="no"></td><td></td><td></td><td class="mt"></td>';
+    const tr = document.createElement('tr'); tr.innerHTML = '<td class="no"></td><td></td><td></td><td></td><td class="mt"></td>';
     [['title', 'Title'], ['author', 'Author']].forEach(([k, label], j) => {
       const inp = document.createElement('input'); inp.value = r[k]; inp.dataset.i = i; inp.dataset.k = k; inp.setAttribute('aria-label', label); inp.autocomplete = 'off'; tr.children[j + 1].appendChild(inp);
     });
+    const sel = document.createElement('select'); sel.dataset.i = i; sel.dataset.k = 'status'; sel.setAttribute('aria-label', 'Status');
+    sel.innerHTML = RL_STATUS.map(x => `<option>${x}</option>`).join(''); sel.value = r.status; tr.children[3].appendChild(sel);
+    const cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = r.wish; cb.dataset.i = i; cb.dataset.k = 'wish'; cb.setAttribute('aria-label', 'Add to Wishlist'); tr.children[4].appendChild(cb);
     body.appendChild(tr);
   });
   $('lpPrev').hidden = !lp.rows.length;
   lpRefresh();
 }
-// Re-check every row (duplicates, matches, the order each will take) without rebuilding the cells being typed in
+// Re-check every row (duplicates, the order each will take) without rebuilding the cells being typed in
 function lpRefresh() {
-  const name = listName($('lp-list').value), have = new Set(listItems(name).map(x => wishKey(x.title)));
-  const wish = new Map((disc.wish || []).map(w => [wishKey(w.title), w])), seen = new Set(), trs = $('lpBody').children;
+  // Same title and (when both have one) the same author, so a comic and a novel that share a title can both be on one list
+  const same = (a, b) => wishKey(a.title) === wishKey(b.title) && (!normQ(a.author) || !normQ(b.author) || normQ(a.author) === normQ(b.author));
+  const name = listName($('lp-list').value), have = listItems(name);
+  const seen = [], trs = $('lpBody').children;
   let n = listEnd(name);
   lp.rows.forEach((r, i) => {
-    const k = wishKey(r.title);
     r.warn = r.title.trim() ? '' : 'No title';
-    r.dup = r.warn ? '' : seen.has(k) ? 'twice in this paste' : have.has(k) ? 'already in this list' : '';
-    if (!r.warn) seen.add(k);
-    r.book = r.warn ? null : listBook({ title: r.title.trim(), author: r.author.trim() }); r.w = r.warn ? null : wish.get(k);
+    r.dup = r.warn ? '' : seen.some(x => same(x, r)) ? 'twice in this paste' : have.some(x => same(x, r)) ? 'already in this list' : '';
+    if (!r.warn) seen.push(r);
     r.no = !r.warn && !r.dup ? ++n : 0;
     const tr = trs[i]; if (!tr) return;
     tr.className = r.warn ? 'bad' : r.dup ? 'dup' : ''; tr.title = r.warn || (r.dup ? 'Skipped: ' + r.dup : '');
     tr.children[0].textContent = r.no || '–';
-    const mt = tr.children[3], sig = r.warn ? 'w' : r.dup ? 'd' + r.dup : r.book ? 'b' + r.book.status : r.w ? 'k' + wishHow(r.w) : 'n';
-    if (mt.dataset.sig === sig) return;
-    mt.dataset.sig = sig; mt.textContent = '';
-    if (r.warn) mt.textContent = 'Needs a title';
-    else if (r.dup) mt.textContent = 'Skipped: ' + r.dup;
-    else if (r.book) mt.textContent = 'In library · ' + (r.book.status || 'no status');
-    else if (r.w) mt.textContent = 'Wishlist · ' + wishHow(r.w);
-    else {
-      mt.append('Not added');
-      const lab = document.createElement('label'), cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = r.wish; cb.dataset.i = i; cb.dataset.k = 'wish';
-      lab.append(cb, 'Add to Wishlist'); mt.appendChild(lab);
-    }
   });
   const skipped = lp.rows.filter(r => r.dup), bad = lp.rows.filter(r => r.warn).length, parts = [];
   if (bad) parts.push(`${bad} line${bad > 1 ? 's have' : ' has'} no title and will be left out.`);
@@ -6964,8 +6948,8 @@ function lpRefresh() {
 }
 $('lp-ta').addEventListener('input', lpParse);
 $('lp-list').addEventListener('input', lpRefresh);
-$('lpBody').addEventListener('input', e => { const i = e.target.dataset.i, k = e.target.dataset.k; if (i == null || !lp.rows[i] || k === 'wish') return; lp.rows[i][k] = e.target.value; lpRefresh(); });
-$('lpBody').addEventListener('change', e => { if (e.target.dataset.k === 'wish' && lp.rows[e.target.dataset.i]) lp.rows[e.target.dataset.i].wish = e.target.checked; });
+$('lpBody').addEventListener('input', e => { const i = e.target.dataset.i, k = e.target.dataset.k; if (i == null || !lp.rows[i] || k === 'wish' || k === 'status') return; lp.rows[i][k] = e.target.value; lpRefresh(); });
+$('lpBody').addEventListener('change', e => { const r = lp.rows[e.target.dataset.i]; if (!r) return; if (e.target.dataset.k === 'wish') r.wish = e.target.checked; else if (e.target.dataset.k === 'status') r.status = e.target.value; });
 $('lpClose').addEventListener('click', () => $('listPasteDlg').close());
 $('lpCancel').addEventListener('click', () => $('listPasteDlg').close());
 $('listPasteForm').addEventListener('submit', async e => {
@@ -6979,12 +6963,15 @@ $('listPasteForm').addEventListener('submit', async e => {
   lp.busy = true; $('lpAdd').disabled = true; $('lpAdd').textContent = 'Adding…';
   try {
     const base = listEnd(name);
-    const rows = todo.map((r, i) => { const b = listBook({ title: r.title.trim(), author: r.author.trim() }); return { list: name, order: String(base + i + 1), title: r.title.trim(), author: r.author.trim(), notes: '', bookId: b ? b.id : '' }; });
+    // To read is stored as blank, so adding to a list never needs the status column unless a row is Reading or Read
+    const rows = todo.map((r, i) => ({ list: name, order: String(base + i + 1), title: r.title.trim(), author: r.author.trim(), notes: '', bookId: '', status: r.status === 'To read' ? '' : r.status }));
     const res = await DB().listAddMany(rows, (disc.lists || []).map(x => x.id));
     res.items.forEach((x, i) => disc.lists.push({ ...Object.fromEntries(res.header.map(h => [h, String(rows[i][h] ?? '').trim()])), id: x.id, _row: x.row }));
     rl.open[name] = true;
-    // Ticked books that are still not in the library or on the Wishlist go to the Wishlist Inbox in one write
-    const wl = todo.filter(r => r.wish && !listBook({ title: r.title.trim(), author: r.author.trim() }) && !wishDupe(r.title));
+    // Ticked rows go to the Wishlist Inbox in one write (skipping any already on the Wishlist). Only the Wishlist is touched, never Books.
+    // Same title and (when both have one) the same author counts as already there, so a comic and a novel with one title stay apart.
+    const onWish = r => (disc.wish || []).some(w => wishKey(w.title) === wishKey(r.title) && (!normQ(w.author) || !normQ(r.author) || normQ(w.author) === normQ(r.author)));
+    const wl = todo.filter(r => r.wish && !onWish(r));
     let wErr = '';
     if (wl.length) { try { await appendWishRows(wl.map(r => ({ title: r.title.trim(), author: r.author.trim(), seenIn: name }))); } catch (e2) { wErr = e2.message || explain(e2); } }
     $('listPasteDlg').close();
@@ -8521,10 +8508,13 @@ $('gForm').addEventListener('submit', e => {
    Sheet columns are matched to SBT by header name, and values are compared only after cellToSb on both sides
    (so 1,116 and 1116, or 'Yes and Yes, are not differences). calc columns are never compared, stored or written. */
 const TOOL_RANGE = { 'Books': 'A1:AZ5000', 'Reading Log': 'A1:H20000', 'App Settings': 'A1:C50', 'Ratings': 'A1:J5000', 'Contents': 'A1:D5000',
-  'Wishlist': 'A1:Z3000', 'Series Tracker': 'A1:I500', 'Reading Lists': 'A1:G2000', 'Wishlist archive': 'A1:P5000', 'Quotes': 'A1:G5000' };
+  'Wishlist': 'A1:Z3000', 'Series Tracker': 'A1:I500', 'Reading Lists': 'A1:H2000', 'Wishlist archive': 'A1:P5000', 'Quotes': 'A1:G5000' };
 // Tabs with a key pair rows by it; the others (Reading Log, Ratings, Contents, Quotes) pair the i-th Sheet row with the i-th Supabase row.
 const TOOL_KEY = { 'Books': 'id', 'Wishlist': 'id', 'Reading Lists': 'id', 'Wishlist archive': 'id', 'Series Tracker': 'series', 'App Settings': 'setting' };
 // Header spellings the Sheet uses for some columns (the app reads these tabs by position, so the names were never fixed)
+// Columns added later: a Sheet tab may not have them yet. Reading treats the missing column as blank; the copy back refuses rather than add a column
+// to the Sheet (or shift any data) when Supabase holds a value for it.
+const TOOL_OPTIONAL = { 'Reading Lists': { status: "Add a 'status' header to the Reading Lists tab first." } };
 const TOOL_ALIAS = { 'App Settings': { key: 'setting' }, 'Contents': { stamp: 'savedAt', start: 'startPage' }, 'Ratings': { flaw: 'fatalFlaw' } };
 const toolSheet = tab => tab === 'Quotes' ? { id: QUOTES_ID, title: 'QUOTES' } : { id: SHEET_ID, title: tab };
 const toolKeyIdx = tab => TOOL_KEY[tab] ? SBT[tab][1].findIndex(c => c[0] === TOOL_KEY[tab]) : -1;
@@ -8535,6 +8525,10 @@ const toolPlural = (n, one, many) => n + ' ' + (n === 1 ? one : many || one + 's
 function toolVal(tab, h, t, cell) {
   let s = cell == null ? '' : String(cell);
   if (tab === 'Reading Log' && h === 'loggedAt') { const m = s.trim().match(/^(\d{4}-\d{2}-\d{2})[ T](\d{2}:\d{2})(?::\d{2}(?:\.\d+)?)?$/); if (m) s = m[1] + ' ' + m[2]; }
+  if (tab === 'Reading Lists' && h === 'status') {   // blank is null (the table only allows To read / Reading / Read or null); other letter cases are tidied
+    const v = s.replace(/^'/, '').trim();
+    return v === '' ? null : RL_STATUS.find(x => x.toLowerCase() === v.toLowerCase()) || v;
+  }
   return cellToSb(t, s);
 }
 // One tab's values from the API (header row first) -> records { row: Sheet row number, cells: strings, n: stored values }; blank rows are skipped.
@@ -8548,15 +8542,16 @@ function toolParse(tab, values) {
     if (name in at) throw toolStop(`The Sheet has the column ${h} twice in ${tab}. Nothing was changed.`);
     at[name] = i;
   });
-  for (const [h] of cols) if (!(h in at)) throw toolStop(`The Sheet's ${tab} tab has no ${h} column, which Supabase expects. Nothing was changed.`);
+  const missing = [];
+  for (const [h] of cols) if (!(h in at)) { if (TOOL_OPTIONAL[tab] && TOOL_OPTIONAL[tab][h]) missing.push(h); else throw toolStop(`The Sheet's ${tab} tab has no ${h} column, which Supabase expects. Nothing was changed.`); }
   const recs = []; let last = 1;
   values.slice(1).forEach((r, i) => {
     if (!r.some(v => String(v ?? '').trim())) return;
     last = i + 2;
-    const cells = cols.map(([h]) => String(r[at[h]] ?? ''));
+    const cells = cols.map(([h]) => at[h] == null ? '' : String(r[at[h]] ?? ''));
     recs.push({ row: i + 2, cells, n: cols.map(([h, , t], j) => t === 'calc' ? null : toolVal(tab, h, t, cells[j])) });
   });
-  return { tab, at, width: hdr.reduce((w, h, i) => h ? i + 1 : w, 0), recs, last };
+  return { tab, at, missing, width: hdr.reduce((w, h, i) => h ? i + 1 : w, 0), recs, last };
 }
 async function toolReadSheet(say, tabs = Object.keys(SBT)) {
   const out = {};
@@ -8601,6 +8596,7 @@ function toolProblems(sheet) {
         const raw = s.cells[j];
         if (tab === 'Reading Log' && h === 'date' && s.n[j] === null) return add(h, "isn't a valid date (needs yyyy-mm-dd)", raw.trim() ? '“' + raw + '”' : '(blank)');
         if (tab === 'Reading Log' && h === 'pages' && s.n[j] === null && !raw.trim()) return add(h, 'is blank, but every entry needs a number');
+        if (tab === 'Reading Lists' && h === 'status' && s.n[j] !== null && !RL_STATUS.includes(s.n[j])) return add(h, 'must be To read, Reading or Read (or blank)', '“' + raw + '”');
         if (tab === 'Contents' && h === 'bookId' && !raw.trim()) return add(h, 'is blank, but every row in this tab needs one');
         if (tab === 'Reading Log' && h === 'loggedAt' && s.n[j] && !/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/.test(s.n[j])) return add(h, "isn't a date and time (needs yyyy-mm-dd hh:mm)", '“' + raw + '”');
         if ((t === 'num' || t === 'int' || t === 'date') && raw.trim() && s.n[j] === null)
@@ -8678,6 +8674,10 @@ function toolPlan(sheet, db) {
       else if (seen.has(k)) refuse.push(`${tab}: ${cols[ki][0]} ${sbToCell(cols[ki][2], s.n[ki])} is in the Sheet twice (row ${s.row}). Fix that in the Sheet first.`);
       seen.add(k);
     });
+    for (const h of p.missing) {   // a column the Sheet doesn't have yet: stop before writing anything if Supabase has values for it
+      const j = cols.findIndex(c => c[0] === h);
+      if (db[tab].some(x => x.n[j] !== null && x.n[j] !== '')) refuse.push(`${tab}: Supabase has ${h} values, but the Sheet's ${tab} tab has no ${h} header. ${TOOL_OPTIONAL[tab][h]}`);
+    }
     const d = toolDiff(tab, p.recs, db[tab]);
     if (ki < 0 && d.onlyS.length) refuse.push(`${tab}: Supabase has ${toolPlural(db[tab].length, 'row')} but the Sheet has ${toolPlural(p.recs.length, 'row')}. This tab only ever grows, so nothing was written. Work out which side is right first.`);
     if (d.cells.length || d.onlyD.length || d.onlyS.length) tabs.push({ tab, ...d });
@@ -8740,7 +8740,7 @@ async function toolWriteSheet(plan, say) {
     if (!t.onlyD.length) continue;
     const r0 = p.last + 1, r1 = p.last + t.onlyD.length;
     if (grid[t.tab].rows != null && r1 > grid[t.tab].rows) grow.push([s.id, { appendDimension: { sheetId: grid[t.tab].sheetId, dimension: 'ROWS', length: r1 - grid[t.tab].rows } }]);
-    push(adds, s.id, { range: `${ref}!A${r0}:${colLetter(p.width - 1)}${r1}`, values: t.onlyD.map(d => { const row = Array(p.width).fill(''); cols.forEach(([h, c, ty]) => { if (ty !== 'calc') row[p.at[h]] = toolOut(t.tab, h, ty, sbToCell(ty, d.r[c])); }); return row; }) });
+    push(adds, s.id, { range: `${ref}!A${r0}:${colLetter(p.width - 1)}${r1}`, values: t.onlyD.map(d => { const row = Array(p.width).fill(''); cols.forEach(([h, c, ty]) => { if (ty !== 'calc' && p.at[h] != null) row[p.at[h]] = toolOut(t.tab, h, ty, sbToCell(ty, d.r[c])); }); return row; }) });
     if (t.tab === 'Books') {   // the remain and % formulas, exactly as a newly added book gets them
       const P = L('pages'), C = L('currentPage');
       t.onlyD.forEach((_, i) => { const r = r0 + i;
@@ -8773,7 +8773,7 @@ async function toolCopyToSb(say) {
       for (let i = 0; i < objs.length; i += 500) await sbWrite(sbTable(tab), { method: 'POST', body: objs.slice(i, i + 500), prefer: 'return=minimal' });
     } catch (err) {
       if (err && err.code === 'sb_signin') throw err;
-      throw toolStop(`Copy stopped while copying ${tab}: ${(err && err.message) || err}. Supabase may now hold only part of your Sheet, and this device was not switched. Your Sheet is unchanged: press Copy again to start over.`);
+      throw toolStop(`Copy stopped while copying ${tab}: ${(tab === 'Reading Lists' ? sbNoStatus(err) : err).message || err}. Supabase may now hold only part of your Sheet, and this device was not switched. Your Sheet is unchanged: press Copy again to start over.`);
     }
   }
   say('Checking the copy…');
