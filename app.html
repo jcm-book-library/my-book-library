@@ -239,9 +239,17 @@ body:has(#undoBar:not([hidden])) .totop{bottom:calc(max(16px,env(safe-area-inset
 .rl-prog{height:5px;background:var(--raise);border-radius:3px;overflow:hidden;margin:0 16px 4px}
 .rl-prog>i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--accent-next))}
 .rl-ol{list-style:none;margin:0;padding:6px 16px 4px;display:flex;flex-direction:column}
-.rl-ol li{display:grid;grid-template-columns:2.4em minmax(0,1fr) auto auto;gap:4px 12px;align-items:center;padding:9px 0;border-top:1px solid var(--line)}
+.rl-ol li{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;gap:4px 10px;align-items:center;padding:9px 0;border-top:1px solid var(--line);position:relative}
 .rl-ol li:first-child{border-top:0}
-.rl-ol .n{color:var(--muted);text-align:right}
+.rl-ol .n{color:var(--muted);display:flex;align-items:center;justify-content:flex-end;gap:2px;min-width:2.4em}
+.rl-ol .n .num{min-width:1.5em;text-align:right}
+.rl-ol .drag{touch-action:none;cursor:grab;background:none;border:0;color:var(--muted);font-size:20px;line-height:1;padding:0;width:34px;height:36px;border-radius:8px;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;display:grid;place-items:center}
+.rl-ol .drag:hover,.rl-ol .drag:focus-visible{color:var(--fg);background:var(--raise)}
+.rl-ol li.lifted{z-index:3;background:var(--surface);box-shadow:0 6px 18px rgba(0,0,0,.28);border-radius:10px;cursor:grabbing;opacity:.97}
+.rl-ol li.lifted .drag{cursor:grabbing}
+.rl-ol li.drop-above{box-shadow:0 -2px 0 0 var(--accent)}
+.rl-ol li.drop-below{box-shadow:0 2px 0 0 var(--accent)}
+.rl-ol.dragging{user-select:none;-webkit-user-select:none}
 .rl-ol .tt{background:none;border:0;padding:0;font:inherit;font-weight:500;color:var(--fg);text-align:left;cursor:pointer}
 .rl-ol .tt:hover{color:var(--accent)}
 .rl-ol .au{font-size:12px;color:var(--muted)}
@@ -252,8 +260,21 @@ body:has(#undoBar:not([hidden])) .totop{bottom:calc(max(16px,env(safe-area-inset
 .rl-ol .nx{font-size:11px;font-weight:700;color:var(--accent);margin-left:8px;white-space:nowrap}
 .rl-ol .st2{font-size:11px;font-weight:700;padding:2px 10px;border-radius:999px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
 .rl-ol .st2.want{border-color:var(--accent);color:var(--fg)}
-.rl-add{padding:6px 16px 14px}
-@media (max-width:560px){.rl-ol li{grid-template-columns:2em minmax(0,1fr) auto}.rl-ol .acts{grid-column:2/-1;justify-content:flex-start}}
+.rl-add{padding:6px 16px 14px;display:flex;gap:8px;flex-wrap:wrap}
+.rl-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media (max-width:560px){.rl-ol li{grid-template-columns:auto minmax(0,1fr) auto}.rl-ol .acts{grid-column:2/-1;justify-content:flex-start}}
+#listPasteDlg{width:min(600px,calc(100vw - 24px));max-height:calc(100dvh - 24px);overflow:hidden}
+#listPasteDlg[open]{display:flex;flex-direction:column}
+#listPasteForm{display:flex;flex-direction:column;min-height:0;flex:1}
+#listPasteDlg .dlg-head{padding:12px 16px}#listPasteDlg .dlg-head h2{font-size:18px}
+#listPasteDlg .dlg-foot{align-items:center;padding:10px 16px;flex:none}
+#lp-ta{font:inherit;font-size:12.5px;line-height:1.4;min-height:96px;white-space:pre;overflow:auto}
+#listPasteDlg .q-body{grid-template-columns:minmax(0,1fr)}
+.ptab.lptab th:nth-child(1){width:8%}.ptab.lptab th:nth-child(2){width:30%}.ptab.lptab th:nth-child(3){width:25%}.ptab.lptab th:nth-child(4){width:37%}
+.lptab td.no{text-align:center;color:var(--muted);font-variant-numeric:tabular-nums}
+.lptab td.mt{font-size:11px;color:var(--muted);line-height:1.3;vertical-align:middle}
+.lptab td.mt label{display:flex;gap:4px;align-items:center;color:var(--fg);cursor:pointer;margin-top:2px}
+.lptab td.mt input{width:14px;min-height:0;height:14px;accent-color:var(--accent)}
 .cov-s{width:26px;height:38px;object-fit:cover;border-radius:3px;margin-right:8px;vertical-align:-14px;background:var(--raise)}
 .cov-m{width:46px;height:68px;object-fit:cover;border-radius:4px;flex:none;background:var(--raise)}
 .nb .book-title:hover{color:var(--accent)}
@@ -1413,7 +1434,7 @@ body.is-blank #view-now :is(.stats,.dash-2){display:none}
   </div>
 
   <div id="view-library" class="vstack" role="tabpanel" aria-labelledby="tab-library" hidden>
-    <div class="lib-mode" role="group" aria-label="Library view"><button type="button" data-mode="books" aria-pressed="true">Books</button><button type="button" data-mode="authors" aria-pressed="false">Authors</button><button type="button" data-mode="series" aria-pressed="false">Series</button><button type="button" data-mode="lists" aria-pressed="false">Reading lists</button></div>
+    <div class="lib-mode" role="group" aria-label="Library view"><button type="button" data-mode="books" aria-pressed="true">Books</button><button type="button" data-mode="authors" aria-pressed="false">Authors</button><button type="button" data-mode="series" aria-pressed="false">Series</button><button type="button" data-mode="lists" aria-pressed="false">Reading Lists</button></div>
     <div id="toolsMountLib"><div id="libTools">
       <div class="lib-tools pop-wrap has-seg" id="libBar">
         <input type="search" id="libSearch" placeholder="Search title, author, series or theme" aria-label="Search books">
@@ -1428,20 +1449,21 @@ body.is-blank #view-now :is(.stats,.dash-2){display:none}
             <div class="field"><label for="libPublisher">Publisher</label><select id="libPublisher" aria-label="Publisher"><option value="">All publishers</option></select></div>
             <div class="field"><label for="libOwned">Owned</label><select id="libOwned" aria-label="Owned"><option value="">Physical &amp; digital</option><option>Physical</option><option>Digital</option></select></div>
           </div>
-          <div class="pop-foot"><button class="linkbtn" id="fClear" type="button">Clear all</button><button class="btn btn-primary" id="fDone" type="button">Done</button></div>
+          <div class="pop-foot"><button class="linkbtn" id="fClear" type="button">Clear All</button><button class="btn btn-primary" id="fDone" type="button">Done</button></div>
         </div>
       </div>
       <div class="fchips" id="fchips" aria-label="Active filters"></div>
     </div></div>
     <div id="listsView" hidden>
-      <div class="rl-bar"><button class="btn btn-primary" type="button" id="rlNew">New list</button><span class="muted small" id="rlNote"></span></div>
+      <span class="rl-sr" id="rlLive" role="status" aria-live="polite"></span>
+      <div class="rl-bar"><button class="btn btn-primary" type="button" id="rlNew">New List</button><span class="muted small" id="rlNote"></span></div>
       <div id="rlBoxes"></div>
     </div>
     <div id="authorsView" hidden>
       <div id="auList">
         <div class="se-tools"><input type="search" id="auSearch" placeholder="Search author, title or series" aria-label="Search authors"><select id="auSort" aria-label="Sort authors"><option value="read">Most read</option><option value="az">A–Z</option><option value="rated">Highest rated</option><option value="toread">Most to read</option></select></div>
         <div id="auTop"></div>
-        <div class="shelf-sec" id="auAllH">All authors</div>
+        <div class="shelf-sec" id="auAllH">All Authors</div>
         <div class="au-grid" id="auGrid"></div>
         <button type="button" class="btn" id="auMore" hidden style="align-self:center"></button>
         <p class="muted small" id="auCount" style="margin:12px 0 0"></p>
@@ -1455,7 +1477,7 @@ body.is-blank #view-now :is(.stats,.dash-2){display:none}
     </div>
     <div id="libShelves" hidden></div>
     <div id="libSecs"></div>
-    <div class="lib-foot"><span><span id="libCount"></span> <button class="btn" id="libSheetOrder" type="button" hidden>Back to sheet order</button></span></div>
+    <div class="lib-foot"><span><span id="libCount"></span> <button class="btn" id="libSheetOrder" type="button" hidden>Back to Sheet Order</button></span></div>
   </div>
 
   <div id="view-next" class="vstack" role="tabpanel" aria-labelledby="tab-next" hidden>
@@ -1749,16 +1771,37 @@ body.is-blank #view-now :is(.stats,.dash-2){display:none}
 
 <dialog id="listDlg" aria-labelledby="rlTitleH" style="width:min(600px,calc(100vw - 32px))">
   <form id="listForm" method="dialog">
-    <div class="dlg-head"><h2 id="rlTitleH">Add to a reading list</h2><button class="btn" type="button" id="rlClose">Close</button></div>
+    <div class="dlg-head"><h2 id="rlTitleH">List Entry</h2><button class="btn" type="button" id="rlClose">Close</button></div>
     <div class="wd-grid">
-      <div class="field w2"><label for="rl-list">List</label><input id="rl-list" name="list" required list="rlNames" autocomplete="off" placeholder="e.g. Marvel Read List"><datalist id="rlNames"></datalist></div>
-      <div class="field"><label for="rl-order">Place in order</label><input id="rl-order" name="order" type="number" min="1" inputmode="numeric"></div>
-      <div class="field w4"><label for="rl-title">Title</label><input id="rl-title" name="title" required autocomplete="off"></div>
-      <div class="field w2"><label for="rl-author">Author</label><input id="rl-author" name="author" autocomplete="off"></div>
-      <div class="field w2"><label for="rl-notes">Notes</label><input id="rl-notes" name="notes" autocomplete="off"></div>
-      <div class="field w4"><label for="rl-book">Link to a book in your library (optional)</label><input id="rl-book" list="rlBooks" autocomplete="off" placeholder="Start typing a title. Only needed when it isn't matched by itself."><datalist id="rlBooks"></datalist><span class="muted small" id="rlBookNote"></span></div>
+      <div class="field w4"><label for="rl-list">List</label><input id="rl-list" name="list" required list="rlNames" autocomplete="off" placeholder="e.g. Marvel Read List"><datalist id="rlNames"></datalist></div>
+      <div class="field w2" id="rlTitleF"><label for="rl-title">Title</label><input id="rl-title" name="title" required autocomplete="off"></div>
+      <div class="field w2" id="rlAuthorF"><label for="rl-author">Author</label><input id="rl-author" name="author" autocomplete="off"></div>
+      <div class="field w4"><label for="rl-notes">Notes</label><input id="rl-notes" name="notes" autocomplete="off"></div>
+      <p class="muted small w4" id="rlHint" style="margin:0;grid-column:1/-1"></p>
     </div>
-    <div class="dlg-foot"><span class="muted" id="rlMsg" style="font-size:13px;align-self:center"></span><span class="dlg-actions"><button class="btn" type="button" id="rlRemove" hidden>Remove from list</button><button class="btn btn-primary" type="submit" id="rlSave">Add</button></span></div>
+    <div class="dlg-foot"><span class="muted" id="rlMsg" style="font-size:13px;align-self:center"></span><span class="dlg-actions"><button class="btn" type="button" id="rlRemove">Remove from List</button><button class="btn btn-primary" type="submit" id="rlSave">Save</button></span></div>
+  </form>
+</dialog>
+
+<dialog id="listPasteDlg" aria-labelledby="lpTitleH">
+  <form id="listPasteForm" method="dialog" novalidate>
+    <div class="dlg-head"><h2 id="lpTitleH">New List</h2><button class="x" type="button" id="lpClose" aria-label="Close">×</button></div>
+    <div class="q-body">
+      <div class="field"><label for="lp-list">List Name</label><input id="lp-list" list="lpNames" autocomplete="off" placeholder="e.g. Marvel Read List"><datalist id="lpNames"></datalist></div>
+      <div class="field"><label for="lp-ta">One book per line, in reading order</label><textarea id="lp-ta" spellcheck="false" rows="4" placeholder="Title – Author&#10;Title by Author&#10;or paste columns from a spreadsheet: title, author"></textarea></div>
+      <div id="lpPrev" hidden><span class="q-lab">Preview (edit any cell)</span><table class="ptab lptab"><thead><tr><th>#</th><th>Title</th><th>Author</th><th>Match</th></tr></thead><tbody id="lpBody"></tbody></table></div>
+      <div class="q-warn" id="lpWarn"></div>
+      <div class="q-err" id="lpErr" role="alert"></div>
+    </div>
+    <div class="dlg-foot"><button class="btn" type="button" id="lpCancel">Cancel</button><button class="btn btn-primary" type="submit" id="lpAdd" disabled>Add 0</button></div>
+  </form>
+</dialog>
+
+<dialog id="rlRenameDlg" aria-labelledby="rnTitleH" style="width:min(440px,calc(100vw - 32px))">
+  <form id="rlRenameForm" method="dialog">
+    <div class="dlg-head"><h2 id="rnTitleH">Rename List</h2><button class="btn" type="button" id="rnClose">Close</button></div>
+    <div style="padding:16px 20px;display:grid;gap:8px"><div class="field"><label for="rn-name">List Name</label><input id="rn-name" autocomplete="off"></div></div>
+    <div class="dlg-foot"><span class="muted" id="rnMsg" style="font-size:13px;align-self:center"></span><button class="btn btn-primary" type="submit" id="rnSave">Rename</button></div>
   </form>
 </dialog>
 
@@ -3010,22 +3053,30 @@ const sheetDb = {
     const { header, row } = await sheetDb._listRow(id);
     await writeCells('Reading Lists', header, row, fields, listCell);
   },
-  // otherIds: ids the caller already holds. Returns { header, id, row }.
-  async listAdd(f, otherIds = []) {
+  // Adds several items in one write. otherIds: ids the caller already holds. Ids are the highest existing + 1 for each row.
+  // Returns { header, items: [{ id, row }] }.
+  async listAddMany(rows, otherIds = []) {
     const header = await readHeader("'Reading Lists'!A1:Z1"), c = header.indexOf('id');
     if (c < 0) throw { code: 'tool_error', message: 'Reading Lists has no id column' };
     const used = await readRange(`'Reading Lists'!A2:${colLetter(header.length - 1)}2000`);
-    const ids = used.map(r => Number(String(r[c] || '').replace(/\D/g, '')) || 0);
-    const id = 'RL' + String(Math.max(0, ...ids, ...otherIds.map(x => Number(String(x).replace(/\D/g, '')) || 0)) + 1).padStart(4, '0');
-    const row = header.map(h => h === 'id' ? id : listCell(h, f[h]));
-    const r0 = await addRowsBelowLast('Reading Lists', header, [row], used);
-    rlRows.set(id, r0);
-    return { header, id, row: r0 };
+    const top = Math.max(0, ...used.map(r => Number(String(r[c] || '').replace(/\D/g, '')) || 0), ...otherIds.map(x => Number(String(x).replace(/\D/g, '')) || 0));
+    const ids = rows.map((_, i) => 'RL' + String(top + i + 1).padStart(4, '0'));
+    const values = rows.map((f, i) => header.map(h => h === 'id' ? ids[i] : listCell(h, f[h])));
+    const r0 = await addRowsBelowLast('Reading Lists', header, values, used);
+    ids.forEach((id, i) => rlRows.set(id, r0 + i));
+    return { header, items: ids.map((id, i) => ({ id, row: r0 + i })) };
   },
   async listClear(id) {
     const { header, row } = await sheetDb._listRow(id);
     await sheetPut(`'Reading Lists'!A${row}:${colLetter(header.length - 1)}${row}`, [header.map(() => '')]);
     rlRows.delete(id);
+  },
+  // New order numbers for some items: [{ id, order }]. Each row is found by id, then only its order cell is written.
+  async listReorder(changes) {
+    for (const { id, order } of changes) {
+      const { header, row } = await sheetDb._listRow(id);
+      await writeCells('Reading Lists', header, row, { order }, listCell);
+    }
   },
   async profileSave() { return false; }   // names and colours live in Supabase only
 };
@@ -3459,21 +3510,30 @@ const sbDb = {
     const got = await sbWrite(`reading_lists?id=eq.${sbEnc(id)}`, { method: 'PATCH', body, prefer: 'return=representation' });
     if (got.length !== 1) throw { code: 'tool_error', message: got.length ? `Reading list id ${id} appears ${got.length} times` : `Reading list id ${id} isn't there any more` };
   },
-  async listAdd(f, otherIds = []) {
+  // Adds several items in one POST (ids are the highest existing + 1 for each). Returns { header, items: [{ id, row }] }.
+  async listAddMany(rows, otherIds = []) {
     const header = sbHeader('Reading Lists');
     for (let attempt = 0; ; attempt++) {
       const used = await sbAllIds('reading_lists');
-      const id = 'RL' + String(Math.max(0, ...used.map(r => sbNum(r.id)), ...otherIds.map(sbNum)) + 1).padStart(4, '0');
+      const top = Math.max(0, ...used.map(r => sbNum(r.id)), ...otherIds.map(sbNum));
+      const ids = rows.map((_, i) => 'RL' + String(top + i + 1).padStart(4, '0'));
       try {
-        const got = await sbWrite('reading_lists', { method: 'POST', body: sbFullObj('Reading Lists', { ...f, id }, (h, v) => h === 'id' ? v : listCell(h, v)), prefer: 'return=representation' });
-        return { header, id, row: this._no('Reading Lists', got[0].row_id) };
+        const got = await sbWrite('reading_lists', { method: 'POST', body: rows.map((f, i) => sbFullObj('Reading Lists', { ...f, id: ids[i] }, (h, v) => h === 'id' ? v : listCell(h, v))), prefer: 'return=representation' });
+        return { header, items: ids.map((id, i) => ({ id, row: this._no('Reading Lists', got[i].row_id) })) };
       } catch (err) { if (!(err && err.status === 409 && attempt === 0)) throw err; }
     }
   },
+  // Find the row first, require exactly one, then delete that row only (by row_id), so a duplicate id can never take two items with it
   async listClear(id) {
-    const got = await sbWrite(`reading_lists?id=eq.${sbEnc(id)}`, { method: 'DELETE', prefer: 'return=representation' });
-    if (!got.length) throw { code: 'tool_error', message: `Reading list id ${id} isn't there any more` };
+    const found = await sb.api(`reading_lists?select=row_id&id=eq.${sbEnc(id)}`);
+    if (found.length !== 1) throw { code: 'tool_error', message: found.length ? `Reading list id ${id} appears ${found.length} times, so nothing was removed` : `Reading list id ${id} isn't there any more` };
+    const got = await sbWrite(`reading_lists?row_id=eq.${sbEnc(found[0].row_id)}`, { method: 'DELETE', prefer: 'return=representation' });
     got.forEach(r => this._drop('Reading Lists', r.row_id));
+    if (got.length !== 1) throw { code: 'tool_error', message: `Reading list id ${id} couldn't be removed (it may have changed on another device). Refresh and try again.` };
+  },
+  // New order numbers for some items: [{ id, order }]. One PATCH each, by id, requiring exactly one row, order only.
+  async listReorder(changes) {
+    for (const { id, order } of changes) await this.listUpdate(id, { order });
   }
 };
 
@@ -3805,7 +3865,7 @@ function renderLibrary() {
         body.appendChild(tr);
       }
       sec.appendChild(wrap);
-      if (list.length > 10) { const m = document.createElement('button'); m.type = 'button'; m.className = 'btn more'; m.dataset.more = name; m.textContent = list.length > lim ? `Show all ${fmt(list.length)}` : 'Show fewer'; sec.appendChild(m); }
+      if (list.length > 10) { const m = document.createElement('button'); m.type = 'button'; m.className = 'btn more'; m.dataset.more = name; m.textContent = list.length > lim ? `Show All ${fmt(list.length)}` : 'Show Fewer'; sec.appendChild(m); }
     }
     box.appendChild(sec);
   }
@@ -3853,10 +3913,10 @@ function renderShelves(rows, filtering) {
   const box = $('libShelves'), set = new Set(rows), defs = [];
   const add = (grp, label, books) => { if (books.length) defs.push({ grp, label, books }); };
   const byFin = (a, b) => (b.finishDate || '').localeCompare(a.finishDate || '');
-  { const rn = rows.filter(b => b.status === 'Reading'); if (rn.length || rows.length) defs.push({ grp: 'top', label: 'Reading now', books: rn }); }
-  add('top', 'Last 10 finished', rows.filter(b => b.status === 'Finished').sort(byFin).slice(0, 10));
+  { const rn = rows.filter(b => b.status === 'Reading'); if (rn.length || rows.length) defs.push({ grp: 'top', label: 'Reading Now', books: rn }); }
+  add('top', 'Last 10 Finished', rows.filter(b => b.status === 'Finished').sort(byFin).slice(0, 10));
   add('top', 'Favourites', dedupeReads(rows.filter(isFav)));
-  add('top', 'Recommended for you', recTop(set, 10));
+  add('top', 'Recommended for You', recTop(set, 10));
   for (const name of listNames()) {
     const seen = new Set(), books = [];
     for (const it of listItems(name)) { const b = listBook(it); if (b && set.has(b) && !seen.has(b.id)) { seen.add(b.id); books.push(b); } }
@@ -3874,11 +3934,11 @@ function renderShelves(rows, filtering) {
   }
   prog.sort((a, b) => b.last.localeCompare(a.last)).slice(0, 12).forEach(p => add('series', p.label, p.books));
   shelfDefs = defs; shelfDevs = { k: devBooks(rows, 'k'), t: devBooks(rows, 't') };
-  const groups = [['top', ''], ['lists', 'Your shelves'], ['series', 'Series in progress']];
+  const groups = [['top', ''], ['lists', 'Your Shelves'], ['series', 'Series in Progress']];
   box.innerHTML = defs.length ? groups.map(([g, h]) => {
     const ds = defs.filter(d => d.grp === g); if (!ds.length) return '';
     return (h ? `<div class="shelf-sec">${h}</div>` : '') + `<div class="sgrid${g === 'series' ? ' s3' : ''}">` + ds.map(d => { const i = defs.indexOf(d);
-      return `<section class="panel shelf" aria-label="${escapeText(d.label)}"><div class="panel-head"><h2>${escapeText(d.label)}<span class="cnt tnum">${fmt(d.books.length)}</span></h2><button type="button" class="linkbtn" data-seeall="${i}">See all</button></div><div class="shelf-row" data-i="${i}" role="group" aria-label="${escapeText(d.label)} books"></div></section>`; }).join('') + '</div>';
+      return `<section class="panel shelf" aria-label="${escapeText(d.label)}"><div class="panel-head"><h2>${escapeText(d.label)}<span class="cnt tnum">${fmt(d.books.length)}</span></h2><button type="button" class="linkbtn" data-seeall="${i}">See All</button></div><div class="shelf-row" data-i="${i}" role="group" aria-label="${escapeText(d.label)} books"></div></section>`; }).join('') + '</div>';
   }).join('') : '<div class="panel empty" style="padding:18px;text-align:center">' + noBooksMsg() + '</div>';
   layoutShelves();
 }
@@ -3929,13 +3989,13 @@ function layoutShelves() {
   const pal = spinePalette(look.spines, today()).map(c => leather(c));
   box.querySelectorAll('.shelf-row').forEach(row => {
     const d = shelfDefs[+row.dataset.i]; if (!d) return;
-    const reading = d.label === 'Reading now' && d.grp === 'top', devW = reading ? DEVS.k.w + DEVS.t.w + 16 : 0;
+    const reading = d.label === 'Reading Now' && d.grp === 'top', devW = reading ? DEVS.k.w + DEVS.t.w + 16 : 0;
     const W = row.clientWidth - 8 - devW, list = d.books;
     let used = 0, n = 0;
     for (const b of list) { const need = spineW(b) + 4; if (used + need > W) break; used += need; n++; }
     if (n < list.length) while (n > 0 && used + 44 > W) { n--; used -= spineW(list[n]) + 4; }
     const shown = list.slice(0, n);
-    row.innerHTML = shown.map(b => spineHtml(b, pal, d.label === 'Reading now')).join('') + (n < list.length ? `<button type="button" class="shelf-more" data-seeall="${row.dataset.i}" title="${list.length - n} more" aria-label="${list.length - n} more books. See all">+${list.length - n}</button>` : '')
+    row.innerHTML = shown.map(b => spineHtml(b, pal, d.label === 'Reading Now')).join('') + (n < list.length ? `<button type="button" class="shelf-more" data-seeall="${row.dataset.i}" title="${list.length - n} more" aria-label="${list.length - n} more books. See all">+${list.length - n}</button>` : '')
       + (reading ? devHtml('k', shelfDevs.k.length, true) + devHtml('t', shelfDevs.t.length, false) : '');
     row.style.height = (Math.max(52, ...shown.map(spineH), ...(reading ? [DEV_H.k, DEV_H.t] : [])) + 16) + 'px';
   });
@@ -4119,6 +4179,7 @@ async function saveBookDialog(e) {
       try { await appendLogRow({ pages: gain, bookId: savedId, title: data.title, pageReached: toNum(data.currentPage) }); }
       catch (err) { notice(`The book was saved, but its ${gain} pages weren't added to today's count: ${err.message || explain(err)}`, 'error'); }
     }
+    if (rl.link) await rlLinkSaved(savedId);   // Edit from a Reading List: keep the item pointing at this book
     $('bookDlg').close();
     renderAll();
   } catch (err) {
@@ -6636,9 +6697,12 @@ async function saveSeries(e) {
 }
 
 /* Reading lists: each list in order, matched against Books and the Wishlist */
-const rl = { open: {}, editing: null, bookId: '' };
+const rl = { open: {}, editing: null, link: null, drag: null, focus: '', gen: 0, q: Promise.resolve(), renaming: '' };
+const rlCan = () => isLive() && !state.readOnly;
 const listNames = () => [...new Set((disc.lists || []).map(x => x.list))];
 const listItems = name => (disc.lists || []).filter(x => x.list === name).sort((a, b) => (toNum(a.order) || 1e6) - (toNum(b.order) || 1e6) || a._row - b._row);
+const listEnd = name => Math.max(0, ...listItems(name).map(x => toNum(x.order)));   // the highest order number in a list
+const listName = v => { v = String(v || '').trim(); return listNames().find(n => normQ(n) === normQ(v)) || v; };   // typing an existing list in other letters means that list
 // An item points at a book you own: the linked book if set, else the same title (and author, when given)
 function listBook(it) {
   if (it.bookId) { const b = state.allBooks.find(x => x.id === it.bookId); if (b) return b; }
@@ -6650,10 +6714,11 @@ function listBook(it) {
   return c.sort((a, b) => rank(a) - rank(b))[0];
 }
 async function renderLists() {
-  const box = $('rlBoxes');
+  const box = $('rlBoxes'), can = rlCan();
+  $('rlNew').disabled = !can;
   if (!isLive()) { box.innerHTML = '<p class="empty">Your reading lists load from the sheet. ' + connectHint() + '</p>'; return; }
   if (!state.libLoaded || !disc.loaded) { box.innerHTML = '<p class="empty">Loading your reading lists…</p>'; await loadDiscover(); }
-  if (!(disc.lists || []).length) { $('rlNote').textContent = ''; box.innerHTML = '<p class="empty">No reading lists yet. Press New list to start one, for example a suggested reading order.</p>'; return; }
+  if (!(disc.lists || []).length) { $('rlNote').textContent = ''; box.innerHTML = '<p class="empty">No reading lists yet. Press New List to start one, for example a suggested reading order.</p>'; return; }
   const q = normQ(state.lib.q), wish = new Map((disc.wish || []).map(w => [wishKey(w.title), w]));
   box.textContent = '';
   const names = listNames(); let shown = 0;
@@ -6675,8 +6740,16 @@ async function renderLists() {
         const { it, b, w } = r, li = document.createElement('li');
         const isNext = rows[nextIdx] === r;
         if (isNext) li.className = 'next';
-        li.innerHTML = '<span class="n tnum"></span><span><button type="button" class="tt"></button><span class="nx" hidden>Next in list</span><br><span class="au"></span></span><span class="stc"></span><span class="acts"></span>';
-        li.querySelector('.n').textContent = it.order || '–';
+        li.dataset.id = it.id;
+        li.innerHTML = '<span class="n tnum"><span class="num"></span></span><span><button type="button" class="tt"></button><span class="nx" hidden>Next in List</span><br><span class="au"></span></span><span class="stc"></span><span class="acts"></span>';
+        li.querySelector('.num').textContent = it.order || '–';
+        if (can && !q) {   // no dragging while a search is hiding some of the items
+          const dg = document.createElement('button'); dg.type = 'button'; dg.className = 'drag'; dg.textContent = '⠿';
+          dg.setAttribute('aria-label', 'Move ' + it.title); dg.title = 'Drag to move, or use the up and down arrow keys';
+          dg.addEventListener('pointerdown', e => rlDragStart(e, li, name));
+          dg.addEventListener('keydown', e => rlKey(e, name, it.id));
+          li.querySelector('.n').prepend(dg);
+        }
         const tt = li.querySelector('.tt'); tt.textContent = it.title;
         li.querySelector('.au').textContent = [it.author, b && b.title !== it.title ? 'in your library as “' + b.title + '”' : '', it.notes].filter(Boolean).join(' · ');
         if (isNext) li.querySelector('.nx').hidden = false;
@@ -6685,74 +6758,138 @@ async function renderLists() {
         else if (w) stc.innerHTML = `<span class="st2 want">Wishlist · ${escapeText(wishHow(w))}</span>`;
         else stc.innerHTML = '<span class="st2">Not added</span>';
         const acts = li.querySelector('.acts');
-        if (!b && !w) { const a = document.createElement('button'); a.type = 'button'; a.textContent = '+ Wishlist'; a.addEventListener('click', async () => { a.disabled = true; try { await appendWishRows([{ title: it.title, author: it.author, seenIn: name }]); setStatus('live', `Added “${it.title}” to your Inbox`); renderLists(); } catch (err) { a.disabled = false; notice('Couldn\'t add it: ' + (err.message || explain(err)), 'error'); } }); acts.appendChild(a); }
-        const e = document.createElement('button'); e.type = 'button'; e.textContent = 'Edit'; e.addEventListener('click', () => openListDlg(it)); acts.appendChild(e);
+        if (!b && !w) { const a = document.createElement('button'); a.type = 'button'; a.textContent = '+ Wishlist'; a.disabled = !can; a.addEventListener('click', async () => { a.disabled = true; try { await appendWishRows([{ title: it.title, author: it.author, seenIn: name }]); setStatus('live', `Added “${it.title}” to your Inbox`); renderLists(); } catch (err) { a.disabled = false; notice('Couldn\'t add it: ' + (err.message || explain(err)), 'error'); } }); acts.appendChild(a); }
+        const e = document.createElement('button'); e.type = 'button'; e.textContent = b ? 'Edit' : 'Add to Library'; e.addEventListener('click', () => rlEdit(it)); acts.appendChild(e);
+        const en = document.createElement('button'); en.type = 'button'; en.textContent = 'Entry'; en.title = 'List only details: which list, notes, remove'; en.setAttribute('aria-label', 'List entry for ' + it.title); en.addEventListener('click', () => openListDlg(it)); acts.appendChild(en);
         ol.appendChild(li);
       }
       sec.appendChild(ol);
       const add = document.createElement('div'); add.className = 'rl-add';
-      add.innerHTML = '<button class="btn" type="button">Add to this list</button>';
-      add.firstChild.addEventListener('click', () => openListDlg(null, name));
+      for (const [label, fn] of [['Add to This List', () => openListPaste(name)], ['Rename List', () => openRename(name)], ['Delete List', () => rlDelete(name)]]) {
+        const bt = document.createElement('button'); bt.className = 'btn'; bt.type = 'button'; bt.textContent = label; bt.disabled = !can; bt.addEventListener('click', fn); add.appendChild(bt);
+      }
       sec.appendChild(add);
     }
     box.appendChild(sec);
   });
   if (!shown) box.innerHTML = '<p class="empty">Nothing in your lists matches that.</p>';
   $('rlNote').textContent = `${names.length} list${names.length === 1 ? '' : 's'} · ${fmt((disc.lists || []).length)} books`;
+  if (rl.focus) { const h = box.querySelector(`li[data-id="${CSS.escape(rl.focus)}"] .drag`); if (h) h.focus(); rl.focus = ''; }
 }
 $('rlBoxes').addEventListener('click', e => { const h = e.target.closest('[data-rl]'); if (!h) return; const n = h.dataset.rl; rl.open[n] = h.getAttribute('aria-expanded') !== 'true'; renderLists(); });
-$('rlNew').addEventListener('click', () => openListDlg(null, ''));
+$('rlNew').addEventListener('click', () => openListPaste(''));
 
 // Writes. Every item has an id (RL0001…); the row is found by it just before each write and only changed cells are written.
 async function writeListFields(id, fields) { await DB().listUpdate(id, fields); }
-async function appendListItem(f) {
-  const { header, id, row: r0 } = await DB().listAdd(f, (disc.lists || []).map(x => x.id));
-  const item = { ...Object.fromEntries(header.map(h => [h, String(f[h] ?? '').trim()])), id, _row: r0 };
-  disc.lists.push(item);
-  return item;
-}
 async function clearListItem(id) { await DB().listClear(id); }
-function bookLabel(b) { return `${b.title}${b.author ? ' — ' + b.author : ''}${b.status ? ' (' + b.status + ')' : ''}`; }
-function openListDlg(it, listName) {
-  rl.editing = it || null;
-  $('rlNames').innerHTML = listNames().map(n => `<option value="${escapeText(n)}">`).join('');
-  $('rlTitleH').textContent = it ? 'Edit list item' : listName ? 'Add to ' + listName : 'New reading list';
-  $('rl-list').value = it ? it.list : listName || '';
-  const next = listName ? Math.max(0, ...listItems(listName).map(x => toNum(x.order))) + 1 : 1;
-  $('rl-order').value = it ? (it.order || '') : next;
-  $('rl-title').value = it ? it.title : ''; $('rl-author').value = it ? it.author : ''; $('rl-notes').value = it ? it.notes : '';
-  rl.bookId = it ? it.bookId || '' : '';
-  const lb = rl.bookId && state.allBooks.find(x => x.id === rl.bookId);
-  $('rl-book').value = lb ? bookLabel(lb) : '';
-  $('rlBookNote').textContent = it && !lb ? (listBook(it) ? 'Matched by title: ' + bookLabel(listBook(it)) : 'No match in your library yet.') : '';
-  $('rlRemove').hidden = !it; $('rlSave').textContent = it ? 'Save' : 'Add';
-  $('rlMsg').textContent = ''; $('rlSave').disabled = false;
-  $('listDlg').showModal(); $((it || listName) ? 'rl-title' : 'rl-list').focus();
+// Reload the lists from the data (after a failed save, so the screen shows what is really stored)
+async function rlReload() { disc.loaded = false; try { await loadDiscover(); } catch (err) {} renderLists(); }
+
+/* Reorder. Drag the ⠿ handle (mouse or touch, Pointer Events) or press the up and down arrow keys on it. The new order shows at once;
+   the whole list is renumbered 1..n and only the items whose number changed are written (DB().listReorder), one after another. */
+function rlMove(name, from, to, id) {
+  const items = listItems(name);
+  if (from === to || !items[from] || items[from].id !== id) return;
+  const moved = items.splice(from, 1)[0]; items.splice(to, 0, moved);
+  const changes = [];
+  items.forEach((it, i) => { const o = String(i + 1); if (String(it.order ?? '').trim() !== o) changes.push({ id: it.id, order: o }); });
+  for (const c of changes) disc.lists.find(x => x.id === c.id).order = c.order;
+  rl.focus = id; $('rlLive').textContent = `Moved “${moved.title}” to place ${to + 1} of ${items.length}`;
+  renderLists();
+  if (!changes.length) return;
+  const gen = rl.gen;
+  rl.q = rl.q.then(async () => {
+    if (gen !== rl.gen) return;   // an earlier save failed and the lists were reloaded
+    try { await DB().listReorder(changes); setStatus('live', `Saved the new order of “${name}”`); }
+    catch (err) { rl.gen++; notice(`Couldn't save the new order: ${err.message || explain(err)}`, 'error'); await rlReload(); }
+  });
 }
-$('rl-book').addEventListener('input', e => {
-  const v = e.target.value.trim(), all = state.allBooks;
-  const exact = all.find(b => bookLabel(b) === v);
-  rl.bookId = exact ? exact.id : '';
-  $('rlBookNote').textContent = exact ? 'Linked.' : '';
-  if (v.length < 2 || exact) return;
-  const k = normQ(v);
-  $('rlBooks').innerHTML = all.filter(b => normQ(b.title + ' ' + b.author).includes(k)).slice(0, 15).map(b => `<option value="${escapeText(bookLabel(b))}">`).join('');
-});
+function rlKey(e, name, id) {
+  if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
+  e.preventDefault();
+  const i = listItems(name).findIndex(x => x.id === id), to = i + (e.key === 'ArrowUp' ? -1 : 1);
+  if (i >= 0 && to >= 0 && to < listItems(name).length) rlMove(name, i, to, id);
+}
+function rlDragStart(e, li, name) {
+  if (rl.drag || (e.pointerType === 'mouse' && e.button !== 0)) return;
+  e.preventDefault();
+  const h = e.currentTarget, ol = li.parentElement, rows = [...ol.children];
+  try { h.setPointerCapture(e.pointerId); } catch (err) {}
+  const mids = rows.map(r => { const b = r.getBoundingClientRect(); return b.top + window.scrollY + b.height / 2; });
+  rl.drag = { li, ol, rows, h, name, id: e.pointerId, from: rows.indexOf(li), to: rows.indexOf(li), y0: e.clientY + window.scrollY, mids, y: e.clientY, raf: 0 };
+  li.classList.add('lifted'); ol.classList.add('dragging');
+  for (const t of ['pointermove', 'pointerup', 'pointercancel', 'lostpointercapture']) h.addEventListener(t, rlDragEvt);
+}
+function rlDragEvt(e) {
+  const d = rl.drag; if (!d || e.pointerId !== d.id) return;
+  if (e.type === 'pointermove') { d.y = e.clientY; rlDragPlace(); if (d.y < 70 || d.y > innerHeight - 70) rlDragScroll(); return; }
+  rl.drag = null; cancelAnimationFrame(d.raf);
+  for (const t of ['pointermove', 'pointerup', 'pointercancel', 'lostpointercapture']) d.h.removeEventListener(t, rlDragEvt);
+  try { d.h.releasePointerCapture(d.id); } catch (err) {}
+  d.li.classList.remove('lifted'); d.li.style.transform = ''; d.ol.classList.remove('dragging');
+  d.rows.forEach(r => r.classList.remove('drop-above', 'drop-below'));
+  if (e.type === 'pointerup' && d.to !== d.from) rlMove(d.name, d.from, d.to, d.li.dataset.id);
+}
+// Lift the row with the pointer and mark where it would land: the number of other rows whose middle is above the lifted row's middle
+function rlDragPlace() {
+  const d = rl.drag, dy = d.y + window.scrollY - d.y0, mid = d.mids[d.from] + dy;
+  d.li.style.transform = `translateY(${dy}px)`;
+  d.to = d.mids.filter((m, i) => i !== d.from && m < mid).length;
+  const others = d.rows.filter(r => r !== d.li);
+  d.rows.forEach(r => r.classList.remove('drop-above', 'drop-below'));
+  if (d.to !== d.from) (d.to < others.length ? others[d.to].classList.add('drop-above') : others[others.length - 1].classList.add('drop-below'));
+}
+function rlDragScroll() {
+  const d = rl.drag; if (!d || d.raf) return;
+  d.raf = requestAnimationFrame(() => {
+    d.raf = 0; if (rl.drag !== d) return;
+    const step = d.y < 70 ? -Math.ceil((70 - d.y) / 5) : d.y > innerHeight - 70 ? Math.ceil((d.y - (innerHeight - 70)) / 5) : 0;
+    if (step) { window.scrollBy(0, step); rlDragPlace(); rlDragScroll(); }
+  });
+}
+
+/* Edit opens the normal Books editor. A matched book is edited there (and, if the item had no bookId, it is quietly linked when the
+   dialog saves, so a later rename keeps the match). An item that isn't in the library opens the editor to add it, and links the new book. */
+function rlEdit(it) {
+  const b = listBook(it);
+  rl.link = { item: it, bookId: b ? b.id : '' };
+  if (b) openBookDialog(b); else openBookDialog(null, { title: it.title, author: it.author, status: 'TBR' });
+}
+async function rlLinkSaved(bookId) {
+  const l = rl.link; rl.link = null;
+  if (!l || !bookId || l.item.bookId === bookId || (l.bookId && l.bookId !== bookId)) return;
+  try { await writeListFields(l.item.id, { bookId }); l.item.bookId = bookId; }
+  catch (err) { notice(`Saved the book, but couldn't link it to “${l.item.list}”: ${err.message || explain(err)}`, 'error'); }
+}
+$('bookDlg').addEventListener('close', () => { rl.link = null; });
+
+// The small "List Entry" dialog: only what belongs to the list (which list, notes, remove). An item with no matching book can also fix its title and author here.
+function openListDlg(it) {
+  rl.editing = it;
+  const b = listBook(it);
+  $('rlNames').innerHTML = listNames().map(n => `<option value="${escapeText(n)}">`).join('');
+  $('rl-list').value = it.list; $('rl-title').value = it.title; $('rl-author').value = it.author; $('rl-notes').value = it.notes;
+  $('rlTitleF').hidden = $('rlAuthorF').hidden = !!b; $('rl-title').required = !b;
+  $('rlHint').textContent = b ? 'Title, author and status come from the book: use Edit to change them. Moving the entry puts it at the end of the other list.' : 'This one isn\'t in your library yet. Add to Library makes a book of it. Moving the entry puts it at the end of the other list.';
+  $('rlRemove').disabled = $('rlSave').disabled = !rlCan();
+  $('rlMsg').textContent = '';
+  $('listDlg').showModal(); $('rl-notes').focus();
+}
 $('rlClose').addEventListener('click', () => $('listDlg').close());
 $('listForm').addEventListener('submit', async e => {
   e.preventDefault();
-  if (!isLive()) { $('rlMsg').textContent = 'Saving needs the live connection. ' + connectHint(); return; }
-  const f = { list: $('rl-list').value.trim(), order: $('rl-order').value.trim(), title: $('rl-title').value.trim(), author: $('rl-author').value.trim(), notes: $('rl-notes').value.trim(), bookId: $('rl-book').value.trim() ? rl.bookId : '' };
-  if (!f.list || !f.title) { $('rlMsg').textContent = 'A list and a title are needed.'; return; }
+  const it = rl.editing; if (!it) return;
+  if (!rlCan()) { $('rlMsg').textContent = 'Saving needs the live connection. ' + connectHint(); return; }
+  const f = { list: listName($('rl-list').value), notes: $('rl-notes').value.trim() };
+  if (!$('rlTitleF').hidden) { f.title = $('rl-title').value.trim(); f.author = $('rl-author').value.trim(); }
+  if (!f.list || ('title' in f && !f.title)) { $('rlMsg').textContent = 'A list and a title are needed.'; return; }
+  if (f.list !== it.list) f.order = String(listEnd(f.list) + 1);   // another list: it goes to the end
   $('rlSave').disabled = true; $('rlMsg').textContent = 'Saving…';
   try {
-    const it = rl.editing;
-    if (it) {
-      const changed = Object.fromEntries(Object.entries(f).filter(([k, v]) => v !== String(it[k] ?? '')));
-      if (Object.keys(changed).length) { await writeListFields(it.id, changed); Object.assign(it, changed); }
-    } else await appendListItem(f);
+    const changed = Object.fromEntries(Object.entries(f).filter(([k, v]) => v !== String(it[k] ?? '')));
+    if (Object.keys(changed).length) { await writeListFields(it.id, changed); Object.assign(it, changed); }
     rl.open[f.list] = true;
-    $('listDlg').close(); setStatus('live', it ? `Saved “${f.title}”` : `Added “${f.title}” to ${f.list}`); renderLists();
+    $('listDlg').close(); setStatus('live', 'list' in changed ? `Moved “${it.title}” to ${f.list}` : `Saved “${it.title}”`); renderLists();
   } catch (err) { $('rlMsg').textContent = "Couldn't save it: " + (err.message || explain(err)); $('rlSave').disabled = false; }
 });
 $('rlRemove').addEventListener('click', async () => {
@@ -6762,6 +6899,140 @@ $('rlRemove').addEventListener('click', async () => {
   try { await clearListItem(it.id); disc.lists.splice(disc.lists.indexOf(it), 1); setStatus('live', `Removed “${it.title}”`); renderLists(); }
   catch (err) { notice(`Couldn't remove “${it.title}”: ${err.message || explain(err)}`, 'error'); }
 });
+
+/* New List / Add to This List: paste one book per line (the same line formats as Next Up), check the preview, add them in order.
+   Books already in the list, and lines repeated in the paste, are marked and skipped. Not-added books can be ticked to go on the Wishlist. */
+const lp = { rows: [], busy: false };
+function openListPaste(name) {
+  $('lpNames').innerHTML = listNames().map(n => `<option value="${escapeText(n)}">`).join('');
+  $('lpTitleH').textContent = name ? 'Add to ' + name : 'New List';
+  $('lp-list').value = name || ''; $('lp-ta').value = ''; lp.rows = []; lp.busy = false; $('lpErr').textContent = '';
+  lpRender();
+  $('listPasteDlg').showModal(); $(name ? 'lp-ta' : 'lp-list').focus();
+}
+function lpParse() {
+  const was = new Map(lp.rows.map(r => [wishKey(r.title), r.wish]));
+  lp.rows = $('lp-ta').value.split('\n').map(parseBookLine).filter(Boolean).map(r => ({ title: r.title, author: r.author, wish: was.get(wishKey(r.title)) || false }));
+  $('lpErr').textContent = ''; lpRender();
+}
+function lpRender() {
+  const body = $('lpBody'); body.textContent = '';
+  lp.rows.forEach((r, i) => {
+    const tr = document.createElement('tr'); tr.innerHTML = '<td class="no"></td><td></td><td></td><td class="mt"></td>';
+    [['title', 'Title'], ['author', 'Author']].forEach(([k, label], j) => {
+      const inp = document.createElement('input'); inp.value = r[k]; inp.dataset.i = i; inp.dataset.k = k; inp.setAttribute('aria-label', label); inp.autocomplete = 'off'; tr.children[j + 1].appendChild(inp);
+    });
+    body.appendChild(tr);
+  });
+  $('lpPrev').hidden = !lp.rows.length;
+  lpRefresh();
+}
+// Re-check every row (duplicates, matches, the order each will take) without rebuilding the cells being typed in
+function lpRefresh() {
+  const name = listName($('lp-list').value), have = new Set(listItems(name).map(x => wishKey(x.title)));
+  const wish = new Map((disc.wish || []).map(w => [wishKey(w.title), w])), seen = new Set(), trs = $('lpBody').children;
+  let n = listEnd(name);
+  lp.rows.forEach((r, i) => {
+    const k = wishKey(r.title);
+    r.warn = r.title.trim() ? '' : 'No title';
+    r.dup = r.warn ? '' : seen.has(k) ? 'twice in this paste' : have.has(k) ? 'already in this list' : '';
+    if (!r.warn) seen.add(k);
+    r.book = r.warn ? null : listBook({ title: r.title.trim(), author: r.author.trim() }); r.w = r.warn ? null : wish.get(k);
+    r.no = !r.warn && !r.dup ? ++n : 0;
+    const tr = trs[i]; if (!tr) return;
+    tr.className = r.warn ? 'bad' : r.dup ? 'dup' : ''; tr.title = r.warn || (r.dup ? 'Skipped: ' + r.dup : '');
+    tr.children[0].textContent = r.no || '–';
+    const mt = tr.children[3], sig = r.warn ? 'w' : r.dup ? 'd' + r.dup : r.book ? 'b' + r.book.status : r.w ? 'k' + wishHow(r.w) : 'n';
+    if (mt.dataset.sig === sig) return;
+    mt.dataset.sig = sig; mt.textContent = '';
+    if (r.warn) mt.textContent = 'Needs a title';
+    else if (r.dup) mt.textContent = 'Skipped: ' + r.dup;
+    else if (r.book) mt.textContent = 'In library · ' + (r.book.status || 'no status');
+    else if (r.w) mt.textContent = 'Wishlist · ' + wishHow(r.w);
+    else {
+      mt.append('Not added');
+      const lab = document.createElement('label'), cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = r.wish; cb.dataset.i = i; cb.dataset.k = 'wish';
+      lab.append(cb, 'Add to Wishlist'); mt.appendChild(lab);
+    }
+  });
+  const skipped = lp.rows.filter(r => r.dup), bad = lp.rows.filter(r => r.warn).length, parts = [];
+  if (bad) parts.push(`${bad} line${bad > 1 ? 's have' : ' has'} no title and will be left out.`);
+  if (skipped.length) parts.push(`${skipped.length} skipped: ${skipped.slice(0, 3).map(r => `${r.title} (${r.dup})`).join('; ')}${skipped.length > 3 ? '…' : ''}`);
+  $('lpWarn').textContent = parts.join(' ');
+  const todo = lp.rows.filter(r => !r.warn && !r.dup).length;
+  if (!lp.busy) { $('lpAdd').textContent = 'Add ' + todo; $('lpAdd').disabled = !todo; }
+}
+$('lp-ta').addEventListener('input', lpParse);
+$('lp-list').addEventListener('input', lpRefresh);
+$('lpBody').addEventListener('input', e => { const i = e.target.dataset.i, k = e.target.dataset.k; if (i == null || !lp.rows[i] || k === 'wish') return; lp.rows[i][k] = e.target.value; lpRefresh(); });
+$('lpBody').addEventListener('change', e => { if (e.target.dataset.k === 'wish' && lp.rows[e.target.dataset.i]) lp.rows[e.target.dataset.i].wish = e.target.checked; });
+$('lpClose').addEventListener('click', () => $('listPasteDlg').close());
+$('lpCancel').addEventListener('click', () => $('listPasteDlg').close());
+$('listPasteForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  if (lp.busy) return;
+  const name = listName($('lp-list').value), todo = lp.rows.filter(r => !r.warn && !r.dup), err = $('lpErr');
+  err.textContent = '';
+  if (!rlCan()) { err.textContent = 'Saving needs the live connection. ' + connectHint(); return; }
+  if (!name) { err.textContent = 'A list name is needed.'; $('lp-list').focus(); return; }
+  if (!todo.length) return;
+  lp.busy = true; $('lpAdd').disabled = true; $('lpAdd').textContent = 'Adding…';
+  try {
+    const base = listEnd(name);
+    const rows = todo.map((r, i) => { const b = listBook({ title: r.title.trim(), author: r.author.trim() }); return { list: name, order: String(base + i + 1), title: r.title.trim(), author: r.author.trim(), notes: '', bookId: b ? b.id : '' }; });
+    const res = await DB().listAddMany(rows, (disc.lists || []).map(x => x.id));
+    res.items.forEach((x, i) => disc.lists.push({ ...Object.fromEntries(res.header.map(h => [h, String(rows[i][h] ?? '').trim()])), id: x.id, _row: x.row }));
+    rl.open[name] = true;
+    // Ticked books that are still not in the library or on the Wishlist go to the Wishlist Inbox in one write
+    const wl = todo.filter(r => r.wish && !listBook({ title: r.title.trim(), author: r.author.trim() }) && !wishDupe(r.title));
+    let wErr = '';
+    if (wl.length) { try { await appendWishRows(wl.map(r => ({ title: r.title.trim(), author: r.author.trim(), seenIn: name }))); } catch (e2) { wErr = e2.message || explain(e2); } }
+    $('listPasteDlg').close();
+    const nb = `${rows.length} book${rows.length === 1 ? '' : 's'}`;
+    setStatus('live', `Added ${nb} to ${name}${wl.length && !wErr ? `, and ${wl.length} to your Wishlist Inbox` : ''}`);
+    renderLists();
+    if (wErr) notice(`Added ${nb} to “${name}”, but couldn't add the ticked books to your Wishlist: ${wErr}`, 'error');
+  } catch (e2) { err.textContent = "Couldn't add them: " + (e2.message || explain(e2)); }
+  finally { lp.busy = false; lpRefresh(); }
+});
+
+/* Rename a list (writes `list` on each item; naming an existing list merges into it, after asking) and delete a list (clears each item's row) */
+function openRename(name) {
+  rl.renaming = name; $('rn-name').value = name; $('rnMsg').textContent = ''; $('rnSave').disabled = !rlCan();
+  $('rlRenameDlg').showModal(); $('rn-name').select();
+}
+$('rnClose').addEventListener('click', () => $('rlRenameDlg').close());
+$('rlRenameForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const old = rl.renaming, nn = $('rn-name').value.trim(), msg = $('rnMsg');
+  if (!rlCan()) { msg.textContent = 'Saving needs the live connection. ' + connectHint(); return; }
+  if (!nn) { msg.textContent = 'A list name is needed.'; $('rn-name').focus(); return; }
+  if (nn === old) { $('rlRenameDlg').close(); return; }
+  const items = listItems(old).slice(), n = items.length, clash = listNames().find(x => x !== old && normQ(x) === normQ(nn)), target = clash || nn;
+  if (clash && !(await askOk(`A list called “${clash}” already exists. Merge “${old}” into it? The ${n} ${n === 1 ? 'entry' : 'entries'} will go at the end of “${clash}”.`, 'Merge'))) return;
+  const base = clash ? listEnd(clash) : 0; let done = 0;
+  $('rnSave').disabled = true; msg.textContent = 'Renaming…';
+  try {
+    for (const [i, it] of items.entries()) {
+      const f = { list: target };
+      if (clash && String(it.order ?? '') !== String(base + i + 1)) f.order = String(base + i + 1);
+      await writeListFields(it.id, f); Object.assign(it, f); done++;
+    }
+    rl.open[target] = rl.open[old] ?? true; delete rl.open[old];
+    $('rlRenameDlg').close(); setStatus('live', clash ? `Merged “${old}” into “${clash}”` : `Renamed “${old}” to “${nn}”`); renderLists();
+  } catch (err) {
+    const text = `Renamed ${done} of ${n}, then stopped: ${err.message || explain(err)}`;
+    msg.textContent = text; $('rnSave').disabled = false; notice(text, 'error'); renderLists();
+  }
+});
+async function rlDelete(name) {
+  const items = listItems(name).slice(), n = items.length;
+  if (!(await askOk(`Delete the list “${name}” and its ${n} ${n === 1 ? 'entry' : 'entries'}? Books in your library aren't changed.`, 'Delete'))) return;
+  let done = 0;
+  try { for (const it of items) { await clearListItem(it.id); disc.lists.splice(disc.lists.indexOf(it), 1); done++; } }
+  catch (err) { notice(`Deleted ${done} of ${n}, then stopped: ${err.message || explain(err)}`, 'error'); renderLists(); return; }
+  delete rl.open[name]; setStatus('live', `Deleted the list “${name}”`); renderLists();
+}
 
 /* ---------- Do I own this? ---------- */
 const normQ = t => String(t || '').toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
@@ -6989,13 +7260,13 @@ function renderAuthors() {
     const rd = list.filter(a => a.nRead > 0).sort((x, y) => y.nRead - x.nRead || y.pages - x.pages || byName(x, y)).slice(0, 10);
     const tbrN = a => a.titles.filter(t => t.rep.status === 'TBR').length;
     const tb = list.filter(a => tbrN(a) > 0).sort((x, y) => tbrN(y) - tbrN(x) || y.nRead - x.nRead || byName(x, y)).slice(0, 10);
-    if (rd.length) tops.push(`<div class="shelf-sec">Top 10 authors you've read</div><div class="au-grid au-top">${rd.map((a, i) => card(a, i + 1, `${a.nRead} read · ${fmt(a.pages)} pages${a.avg ? ' · ★' + a.avg.toFixed(1) : ''}`)).join('')}</div>`);
-    if (tb.length) tops.push(`<div class="shelf-sec">Top 10 on your TBR</div><div class="au-grid au-top">${tb.map((a, i) => card(a, i + 1, `${tbrN(a)} on your TBR · ${a.nRead} read`)).join('')}</div>`);
+    if (rd.length) tops.push(`<div class="shelf-sec">Top 10 Authors You've Read</div><div class="au-grid au-top">${rd.map((a, i) => card(a, i + 1, `${a.nRead} read · ${fmt(a.pages)} pages${a.avg ? ' · ★' + a.avg.toFixed(1) : ''}`)).join('')}</div>`);
+    if (tb.length) tops.push(`<div class="shelf-sec">Top 10 on Your TBR</div><div class="au-grid au-top">${tb.map((a, i) => card(a, i + 1, `${tbrN(a)} on your TBR · ${a.nRead} read`)).join('')}</div>`);
   }
   $('auTop').innerHTML = tops.join('');
   const cap = AU.all ? shown.length : 50, vis = shown.slice(0, cap);
   $('auGrid').innerHTML = vis.map(a => card(a)).join('');
-  $('auMore').hidden = shown.length <= cap; $('auMore').textContent = `Show all ${fmt(shown.length)}`;
+  $('auMore').hidden = shown.length <= cap; $('auMore').textContent = `Show All ${fmt(shown.length)}`;
   $('auCount').textContent = shown.length ? `${shown.length > cap ? `Showing ${fmt(cap)} of ` : ''}${fmt(shown.length)} author${shown.length === 1 ? '' : 's'}${q ? ' match' : ''}` : '';
   if (!shown.length) $('auGrid').innerHTML = `<p class="empty" style="grid-column:1/-1">${list.length ? 'No authors match that search.' : 'No authors yet.'}</p>`;
 }
@@ -7036,11 +7307,11 @@ function renderAuthorPage(a) {
   const quotes = (disc.quotes || []).filter(q => (q.bookId && ids.has(q.bookId)) || (q.by && authorFirstKey(q.by) === a.key));
   quotes.sort((x, y) => x.added !== y.added ? (x.added < y.added ? 1 : -1) : y._row - x._row);
   const qShow = AU.quotesAll ? quotes : quotes.slice(0, 3);
-  const quoteHtml = quotes.length ? `<section class="panel"><div class="panel-head"><h2>Dog-ear quotes</h2><span class="muted small">${quotes.length} from ${escapeText(a.name)}</span></div><ul class="dog-list">${qShow.map(q => `<li class="dog"><p>${escapeText(q.text)}</p><footer>${escapeText([q.who ? '— ' + q.who : '', q.from, q.page ? 'p. ' + q.page : ''].filter(Boolean).join(' · '))}</footer></li>`).join('')}</ul>${quotes.length > 3 ? `<p style="margin:10px 0 0"><button type="button" class="linkbtn" data-quotes>${AU.quotesAll ? 'Show fewer' : 'Show all ' + quotes.length}</button></p>` : ''}</section>` : '';
+  const quoteHtml = quotes.length ? `<section class="panel"><div class="panel-head"><h2>Dog-ear Quotes</h2><span class="muted small">${quotes.length} from ${escapeText(a.name)}</span></div><ul class="dog-list">${qShow.map(q => `<li class="dog"><p>${escapeText(q.text)}</p><footer>${escapeText([q.who ? '— ' + q.who : '', q.from, q.page ? 'p. ' + q.page : ''].filter(Boolean).join(' · '))}</footer></li>`).join('')}</ul>${quotes.length > 3 ? `<p style="margin:10px 0 0"><button type="button" class="linkbtn" data-quotes>${AU.quotesAll ? 'Show Fewer' : 'Show All ' + quotes.length}</button></p>` : ''}</section>` : '';
   const tile = (v, l) => `<div class="ap-tile"><b>${v}</b><span>${l}</span></div>`;
-  $('auPage').innerHTML = `<button type="button" class="linkbtn ap-back" data-back>← All authors</button>
+  $('auPage').innerHTML = `<button type="button" class="linkbtn ap-back" data-back>← All Authors</button>
     <div class="ap-head"><span class="au-av" aria-hidden="true">${escapeText(initialsOf(a.name))}</span><div style="min-width:0"><h2>${escapeText(a.name)}</h2>${sub ? `<div class="muted small">${escapeText(sub)}</div>` : ''}</div></div>
-    <div class="ap-tiles">${tile(a.nBooks, 'Books')}${tile(a.nRead, 'Read')}${tile(fmt(a.pages), 'Pages read')}${tile(a.avg ? a.avg.toFixed(1) : '–', 'Avg rating')}${tile(a.first || '–', 'First read')}</div>
+    <div class="ap-tiles">${tile(a.nBooks, 'Books')}${tile(a.nRead, 'Read')}${tile(fmt(a.pages), 'Pages Read')}${tile(a.avg ? a.avg.toFixed(1) : '–', 'Avg Rating')}${tile(a.first || '–', 'First Read')}</div>
     ${parts.length ? `<section class="panel ap-panel">${parts.join('')}</section>` : '<p class="empty">Nothing here yet.</p>'}${quoteHtml}`;
 }
 
@@ -7086,7 +7357,7 @@ function renderSeries() {
   afterDiscover();
   const all = seriesRows(), authors = new Set(buildAuthors().map(a => a.key));
   const q = normQ(SE.q);
-  const FILTERS = [['all', 'All'], ['progress', 'In progress'], ['complete', 'Complete'], ['new', 'Not started']];
+  const FILTERS = [['all', 'All'], ['progress', 'In Progress'], ['complete', 'Complete'], ['new', 'Not Started']];
   $('seChips').innerHTML = FILTERS.map(([k, l]) => `<button type="button" class="chip" data-f="${k}" aria-pressed="${SE.filter === k}">${l}<span class="n">${k === 'all' ? all.length : all.filter(r => r.group === k).length}</span></button>`).join('');
   $('seSort').value = SE.sort;
   const rows = all.filter(r => (SE.filter === 'all' || r.group === SE.filter) && (!q || normQ(r.s.series + ' ' + r.author).includes(q)))

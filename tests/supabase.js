@@ -250,22 +250,127 @@ const step = async (name, fn) => { try { await fn(); } catch (e) { check(name + 
 
     await step('reading list', async () => {
       const n = w.calls.length;
-      await page.evaluate(() => { document.querySelector('.lib-mode [data-mode="lists"]').click(); openListDlg(null, 'Classics'); });
-      await fill(page, '#rl-%', { title: 'Added Classic', author: 'Cass Sic', notes: 'n1' });
-      await submit(page, '#listForm'); await saved(page, 800);
+      await page.evaluate(() => { document.querySelector('.lib-mode [data-mode="lists"]').click(); openListPaste('Classics'); });
+      await fill(page, '#%', { 'lp-ta': 'Added Classic – Cass Sic' });
+      await submit(page, '#listPasteForm'); await saved(page, 800);
       const p = writesSince(w, n).find(c => c.method === 'POST' && c.table === 'reading_lists');
-      check('list add: POST with next RL id (RL0004) and list name', !!p && p.body.id === 'RL0004' && p.body.list === 'Classics' && p.body.title === 'Added Classic' && p.body.sort_order === 2 && /return=representation/.test(p.headers.prefer), p && p.body);
+      check('list add: POST (one row) with next RL id (RL0004), list name, order after the last', !!p && p.body.length === 1 && p.body[0].id === 'RL0004' && p.body[0].list === 'Classics' && p.body[0].title === 'Added Classic' && p.body[0].sort_order === 2 && /return=representation/.test(p.headers.prefer), p && p.body);
       const m = w.calls.length;
-      await page.evaluate(() => openListDlg(disc.lists.find(x => x.id === 'RL0002'), 'Summer Sci-Fi'));
-      await fill(page, '#rl-%', { notes: 'edited', order: '5' });
+      await page.evaluate(() => openListDlg(disc.lists.find(x => x.id === 'RL0002')));
+      await fill(page, '#rl-%', { notes: 'edited' });
       await submit(page, '#listForm'); await saved(page, 800);
       const pe = writesSince(w, m);
-      check('list edit: PATCH by id with notes and sort_order only', pe.length === 1 && pe[0].method === 'PATCH' && pe[0].query.startsWith('?id=eq.RL0002') && keysOf(pe[0].body) === 'notes,sort_order' && pe[0].body.sort_order === 5, pe.map(c => [c.query, c.body]));
-      const m2 = w.calls.length;
-      await page.evaluate(() => openListDlg(disc.lists.find(x => x.id === 'RL0003'), 'Classics'));
+      check('list entry edit: PATCH by id with notes only', pe.length === 1 && pe[0].method === 'PATCH' && pe[0].query.startsWith('?id=eq.RL0002') && keysOf(pe[0].body) === 'notes', pe.map(c => [c.query, c.body]));
+      const m2 = w.calls.length, rid = w.db.reading_lists.find(x => x.id === 'RL0003').row_id;
+      await page.evaluate(() => openListDlg(disc.lists.find(x => x.id === 'RL0003')));
       await page.evaluate(() => document.getElementById('rlRemove').click()); await yes(page); await saved(page, 800);
-      const pd = writesSince(w, m2);
-      check('list remove: DELETE by id, row gone', pd.length === 1 && pd[0].method === 'DELETE' && pd[0].query.startsWith('?id=eq.RL0003') && !w.db.reading_lists.some(x => x.id === 'RL0003'), pd.map(c => [c.method, c.query]));
+      const cs = w.calls.slice(m2).filter(c => c.table === 'reading_lists');
+      check('list remove: GET by id for row_id first, then DELETE by row_id, row gone', cs.length === 2 && cs[0].method === 'GET' && cs[0].query === '?select=row_id&id=eq.RL0003' && cs[1].method === 'DELETE' && cs[1].query === `?row_id=eq.${rid}` && !w.db.reading_lists.some(x => x.id === 'RL0003'), cs.map(c => [c.method, c.query]));
+      const dupe = await page.evaluate(() => DB().listClear('RL9999').then(() => 'cleared', e => e.message));
+      check('list remove: an id that is not there deletes nothing', /isn't there any more/.test(dupe) && w.calls.slice(-1)[0].method === 'GET', dupe);
+      w.insert('reading_lists', { list: 'Twin', sort_order: 1, title: 'A', author: '', notes: '', id: 'RL0999', book_id: '' }); w.insert('reading_lists', { list: 'Twin', sort_order: 2, title: 'B', author: '', notes: '', id: 'RL0999', book_id: '' });
+      const k = w.calls.length, twin = await page.evaluate(() => DB().listClear('RL0999').then(() => 'cleared', e => e.message));
+      check('list remove: an id found twice deletes nothing', /appears 2 times/.test(twin) && !w.calls.slice(k).some(c => c.method === 'DELETE') && w.db.reading_lists.filter(x => x.id === 'RL0999').length === 2, twin);
+      w.db.reading_lists = w.db.reading_lists.filter(x => x.id !== 'RL0999');
+    });
+
+    await step('reading list: Edit opens the Books editor', async () => {
+      const n = w.calls.length;
+      await page.evaluate(() => { document.querySelector('.lib-mode [data-mode="lists"]').click(); });
+      await page.click('li[data-id="RL0002"] .acts button:has-text("Edit")'); await page.waitForSelector('#bookDlg[open]');
+      check('edit: the Books editor opens for the matched book (ID 17)', (await page.evaluate(() => document.getElementById('f-title').value + '|' + document.getElementById('dlgMsg').textContent)) === 'Quiet Engines|ID 17');
+      await fill(page, '#bookForm [name="%"]', { notes: 'from the list' });
+      await submit(page, '#bookForm'); await saved(page, 900);
+      const ws = writesSince(w, n);
+      check('edit: book PATCH, then the item quietly gets book_id 17 (only that column)', ws.length === 2 && ws[0].table === 'books' && ws[0].method === 'PATCH' && ws[1].table === 'reading_lists' && ws[1].query.startsWith('?id=eq.RL0002') && JSON.stringify(ws[1].body) === '{"book_id":17}', ws.map(c => [c.table, c.method, c.query, c.body]));
+      await page.evaluate(() => { const h = document.querySelector('[data-rl="Classics"]'); if (h.getAttribute('aria-expanded') !== 'true') h.click(); });
+      const m = w.calls.length;
+      await page.click('li[data-id="RL0004"] .acts button:has-text("Add to Library")'); await page.waitForSelector('#bookDlg[open]');
+      check('add to library: editor opens with the title, author and TBR filled in', (await page.evaluate(() => ['f-title', 'f-author', 'f-status'].map(i => document.getElementById(i).value).join('|'))) === 'Added Classic|Cass Sic|TBR');
+      await submit(page, '#bookForm'); await saved(page, 900);
+      const wb = writesSince(w, m), nb = wb.find(c => c.table === 'books' && c.method === 'POST'), lk = wb.find(c => c.table === 'reading_lists');
+      check('add to library: book POST, then the item gets the new book id', !!nb && !!lk && lk.method === 'PATCH' && lk.query.startsWith('?id=eq.RL0004') && keysOf(lk.body) === 'book_id' && lk.body.book_id === w.db.books.find(b => b.title === 'Added Classic').id, wb.map(c => [c.table, c.method, c.body]));
+      const m3 = w.calls.length;
+      await page.click('li[data-id="RL0001"] .acts button:has-text("Edit")'); await page.waitForSelector('#bookDlg[open]'); await page.click('#dlgClose');
+      check('edit: closing the editor writes nothing', writesSince(w, m3).length === 0);
+    });
+
+    await step('reading list: paste a list, reorder, rename, entry, delete', async () => {
+      const n = w.calls.length;
+      await page.evaluate(() => { document.querySelector('.lib-mode [data-mode="lists"]').click(); openListPaste(''); });
+      await fill(page, '#%', { 'lp-list': 'Fresh Picks', 'lp-ta': 'Fresh One – Fay Aldous\nDust of Stars by Ben Okafor\nFresh One - Fay Aldous' });
+      const prev = await page.evaluate(() => ({ rows: document.querySelectorAll('#lpBody tr').length, dup: document.querySelectorAll('#lpBody tr.dup').length, box: document.querySelectorAll('#lpBody input[type=checkbox]').length, add: document.getElementById('lpAdd').textContent, match: [...document.querySelectorAll('#lpBody td.mt')].map(x => x.textContent) }));
+      check('paste: 3 lines, 1 repeated line skipped, Add 2, one Wishlist box, library match shown', prev.rows === 3 && prev.dup === 1 && prev.box === 1 && prev.add === 'Add 2' && /^In library · \w+/.test(prev.match[1]) && /^Skipped/.test(prev.match[2]), prev);
+      await page.click('#lpBody input[type=checkbox]');
+      await submit(page, '#listPasteForm'); await saved(page, 1000);
+      const ws = writesSince(w, n), pl = ws.find(c => c.table === 'reading_lists'), pw = ws.find(c => c.table === 'wishlist');
+      check('paste: one POST for both items, in order, ids RL0005 and RL0006, book_id on the library one', !!pl && pl.method === 'POST' && pl.body.length === 2 && pl.body.map(r => r.id + r.sort_order + r.title).join() === 'RL00051Fresh One,RL00062Dust of Stars' && pl.body[1].book_id === 5 && pl.body[0].book_id === null && pl.body[0].list === 'Fresh Picks', pl && pl.body);
+      check('paste: the ticked book goes to the Wishlist in one POST, seen in the list name; nothing else', !!pw && pw.body.length === 1 && pw.body[0].title === 'Fresh One' && pw.body[0].seen_in === 'Fresh Picks' && pw.body[0].stage === 'Inbox' && ws.length === 2, ws.map(c => [c.table, c.body]));
+      const d1 = await page.evaluate(() => { openListPaste('Fresh Picks'); document.getElementById('lp-ta').value = 'Fresh One\nThird Wave – Cy Zane'; document.getElementById('lp-ta').dispatchEvent(new Event('input', { bubbles: true })); return [document.getElementById('lpAdd').textContent, document.querySelectorAll('#lpBody tr.dup').length, [...document.querySelectorAll('#lpBody td.no')].map(x => x.textContent).join()]; });
+      check('paste into an existing list: a title already in it is skipped, the new one is number 3', d1.join('|') === 'Add 1|1|–,3', d1);
+      await submit(page, '#listPasteForm'); await saved(page, 800);
+      check('paste into an existing list: appended with sort_order 3 and no Wishlist write', w.db.reading_lists.some(x => x.title === 'Third Wave' && x.sort_order === 3 && x.id === 'RL0007') && !w.db.wishlist.some(x => x.title === 'Third Wave'));
+      // keyboard reorder: only the two changed rows are PATCHed, sort_order only
+      const m = w.calls.length;
+      await page.focus('li[data-id="RL0007"] .drag'); await page.keyboard.press('ArrowUp'); await saved(page, 800);
+      const pr = writesSince(w, m);
+      check('reorder (ArrowUp): exactly two PATCHes, sort_order only (the two rows that changed)', pr.length === 2 && pr.every(c => c.method === 'PATCH' && keysOf(c.body) === 'sort_order'), pr.map(c => [c.query, c.body]));
+      const ord = id => w.db.reading_lists.find(x => x.id === id).sort_order;
+      check('reorder (ArrowUp): stored order is Fresh One 1, Third Wave 2, Dust of Stars 3', ord('RL0005') === 1 && ord('RL0007') === 2 && ord('RL0006') === 3 && pr.map(c => c.query).sort().join() === '?id=eq.RL0006,?id=eq.RL0007', [ord('RL0005'), ord('RL0007'), ord('RL0006')]);
+      check('reorder: focus stays on the moved handle', (await page.evaluate(() => document.activeElement.getAttribute('aria-label'))) === 'Move Third Wave');
+      // a pointer drag: first item to the bottom renumbers the three, all three rows changed
+      await page.locator('li[data-id="RL0005"] .drag').scrollIntoViewIfNeeded();
+      const m1 = w.calls.length, h = await page.locator('li[data-id="RL0005"] .drag').boundingBox(), t = await page.locator('li[data-id="RL0006"]').boundingBox();
+      await page.mouse.move(h.x + h.width / 2, h.y + h.height / 2); await page.mouse.down();
+      await page.mouse.move(h.x + h.width / 2, h.y + h.height / 2 + 20, { steps: 3 }); await page.mouse.move(h.x + h.width / 2, t.y + t.height - 3, { steps: 8 });
+      check('drag: the row is lifted and a drop mark shows', await page.evaluate(() => !!document.querySelector('li.lifted') && !!document.querySelector('li.drop-below')));
+      await page.mouse.up(); await saved(page, 900);
+      const pd = writesSince(w, m1);
+      check('drag: renumbered 1..3 in the new order with a PATCH for each changed row only', ord('RL0007') === 1 && ord('RL0006') === 2 && ord('RL0005') === 3 && pd.length === 3 && pd.every(c => c.method === 'PATCH' && keysOf(c.body) === 'sort_order'), pd.map(c => [c.query, c.body]));
+      check('drag: the page shows the new order', (await page.evaluate(() => [...document.querySelectorAll('li[data-id]')].filter(x => ['RL0005', 'RL0006', 'RL0007'].includes(x.dataset.id)).map(x => x.dataset.id).join())) === 'RL0007,RL0006,RL0005');
+      // a failed save shows an error and reloads the stored order
+      await page.evaluate(() => { window.__ro = sbDb.listReorder; sbDb.listReorder = async () => { throw { message: 'boom' }; }; });
+      await page.focus('li[data-id="RL0007"] .drag'); await page.keyboard.press('ArrowDown'); await saved(page, 900);
+      await page.evaluate(() => { sbDb.listReorder = window.__ro; });
+      check('reorder failure: error notice, and the list is reloaded to the stored order', /Couldn't save the new order: boom/.test(await page.locator('#notice').innerText()) && (await page.evaluate(() => [...document.querySelectorAll('li[data-id]')].filter(x => ['RL0005', 'RL0006', 'RL0007'].includes(x.dataset.id)).map(x => x.dataset.id).join())) === 'RL0007,RL0006,RL0005');
+      // searching hides the handles
+      await fill(page, '#%', { libSearch: 'third' }); await page.waitForTimeout(600);
+      check('search: no drag handles while a search is on', (await page.evaluate(() => document.querySelectorAll('.rl-ol .drag').length)) === 0);
+      await fill(page, '#%', { libSearch: '' });
+      // rename (list only), then rename onto an existing list (asks, merges to the end)
+      const m2 = w.calls.length;
+      await page.evaluate(() => openRename('Fresh Picks'));
+      await fill(page, '#%', { 'rn-name': '' }); await submit(page, '#rlRenameForm');
+      check('rename: an empty name is refused, nothing written', /needed/.test(await page.locator('#rnMsg').innerText()) && writesSince(w, m2).length === 0);
+      await fill(page, '#%', { 'rn-name': 'Best Picks' }); await submit(page, '#rlRenameForm'); await saved(page, 900);
+      const pn = writesSince(w, m2);
+      check('rename: one PATCH per item, list only', pn.length === 3 && pn.every(c => c.method === 'PATCH' && JSON.stringify(c.body) === '{"list":"Best Picks"}') && pn.map(c => c.query).sort().join() === '?id=eq.RL0005,?id=eq.RL0006,?id=eq.RL0007', pn.map(c => [c.query, c.body]));
+      const m3 = w.calls.length;
+      await page.evaluate(() => openRename('Classics')); await fill(page, '#%', { 'rn-name': 'best picks' }); await submit(page, '#rlRenameForm');
+      check('merge: asks first', /already exists/.test(await page.evaluate(() => { const d = document.getElementById('askDlg'); return d.open ? document.getElementById('askMsg').textContent : ''; })));
+      await yes(page); await saved(page, 900);
+      const pm = writesSince(w, m3);
+      check('merge: the item goes to the end of the other list (list and sort_order)', pm.length === 1 && pm[0].query.startsWith('?id=eq.RL0004') && JSON.stringify(pm[0].body) === '{"list":"Best Picks","sort_order":4}', pm.map(c => [c.query, c.body]));
+      // entry dialog: another list means the end of that list
+      const m4 = w.calls.length;
+      await page.evaluate(() => openListDlg(disc.lists.find(x => x.id === 'RL0002')));
+      await fill(page, '#rl-%', { list: 'Best Picks' }); await submit(page, '#listForm'); await saved(page, 800);
+      const pe = writesSince(w, m4);
+      check('entry: moving to another list PATCHes list and sort_order (end of that list)', pe.length === 1 && pe[0].query.startsWith('?id=eq.RL0002') && JSON.stringify(pe[0].body) === '{"list":"Best Picks","sort_order":5}', pe.map(c => [c.query, c.body]));
+      // delete: confirm text, partial failure message, then the rest
+      await page.evaluate(() => { document.querySelector('[data-rl="Best Picks"]').getAttribute('aria-expanded') === 'true' || document.querySelector('[data-rl="Best Picks"]').click(); });
+      await page.evaluate(() => { window.__rc = sbDb.listClear; let k = 0; sbDb.listClear = async id => { if (++k === 3) throw { message: 'boom' }; return window.__rc.call(sbDb, id); }; });
+      await page.evaluate(() => { [...document.querySelectorAll('#rlBoxes .lib-sec')].find(s => s.querySelector('.lib-sec-head').dataset.rl === 'Best Picks').querySelector('.rl-add .btn:nth-child(3)').click(); });
+      check('delete: confirm text names the list and its 5 entries', (await page.locator('#askMsg').innerText()) === 'Delete the list “Best Picks” and its 5 entries? Books in your library aren\'t changed.');
+      await yes(page); await saved(page, 1000);
+      check('delete: a failure part way says how far it got', /Deleted 2 of 5, then stopped: boom/.test(await page.locator('#notice').innerText()) && w.db.reading_lists.filter(x => x.list === 'Best Picks').length === 3);
+      await page.evaluate(() => { sbDb.listClear = window.__rc; });
+      const m5 = w.calls.length;
+      await page.evaluate(() => { [...document.querySelectorAll('#rlBoxes .lib-sec')].find(s => s.querySelector('.lib-sec-head').dataset.rl === 'Best Picks').querySelector('.rl-add .btn:nth-child(3)').click(); });
+      check('delete: the confirm counts what is left (3 entries)', /its 3 entries\?/.test(await page.locator('#askMsg').innerText()));
+      await yes(page); await saved(page, 1000);
+      const pc = w.calls.slice(m5).filter(c => c.table === 'reading_lists');
+      check('delete: for each item a GET then a DELETE by row_id; only reading_lists touched; Summer Sci-Fi stays', pc.filter(c => c.method === 'DELETE').length === 3 && pc.filter(c => c.method === 'DELETE').every(c => /^\?row_id=eq\.\d+$/.test(c.query)) && w.calls.slice(m5).every(c => c.table === 'reading_lists' || c.method === 'GET') && !w.db.reading_lists.some(x => x.list === 'Best Picks') && w.db.reading_lists.some(x => x.id === 'RL0001'), pc.map(c => [c.method, c.query]));
     });
 
     await step('settings', async () => {
@@ -1022,13 +1127,13 @@ const step = async (name, fn) => { try { await fn(); } catch (e) { check(name + 
     check('artifact: persistent read-only notice after load', (await page.locator('#notice').innerText()) === 'This copy is read-only. Use the live site: https://ourlibrary.au/');
     const res = await page.evaluate(async () => {
       const calls = { bookUpdate: ['1', { notes: 'x' }], bookPage: ['1', 200], bookAdd: [{ title: 't' }], booksAddMany: [[{ title: 't' }]], logAdd: [[]], logEdit: [{ _row: 2 }, { del: true }], ratingAdd: [[]], contentsAdd: ['1', [], 's'], quoteAdd: [[]],
-        settingSave: ['k', 'v'], wishUpdate: ['WL0001', {}], wishClear: ['WL0001'], wishAdd: [[{ title: 't' }]], archiveAdd: [[]], seriesSave: [{ series: 's' }, 's'], seriesClear: ['s'], listUpdate: ['RL0001', {}], listAdd: [{}], listClear: ['RL0001'], bookDelete: ['1'] };
+        settingSave: ['k', 'v'], wishUpdate: ['WL0001', {}], wishClear: ['WL0001'], wishAdd: [[{ title: 't' }]], archiveAdd: [[]], seriesSave: [{ series: 's' }, 's'], seriesClear: ['s'], listUpdate: ['RL0001', {}], listAddMany: [[{}]], listReorder: [[]], listClear: ['RL0001'], bookDelete: ['1'] };
       const out = {};
       for (const [k, a] of Object.entries(calls)) out[k] = await DB()[k](...a).then(() => 'wrote', e => e && e.code + '|' + e.message);
       return out;
     });
     const MSG = 'tool_error|This copy is read-only. Use the live site: https://ourlibrary.au/';
-    check('artifact: every write method throws the read-only error', Object.values(res).every(v => v === MSG) && Object.keys(res).length === 20, res);
+    check('artifact: every write method throws the read-only error', Object.values(res).every(v => v === MSG) && Object.keys(res).length === 21, res);
     check('artifact: no write reached the sheet', w.writes.length === 0, w.writes.length);
     const logged = await page.evaluate(async () => { const b = document.createElement('button'); return logEntry({ pages: 5, bookId: '1', title: 'x', pageReached: 125 }, b); });
     check('artifact: logging pages shows the read-only message and writes nothing', logged !== true && w.writes.length === 0 && /read-only/.test(await page.locator('#notice').innerText()));

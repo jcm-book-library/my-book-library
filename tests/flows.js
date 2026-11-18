@@ -136,18 +136,127 @@ flow('k-series-prune', async ({ page }) => {
   await page.evaluate(() => { document.querySelector('.lib-mode [data-mode="wish"]').click(); });
   await settle(page, 1000);
 }, { mutate: s => { s['Series Tracker'].push(['Ghost Series', 'Gus Ghost', '', 'Novel', 'Ongoing', '', '', '', ''], ['Phantom Run', '', '', 'Comic', 'Following', '', '', '', '']); } });
-// (l) Reading List: add (below the blank middle row), edit, remove
+// (l) Reading List: add one title through the paste dialog (below the blank middle row), edit the entry's list-only fields, remove
 flow('l-list-add-remove', async ({ page }) => {
-  await page.evaluate(() => { document.querySelector('.lib-mode [data-mode="lists"]').click(); openListDlg(null, 'Classics'); });
-  await fill(page, '#rl-%', { title: 'Added Classic', author: 'Cass Sic', notes: 'n1' });
+  await page.evaluate(() => { document.querySelector('.lib-mode [data-mode="lists"]').click(); openListPaste('Classics'); });
+  await fill(page, '#%', { 'lp-ta': 'Added Classic – Cass Sic' });
+  await submit(page, '#listPasteForm'); await settle(page, 800);
+  await page.evaluate(() => openListDlg(disc.lists.find(x => x.id === 'RL0002')));
+  await fill(page, '#rl-%', { notes: 'edited' });
   await submit(page, '#listForm'); await settle(page, 800);
-  await page.evaluate(() => openListDlg(disc.lists.find(x => x.id === 'RL0002'), 'Summer Sci-Fi'));
-  await fill(page, '#rl-%', { notes: 'edited', order: '5' });
-  await submit(page, '#listForm'); await settle(page, 800);
-  await page.evaluate(() => openListDlg(disc.lists.find(x => x.id === 'RL0003'), 'Classics'));
+  await page.evaluate(() => openListDlg(disc.lists.find(x => x.id === 'RL0003')));
   await page.evaluate(() => document.getElementById('rlRemove').click());
   await yes(page); await settle(page, 800);
 });
+// The synthetic rows in data.js are shared objects that earlier flows write into, so these flows each start from a pristine copy of the sheet
+const pristine = () => { const k = require.resolve('./data.js'), old = require.cache[k]; delete require.cache[k]; const m = require('./data.js').makeSheets(); require.cache[k] = old; return m; };
+const fresh = extra => s => { Object.assign(s, pristine()); if (extra) extra(s); };
+const listsMode = page => page.evaluate(() => { document.querySelector('.lib-mode [data-mode="lists"]').click(); });
+const moreItems = s => { s['Reading Lists'].push(['Summer Sci-Fi', '3', 'Third Wave', 'Cy Zane', '', 'RL0004', ''], ['Summer Sci-Fi', '4', 'Fourth Dawn', 'Di Yarra', '', 'RL0005', '']); };
+const rlTab = (s, id) => s['Reading Lists'].find(r => r[5] === id);
+// (l2) New List from a pasted list: a repeated line is skipped, one book is already in the library, one is ticked for the Wishlist
+flow('l2-list-paste', async ({ page, sheets }) => {
+  await listsMode(page);
+  await page.evaluate(() => openListPaste(''));
+  await fill(page, '#%', { 'lp-list': 'Fresh Picks', 'lp-ta': 'Fresh One – Fay Aldous\nDust of Stars by Ben Okafor\nFresh One - Fay Aldous' });
+  must(await page.evaluate(() => document.querySelectorAll('#lpBody tr').length) === 3, 'three preview rows');
+  must(await page.evaluate(() => document.getElementById('lpAdd').textContent) === 'Add 2', 'the button should say Add 2');
+  must(await page.evaluate(() => document.querySelectorAll('#lpBody tr.dup').length) === 1, 'the repeated line should be marked');
+  must(await page.evaluate(() => document.querySelectorAll('#lpBody input[type=checkbox]').length) === 1, 'only the not-added row has the Wishlist box');
+  await page.click('#lpBody input[type=checkbox]');
+  await submit(page, '#listPasteForm'); await settle(page, 1000);
+  const rows = sheets['Reading Lists'].filter(r => r[0] === 'Fresh Picks');
+  must(rows.length === 2 && rows[0][2] === 'Fresh One' && rows[0][1] === '1' && rows[1][2] === 'Dust of Stars' && rows[1][1] === '2' && rows[1][6] === '5', 'two items in order, the library one linked: ' + JSON.stringify(rows));
+  must(sheets['Wishlist'].some(r => r.includes('Fresh One') && r.includes('Fresh Picks')), 'Fresh One should be on the Wishlist, seen in Fresh Picks');
+}, { mutate: fresh() });
+// (l2b) Pasting into an existing list adds to its end and skips what is already there
+flow('l2b-list-paste-existing', async ({ page, sheets }) => {
+  await listsMode(page);
+  await page.evaluate(() => openListPaste('Summer Sci-Fi'));
+  await fill(page, '#%', { 'lp-ta': 'Quiet Engines – Eli Ramos\nLate Entry' });
+  must(await page.evaluate(() => document.getElementById('lpAdd').textContent) === 'Add 1', 'the duplicate should be skipped');
+  await submit(page, '#listPasteForm'); await settle(page, 800);
+  const r = sheets['Reading Lists'].find(x => x[2] === 'Late Entry');
+  must(r && r[0] === 'Summer Sci-Fi' && r[1] === '3' && r[5] === 'RL0004', 'Late Entry should be number 3: ' + JSON.stringify(r));
+  must(!sheets['Wishlist'].some(x => x.includes('Late Entry')), 'nothing goes to the Wishlist unless ticked');
+}, { mutate: fresh() });
+// (l3) Reorder: arrow keys on the handle, then one real pointer drag. Only changed order cells are written
+flow('l3-list-reorder', async ({ page, sheets, writes }) => {
+  await listsMode(page);
+  await page.focus('li[data-id="RL0004"] .drag');
+  await page.keyboard.press('ArrowUp'); await settle(page, 600);
+  must(writes.length === 2 && writes.every(w => /Reading Lists/.test(w.input.range) && /!B\d+$/.test(w.input.range)), 'two order cells only: ' + JSON.stringify(writes.map(w => w.input)));
+  must(rlTab(sheets, 'RL0004')[1] === '2' && rlTab(sheets, 'RL0002')[1] === '3' && rlTab(sheets, 'RL0001')[1] === '1' && rlTab(sheets, 'RL0005')[1] === '4', 'orders after ArrowUp');
+  must(await page.evaluate(() => document.activeElement.getAttribute('aria-label')) === 'Move Third Wave', 'focus stays on the moved handle');
+  const h = await page.locator('li[data-id="RL0001"] .drag').boundingBox(), t = await page.locator('li[data-id="RL0005"]').boundingBox();
+  await page.mouse.move(h.x + h.width / 2, h.y + h.height / 2); await page.mouse.down();
+  await page.mouse.move(h.x + h.width / 2, h.y + h.height / 2 + 20, { steps: 3 });
+  await page.mouse.move(h.x + h.width / 2, t.y + t.height - 4, { steps: 8 });
+  must(await page.evaluate(() => !!document.querySelector('.rl-ol li.lifted') && !!document.querySelector('.rl-ol li.drop-below')), 'lifted row and a drop mark while dragging');
+  await page.mouse.up(); await settle(page, 800);
+  const order = ['RL0004', 'RL0002', 'RL0005', 'RL0001'].map(id => rlTab(sheets, id)[1]).join();
+  must(order === '1,2,3,4', 'after the drag the list reads 1..4 in the new order: ' + order);
+  must(await page.evaluate(() => [...document.querySelectorAll('li[data-id]')].map(x => x.dataset.id).join()) === 'RL0004,RL0002,RL0005,RL0001', 'rows re-rendered in the new order');
+}, { mutate: fresh(moreItems) });
+// (l3b) While a search filters the list there are no drag handles
+flow('l3b-list-search-no-handles', async ({ page, writes }) => {
+  await listsMode(page);
+  must(await page.evaluate(() => document.querySelectorAll('.rl-ol .drag').length) > 0, 'handles show with no search');
+  await fill(page, '#%', { libSearch: 'engines' }); await settle(page, 400);
+  must(await page.evaluate(() => document.querySelectorAll('.rl-ol .drag').length) === 0, 'no handles while searching');
+  must(writes.length === 0, 'no writes');
+}, { mutate: fresh() });
+// (l4) Rename a list, then rename another onto it (asks, then merges to the end)
+flow('l4-list-rename-merge', async ({ page, sheets }) => {
+  await listsMode(page);
+  await page.evaluate(() => openRename('Summer Sci-Fi'));
+  await fill(page, '#%', { 'rn-name': '' });
+  await submit(page, '#rlRenameForm');
+  must(/needed/.test(await page.evaluate(() => document.getElementById('rnMsg').textContent)), 'an empty name is refused');
+  await fill(page, '#%', { 'rn-name': 'Space Summer' });
+  await submit(page, '#rlRenameForm'); await settle(page, 800);
+  must(rlTab(sheets, 'RL0001')[0] === 'Space Summer' && rlTab(sheets, 'RL0002')[0] === 'Space Summer' && rlTab(sheets, 'RL0001')[1] === '1', 'both items renamed, numbers untouched');
+  await page.evaluate(() => openRename('Classics'));
+  await fill(page, '#%', { 'rn-name': 'space summer' });
+  await submit(page, '#rlRenameForm'); await yes(page); await settle(page, 800);
+  const m = rlTab(sheets, 'RL0003');
+  must(m[0] === 'Space Summer' && m[1] === '3', 'merged item goes to the end of the other list: ' + JSON.stringify(m));
+}, { mutate: fresh() });
+// (l5) Delete a list: asks first, then clears each of its rows (only Reading Lists cells)
+flow('l5-list-delete', async ({ page, sheets, writes }) => {
+  await listsMode(page);
+  await page.evaluate(() => document.querySelector('#rlBoxes .rl-add .btn:nth-child(3)').click());
+  must(/Delete the list “Summer Sci-Fi” and its 2 entries\? Books in your library aren't changed\./.test(await page.evaluate(() => document.getElementById('askMsg').textContent)), 'confirm text');
+  await yes(page); await settle(page, 900);
+  must(!rlTab(sheets, 'RL0001') && !rlTab(sheets, 'RL0002') && rlTab(sheets, 'RL0003'), 'Summer Sci-Fi rows cleared, Classics kept');
+  must(writes.length === 2 && writes.every(w => /Reading Lists/.test(w.input.range)), 'two row clears, nothing else: ' + JSON.stringify(writes.map(w => w.input.range)));
+}, { mutate: fresh() });
+// (l6) Entry dialog: move an item to another list (goes to the end of it)
+flow('l6-list-entry-move', async ({ page, sheets }) => {
+  await listsMode(page);
+  await page.evaluate(() => openListDlg(disc.lists.find(x => x.id === 'RL0002')));
+  await fill(page, '#rl-%', { list: 'Classics', notes: 'moved' });
+  await submit(page, '#listForm'); await settle(page, 800);
+  const r = rlTab(sheets, 'RL0002');
+  must(r[0] === 'Classics' && r[1] === '2' && r[4] === 'moved', 'moved to the end of Classics: ' + JSON.stringify(r));
+}, { mutate: fresh() });
+// (l7) Edit opens the Books editor; saving it quietly links the item to the book. An item not in the library gets Add to Library
+flow('l7-list-edit-book', async ({ page, sheets }) => {
+  await listsMode(page);
+  await page.click('li[data-id="RL0002"] .acts button:has-text("Edit")');
+  await page.waitForSelector('#bookDlg[open]');
+  must(await page.evaluate(() => document.getElementById('f-title').value) === 'Quiet Engines' && await page.evaluate(() => document.getElementById('dlgMsg').textContent) === 'ID 17', 'the Books editor for book 17');
+  await fill(page, '#bookForm [name="%"]', { notes: 'from the list' });
+  await submit(page, '#bookForm'); await settle(page, 900);
+  must(rlTab(sheets, 'RL0002')[6] === '17', 'the item is linked to book 17');
+  await page.evaluate(() => { document.querySelector('.lib-mode [data-mode="lists"]').click(); document.querySelector('[data-rl="Classics"]').click(); });
+  await page.click('li[data-id="RL0003"] .acts button:has-text("Add to Library")');
+  await page.waitForSelector('#bookDlg[open]');
+  must(await page.evaluate(() => document.getElementById('f-title').value) === 'Moby Unlisted' && await page.evaluate(() => document.getElementById('f-status').value) === 'TBR', 'prefilled add dialog');
+  await submit(page, '#bookForm'); await settle(page, 900);
+  const id = rlTab(sheets, 'RL0003')[6];
+  must(id && sheets['Books'].some(r => r[r.length - 1] === id && r[0] === 'Moby Unlisted'), 'the new book id is saved on the item: ' + id);
+}, { mutate: fresh() });
 // (m) save a rating (book row + Ratings append)
 flow('m-rating', async ({ page }) => {
   await page.evaluate(async () => {
@@ -291,9 +400,6 @@ flow('r-series-missing-to-wishlist', async ({ page }) => {
 });
 
 // ===== Remove (TBR / Paused / DNF), Undo, Restore, Delete for good =====
-// The synthetic rows in data.js are shared objects that earlier flows write into, so these flows each start from a pristine copy of the sheet
-const pristine = () => { const k = require.resolve('./data.js'), old = require.cache[k]; delete require.cache[k]; const m = require('./data.js').makeSheets(); require.cache[k] = old; return m; };
-const fresh = extra => s => { Object.assign(s, pristine()); if (extra) extra(s); };
 const must = (cond, msg) => { if (!cond) throw new Error(msg); };
 const ids = (page, which) => page.evaluate(w => state[w].map(b => b.id).join(','), which);
 // (s1) the plan's x on an Up next book: status Removed with tier and upNextOrder cleared, then Up next is renumbered; the book is gone from every list
