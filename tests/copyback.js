@@ -20,7 +20,7 @@ const check = (name, ok, extra) => log.push((ok ? 'PASS ' : 'FAIL ') + name + (!
 // ---------- the synthetic Sheet ----------
 // Fixture rows are objects keyed by the Supabase-side header names, holding what the Sheet shows (strings); null is a cleared (blank) row.
 const SHEET_HDR = {   // header spellings that differ from SBT, or a different column order
-  'Reading Lists': ['id', 'list', 'order', 'title', 'author', 'notes', 'bookId'],
+  'Reading Lists': ['id', 'list', 'order', 'title', 'author', 'notes', 'bookId', 'status'],
   'App Settings': ['key', 'value', 'note'],
   'Contents': ['bookId', 'stamp', 'story', 'start'],
   'Ratings': ['date', 'bookId', 'title', 'category', 'gut', 'criteria', 'standout', 'flaw', 'suggested', 'final']
@@ -72,7 +72,7 @@ function fixture() {
       { series: 'Moon Knight', author: 'Marv Writer', publisher: 'Marvel', kind: 'Comic', status: 'Ongoing', released: '12', soldAs: 'Box Set' }
     ],
     'Reading Lists': [
-      { list: 'Summer Sci-Fi', order: '1', title: 'Dust of Stars', author: 'Ben Okafor', id: 'RL0001', bookId: '5' }, { list: 'Summer Sci-Fi', order: '2', title: 'Quiet Engines', author: 'Eli Ramos', id: 'RL0002' },
+      { list: 'Summer Sci-Fi', order: '1', title: 'Dust of Stars', author: 'Ben Okafor', id: 'RL0001', bookId: '5', status: 'Read' }, { list: 'Summer Sci-Fi', order: '2', title: 'Quiet Engines', author: 'Eli Ramos', id: 'RL0002', status: 'Reading' },
       { list: 'Classics', order: '1', title: 'Moby Unlisted', author: 'Herman M', notes: 'someday', id: 'RL0003' }
     ],
     'Wishlist archive': [
@@ -101,7 +101,7 @@ function sheetTabs(fx, spreadsheet) {
 }
 function seedDb(w, fx) {
   for (const tab of TABS) { const [table, cols] = SBT[tab];
-    for (const o of fx[tab].filter(Boolean)) { const row = {}; cols.forEach(([h, c, t]) => { if (t !== 'calc') row[c] = cellToSb(t, o[h] ?? ''); }); w.insert(table, row); } }
+    for (const o of fx[tab].filter(Boolean)) { const row = {}; cols.forEach(([h, c, t]) => { if (t !== 'calc') row[c] = table === 'reading_lists' && c === 'status' && !o[h] ? null : cellToSb(t, o[h] ?? ''); }); w.insert(table, row); } }
 }
 function makeWorld({ edit, sbEdit, empty } = {}) {
   const fx = fixture(); if (edit) edit(fx);
@@ -252,6 +252,46 @@ const get = (w, tab, row, col) => (tabOf(w, tab).data[row - 1] || [])[col];
   await scenario(browser, 'refuse-many', { mode: 'sheet', build: { edit: fx => { fx['Reading Log'] = Array.from({ length: 25 }, (_, i) => ({ date: 'Oct ' + i, pages: '5', bookId: '1', title: 'T', source: 'app' })); } }, run: async (page, w) => {
     await press(page, '#sbCopy'); const m = await press(page, '#sbCopy');
     check('(c) lists up to 20 problems, then says how many more', m.split('\n').filter(l => /^Reading Log, row/.test(l)).length === 20 && /…and 5 more/.test(m) && sbWrites(w).length === 0, m.slice(0, 300));
+  } });
+
+  // ===== Reading Lists status column (added later: the Sheet tab may not have the header yet) =====
+  const dropSheetStatus = w => { const t = tabOf(w, 'Reading Lists'); t.data[0] = t.data[0].slice(); const i = t.data[0].indexOf('status'); t.data.forEach(r => r.splice(i, 1)); };
+  await scenario(browser, 'status-sheet-lacks-header-to-sb', { mode: 'sheet', run: async (page, w) => {
+    dropSheetStatus(w);
+    check('status: Check treats the missing header as blank and says which cells differ', /Reading Lists: 3 rows in the Sheet, 3 rows in Supabase: 2 cells differ/.test(await press(page, '#sbCheck')));
+    await press(page, '#sbCopy'); const m = await press(page, '#sbCopy');
+    check('status: Copy Sheet -> Supabase with no status header copies (missing = blank) and checks', /^Copied \d+ rows and checked them/.test(m), m);
+    check('status: every copied list entry has a null status (not an empty string)', w.db.reading_lists.length === 3 && w.db.reading_lists.every(r => r.status === null), w.db.reading_lists.map(r => r.status));
+    check('status: the Sheet was only read', w.sheetsApi.writes().length === 0);
+  } });
+  await scenario(browser, 'status-sheet-has-header-to-sb', { mode: 'sheet', run: async (page, w) => {
+    await press(page, '#sbCopy'); const m = await press(page, '#sbCopy');
+    check('status: Copy Sheet -> Supabase copies Read / Reading and blank as null', /^Copied/.test(m) && JSON.stringify(w.db.reading_lists.map(r => [r.id, r.status])) === '[["RL0001","Read"],["RL0002","Reading"],["RL0003",null]]', w.db.reading_lists.map(r => [r.id, r.status]));
+  } });
+  await scenario(browser, 'status-bad-value', { mode: 'sheet', build: { edit: fx => { fx['Reading Lists'][2].status = 'Done'; } }, run: async (page, w) => {
+    await press(page, '#sbCopy'); const m = await press(page, '#sbCopy');
+    check('status: a value other than To read / Reading / Read stops the copy before anything is written', /^Nothing was copied/.test(m) && /Reading Lists, row 4, status: must be To read, Reading or Read/.test(m) && sbWrites(w).length === 0, m);
+  } });
+  await scenario(browser, 'status-sheet-lacks-header-to-sheet', { mode: 'sb', run: async (page, w) => {
+    dropSheetStatus(w);
+    const api = w.sheetsApi, orig = JSON.stringify(tabOf(w, 'Reading Lists').data), nTabs = api.sheets[SHEET_ID].length, m1 = await press(page, '#sbCopy');
+    check('status: Copy Supabase -> Sheet stops when Supabase has statuses and the Sheet has no status header, naming the header', /^Nothing was written\./.test(m1) && /Reading Lists: Supabase has status values, but the Sheet's Reading Lists tab has no status header\. Add a 'status' header to the Reading Lists tab first\./.test(m1), m1);
+    check('status: nothing written anywhere, no backup tab, no column added', api.writes().length === 0 && sbWrites(w).length === 0 && JSON.stringify(tabOf(w, 'Reading Lists').data) === orig && api.sheets[SHEET_ID].length === nTabs, api.writes().length);
+    check('status: the button is still at its start (no second press armed)', (await btnText(page, '#sbCopy')) === 'Copy Supabase → Sheet (weekly backup)');
+  } });
+  await scenario(browser, 'status-sheet-lacks-header-blank-to-sheet', { mode: 'sb', build: { sbEdit: w => { w.db.reading_lists.forEach(r => { r.status = null; }); dbSet(w, 'books', r => r.id === 1, { current_page: 150 }); } }, run: async (page, w) => {
+    dropSheetStatus(w);
+    const api = w.sheetsApi, before = tabOf(w, 'Reading Lists').data.map(r => r.length).join();
+    await press(page, '#sbCopy'); const m = await press(page, '#sbCopy');
+    check('status: with only blank statuses the copy back goes ahead for the other tabs', /^The Sheet now matches Supabase/.test(m), m);
+    check('status: Reading Lists is not written, not backed up, and gets no new column', tabOf(w, 'Reading Lists').data.map(r => r.length).join() === before && !api.sheets[SHEET_ID].some(t => /^Reading Lists backup/.test(t.title)) && dataRanges(api).every(d => !/Reading Lists/.test(d.range)), dataRanges(api).map(d => d.range));
+  } });
+  await scenario(browser, 'status-copy-back-cell', { mode: 'sb', build: { sbEdit: w => { dbSet(w, 'reading_lists', r => r.id === 'RL0002', { status: 'Read' }); dbSet(w, 'reading_lists', r => r.id === 'RL0001', { status: null }); } }, run: async (page, w) => {
+    const api = w.sheetsApi, m1 = await press(page, '#sbCopy');
+    check('status: the preview counts the two changed status cells', /Reading Lists: 2 cells changed/.test(m1), m1);
+    await press(page, '#sbCopy');
+    const rr = dataRanges(api).filter(d => /Reading Lists/.test(d.range));
+    check('status: only the status cells (column H) are written, with a leading quote or blank', rr.length === 2 && rr.every(d => /!H[23]$/.test(d.range)) && JSON.stringify(rr.map(d => d.values[0][0]).sort()) === JSON.stringify(['', "'Read"]), rr.map(d => [d.range, d.values]));
   } });
 
   // ===== (d) Check =====
